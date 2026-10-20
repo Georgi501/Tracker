@@ -1,0 +1,34 @@
+import type { Lang } from "./i18n";
+
+const en = {
+  watch: "Add to watchlist", watching: "On watchlist", range52: "52-week range", low: "Low", high: "High", chart1y: "Last 12 months",
+  noChart: "Price history unavailable.", alerts: "Price alerts", alertAbove: "Above", alertBelow: "Below", alertTarget: "Target price",
+  alertAdd: "Set alert", alertHit: "Target reached", alertWaiting: "Waiting", alertNone: "No alerts yet. Alerts are checked against live quotes while the app is open.",
+  taxExport: "Download tax report (Excel/CSV)", taxNote: "Amounts in USD, FIFO. Check with your tax advisor before filing.",
+};
+type Copy = typeof en;
+const bg: Copy = {
+  watch: "Добави в Watchlist", watching: "В Watchlist", range52: "52-седмичен диапазон", low: "Мин", high: "Макс", chart1y: "Последните 12 месеца",
+  noChart: "Няма налична ценова история.", alerts: "Ценови известия", alertAbove: "Над", alertBelow: "Под", alertTarget: "Целева цена",
+  alertAdd: "Задай известие", alertHit: "Целта е достигната", alertWaiting: "Изчакване", alertNone: "Няма известия. Проверяват се спрямо реалните цени, докато приложението е отворено.",
+  taxExport: "Изтегли данъчен отчет (Excel/CSV)", taxNote: "Суми в USD, по FIFO. Провери с данъчен консултант преди подаване.",
+};
+const de: Copy = {
+  watch: "Zur Watchlist", watching: "Auf Watchlist", range52: "52-Wochen-Spanne", low: "Tief", high: "Hoch", chart1y: "Letzte 12 Monate",
+  noChart: "Kursverlauf nicht verfügbar.", alerts: "Preisalarme", alertAbove: "Über", alertBelow: "Unter", alertTarget: "Zielpreis",
+  alertAdd: "Alarm setzen", alertHit: "Ziel erreicht", alertWaiting: "Wartet", alertNone: "Noch keine Alarme. Sie werden bei geöffneter App mit Live-Kursen geprüft.",
+  taxExport: "Steuerbericht herunterladen (Excel/CSV)", taxNote: "Beträge in USD, FIFO. Vor Abgabe mit Steuerberater prüfen.",
+};
+const es: Copy = {
+  watch: "Añadir a watchlist", watching: "En watchlist", range52: "Rango 52 semanas", low: "Mín", high: "Máx", chart1y: "Últimos 12 meses",
+  noChart: "Historial de precios no disponible.", alerts: "Alertas de precio", alertAbove: "Por encima", alertBelow: "Por debajo", alertTarget: "Precio objetivo",
+  alertAdd: "Crear alerta", alertHit: "Objetivo alcanzado", alertWaiting: "En espera", alertNone: "Sin alertas. Se comprueban con cotizaciones reales mientras la app está abierta.",
+  taxExport: "Descargar informe fiscal (Excel/CSV)", taxNote: "Importes en USD, FIFO. Consulta a tu asesor fiscal antes de declarar.",
+};
+const it: Copy = {
+  watch: "Aggiungi alla watchlist", watching: "In watchlist", range52: "Intervallo 52 settimane", low: "Min", high: "Max", chart1y: "Ultimi 12 mesi",
+  noChart: "Storico prezzi non disponibile.", alerts: "Avvisi di prezzo", alertAbove: "Sopra", alertBelow: "Sotto", alertTarget: "Prezzo obiettivo",
+  alertAdd: "Imposta avviso", alertHit: "Obiettivo raggiunto", alertWaiting: "In attesa", alertNone: "Nessun avviso. Vengono controllati con quotazioni reali mentre l'app è aperta.",
+  taxExport: "Scarica report fiscale (Excel/CSV)", taxNote: "Importi in USD, FIFO. Verifica con il commercialista prima della dichiarazione.",
+};
+export const extrasCopy: Record<Lang, Copy> = { en, bg, de, es, it };

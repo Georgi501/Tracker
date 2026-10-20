@@ -1,0 +1,120 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { openProCheckout, initializePaddle, paddleListeners } from "@/lib/paddle";
+import { paymentsCopy } from "@/lib/payments-i18n";
+import { Check, Bot, Flame, LayoutGrid, CalendarRange, Layers } from "lucide-react";
+import { proCopy } from "@/lib/pro-i18n";
+import { BarsSilhouette, CurveSilhouette, HeatmapSilhouette, ProBadge } from "@/components/ProFeatures";
+import { Card } from "@/components/AppShell";
+import { usePortfolio } from "@/lib/store";
+
+export const Route = createFileRoute("/pricing")({
+  head: () => ({
+    meta: [
+      { title: "Pricing — folio. Free & Pro plans" },
+      { name: "description", content: "Free plan with 1 broker, Pro for €3.99/month or €39.99/year with up to 4 brokers." },
+      { property: "og:title", content: "Pricing — folio." },
+      { property: "og:description", content: "Pro: €3.99/month or €39.99/year, up to 4 broker connections." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Pricing,
+});
+
+function Pricing() {
+  const p = usePortfolio();
+  const [yearly, setYearly] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const c = paymentsCopy[p.lang];
+  const pc = proCopy[p.lang];
+  useEffect(() => {
+    const done = (e: { name?: string }) => { if (e.name === "checkout.completed") setActivating(true); };
+    paddleListeners.add(done);
+    if (new URLSearchParams(window.location.search).get("checkout") === "success") setActivating(true);
+    return () => { paddleListeners.delete(done); };
+  }, []);
+  // Pro is granted only by the verified payment notification; poll until it lands.
+  useEffect(() => {
+    if (!activating) return;
+    if (p.isPro) { setActivating(false); toast.success(c.success); return; }
+    const t = setInterval(() => { void p.reload(); }, 3000);
+    return () => clearInterval(t);
+  }, [activating, p.isPro]);
+  const buy = async () => {
+    if (!p.user) return;
+    setBusy(true);
+    try { await initializePaddle(); await openProCheckout({ priceId: yearly ? "pro_yearly" : "pro_monthly", userId: p.user.id, email: p.user.email }); }
+    catch { toast.error(c.failed); } finally { setBusy(false); }
+  };
+  const Feature = ({ children }: { children: string }) => (
+    <li className="flex gap-2 text-sm"><Check size={16} className="mt-0.5 text-primary" />{children}</li>
+  );
+  return (
+    <div className="mx-auto max-w-4xl py-4">
+      <h1 className="font-display text-center text-3xl font-bold">{p.t("pricing")}</h1>
+      <div className="mx-auto mt-5 flex w-fit rounded-full bg-secondary p-1 text-sm">
+        {[false, true].map((y) => (
+          <button key={String(y)} onClick={() => setYearly(y)}
+            className={`rounded-full px-4 py-1.5 font-semibold ${yearly === y ? "bg-card shadow-sm" : "text-muted-foreground"}`}>
+            {y ? p.t("perYear").replace("/ ", "") : p.t("perMonth").replace("/ ", "")}
+          </button>
+        ))}
+      </div>
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <Card className="p-7">
+          <h2 className="font-display text-xl font-semibold">{p.t("free")}</h2>
+          <p className="font-display my-3 text-4xl font-bold">€0</p>
+          <ul className="space-y-2"><Feature>{p.t("freeF1")}</Feature><Feature>{p.t("freeF2")}</Feature><Feature>{p.t("freeF3")}</Feature></ul>
+          <div className="mt-6">
+            {p.user ? (
+              <span className="text-sm text-muted-foreground">{!p.isPro && p.t("currentPlan")}</span>
+            ) : (
+              <Link to="/auth" className="inline-block rounded-full border border-border px-5 py-2 text-sm font-semibold">{p.t("signUp")}</Link>
+            )}
+          </div>
+        </Card>
+        <Card className="border-primary p-7">
+          <h2 className="font-display text-xl font-semibold">{p.t("pro")}</h2>
+          <p className="font-display my-3 text-4xl font-bold">
+            {yearly ? "€39.99" : "€3.99"}<span className="text-base font-medium text-muted-foreground"> {yearly ? p.t("perYear") : p.t("perMonth")}</span>
+          </p>
+          <ul className="space-y-2"><Feature>{p.t("proF1")}</Feature><Feature>{p.t("proF2")}</Feature><Feature>{p.t("proF3")}</Feature><Feature>{pc.heatmap}</Feature><Feature>{pc.income}</Feature><Feature>{pc.fire}</Feature><Feature>{pc.advisor}</Feature></ul>
+          <div className="mt-6">
+            {p.isPro ? <span className="text-sm font-semibold text-primary">{p.t("currentPlan")}</span> : (
+              activating ? <span className="text-sm text-muted-foreground">{c.processing}</span>
+              : p.user ? <button onClick={buy} disabled={busy} className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{c.upgrade}</button>
+              : <Link to="/auth" className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">{c.upgrade}</Link>
+            )}
+          </div>
+        </Card>
+      </div>
+      <section className="mt-14">
+        <div className="text-center"><ProBadge /><h2 className="font-display mt-2 text-2xl font-bold">{pc.showcaseTitle}</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{pc.showcaseSub}</p></div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {[[LayoutGrid, pc.heatmap, pc.heatmapDesc, <HeatmapSilhouette key="h" />], [CalendarRange, pc.income, pc.incomeDesc, <BarsSilhouette key="b" />], [Flame, pc.fire, pc.fireDesc, <CurveSilhouette key="c" />]].map(([Icon, t, d, v], i) => {
+            const I = Icon as typeof Flame;
+            return (
+              <Card key={i} className="p-5">
+                <div className="mb-4 rounded-xl bg-secondary/60 p-3">{v as React.ReactNode}</div>
+                <h3 className="font-display flex items-center gap-2 font-semibold"><I size={18} className="text-primary" />{t as string}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{d as string}</p>
+              </Card>
+            );
+          })}
+        </div>
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <Card className="flex gap-3 p-5"><Bot className="shrink-0 text-primary" /><div><h3 className="font-display font-semibold">{pc.advisor}</h3><p className="text-sm text-muted-foreground">{pc.advisorDesc}</p></div></Card>
+          <Card className="flex gap-3 p-5"><Layers className="shrink-0 text-primary" /><div><h3 className="font-display font-semibold">{pc.brokers}</h3><p className="text-sm text-muted-foreground">{pc.brokersDesc}</p></div></Card>
+        </div>
+        {!p.isPro && <div className="mt-8 text-center">
+          {p.user ? <button onClick={buy} disabled={busy} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{c.upgrade}</button>
+          : <Link to="/auth" className="inline-block rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground">{c.upgrade}</Link>}
+        </div>}
+      </section>
+    </div>
+  );
+}

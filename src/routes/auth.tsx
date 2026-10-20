@@ -1,0 +1,117 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import "@lovable.dev/cloud-auth-js/styles.css";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import { Card } from "@/components/AppShell";
+import { usePortfolio } from "@/lib/store";
+import { authCopy, authErrorKey } from "@/lib/auth-i18n";
+
+export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "Sign in — folio. Portfolio Tracker" },
+      { name: "description", content: "Create a free folio. account or sign in to track your portfolio." },
+      { property: "og:title", content: "Sign in — folio." },
+      { property: "og:description", content: "Free portfolio tracking with live prices and broker CSV import." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AuthPage,
+});
+
+const input = "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
+
+function AuthPage() {
+  const p = usePortfolio();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"in" | "up">("in");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const c = authCopy[p.lang];
+
+  useEffect(() => { if (p.user) navigate({ to: "/" }); }, [p.user, navigate]);
+
+  const switchMode = (m: "in" | "up") => { setMode(m); setError(null); };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); setBusy(true); setError(null);
+    try {
+      if (mode === "up") {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(), password, options: { emailRedirectTo: window.location.origin, data: { display_name: name } },
+        });
+        if (error) throw error;
+        // Existing accounts come back without identities: tell the user to sign in.
+        if (data.user && (data.user.identities?.length ?? 0) === 0) { setError(c.exists); setMode("in"); return; }
+        if (!data.session) setSentTo(email.trim());
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error";
+      const key = authErrorKey(msg);
+      setError(key ? c[key] : msg);
+    } finally { setBusy(false); }
+  };
+  const forgot = async () => {
+    if (!email) { toast.error(p.t("email")); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+    if (error) toast.error(error.message); else toast.success(p.t("resetSent"));
+  };
+  const oauth = async (provider: "google" | "apple") => {
+    const r = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+    if (r.error) toast.error(r.error.message);
+  };
+
+  if (sentTo) return (
+    <div className="mx-auto max-w-md py-8">
+      <Card className="p-7 text-center">
+        <h1 className="font-display text-2xl font-bold">{p.t("checkEmail")}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{c.sent(sentTo)}</p>
+        <button onClick={() => { setSentTo(null); switchMode("in"); }} className="mt-5 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground">{c.back}</button>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="mx-auto max-w-md py-8">
+      <Card className="p-7">
+        <h1 className="font-display text-2xl font-bold">{mode === "in" ? p.t("signIn") : p.t("signUp")}</h1>
+        <p className="mb-5 mt-1 text-sm text-muted-foreground">{p.t("tagline")}</p>
+        <form onSubmit={submit} className="space-y-3">
+          {mode === "up" && <input className={input} placeholder={p.t("displayName")} value={name} onChange={(e) => setName(e.target.value)} />}
+          <input className={input} type="email" required autoComplete="email" placeholder={p.t("email")} value={email} onChange={(e) => setEmail(e.target.value)} />
+          <div className="relative">
+            <input className={`${input} pr-20`} type={show ? "text" : "password"} required minLength={mode === "up" ? 8 : 1} autoComplete={mode === "up" ? "new-password" : "current-password"} placeholder={p.t("password")} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">{show ? c.hide : c.show}</button>
+          </div>
+          {mode === "up" && <p className="text-xs text-muted-foreground">{c.passwordHint}</p>}
+          {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+          <button disabled={busy} className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+            {mode === "in" ? p.t("signIn") : p.t("signUp")}
+          </button>
+        </form>
+        <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
+          <button onClick={() => switchMode(mode === "in" ? "up" : "in")} className="font-semibold text-primary">
+            {mode === "in" ? c.noAccount : c.haveAccount}
+          </button>
+          {mode === "in" && <button onClick={forgot} className="text-muted-foreground">{p.t("forgot")}</button>}
+        </div>
+        <p className="my-5 text-center text-xs text-muted-foreground">{p.t("orWith")}</p>
+        <div className="space-y-2">
+          <button type="button" onClick={() => oauth("google")} className="w-full rounded-full border border-border py-2.5 text-sm font-semibold hover:bg-secondary">Google</button>
+          <button type="button" onClick={() => oauth("apple")} className="w-full rounded-full bg-foreground py-2.5 text-sm font-semibold text-background hover:opacity-90"> Apple</button>
+        </div>
+      </Card>
+    </div>
+  );
+}
