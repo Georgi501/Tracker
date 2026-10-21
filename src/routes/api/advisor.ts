@@ -73,22 +73,16 @@ export const Route = createFileRoute("/api/advisor")({
         let context: string;
         try { context = await portfolioContext(sb); } catch { return new Response("Portfolio unavailable", { status: 503 }); }
 
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return new Response("AI is not configured", { status: 500 });
-        const { createOpenAI } = await import("@ai-sdk/openai");
+        const { getOpenAIModel } = await import("@/lib/ai/openai.server");
+        const model = getOpenAIModel();
+        if (!model) return new Response("AI is not configured", { status: 500 });
         const { streamText } = await import("ai");
-        const { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId, withLovableAiGatewayRunIdHeader } = await import("@/lib/ai/run-id.server");
-        const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
-        const provider = createOpenAI({
-          baseURL: "https://ai.gateway.lovable.dev/v1", apiKey,
-          headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: runIdFetch.fetch,
-        });
         const result = streamText({
-          model: provider.responses("openai/gpt-6-astra"),
+          model,
           system: `${INSTRUCTIONS}\n\nPORTFOLIO DATA (JSON):\n${context}`,
           messages: await convertToModelMessages(messages),
           abortSignal: request.signal,
-          providerOptions: { openai: { forceReasoning: true, reasoningEffort: "medium", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
+          providerOptions: { openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false } },
         });
         const response = result.toUIMessageStreamResponse({
           originalMessages: messages, sendReasoning: true,
@@ -98,7 +92,7 @@ export const Route = createFileRoute("/api/advisor")({
             if (error) console.error("Failed to save assistant message", error);
           },
         });
-        return withLovableAiGatewayRunIdHeader(response, runIdFetch);
+        return response;
       },
     },
   },

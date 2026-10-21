@@ -52,15 +52,12 @@ export const Route = createFileRoute("/api/review")({
         });
         const facts = { asOf: new Date().toISOString().slice(0, 10), totalCostUsd: +totalCost.toFixed(2), transactions: txs.length, note: "weights are by cost basis; livePrice is in priceCurrency", positions: rows };
 
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return new Response("AI is not configured", { status: 500 });
-        const { createOpenAI } = await import("@ai-sdk/openai");
+        const { getOpenAIModel } = await import("@/lib/ai/openai.server");
+        const model = getOpenAIModel();
+        if (!model) return new Response("AI is not configured", { status: 500 });
         const { streamText } = await import("ai");
-        const { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId, withLovableAiGatewayRunIdHeader } = await import("@/lib/ai/run-id.server");
-        const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
-        const provider = createOpenAI({ baseURL: "https://ai.gateway.lovable.dev/v1", apiKey, headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: runIdFetch.fetch });
         const result = streamText({
-          model: provider.responses("openai/gpt-6-astra"),
+          model,
           system: `You review an investor's own portfolio. Use ONLY the JSON below; never invent prices, returns or forecasts. null means unavailable — say so. Write in ${LANG_NAMES[lang]}, concise markdown, sections:
 1. Snapshot (size, number of positions, largest weights)
 2. Concentration & diversification (by position, sector, region, asset type)
@@ -73,9 +70,9 @@ PORTFOLIO (JSON):
 ${JSON.stringify(facts)}`,
           prompt: "Review my portfolio.",
           abortSignal: request.signal,
-          providerOptions: { openai: { forceReasoning: true, reasoningEffort: "medium", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
+          providerOptions: { openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false } },
         });
-        return withLovableAiGatewayRunIdHeader(result.toTextStreamResponse(), runIdFetch);
+        return result.toTextStreamResponse();
       },
     },
   },

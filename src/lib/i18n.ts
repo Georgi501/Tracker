@@ -5,7 +5,7 @@ export const languageLocale = (lang: Lang) => languages.find((l) => l.code === l
 
 
 const en = {
-language: "Language", toggleTheme: "Toggle theme", close: "Close", continueLovable: "Continue with Lovable", passwordUpdated: "Password updated",
+language: "Language", toggleTheme: "Toggle theme", close: "Close", passwordUpdated: "Password updated",
   dashboard: "Dashboard", holdings: "Holdings", dividends: "Dividends",
   netWorth: "Net worth", totalPnl: "Total gain / loss", dayChange: "Today", ttwror: "TTWROR", irr: "IRR (p.a.)",
   invested: "Invested", performance: "Performance", allocation: "Allocation",
@@ -39,7 +39,7 @@ language: "Language", toggleTheme: "Toggle theme", close: "Close", continueLovab
 };
 type Dict = typeof en;
 const bg: Dict = {
-language: "Език", toggleTheme: "Смени темата", close: "Затвори", continueLovable: "Продължи с Lovable", passwordUpdated: "Паролата е обновена",
+language: "Език", toggleTheme: "Смени темата", close: "Затвори", passwordUpdated: "Паролата е обновена",
   dashboard: "Табло", holdings: "Позиции", dividends: "Дивиденти",
   netWorth: "Нетна стойност", totalPnl: "Обща печалба / загуба", dayChange: "Днес", ttwror: "TTWROR", irr: "IRR (год.)",
   invested: "Инвестирани", performance: "Представяне", allocation: "Разпределение",
@@ -179,7 +179,6 @@ const de: Dict = {
   "language": "Sprache",
   "toggleTheme": "Darstellung wechseln",
   "close": "Schließen",
-  "continueLovable": "Mit Lovable fortfahren",
   "passwordUpdated": "Passwort aktualisiert"
 };
 const es: Dict = {
@@ -290,7 +289,6 @@ const es: Dict = {
   "language": "Idioma",
   "toggleTheme": "Cambiar tema",
   "close": "Cerrar",
-  "continueLovable": "Continuar con Lovable",
   "passwordUpdated": "Contraseña actualizada"
 };
 const it: Dict = {
@@ -401,7 +399,6 @@ const it: Dict = {
   "language": "Lingua",
   "toggleTheme": "Cambia tema",
   "close": "Chiudi",
-  "continueLovable": "Continua con Lovable",
   "passwordUpdated": "Password aggiornata"
 };
 const labels: Record<string, Record<Lang, string>> = {

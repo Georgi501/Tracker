@@ -1,15 +1,11 @@
-<!-- LOVABLE:BEGIN -->
 > [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
+> GitHub sync status with Lovable has not been verified. Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
+> that are already pushed — rewriting published history can cause collaborator data loss.
 >
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+> Keep shared branches in a working state.
 
-- User portfolio rows are RLS-scoped in Cloud; only preferences persist locally. Transaction costs are stored in USD; display FX must come from the market provider, never fixed rates.
+- User portfolio rows are RLS-scoped in Supabase; only preferences persist locally. Transaction costs are stored in USD; display FX must come from the market provider, never fixed rates.
 - PortfolioProvider renders children only after mount, to avoid SSR hydration mismatches from locale/time-dependent output.
 - Signed-out visitors see an empty portfolio; signed-in users read/write their own rows (RLS by user_id). Broker limits remain enforced by the is_pro() database trigger.
 - Live quotes use shared server-only yahoo-finance2 chart metadata for stocks/ETFs and direct CoinGecko crypto data; missing quotes remain unavailable and are never replaced by transaction costs.

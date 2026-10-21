@@ -2,7 +2,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { usePortfolio } from "@/lib/store";
 import { authCopy, authErrorKey } from "@/lib/auth-i18n";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -76,14 +75,19 @@ export function AuthForm({ onSignedIn, redirectOnSignIn = false }: { onSignedIn?
         console.error("Unable to remember OAuth sign-up intent", error);
       }
     }
-    const r = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
-    if (r.error) {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (error) {
       if (mode === "up") {
         try { sessionStorage.removeItem("folio-oauth-signup-started"); } catch (error) {
           console.error("Unable to clear OAuth sign-up intent", error);
         }
       }
-      toast.error(r.error.message);
+      toast.error(error instanceof Error ? error.message : "Unable to start sign-in");
     }
   };
 

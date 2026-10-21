@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import "@lovable.dev/cloud-auth-js/styles.css";
 import { AuthForm } from "@/components/AuthForm";
 
 export const Route = createFileRoute("/auth")({

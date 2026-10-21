@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrokersRouteImport } from './routes/brokers'
@@ -17,6 +18,7 @@ import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendsRouteImport } from './routes/dividends'
+import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -36,6 +38,8 @@ import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiThesisRouteImport } from './routes/api/thesis'
 import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
 import { Route as CommunityUserIdRouteImport } from './routes/community.$userId'
+import { Route as ApiAccountDeleteRouteImport } from './routes/api/account/delete'
+import { Route as ApiAccountPortalRouteImport } from './routes/api/account/portal'
 import { Route as ApiPublicAnalyticsRouteImport } from './routes/api/public/analytics'
 import { Route as ApiReferralsClaimRouteImport } from './routes/api/referrals/claim'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -43,6 +47,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -78,6 +87,11 @@ const DisclaimerRoute = DisclaimerRouteImport.update({
 const DividendsRoute = DividendsRouteImport.update({
   id: '/dividends',
   path: '/dividends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HoldingsRoute = HoldingsRouteImport.update({
@@ -175,6 +189,16 @@ const CommunityUserIdRoute = CommunityUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => CommunityRoute,
 } as any)
+const ApiAccountDeleteRoute = ApiAccountDeleteRouteImport.update({
+  id: '/api/account/delete',
+  path: '/api/account/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountPortalRoute = ApiAccountPortalRouteImport.update({
+  id: '/api/account/portal',
+  path: '/api/account/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAnalyticsRoute = ApiPublicAnalyticsRouteImport.update({
   id: '/api/public/analytics',
   path: '/api/public/analytics',
@@ -194,6 +218,7 @@ const ApiPublicPaymentsWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -201,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -220,12 +246,15 @@ export interface FileRoutesByFullPath {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
+  '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -233,6 +262,7 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -252,6 +282,8 @@ export interface FileRoutesByTo {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor': typeof AdvisorIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
+  '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -259,6 +291,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -266,6 +299,7 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -285,6 +319,8 @@ export interface FileRoutesById {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
+  '/api/account/delete': typeof ApiAccountDeleteRoute
+  '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -293,6 +329,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -300,6 +337,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/disclaimer'
     | '/dividends'
+    | '/features'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -319,12 +357,15 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor/'
+    | '/api/account/delete'
+    | '/api/account/portal'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -332,6 +373,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/disclaimer'
     | '/dividends'
+    | '/features'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -351,12 +393,15 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor'
+    | '/api/account/delete'
+    | '/api/account/portal'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -364,6 +409,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/disclaimer'
     | '/dividends'
+    | '/features'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -383,6 +429,8 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor/'
+    | '/api/account/delete'
+    | '/api/account/portal'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
@@ -390,6 +438,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   BrokersRoute: typeof BrokersRoute
@@ -397,6 +446,7 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   DisclaimerRoute: typeof DisclaimerRoute
   DividendsRoute: typeof DividendsRoute
+  FeaturesRoute: typeof FeaturesRoute
   HoldingsRoute: typeof HoldingsRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
@@ -415,6 +465,8 @@ export interface RootRouteChildren {
   ApiThesisRoute: typeof ApiThesisRoute
   AssetSymbolRoute: typeof AssetSymbolRoute
   AdvisorIndexRoute: typeof AdvisorIndexRoute
+  ApiAccountDeleteRoute: typeof ApiAccountDeleteRoute
+  ApiAccountPortalRoute: typeof ApiAccountPortalRoute
   ApiPublicAnalyticsRoute: typeof ApiPublicAnalyticsRoute
   ApiReferralsClaimRoute: typeof ApiReferralsClaimRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -427,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -476,6 +535,13 @@ declare module '@tanstack/react-router' {
       path: '/dividends'
       fullPath: '/dividends'
       preLoaderRoute: typeof DividendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/holdings': {
@@ -611,6 +677,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunityUserIdRouteImport
       parentRoute: typeof CommunityRoute
     }
+    '/api/account/delete': {
+      id: '/api/account/delete'
+      path: '/api/account/delete'
+      fullPath: '/api/account/delete'
+      preLoaderRoute: typeof ApiAccountDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/account/portal': {
+      id: '/api/account/portal'
+      path: '/api/account/portal'
+      fullPath: '/api/account/portal'
+      preLoaderRoute: typeof ApiAccountPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/analytics': {
       id: '/api/public/analytics'
       path: '/api/public/analytics'
@@ -649,6 +729,7 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   BrokersRoute: BrokersRoute,
@@ -656,6 +737,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   DisclaimerRoute: DisclaimerRoute,
   DividendsRoute: DividendsRoute,
+  FeaturesRoute: FeaturesRoute,
   HoldingsRoute: HoldingsRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,
@@ -674,6 +756,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiThesisRoute: ApiThesisRoute,
   AssetSymbolRoute: AssetSymbolRoute,
   AdvisorIndexRoute: AdvisorIndexRoute,
+  ApiAccountDeleteRoute: ApiAccountDeleteRoute,
+  ApiAccountPortalRoute: ApiAccountPortalRoute,
   ApiPublicAnalyticsRoute: ApiPublicAnalyticsRoute,
   ApiReferralsClaimRoute: ApiReferralsClaimRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

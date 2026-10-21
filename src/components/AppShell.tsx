@@ -179,6 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <p className="mt-0.5 text-xs text-muted-foreground">{p.isPro ? "Pro" : (p.lang === "bg" ? "Безплатен план" : "Free plan")}</p>
                   </div>
                   {!p.isPro && <DropdownMenuItem asChild><Link to="/pricing" className="font-semibold text-primary"><Crown size={14} />{p.lang === "bg" ? "Надгради до Pro" : "Upgrade to Pro"}</Link></DropdownMenuItem>}
+                  <DropdownMenuItem asChild><Link to="/account"><Settings2 size={14} />{p.lang === "bg" ? "Профил и плащания" : "Account & billing"}</Link></DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild><Link to="/profile"><UserRound size={14} />{p.lang === "bg" ? "Моят профил" : "My profile"}</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/brokers"><Landmark size={14} />{p.t("brokers")}</Link></DropdownMenuItem>
@@ -220,6 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li><Link to="/pricing">{p.t("pricing")}</Link></li>
               <li><Link to="/compare">{legalCopy(p.lang).footer.compare}</Link></li>
               <li><Link to="/markets">{marketCopy[p.lang].markets}</Link></li>
+              <li><Link to="/features">{p.lang === "bg" ? "Функции" : "Features"}</Link></li>
             </ul>
           </div>
           <div>
