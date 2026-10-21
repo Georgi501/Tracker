@@ -12,11 +12,11 @@ import { marketDetails, type ChartRange } from "@/lib/market.functions";
 const POPULAR = ["AAPL", "MSFT", "NVDA", "META", "AMZN", "GOOGL", "TSLA", "BTC"];
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y"];
 const T = {
-  bg: { title: "Компании, които следиш", popular: "Популярни компании", gain: "Ръст", loss: "Спад", all: "Watchlist →", none: "Няма данни" },
-  en: { title: "Companies you follow", popular: "Popular companies", gain: "Gainers", loss: "Losers", all: "Watchlist →", none: "No data" },
-  de: { title: "Beobachtete Unternehmen", popular: "Beliebte Unternehmen", gain: "Gewinner", loss: "Verlierer", all: "Watchlist →", none: "Keine Daten" },
-  es: { title: "Empresas que sigues", popular: "Empresas populares", gain: "Subidas", loss: "Caídas", all: "Watchlist →", none: "Sin datos" },
-  it: { title: "Aziende che segui", popular: "Aziende popolari", gain: "Rialzi", loss: "Ribassi", all: "Watchlist →", none: "Nessun dato" },
+  bg: { title: "Компании, които следиш", popular: "Популярни компании", gain: "Ръст", loss: "Най-слаби", all: "Watchlist →", none: "Няма данни" },
+  en: { title: "Companies you follow", popular: "Popular companies", gain: "Gainers", loss: "Weakest", all: "Watchlist →", none: "No data" },
+  de: { title: "Beobachtete Unternehmen", popular: "Beliebte Unternehmen", gain: "Gewinner", loss: "Schwächste", all: "Watchlist →", none: "Keine Daten" },
+  es: { title: "Empresas que sigues", popular: "Empresas populares", gain: "Subidas", loss: "Más débiles", all: "Watchlist →", none: "Sin datos" },
+  it: { title: "Aziende che segui", popular: "Aziende popolari", gain: "Rialzi", loss: "Più deboli", all: "Watchlist →", none: "Nessun dato" },
 } as const;
 
 const assetOf = (s: string) => MARKET_ASSETS.find((a) => a.symbol.toUpperCase() === s) ?? { symbol: s, name: s, type: "stock" as const };
@@ -47,7 +47,7 @@ export function DashboardMovers() {
   });
   const ranked = rows.filter((r) => r.ret != null).sort((x, y) => y.ret! - x.ret!);
   const gainers = ranked.filter((r) => r.ret! > 0).slice(0, 3);
-  const losers = ranked.filter((r) => r.ret! < 0).reverse().slice(0, 3);
+  const weakest = ranked.slice(-3).reverse();
   const fmt = (n: number, cur?: string) => { try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD", maximumFractionDigits: 2 }).format(n); } catch { return n.toFixed(2); } };
 
   const Mover = ({ r, up }: { r: (typeof rows)[number]; up: boolean }) => (
@@ -56,6 +56,25 @@ export function DashboardMovers() {
       <span className="flex-1 truncate text-sm font-semibold">{r.a.symbol.replace(/\..*$/, "")}</span>
       <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>{up ? "+" : ""}{r.ret!.toFixed(2)}%</span>
     </li>
+  );
+
+  const tickerCard = (r: (typeof rows)[number], copy = false) => (
+    <Link key={r.a.symbol} to="/asset/$symbol" params={{ symbol: r.a.symbol }}
+      tabIndex={copy ? -1 : undefined}
+      className="market-ticker-item card-interactive press w-40 shrink-0 rounded-2xl border border-border bg-card p-3">
+      <div className="flex items-center gap-2">
+        <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={32} />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold">{r.a.symbol.replace(/\..*$/, "")}</p>
+          <p className="truncate text-[0.7rem] text-muted-foreground">{r.a.name}</p>
+        </div>
+      </div>
+      <div className="mt-2"><Spark v={r.closes} /></div>
+      <div className="mt-1 flex items-baseline justify-between gap-1">
+        <span className="truncate text-sm font-semibold">{r.closes.length ? fmt(r.closes.at(-1)!, r.cur) : r.loading ? "…" : "—"}</span>
+        {r.ret != null && <span className={`text-xs font-bold ${r.ret >= 0 ? "text-success" : "text-destructive"}`}>{r.ret >= 0 ? "+" : ""}{r.ret.toFixed(2)}%</span>}
+      </div>
+    </Link>
   );
 
   return (
@@ -68,30 +87,22 @@ export function DashboardMovers() {
           <Link to="/watchlist" className="ml-2 text-sm font-semibold text-primary">{c.all}</Link>
         </div>
       </div>
-      <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
-        {rows.map((r) => (
-          <Link key={r.a.symbol} to="/asset/$symbol" params={{ symbol: r.a.symbol }}
-            className="card-interactive press w-40 shrink-0 snap-start rounded-2xl border border-border bg-card p-3">
-            <div className="flex items-center gap-2">
-              <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={32} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold">{r.a.symbol.replace(/\..*$/, "")}</p>
-                <p className="truncate text-[0.7rem] text-muted-foreground">{r.a.name}</p>
+      <div className={`-mx-1 px-1 pb-2 ${list.length ? "flex snap-x gap-3 overflow-x-auto" : "market-ticker"}`}>
+        {list.length ? rows.map((r) => tickerCard(r)) : (
+          <div className="market-ticker-track">
+            {[true, false].map((copy) => (
+              <div key={String(copy)} className="market-ticker-group" aria-hidden={copy || undefined} inert={copy || undefined}>
+                {rows.map((r) => tickerCard(r, copy))}
               </div>
-            </div>
-            <div className="mt-2"><Spark v={r.closes} /></div>
-            <div className="mt-1 flex items-baseline justify-between gap-1">
-              <span className="truncate text-sm font-semibold">{r.closes.length ? fmt(r.closes.at(-1)!, r.cur) : r.loading ? "…" : "—"}</span>
-              {r.ret != null && <span className={`text-xs font-bold ${r.ret >= 0 ? "text-success" : "text-destructive"}`}>{r.ret >= 0 ? "+" : ""}{r.ret.toFixed(2)}%</span>}
-            </div>
-          </Link>
-        ))}
+            ))}
+          </div>
+        )}
       </div>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <div><p className="text-xs font-semibold uppercase text-success">▲ {c.gain}</p>
           {gainers.length ? <ul>{gainers.map((r) => <Mover key={r.a.symbol} r={r} up />)}</ul> : <p className="py-2 text-xs text-muted-foreground">{c.none}</p>}</div>
-        <div><p className="text-xs font-semibold uppercase text-destructive">▼ {c.loss}</p>
-          {losers.length ? <ul>{losers.map((r) => <Mover key={r.a.symbol} r={r} up={false} />)}</ul> : <p className="py-2 text-xs text-muted-foreground">{c.none}</p>}</div>
+        <div><p className={`text-xs font-semibold uppercase ${weakest.some((r) => r.ret! < 0) ? "text-destructive" : "text-muted-foreground"}`}>▼ {c.loss}</p>
+          {weakest.length ? <ul>{weakest.map((r) => <Mover key={r.a.symbol} r={r} up={r.ret! >= 0} />)}</ul> : <p className="py-2 text-xs text-muted-foreground">{c.none}</p>}</div>
       </div>
     </Card>
   );

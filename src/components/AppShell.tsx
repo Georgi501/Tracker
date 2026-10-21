@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="topband px-4 py-1.5 text-center text-xs">{paymentsCopy[p.lang].testBanner}</div>
       )}
       <header className="header-as sticky top-0 z-30">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 lg:gap-4">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <span aria-hidden className="logo-mark grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">f</span>
             <span className="hidden font-display text-base font-bold uppercase tracking-[0.2em] sm:inline">folio</span>

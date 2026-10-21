@@ -65,7 +65,7 @@ function Pricing() {
         ))}
       </div>
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <Card className="p-7">
+        <Card className="hover-lift-card p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("free")}</h2>
           <p className="font-display my-3 text-4xl font-bold">€0</p>
           <ul className="space-y-2"><Feature>{p.t("freeF1")}</Feature><Feature>{p.t("freeF2")}</Feature><Feature>{p.t("freeF3")}</Feature></ul>
@@ -77,7 +77,7 @@ function Pricing() {
             )}
           </div>
         </Card>
-        <Card className="border-primary p-7">
+        <Card className="hover-lift-card border-primary p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("pro")}</h2>
           <p className="font-display my-3 text-4xl font-bold">
             {yearly ? "€49.99" : "€4.99"}<span className="text-base font-medium text-muted-foreground"> {yearly ? p.t("perYear") : p.t("perMonth")}</span>

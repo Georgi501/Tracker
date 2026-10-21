@@ -21,11 +21,11 @@ export function HeaderSearch() {
   useEffect(() => { if (loc.pathname !== "/markets") setValue(""); }, [loc.pathname]);
   const go = (q: string) => navigate({ to: "/markets", search: { q: q || undefined }, replace: loc.pathname === "/markets" });
   return (
-    <form role="search" onSubmit={(e) => { e.preventDefault(); go(value.trim()); }} className="relative w-full">
-      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <form role="search" onSubmit={(e) => { e.preventDefault(); go(value.trim()); }} className="header-search-frame rotating-border-frame relative h-9 w-full rounded-full border border-border bg-secondary">
+      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 z-20 -translate-y-1/2 text-muted-foreground" />
       <input aria-label={PLACEHOLDER[p.lang]} placeholder={PLACEHOLDER[p.lang]} maxLength={60} autoComplete="off" value={value}
         onChange={(e) => { setValue(e.target.value); go(e.target.value); }}
-        className="h-9 w-full rounded-full border border-border bg-secondary pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-background" />
+        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground" />
     </form>
   );
 }

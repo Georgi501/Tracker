@@ -42,6 +42,7 @@ const PERIODS: HistoryPeriod[] = ["1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"];
 function Dashboard() {
   const p = usePortfolio();
   const [period, setPeriod] = useState<HistoryPeriod>("1Y");
+  const [chartMode, setChartMode] = useState<"value" | "performance">("value");
   const [benchmark, setBenchmark] = useState<BenchmarkSymbol | "none">("none");
   const [benchmarkLoaded, setBenchmarkLoaded] = useState(false);
   useEffect(() => {
@@ -70,6 +71,19 @@ function Dashboard() {
     enabled: benchmark !== "none" && !!first && !!last, staleTime: 300000 });
   const comparison = indexHistory.data?.index ? benchmarkSeries(series, indexHistory.data.index.prices, indexHistory.data.index.currency, p.currency, indexHistory.data.eur, indexHistory.data.gbp) : [];
   const comparisonLast = comparison.at(-1);
+  const performanceSeries: { t: number; v: number }[] = [];
+  if (series.length > 1 && historyReturn(series) !== null) {
+    let growth = 1;
+    series.forEach((point, index) => {
+      const prior = series[index - 1];
+      if (prior) growth *= (point.v - point.flow) / prior.v;
+      performanceSeries.push({ t: point.t, v: (growth - 1) * 100 });
+    });
+  }
+  const performanceChart = performanceSeries.map((point, index) => ({
+    ...point,
+    benchmark: comparison[index]?.benchmark,
+  }));
   const indexName = BENCHMARKS.find((b) => b.symbol === benchmark)?.name ?? "";
   const tw = historyReturn(series) ?? Number.NaN;
   const irrV = p.holdings.length && Number.isFinite(total) ? portfolioIrr(p.transactions, total) : Number.NaN;
@@ -79,25 +93,29 @@ function Dashboard() {
     new Date(t).toLocaleString(locale, ["1Y", "3Y", "5Y", "ALL"].includes(period) ? { month: "short", year: "2-digit" } : { day: "numeric", month: "short" });
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div className="dashboard-grid grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
       <div className="lg:col-span-3"><WelcomeHero /></div>
-      <PortfolioHealth />
-      <WeeklyDigest />
-      <Card className="lg:col-span-2">
-        <p className="text-sm text-muted-foreground">{p.t("netWorth")}</p>
-        <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">{p.user ? p.money(total) : "—"}</h1>
+      <Card className="dashboard-primary-card min-w-0 p-4 sm:p-5 lg:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{p.t("netWorth")}</p>
+          <div role="group" aria-label={p.t("performance")} className="rotating-border-frame relative flex rounded-lg border border-border bg-background/50 p-0.5">
+            <Button size="sm" variant={chartMode === "value" ? "secondary" : "ghost"} aria-pressed={chartMode === "value"} onClick={() => setChartMode("value")}>{p.t("netWorth")}</Button>
+            <Button size="sm" variant={chartMode === "performance" ? "secondary" : "ghost"} aria-pressed={chartMode === "performance"} onClick={() => setChartMode("performance")}>{p.t("performance")}</Button>
+          </div>
+        </div>
+        <h1 className="font-display mt-1 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-4xl md:text-5xl">{p.user ? p.money(total) : "—"}</h1>
         <p className="mt-1 text-sm font-semibold">
           <Delta value={chg}>{Number.isFinite(chg) ? new Intl.NumberFormat(languageLocale(p.lang), { style: "currency", currency: p.currency, signDisplay: "exceptZero" }).format(chg) : "—"} ({pct(tw)})</Delta>{" "}
           <span className="font-normal text-muted-foreground">{p.t("perPeriod")}</span>
         </p>
-        <div className="mt-4 h-64">
-          {benchmark !== "none" ? !comparison.length ? <p role="status" className="py-8 text-sm text-muted-foreground">{history.isFetching || indexHistory.isFetching ? "…" : c.unavailable}</p> : <ResponsiveContainer>
-            <LineChart data={comparison}>
+        <div className="relative mt-2 h-32 sm:h-36 md:h-40">
+          {chartMode === "performance" ? !performanceSeries.length ? <p className="py-8 text-sm text-muted-foreground">{history.isFetching ? "…" : p.t("noPeriodData")}</p> : <ResponsiveContainer>
+            <LineChart data={performanceChart} margin={{ top: comparison.length ? 34 : 0 }}>
               <XAxis dataKey="t" tickFormatter={fmtT} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={40} />
-              <YAxis tickFormatter={(v: number) => `${v.toFixed(1)}%`} width={55} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v: number) => `${v.toFixed(1)}%`} width={42} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} />
               <Tooltip labelFormatter={(t) => fmtT(t as number)} formatter={(v: number) => pct(v)} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
-              <Line type="linear" dataKey="portfolio" name={c.portfolio} stroke="var(--primary)" strokeWidth={2.5} dot={false} isAnimationActive={false} />
-              <Line type="linear" dataKey="benchmark" name={indexName} stroke="var(--chart-2)" strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line type="linear" dataKey="v" name={c.portfolio} stroke="var(--primary)" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+              {comparison.length > 0 && <Line type="linear" dataKey="benchmark" name={indexName} stroke="var(--chart-2)" strokeWidth={2} dot={false} isAnimationActive={false} />}
             </LineChart>
           </ResponsiveContainer> : !series.length ? <p className="py-8 text-sm text-muted-foreground">{history.isFetching ? "…" : p.t("noPeriodData")}</p> : <ResponsiveContainer>
             <AreaChart data={series.map((d) => ({ t: d.t, v: d.v }))}>
@@ -115,9 +133,20 @@ function Dashboard() {
               <Area type="monotone" dataKey="v" stroke="var(--primary)" strokeWidth={2.5} fill="url(#g)" />
             </AreaChart>
           </ResponsiveContainer>}
+          {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
+            <div className="absolute left-11 right-0 top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] leading-tight sm:gap-x-4 sm:text-xs">
+              <span className="flex items-center gap-1.5"><span className="size-1.5 shrink-0 rounded-full bg-primary" />{c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b></span>
+              <span className="flex items-center gap-1.5"><span className="size-1.5 shrink-0 rounded-full bg-chart-2" />{indexName}: <b>{comparisonLast ? pct(comparisonLast.benchmark) : "—"}</b></span>
+              <span className="hidden text-muted-foreground sm:inline">{c.difference}: <b>{comparisonLast ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}` : "—"}</b></span>
+              <span className="basis-full truncate text-[9px] text-muted-foreground" title={c.priceReturn}>{c.priceReturn}</span>
+            </div>
+          )}
+          {benchmark !== "none" && chartMode === "performance" && performanceSeries.length > 0 && !comparison.length && (
+            <p role="status" className="absolute left-11 top-2 z-10 text-xs text-muted-foreground">{indexHistory.isFetching ? "…" : c.unavailable}</p>
+          )}
         </div>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
           {PERIODS.map((x) => (
             <Button key={x} size="sm" variant={period === x ? "default" : "secondary"} aria-pressed={period === x} onClick={() => setPeriod(x)}>
               {x}
@@ -127,32 +156,26 @@ function Dashboard() {
           <label className="grid gap-1 text-xs text-muted-foreground">
             {c.compare}
             <Select value={benchmark} onValueChange={(value) => { if (value === "none" || BENCHMARKS.some((b) => b.symbol === value)) setBenchmark(value as BenchmarkSymbol | "none"); }}>
-              <SelectTrigger aria-label={c.compare} className="w-52 text-foreground"><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label={c.compare} className="w-full text-foreground sm:w-52"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="none">{c.none}</SelectItem>{BENCHMARKS.map((b) => <SelectItem key={b.symbol} value={b.symbol}>{b.name}</SelectItem>)}</SelectContent>
             </Select>
           </label>
         </div>
-        {benchmark !== "none" && <div className="mt-4">
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-live="polite">
-            <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-primary" />{c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b></span>
-            <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-chart-2" />{indexName}: <b>{comparisonLast ? pct(comparisonLast.benchmark) : "—"}</b></span>
-            <span>{c.difference}: <b>{comparisonLast ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}` : "—"}</b></span>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">{c.priceReturn}</p>
-        </div>}
       </Card>
-      <div className="grid gap-5">
+      <div className="dashboard-metrics grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5">
         <Metric label={p.t("totalPnl")} value={p.user ? p.money(pnl, { sign: true }) : "—"} sub={pct((pnl / cost) * 100)} n={pnl} />
         <Metric label={p.t("dayChange")} value={p.user ? p.money(day, { sign: true }) : "—"} sub={pct((day / (total - day)) * 100)} n={day} />
-        <div className="grid grid-cols-2 gap-5">
+        <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
           <Metric label={`${p.t("ttwror")} · ${period}`} value={pct(tw)} n={tw} />
           <Metric label={p.t("irr")} value={pct(irrV)} n={irrV} />
         </div>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
           <Metric label={p.t("invested")} value={p.user ? p.money(cost) : "—"} />
           <Metric label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"} value={p.user ? p.money(realized, { sign: true }) : "—"} n={realized} />
         </div>
       </div>
+      <PortfolioHealth />
+      <WeeklyDigest />
       <DashboardMovers />
       <AllocationCard />
       <Card className="lg:col-span-2">
@@ -182,12 +205,12 @@ function Dashboard() {
 
 function Metric({ label, value, sub, n }: { label: string; value: string; sub?: string; n?: number }) {
   return (
-    <Card className="p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-display mt-1 text-xl font-semibold">
+    <Card className="dashboard-metric min-w-0 p-2.5">
+      <p className="text-[10px] font-semibold uppercase leading-snug tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</p>
+      <p className="font-display mt-0.5 break-words text-sm font-semibold tracking-tight tabular-nums sm:text-lg">
         {n === undefined ? value : <Delta value={n}>{value}</Delta>}
       </p>
-      {sub && <p className="text-xs font-semibold">{n !== undefined ? <Delta value={n}>{sub}</Delta> : sub}</p>}
+      {sub && <p className="mt-0.5 text-xs font-semibold tabular-nums">{n !== undefined ? <Delta value={n}>{sub}</Delta> : sub}</p>}
     </Card>
   );
 }

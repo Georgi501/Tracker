@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 export const getBenchmarkHistory = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ symbol: z.enum(["^GSPC", "^IXIC", "^STOXX50E", "^FTSE"]), start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input))
+  .inputValidator((input) => z.object({ symbol: z.enum(["^GSPC", "^NDX", "URTH", "^DJI"]), start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input))
   .handler(async ({ data }) => {
     if (data.start > data.end || Date.parse(data.start) < Date.UTC(1970, 0, 1) || data.end > new Date().toISOString().slice(0, 10)) throw new Error("Invalid history dates");
     try {

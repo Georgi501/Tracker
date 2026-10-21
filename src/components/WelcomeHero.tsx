@@ -25,22 +25,22 @@ export function WelcomeHero() {
   const name = p.displayName.trim() || (meta?.["display_name"] as string | undefined) || (meta?.["full_name"] as string | undefined) || (meta?.["name"] as string | undefined) || undefined;
 
   if (!p.user) return (
-    <section className="rise rounded-3xl border border-border bg-card p-6 md:p-10">
-      <h1 className="font-display text-3xl font-bold tracking-tight md:text-5xl">{c.guestTitle}</h1>
-      <p className="mt-3 max-w-xl text-muted-foreground">{c.guestSub}</p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Link to="/auth" className="press inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 font-semibold text-primary-foreground">{c.signUp}<ArrowRight className="size-4" /></Link>
-        <Link to="/markets" className={chip}><Search className="size-4" />{c.explore}</Link>
+    <section className="rise hover-lift-card rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7">
+      <h1 className="font-display max-w-4xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl">{c.guestTitle}</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{c.guestSub}</p>
+      <div className="mt-4 flex flex-wrap gap-2.5">
+        <Link to="/auth" className="press inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20">{c.signUp}<ArrowRight className="size-4" /></Link>
+        <Link to="/markets" className={`${chip} min-h-10 px-4`}><Search className="size-4" />{c.explore}</Link>
       </div>
     </section>
   );
 
   if (!p.holdings.length) return (
-    <section className="rise rounded-3xl border border-border bg-card p-6 md:p-8">
+    <section className="rise rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7">
       <p className="text-sm text-muted-foreground">{greet}{name ? `, ${name}` : ""}</p>
-      <h1 className="font-display text-2xl font-bold md:text-4xl">{c.emptyTitle}</h1>
-      <p className="mt-2 text-muted-foreground">{c.emptySub}</p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <h1 className="font-display mt-1 text-balance text-2xl font-bold leading-tight md:text-4xl">{c.emptyTitle}</h1>
+      <p className="mt-2 leading-relaxed text-muted-foreground">{c.emptySub}</p>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
         {[{ to: "/brokers", icon: Upload, t: c.s1 }, { to: "/holdings", icon: PlusCircle, t: c.s2 }, { to: "/watchlist", icon: Eye, t: c.s3 }].map((s, i) => (
           <Link key={s.to} to={s.to} className="card-interactive press flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-4">
             <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{i + 1}</span>

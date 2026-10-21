@@ -2,9 +2,9 @@ import { closeAt, currencyRate, type DailyPrice, type PortfolioPoint } from "./h
 import type { Currency } from "./portfolio";
 export const BENCHMARKS = [
   { symbol: "^GSPC", name: "S&P 500" },
-  { symbol: "^IXIC", name: "NASDAQ Composite" },
-  { symbol: "^STOXX50E", name: "EURO STOXX 50" },
-  { symbol: "^FTSE", name: "FTSE 100" },
+  { symbol: "^NDX", name: "NASDAQ 100" },
+  { symbol: "URTH", name: "MSCI World (ETF)" },
+  { symbol: "^DJI", name: "Dow Jones 30" },
 ] as const;
 export type BenchmarkSymbol = typeof BENCHMARKS[number]["symbol"];
 export function savedBenchmark(value: unknown): BenchmarkSymbol | "none" {
