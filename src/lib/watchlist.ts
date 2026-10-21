@@ -31,3 +31,17 @@ export const readWatchlist = () => parseWatchlist(localStorage.getItem(WATCH_KEY
 export const readAlerts = () => parseAlerts(localStorage.getItem(ALERTS_KEY));
 export function writeWatchlist(list: string[]) { localStorage.setItem(WATCH_KEY, JSON.stringify(list)); window.dispatchEvent(new Event("folio-watch")); }
 export function writeAlerts(list: PriceAlert[]) { localStorage.setItem(ALERTS_KEY, JSON.stringify(list)); window.dispatchEvent(new Event("folio-watch")); }
+
+/** Personal buy targets (ticker -> price in the asset's quote currency); local preference only. */
+export const TARGETS_KEY = "folio-buy-targets";
+export function parseTargets(raw: string | null): Record<string, number> {
+  try {
+    const v: unknown = JSON.parse(raw ?? "{}");
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    return Object.fromEntries(Object.entries(v as Record<string, unknown>).filter(([k, n]) => SYMBOL_RE.test(k) && typeof n === "number" && Number.isFinite(n) && n > 0)) as Record<string, number>;
+  } catch { return {}; }
+}
+export const readTargets = () => parseTargets(localStorage.getItem(TARGETS_KEY));
+export function writeTargets(t: Record<string, number>) { localStorage.setItem(TARGETS_KEY, JSON.stringify(t)); window.dispatchEvent(new Event("folio-watch")); }
+/** True only when a real price is at or below the user's buy target. */
+export const inBuyZone = (price: number | null | undefined, target: number | undefined) => price != null && price > 0 && target != null && price <= target;

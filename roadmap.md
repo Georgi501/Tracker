@@ -36,3 +36,21 @@
 - [x] Downloadable FIFO tax report (Excel/CSV)
 - [x] Price alerts checked against live quotes while the app is open
 - [x] Header search bar under nav (news/tickers/companies) + Yahoo key stats when opening a company (no bid/ask/volume)
+- [x] Profiles with photo/bio, member directory, user-to-user chat
+- [x] Opt-in portfolio showcase on public profiles (percentages only)
+- [x] Community, profiles sharing and chat are Pro-only
+- [x] Redesign top header (no base currency at start)
+- [x] Company overview (profile) + latest news under charts when opening an asset
+- [x] Pro AI thesis check: ticker + thesis → company summary and verification questions
+- [x] Position detail page with stats, history, journal and company overview
+- [x] Portfolio timeline page
+- [x] Investing journal (per account) with review reminders
+- [x] Pro shareable snapshot (percentages only)
+- [ ] ETF look-through (country/sector/holdings overlap) — needs a reliable ETF holdings data source
+- [x] Header in AlphaSpread navy-charcoal with modern hover/active interactions
+- [ ] Legal pages (Terms, Privacy, Refund 30 days, Disclaimer) + footer with support email — blocked on Georgi: support email + final site name
+- [x] Dark footer + Terms, Privacy, Refund (30 days), Financial Disclaimer pages
+- [x] Pro head-to-head asset comparison (/compare)
+- [ ] Support email in footer/legal pages — waiting for Georgi (remind him)
+- [ ] Final brand name — waiting for Georgi
+- [ ] One-click sample portfolio — skipped: conflicts with real-data-only rule

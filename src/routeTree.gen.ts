@@ -13,15 +13,29 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrokersRouteImport } from './routes/brokers'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as MarketsRouteImport } from './routes/markets'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RefundRouteImport } from './routes/refund'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
 import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
+import { Route as ApiReviewRouteImport } from './routes/api/review'
+import { Route as ApiThesisRouteImport } from './routes/api/thesis'
+import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
+import { Route as CommunityUserIdRouteImport } from './routes/community.$userId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -44,6 +58,21 @@ const BrokersRoute = BrokersRouteImport.update({
   path: '/brokers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DividendsRoute = DividendsRouteImport.update({
   id: '/dividends',
   path: '/dividends',
@@ -59,9 +88,29 @@ const MarketsRoute = MarketsRouteImport.update({
   path: '/markets',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -69,9 +118,24 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimelineRoute = TimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchlistRoute = WatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdvisorIndexRoute = AdvisorIndexRouteImport.update({
@@ -89,6 +153,26 @@ const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
   path: '/api/advisor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReviewRoute = ApiReviewRouteImport.update({
+  id: '/api/review',
+  path: '/api/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiThesisRoute = ApiThesisRouteImport.update({
+  id: '/api/thesis',
+  path: '/api/thesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssetSymbolRoute = AssetSymbolRouteImport.update({
+  id: '/asset/$symbol',
+  path: '/asset/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityUserIdRoute = CommunityUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => CommunityRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -101,14 +185,28 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
+  '/community': typeof CommunityRouteWithChildren
+  '/compare': typeof CompareRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
+  '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/review': typeof ApiReviewRoute
+  '/api/thesis': typeof ApiThesisRoute
+  '/asset/$symbol': typeof AssetSymbolRoute
+  '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -117,14 +215,28 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
+  '/community': typeof CommunityRouteWithChildren
+  '/compare': typeof CompareRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
+  '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/review': typeof ApiReviewRoute
+  '/api/thesis': typeof ApiThesisRoute
+  '/asset/$symbol': typeof AssetSymbolRoute
+  '/community/$userId': typeof CommunityUserIdRoute
   '/advisor': typeof AdvisorIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -134,14 +246,28 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
+  '/community': typeof CommunityRouteWithChildren
+  '/compare': typeof CompareRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
+  '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/review': typeof ApiReviewRoute
+  '/api/thesis': typeof ApiThesisRoute
+  '/asset/$symbol': typeof AssetSymbolRoute
+  '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -152,14 +278,28 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/auth'
     | '/brokers'
+    | '/community'
+    | '/compare'
+    | '/disclaimer'
     | '/dividends'
     | '/holdings'
     | '/markets'
+    | '/messages'
     | '/pricing'
+    | '/privacy'
+    | '/profile'
+    | '/refund'
     | '/reset-password'
+    | '/terms'
+    | '/timeline'
     | '/tools'
+    | '/watchlist'
     | '/advisor/$threadId'
     | '/api/advisor'
+    | '/api/review'
+    | '/api/thesis'
+    | '/asset/$symbol'
+    | '/community/$userId'
     | '/advisor/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -168,14 +308,28 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/auth'
     | '/brokers'
+    | '/community'
+    | '/compare'
+    | '/disclaimer'
     | '/dividends'
     | '/holdings'
     | '/markets'
+    | '/messages'
     | '/pricing'
+    | '/privacy'
+    | '/profile'
+    | '/refund'
     | '/reset-password'
+    | '/terms'
+    | '/timeline'
     | '/tools'
+    | '/watchlist'
     | '/advisor/$threadId'
     | '/api/advisor'
+    | '/api/review'
+    | '/api/thesis'
+    | '/asset/$symbol'
+    | '/community/$userId'
     | '/advisor'
     | '/api/public/payments/webhook'
   id:
@@ -184,14 +338,28 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/auth'
     | '/brokers'
+    | '/community'
+    | '/compare'
+    | '/disclaimer'
     | '/dividends'
     | '/holdings'
     | '/markets'
+    | '/messages'
     | '/pricing'
+    | '/privacy'
+    | '/profile'
+    | '/refund'
     | '/reset-password'
+    | '/terms'
+    | '/timeline'
     | '/tools'
+    | '/watchlist'
     | '/advisor/$threadId'
     | '/api/advisor'
+    | '/api/review'
+    | '/api/thesis'
+    | '/asset/$symbol'
+    | '/community/$userId'
     | '/advisor/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -201,14 +369,27 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   BrokersRoute: typeof BrokersRoute
+  CommunityRoute: typeof CommunityRouteWithChildren
+  CompareRoute: typeof CompareRoute
+  DisclaimerRoute: typeof DisclaimerRoute
   DividendsRoute: typeof DividendsRoute
   HoldingsRoute: typeof HoldingsRoute
   MarketsRoute: typeof MarketsRoute
+  MessagesRoute: typeof MessagesRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  RefundRoute: typeof RefundRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
+  TimelineRoute: typeof TimelineRoute
   ToolsRoute: typeof ToolsRoute
+  WatchlistRoute: typeof WatchlistRoute
   AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
+  ApiReviewRoute: typeof ApiReviewRoute
+  ApiThesisRoute: typeof ApiThesisRoute
+  AssetSymbolRoute: typeof AssetSymbolRoute
   AdvisorIndexRoute: typeof AdvisorIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -243,6 +424,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrokersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dividends': {
       id: '/dividends'
       path: '/dividends'
@@ -264,11 +466,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -278,11 +508,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/timeline': {
+      id: '/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools': {
       id: '/tools'
       path: '/tools'
       fullPath: '/tools'
       preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watchlist': {
+      id: '/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof WatchlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/advisor/': {
@@ -306,6 +557,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/review': {
+      id: '/api/review'
+      path: '/api/review'
+      fullPath: '/api/review'
+      preLoaderRoute: typeof ApiReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/thesis': {
+      id: '/api/thesis'
+      path: '/api/thesis'
+      fullPath: '/api/thesis'
+      preLoaderRoute: typeof ApiThesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/asset/$symbol': {
+      id: '/asset/$symbol'
+      path: '/asset/$symbol'
+      fullPath: '/asset/$symbol'
+      preLoaderRoute: typeof AssetSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/$userId': {
+      id: '/community/$userId'
+      path: '/$userId'
+      fullPath: '/community/$userId'
+      preLoaderRoute: typeof CommunityUserIdRouteImport
+      parentRoute: typeof CommunityRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -316,19 +595,44 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CommunityRouteChildren {
+  CommunityUserIdRoute: typeof CommunityUserIdRoute
+}
+
+const CommunityRouteChildren: CommunityRouteChildren = {
+  CommunityUserIdRoute: CommunityUserIdRoute,
+}
+
+const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
+  CommunityRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   BrokersRoute: BrokersRoute,
+  CommunityRoute: CommunityRouteWithChildren,
+  CompareRoute: CompareRoute,
+  DisclaimerRoute: DisclaimerRoute,
   DividendsRoute: DividendsRoute,
   HoldingsRoute: HoldingsRoute,
   MarketsRoute: MarketsRoute,
+  MessagesRoute: MessagesRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  RefundRoute: RefundRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
+  TimelineRoute: TimelineRoute,
   ToolsRoute: ToolsRoute,
+  WatchlistRoute: WatchlistRoute,
   AdvisorThreadIdRoute: AdvisorThreadIdRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
+  ApiReviewRoute: ApiReviewRoute,
+  ApiThesisRoute: ApiThesisRoute,
+  AssetSymbolRoute: AssetSymbolRoute,
   AdvisorIndexRoute: AdvisorIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

@@ -8,10 +8,12 @@ import { Card, Delta } from "@/components/AppShell";
 import { usePortfolio, pct } from "@/lib/store";
 import { languageLocale } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
-import { MARKET_ASSETS, marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
+import { MARKET_ASSETS, marketSearchSchema, searchCatalog, ucitsInfo, type MarketAsset } from "@/lib/market-search";
 import { marketQuote, searchMarket, type MarketNews } from "@/lib/market.functions";
 import { AssetExtras } from "@/components/AssetExtras";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import { KeyStats } from "@/components/KeyStats";
+import { CompanyOverview } from "@/components/CompanyOverview";
 import { z } from "zod";
 
 const NEWS_LABEL = { en: "News", bg: "Новини", de: "Nachrichten", es: "Noticias", it: "Notizie" } as const;
@@ -86,13 +88,13 @@ function Markets() {
       <ul className="divide-y divide-border">
         {results.map((a) => <li key={a.symbol}>
           <Button variant="ghost" onClick={() => selected && selected.symbol === a.symbol ? setSelected(null) : void loadQuote(a)} className="h-auto min-h-16 w-full justify-start whitespace-normal px-3 py-3 text-left" aria-pressed={selected?.symbol === a.symbol} aria-expanded={selected?.symbol === a.symbol}>
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-xs font-bold">{a.symbol.slice(0, 4)}</span>
+            <CompanyLogo symbol={a.symbol} type={a.type} />
             <span className="min-w-0 flex-1"><span className="block break-words font-semibold">{a.name}</span><span className="block text-xs text-muted-foreground">{a.symbol} · {p.t(a.type)}</span></span>
             <ChevronDown className={`shrink-0 text-muted-foreground transition-transform ${selected?.symbol === a.symbol ? "rotate-180" : ""}`} />
           </Button>
           {selected && selected.symbol === a.symbol && <Card className="mb-2 ml-3 mr-1">
             <div className="flex items-start justify-between gap-3">
-              <div><p className="text-sm text-muted-foreground">{selected.symbol} · {p.t(selected.type)}</p><h3 className="font-display break-words text-xl font-semibold">{selected.name}</h3></div>
+              <div><p className="text-sm text-muted-foreground">{selected.symbol} · {p.t(selected.type)}</p><h3 className="font-display break-words text-xl font-semibold">{selected.name}</h3>{(() => { const u = ucitsInfo(selected.symbol); if (!u) return null; const bg = p.lang === "bg"; return <div className="mt-2 flex flex-wrap gap-1.5 text-xs">{["UCITS", u.isin, ({ IE: bg ? "Ирландия" : "Ireland", LU: bg ? "Люксембург" : "Luxembourg", DE: bg ? "Германия" : "Germany" })[u.domicile], u.policy === "acc" ? (bg ? "Акумулиращ" : "Accumulating") : (bg ? "Разпределящ" : "Distributing"), u.index].map((t) => <span key={t} className="rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary">{t}</span>)}</div>; })()}</div>
               <Button variant="outline" size="icon" disabled={quoteBusy} aria-label={c.refresh} title={c.refresh} onClick={() => void loadQuote(selected)}><RefreshCw className={quoteBusy ? "animate-spin" : ""} /></Button>
             </div>
             <div className="mt-4" aria-live="polite">
@@ -107,6 +109,7 @@ function Markets() {
             </div>
             {selected.type !== "crypto" && <KeyStats symbol={selected.symbol} lang={p.lang} />}
             <AssetExtras asset={selected} price={quote?.quote?.price ?? null} />
+            <CompanyOverview asset={selected} lang={p.lang} />
           </Card>}
         </li>)}
       </ul>

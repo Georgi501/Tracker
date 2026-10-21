@@ -142,6 +142,33 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+          sender_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           category: string
@@ -202,27 +229,75 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_notes: {
+        Row: {
+          created_at: string
+          horizon: string
+          id: string
+          review_date: string | null
+          symbol: string
+          thesis: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          horizon?: string
+          id?: string
+          review_date?: string | null
+          symbol: string
+          thesis?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          horizon?: string
+          id?: string
+          review_date?: string | null
+          symbol?: string
+          thesis?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          avatar_path: string | null
+          bio: string
           created_at: string
           currency: string
           display_name: string | null
           id: string
+          investing_style: string
+          is_public: boolean
           lang: string
+          share_portfolio: boolean
         }
         Insert: {
+          avatar_path?: string | null
+          bio?: string
           created_at?: string
           currency?: string
           display_name?: string | null
           id: string
+          investing_style?: string
+          is_public?: boolean
           lang?: string
+          share_portfolio?: boolean
         }
         Update: {
+          avatar_path?: string | null
+          bio?: string
           created_at?: string
           currency?: string
           display_name?: string | null
           id?: string
+          investing_style?: string
+          is_public?: boolean
           lang?: string
+          share_portfolio?: boolean
         }
         Relationships: []
       }
@@ -340,6 +415,15 @@ export type Database = {
     }
     Functions: {
       is_pro: { Args: { _user_id: string }; Returns: boolean }
+      public_portfolio: {
+        Args: { _user_id: string }
+        Returns: {
+          name: string
+          symbol: string
+          type: string
+          weight: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

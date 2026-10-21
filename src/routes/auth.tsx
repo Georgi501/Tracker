@@ -46,7 +46,7 @@ function AuthPage() {
     try {
       if (mode === "up") {
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(), password, options: { emailRedirectTo: window.location.origin, data: { display_name: name } },
+          email: email.trim(), password, options: { emailRedirectTo: window.location.origin, data: { display_name: name.trim().slice(0, 60) } },
         });
         if (error) throw error;
         // Existing accounts come back without identities: tell the user to sign in.
@@ -88,7 +88,7 @@ function AuthPage() {
         <h1 className="font-display text-2xl font-bold">{mode === "in" ? p.t("signIn") : p.t("signUp")}</h1>
         <p className="mb-5 mt-1 text-sm text-muted-foreground">{p.t("tagline")}</p>
         <form onSubmit={submit} className="space-y-3">
-          {mode === "up" && <input className={input} placeholder={p.t("displayName")} value={name} onChange={(e) => setName(e.target.value)} />}
+          {mode === "up" && <input className={input} required minLength={2} maxLength={60} autoComplete="nickname" placeholder={p.lang === "bg" ? "Име или никнейм" : "Name or nickname"} value={name} onChange={(e) => setName(e.target.value)} />}
           <input className={input} type="email" required autoComplete="email" placeholder={p.t("email")} value={email} onChange={(e) => setEmail(e.target.value)} />
           <div className="relative">
             <input className={`${input} pr-20`} type={show ? "text" : "password"} required minLength={mode === "up" ? 8 : 1} autoComplete={mode === "up" ? "new-password" : "current-password"} placeholder={p.t("password")} value={password} onChange={(e) => setPassword(e.target.value)} />

@@ -5,6 +5,7 @@ import { Card } from "@/components/AppShell";
 import { pct, usePortfolio } from "@/lib/store";
 import { proCopy } from "@/lib/pro-i18n";
 import { fireProjection } from "@/lib/pro";
+import { planCopy } from "@/lib/plan-i18n";
 
 export function ProBadge() {
   return <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary"><Sparkles size={10} />Pro</span>;
@@ -23,7 +24,9 @@ export function ProGate({ title, desc, preview, children, className = "" }: { ti
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/40 p-4 text-center">
             <Lock size={20} className="text-primary" />
             <p className="max-w-xs text-sm text-foreground">{desc}</p>
-            <Link to="/pricing" className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">{c.unlock}</Link>
+            <Link to="/pricing" className="press rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">{c.unlock}</Link>
+            <span className="text-xs font-medium text-muted-foreground">{planCopy[p.lang].gateNote}</span>
+            <Link to="/pricing" className="text-xs font-semibold text-primary underline-offset-2 hover:underline">{planCopy[p.lang].seeWhat}</Link>
           </div>
         </div>
       )}

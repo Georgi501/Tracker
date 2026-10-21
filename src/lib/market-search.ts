@@ -15,13 +15,40 @@ export const MARKET_ASSETS: MarketAsset[] = [
   { symbol: "KO", name: "Coca-Cola Co.", type: "stock" },
   { symbol: "ASML", name: "ASML Holding", type: "stock" },
   { symbol: "VOO", name: "Vanguard S&P 500 ETF", type: "etf" },
-  { symbol: "VWCE.DE", name: "Vanguard FTSE All-World", type: "etf" },
-  { symbol: "SPYL.DE", name: "SPDR S&P 500 UCITS ETF", type: "etf" },
   { symbol: "BTC", name: "Bitcoin", type: "crypto" },
   { symbol: "ETH", name: "Ethereum", type: "crypto" },
 ];
+export interface UcitsInfo { isin: string; domicile: "IE" | "LU" | "DE"; policy: "acc" | "dist"; index: string }
+/** Popular UCITS ETFs with verified ISIN, domicile and distribution policy (static fund facts, not prices). */
+export const UCITS: (MarketAsset & UcitsInfo)[] = [
+  { symbol: "VWCE.DE", name: "Vanguard FTSE All-World UCITS ETF (Acc)", type: "etf", isin: "IE00BK5BQT80", domicile: "IE", policy: "acc", index: "FTSE All-World" },
+  { symbol: "VWRL.AS", name: "Vanguard FTSE All-World UCITS ETF (Dist)", type: "etf", isin: "IE00B3RBWM25", domicile: "IE", policy: "dist", index: "FTSE All-World" },
+  { symbol: "IWDA.AS", name: "iShares Core MSCI World UCITS ETF (Acc)", type: "etf", isin: "IE00B4L5Y983", domicile: "IE", policy: "acc", index: "MSCI World" },
+  { symbol: "EUNL.DE", name: "iShares Core MSCI World UCITS ETF (Acc)", type: "etf", isin: "IE00B4L5Y983", domicile: "IE", policy: "acc", index: "MSCI World" },
+  { symbol: "XDWD.DE", name: "Xtrackers MSCI World UCITS ETF 1C", type: "etf", isin: "IE00BJ0KDQ92", domicile: "IE", policy: "acc", index: "MSCI World" },
+  { symbol: "SSAC.L", name: "iShares MSCI ACWI UCITS ETF (Acc)", type: "etf", isin: "IE00B6R52259", domicile: "IE", policy: "acc", index: "MSCI ACWI" },
+  { symbol: "IUSQ.DE", name: "iShares MSCI ACWI UCITS ETF (Acc)", type: "etf", isin: "IE00B6R52259", domicile: "IE", policy: "acc", index: "MSCI ACWI" },
+  { symbol: "SXR8.DE", name: "iShares Core S&P 500 UCITS ETF (Acc)", type: "etf", isin: "IE00B5BMR087", domicile: "IE", policy: "acc", index: "S&P 500" },
+  { symbol: "CSPX.L", name: "iShares Core S&P 500 UCITS ETF (Acc)", type: "etf", isin: "IE00B5BMR087", domicile: "IE", policy: "acc", index: "S&P 500" },
+  { symbol: "VUAA.DE", name: "Vanguard S&P 500 UCITS ETF (Acc)", type: "etf", isin: "IE00BFMXXD54", domicile: "IE", policy: "acc", index: "S&P 500" },
+  { symbol: "VUSA.AS", name: "Vanguard S&P 500 UCITS ETF (Dist)", type: "etf", isin: "IE00B3XXRP09", domicile: "IE", policy: "dist", index: "S&P 500" },
+  { symbol: "SPYL.DE", name: "SPDR S&P 500 UCITS ETF (Acc)", type: "etf", isin: "IE000XZSV718", domicile: "IE", policy: "acc", index: "S&P 500" },
+  { symbol: "SXRV.DE", name: "iShares Nasdaq 100 UCITS ETF (Acc)", type: "etf", isin: "IE00B53SZB19", domicile: "IE", policy: "acc", index: "Nasdaq-100" },
+  { symbol: "EQQQ.DE", name: "Invesco EQQQ Nasdaq-100 UCITS ETF (Dist)", type: "etf", isin: "IE0032077012", domicile: "IE", policy: "dist", index: "Nasdaq-100" },
+  { symbol: "IS3N.DE", name: "iShares Core MSCI EM IMI UCITS ETF (Acc)", type: "etf", isin: "IE00BKM4GZ66", domicile: "IE", policy: "acc", index: "MSCI EM IMI" },
+  { symbol: "VHYL.AS", name: "Vanguard FTSE All-World High Dividend Yield UCITS ETF (Dist)", type: "etf", isin: "IE00B8GKDB10", domicile: "IE", policy: "dist", index: "FTSE All-World High Dividend Yield" },
+  { symbol: "ZPRV.DE", name: "SPDR MSCI USA Small Cap Value Weighted UCITS ETF (Acc)", type: "etf", isin: "IE00BSPLC413", domicile: "IE", policy: "acc", index: "MSCI USA Small Cap Value Weighted" },
+  { symbol: "MEUD.PA", name: "Amundi Core Stoxx Europe 600 UCITS ETF (Acc)", type: "etf", isin: "LU0908500753", domicile: "LU", policy: "acc", index: "STOXX Europe 600" },
+  { symbol: "EXSA.DE", name: "iShares STOXX Europe 600 UCITS ETF (DE) (Dist)", type: "etf", isin: "DE0002635307", domicile: "DE", policy: "dist", index: "STOXX Europe 600" },
+];
+MARKET_ASSETS.push(...UCITS.map(({ symbol, name, type }) => ({ symbol, name, type })));
+export const ucitsInfo = (symbol: string) => UCITS.find((u) => u.symbol.toUpperCase() === symbol.toUpperCase());
+export const isIsin = (q: string) => /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(q.trim().toUpperCase());
+
 export function searchCatalog(query: string): MarketAsset[] {
   const q = query.trim().toLowerCase();
-  return MARKET_ASSETS.filter((a) => `${a.symbol} ${a.name}`.toLowerCase().includes(q))
+  const isin = (s: string) => ucitsInfo(s)?.isin.toLowerCase() ?? "";
+  const words = q.split(/\s+/).filter(Boolean);
+  return MARKET_ASSETS.filter((a) => { const hay = `${a.symbol} ${a.name} ${isin(a.symbol)} ${ucitsInfo(a.symbol) ? "ucits " + ucitsInfo(a.symbol)!.index : ""}`.toLowerCase(); return words.every((w) => hay.includes(w)); })
     .sort((a, b) => Number(b.symbol.toLowerCase() === q) - Number(a.symbol.toLowerCase() === q));
 }

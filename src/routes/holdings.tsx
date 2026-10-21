@@ -1,11 +1,12 @@
 import { languageLocale, type Lang } from "@/lib/i18n";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Search, Trash2, TrendingUp, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Plus, Search, Trash2, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import { Card, Delta } from "@/components/AppShell";
 import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
 import { pct, usePortfolio } from "@/lib/store";
@@ -28,6 +29,21 @@ export const Route = createFileRoute("/holdings")({
 });
 
 const TYPES: (AssetType | "all")[] = ["all", "stock", "etf", "crypto", "cash", "realEstate"];
+
+type SortKey = "name" | "qty" | "price" | "change" | "avgCost" | "value" | "pnl" | "pnlPct";
+type HoldingRow = ReturnType<typeof usePortfolio>["holdings"][number];
+function sortValue(h: HoldingRow, k: SortKey): number {
+  switch (k) {
+    case "qty": return h.quantity;
+    case "price": return h.asset.price;
+    case "change": return h.asset.change24h;
+    case "avgCost": return h.avgCost;
+    case "value": return h.value;
+    case "pnl": return h.pnl;
+    case "pnlPct": return h.pnlPct;
+    default: return 0;
+  }
+}
 
 const COPY: Record<Lang, Record<"placeholder" | "market" | "searching" | "none" | "add" | "owned" | "empty" | "emptyHint" | "addFirst" | "unavailable" | "popular" | "remove" | "confirmRemove", string>> = {
   en: { placeholder: "Search holdings or any ticker (META, VWCE.DE, BTC)…", market: "Live market", searching: "Searching…", none: "No market results.", add: "Add", owned: "In portfolio", empty: "Your portfolio is empty", emptyHint: "Search any stock, ETF or crypto above to see its live price and add it.", addFirst: "Add first position", unavailable: "Quote unavailable", popular: "Popular", remove: "Delete position", confirmRemove: "Delete {s} and all its transactions?" },
@@ -58,10 +74,31 @@ function Holdings() {
     staleTime: 60_000,
   });
 
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "value", dir: -1 });
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: key === "name" ? 1 : -1 });
   const rows = p.holdings.filter(
     (h) => (type === "all" || h.asset.type === type) &&
       (h.asset.name + h.asset.symbol).toLowerCase().includes(q.toLowerCase()),
+  ).sort((a, b) => {
+    if (sort.key === "name") return a.asset.name.localeCompare(b.asset.name) * sort.dir;
+    const av = sortValue(a, sort.key), bv = sortValue(b, sort.key);
+    // Missing quotes always sink to the bottom regardless of direction.
+    if (!Number.isFinite(av)) return Number.isFinite(bv) ? 1 : 0;
+    if (!Number.isFinite(bv)) return -1;
+    return (av - bv) * sort.dir;
+  });
+  const Th = ({ k, label, left }: { k: SortKey; label: string; left?: boolean }) => (
+    <th className={`py-2 font-medium ${left ? "" : "text-right"}`} aria-sort={sort.key === k ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
+      <button onClick={() => toggleSort(k)} className={`inline-flex items-center gap-1 hover:text-foreground ${sort.key === k ? "text-foreground" : ""}`}>
+        {label}{sort.key === k ? (sort.dir === 1 ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} className="opacity-40" />}
+      </button>
+    </th>
   );
+  const sortLabels: Record<SortKey, string> = {
+    name: p.t("name"), qty: p.t("qty"), price: p.t("price"), change: "24h %", avgCost: p.t("avgCost"),
+    value: p.t("value"), pnl: p.t("pnl"), pnlPct: `${p.t("pnl")} %`,
+  };
   const num = (n: number) => n.toLocaleString(languageLocale(p.lang), { maximumFractionDigits: 6 });
   const owned = new Set(p.assets.map((a) => a.symbol.toUpperCase()));
 
@@ -81,13 +118,35 @@ function Holdings() {
 
   return (
     <div className="space-y-5">
+      {p.holdings.length > 0 && (() => {
+        const total = p.holdings.reduce((s, h) => s + h.value, 0);
+        const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
+        const prev = total - day;
+        const bg = p.lang === "bg";
+        return (
+          <Card>
+            <div className="flex flex-wrap items-end gap-x-10 gap-y-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{bg ? "Обща стойност" : "Holdings Summary"}</p>
+                <p className="font-display mt-1 text-3xl font-bold tabular-nums">{p.money(total)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{bg ? "Дневна промяна" : "Day Change"}</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums">
+                  <Delta value={day}>{p.money(day, { sign: true })} ({prev > 0 ? pct((day / prev) * 100) : "—"})</Delta>
+                </p>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="font-display mr-auto text-2xl font-bold">{p.t("holdings")}</h1>
           <div className="relative w-full sm:w-96">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input value={q} maxLength={60} autoComplete="off" onChange={(e) => setQ(e.target.value)} placeholder={c.placeholder} aria-label={c.placeholder}
-              className="w-full rounded-full border border-input bg-background py-2.5 pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              className="w-full rounded-full border border-input bg-background py-3 pl-9 pr-9 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20" />
             {q && (
               <button onClick={() => setQ("")} aria-label={p.t("close")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X size={15} /></button>
             )}
@@ -98,7 +157,7 @@ function Holdings() {
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
             <span className="text-muted-foreground">{c.popular}:</span>
             {POPULAR.map((s) => (
-              <button key={s} onClick={() => setQ(s)} className="rounded-full border border-border px-3 py-1 font-semibold hover:bg-secondary">{s}</button>
+              <button key={s} onClick={() => setQ(s)} className="press rounded-full border border-border px-3 py-1.5 font-semibold hover:border-primary hover:text-primary">{s}</button>
             ))}
           </div>
         )}
@@ -121,7 +180,7 @@ function Holdings() {
         <div className="mb-4 flex flex-wrap gap-1">
           {TYPES.map((t) => (
             <button key={t} onClick={() => setType(t)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${type === t ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${type === t ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
               {t === "all" ? p.t("all") : p.t(t)}
             </button>
           ))}
@@ -131,21 +190,51 @@ function Holdings() {
           <div className="flex flex-col items-center gap-3 py-10 text-center">
             <p className="font-display text-lg font-semibold">{c.empty}</p>
             <p className="max-w-sm text-sm text-muted-foreground">{c.emptyHint}</p>
-            <button onClick={() => openAdd(null)} className="mt-1 flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
+            <button onClick={() => openAdd(null)} className="bg-brand-gradient shadow-glow press mt-1 flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
               <Plus size={16} /> {c.addFirst}
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="mb-3 flex items-center gap-2 md:hidden">
+            <ArrowUpDown size={14} className="text-muted-foreground" />
+            <select value={sort.key} onChange={(e) => toggleSort(e.target.value as SortKey)} aria-label="Sort"
+              className="flex-1 rounded-full border border-input bg-background px-3 py-2 text-sm">
+              {(Object.keys(sortLabels) as SortKey[]).map((k) => <option key={k} value={k}>{sortLabels[k]}</option>)}
+            </select>
+            <button onClick={() => setSort((s) => ({ ...s, dir: s.dir === 1 ? -1 : 1 }))} aria-label="Toggle direction"
+              className="press rounded-full border border-border p-2">{sort.dir === 1 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}</button>
+          </div>
+          <ul className="space-y-2.5 md:hidden">
+            {rows.map((h, i) => (
+              <li key={h.asset.id} style={{ animationDelay: `${i * 40}ms` }} className="rise-in flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-3">
+                <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
+                <div className="min-w-0 flex-1">
+                  <Link to="/asset/$symbol" params={{ symbol: h.asset.symbol }} className="block truncate font-semibold hover:text-primary">{h.asset.name}</Link><StaleBadge at={h.asset.quoteAt} price={h.asset.price} bg={p.lang === "bg"} />
+                  <p className="text-xs text-muted-foreground">{num(h.quantity)} · {h.asset.symbol} · <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta></p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">{p.money(h.value)}</p>
+                  <p className="text-xs"><Delta value={h.pnl}>{p.money(h.pnl, { sign: true })} · {pct(h.pnlPct)}</Delta></p>
+                </div>
+                <button onClick={() => void removeAsset(h.asset.id, h.asset.symbol)} aria-label={`${c.remove} ${h.asset.symbol}`}
+                  className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 size={16} /></button>
+              </li>
+            ))}
+            {!rows.length && <p className="py-10 text-center text-muted-foreground">{p.t("noResults")}</p>}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr className="border-b border-border">
-                  <th className="py-2 font-medium">{p.t("name")}</th>
-                  <th className="text-right font-medium">{p.t("qty")}</th>
-                  <th className="text-right font-medium">{p.t("price")}</th>
-                  <th className="text-right font-medium">{p.t("avgCost")}</th>
-                  <th className="text-right font-medium">{p.t("value")}</th>
-                  <th className="text-right font-medium">{p.t("pnl")}</th>
+                  <Th k="name" label={p.t("name")} left />
+                  <Th k="qty" label={p.t("qty")} />
+                  <Th k="price" label={p.t("price")} />
+                  <Th k="change" label="24h %" />
+                  <Th k="avgCost" label={p.t("avgCost")} />
+                  <Th k="value" label={p.t("value")} />
+                  <Th k="pnl" label={p.t("pnl")} />
+                  <Th k="pnlPct" label={`${p.t("pnl")} %`} />
                   <th className="w-10" />
                 </tr>
               </thead>
@@ -153,22 +242,18 @@ function Holdings() {
                 {rows.map((h) => (
                   <tr key={h.asset.id} className="border-b border-border last:border-0 hover:bg-secondary/50">
                     <td className="py-3">
-                      <p className="font-semibold">{h.asset.name}</p>
+                      <div className="flex items-center gap-3"><CompanyLogo symbol={h.asset.symbol} type={h.asset.type} /><div>
+                      <Link to="/asset/$symbol" params={{ symbol: h.asset.symbol }} className="font-semibold hover:text-primary">{h.asset.name}</Link><StaleBadge at={h.asset.quoteAt} price={h.asset.price} bg={p.lang === "bg"} />
                       <p className="text-xs text-muted-foreground">{h.asset.symbol} · {p.t(h.asset.type)}</p>
+                      </div></div>
                     </td>
                     <td className="text-right">{num(h.quantity)}</td>
-                    <td className="text-right">
-                      {p.money(h.asset.price)}
-                      <p className="text-xs"><Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta></p>
-                    </td>
+                    <td className="text-right">{p.money(h.asset.price)}</td>
+                    <td className="text-right"><Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta></td>
                     <td className="text-right">{p.money(h.avgCost)}</td>
                     <td className="text-right font-semibold">{p.money(h.value)}</td>
-                    <td className="text-right">
-                      <Delta value={h.pnl}>
-                        <span className="font-semibold">{p.money(h.pnl, { sign: true })}</span>
-                        <p className="text-xs">{pct(h.pnlPct)}</p>
-                      </Delta>
-                    </td>
+                    <td className="text-right"><Delta value={h.pnl}><span className="font-semibold">{p.money(h.pnl, { sign: true })}</span></Delta></td>
+                    <td className="text-right"><Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta></td>
                     <td className="pl-2 text-right">
                       <button onClick={() => void removeAsset(h.asset.id, h.asset.symbol)} aria-label={`${c.remove} ${h.asset.symbol}`} title={c.remove}
                         className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 size={16} /></button>
@@ -179,6 +264,7 @@ function Holdings() {
             </table>
             {!rows.length && <p className="py-10 text-center text-muted-foreground">{p.t("noResults")}</p>}
           </div>
+          </>
         )}
       </Card>
       <AddTransactionDialog open={!!preset} preset={preset} onClose={() => setPreset(null)} />
@@ -214,6 +300,7 @@ function MarketRow({ asset, owned, copy, onAdd }: {
   })();
   return (
     <div className="flex items-center gap-3 py-2.5">
+      <CompanyLogo symbol={asset.symbol} type={asset.type} size={36} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{asset.symbol} <span className="font-normal text-muted-foreground">· {p.t(asset.type)}</span></p>
         <p className="truncate text-xs text-muted-foreground">{asset.name}</p>
@@ -235,4 +322,13 @@ function MarketRow({ asset, owned, copy, onAdd }: {
       </button>
     </div>
   );
+}
+
+
+/** Flags quotes older than 4 days (covers weekends/holidays) or missing; never substitutes a price. */
+function StaleBadge({ at, price, bg }: { at?: string | undefined; price: number; bg: boolean }) {
+  const missing = !(price > 0) || !at;
+  const old = !missing && Date.now() - Date.parse(at!) > 4 * 86400000;
+  if (!missing && !old) return null;
+  return <span title={at ? new Date(at).toLocaleString() : undefined} className="mt-0.5 inline-block rounded-full bg-destructive/15 px-2 text-[10px] font-semibold text-destructive">{missing ? (bg ? "няма цена" : "no quote") : (bg ? "остаряла цена" : "stale price")}</span>;
 }

@@ -9,8 +9,14 @@ import { useEffect, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, Delta } from "@/components/AppShell";
 import { AllocationCard } from "@/components/AllocationCard";
+import { DashboardMovers } from "@/components/DashboardMovers";
+import { CompanyLogo } from "@/components/CompanyLogo";
+import { WelcomeHero } from "@/components/WelcomeHero";
+import { PortfolioHealth } from "@/components/PortfolioHealth";
+import { WeeklyDigest } from "@/components/WeeklyDigest";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioIrr } from "@/lib/portfolio";
+import { fifoTaxReport } from "@/lib/tools";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Line, LineChart } from "recharts";
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
@@ -50,6 +56,7 @@ function Dashboard() {
   const total = p.holdings.reduce((s, h) => s + h.value, 0);
   const cost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
   const pnl = total - cost;
+  const realized = fifoTaxReport(p.transactions).reduce((s, y) => s + y.realized, 0);
   const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
   const historyFn = useServerFn(getPortfolioHistory);
   const history = useQuery({ queryKey: ["portfolio-history", p.user?.id, p.transactions, period, p.currency], queryFn: () => historyFn({ data: { period, currency: p.currency } }), enabled: !!p.user, staleTime: 60000 });
@@ -72,7 +79,10 @@ function Dashboard() {
     new Date(t).toLocaleString(locale, ["1Y", "3Y", "5Y", "ALL"].includes(period) ? { month: "short", year: "2-digit" } : { day: "numeric", month: "short" });
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="lg:col-span-3"><WelcomeHero /></div>
+      <PortfolioHealth />
+      <WeeklyDigest />
       <Card className="lg:col-span-2">
         <p className="text-sm text-muted-foreground">{p.t("netWorth")}</p>
         <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">{p.user ? p.money(total) : "—"}</h1>
@@ -138,8 +148,12 @@ function Dashboard() {
           <Metric label={`${p.t("ttwror")} · ${period}`} value={pct(tw)} n={tw} />
           <Metric label={p.t("irr")} value={pct(irrV)} n={irrV} />
         </div>
-        <Metric label={p.t("invested")} value={p.user ? p.money(cost) : "—"} />
+        <div className="grid grid-cols-2 gap-5">
+          <Metric label={p.t("invested")} value={p.user ? p.money(cost) : "—"} />
+          <Metric label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"} value={p.user ? p.money(realized, { sign: true }) : "—"} n={realized} />
+        </div>
       </div>
+      <DashboardMovers />
       <AllocationCard />
       <Card className="lg:col-span-2">
         <div className="mb-3 flex justify-between">
@@ -149,7 +163,7 @@ function Dashboard() {
         <ul className="divide-y divide-border">
           {p.holdings.slice(0, 6).map((h) => (
             <li key={h.asset.id} className="flex items-center gap-3 py-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-bold">{h.asset.symbol.slice(0, 4)}</span>
+              <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
               <div className="flex-1">
                 <p className="text-sm font-semibold">{h.asset.name}</p>
                 <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>

@@ -1,5 +1,8 @@
+import { SnapshotCard } from "@/components/SnapshotCard";
+import { PortfolioReview, DataQuality, proToolsCopy } from "@/components/ProTools";
 import { CurveSilhouette, FireCalculator, ProGate } from "@/components/ProFeatures";
 import { DcfCalculator, dcfCopy } from "@/components/DcfCalculator";
+import { ThesisCheck, thesisCopy } from "@/components/ThesisCheck";
 import { proCopy } from "@/lib/pro-i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -52,11 +55,15 @@ function Tools() {
       <h1 className="font-display text-2xl font-bold lg:col-span-2">{c.tools}</h1>
       <ProGate title={proCopy[p.lang].fire} desc={proCopy[p.lang].fireDesc} preview={<CurveSilhouette />}><FireCalculator /></ProGate>
       <ProGate title={dcfCopy[p.lang].intrinsic + " (DCF)"} desc={dcfCopy[p.lang].disclaimer} preview={<CurveSilhouette />}><DcfCalculator /></ProGate>
+      <ProGate title={thesisCopy[p.lang].title} desc={thesisCopy[p.lang].desc} preview={<CurveSilhouette />}><ThesisCheck /></ProGate>
+      <ProGate title={proToolsCopy[p.lang].review} desc={proToolsCopy[p.lang].reviewDesc} preview={<CurveSilhouette />}><PortfolioReview /></ProGate>
+      <ProGate title={p.lang === "bg" ? "Споделима снимка на портфолиото" : "Shareable portfolio snapshot"} desc={p.lang === "bg" ? "Красива картичка само с проценти по класове активи." : "A clean card with asset-class percentages only."} preview={<CurveSilhouette />}><SnapshotCard /></ProGate>
+      <ProGate title={proToolsCopy[p.lang].quality} desc={proToolsCopy[p.lang].qualityDesc} preview={<CurveSilhouette />}><DataQuality /></ProGate>
       <GoalsCard />
-      <Rebalance />
+      <ProGate title={c.rebalance} desc={c.rebalanceHint} preview={<CurveSilhouette />}><Rebalance /></ProGate>
       <Risk />
       <ConcentrationCard />
-      <Tax />
+      <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}><Tax /></ProGate>
       <div className="grid gap-5">
         <Watchlist />
         <Card>
@@ -66,6 +73,7 @@ function Tools() {
               onClick={() => download("folio-transactions.csv", exportCsv(p.assets, p.transactions), "text/csv")}>{c.exportCsv}</Button>
             <Button variant="secondary" disabled={!p.transactions.length}
               onClick={() => download("folio-backup.json", JSON.stringify({ exportedAt: new Date().toISOString(), assets: p.assets, transactions: p.transactions }, null, 2), "application/json")}>{c.exportJson}</Button>
+            <Button variant="secondary" disabled={!p.transactions.length} onClick={() => window.print()}>PDF</Button>
           </div>
         </Card>
       </div>

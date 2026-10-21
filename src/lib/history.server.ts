@@ -2,7 +2,19 @@ import { yahooClient, CRYPTO_IDS } from "./prices.server";
 import type { DailyPrice } from "./history";
 /** CoinGecko's free API only serves the last 365 days, so longer crypto series come from Yahoo's USD pair — one provider per chart, never a stitched mix. */
 const COINGECKO_MAX_DAYS = 365;
-export async function dailyHistory(symbol: string, start: string, end: string, type = "stock") {
+const histCache = new Map<string, { at: number; v: Promise<{ currency: string; prices: DailyPrice[]; splits: boolean }> }>();
+/** Daily closes change at most once a day; cache 6h (failures are evicted so they retry). */
+export function dailyHistory(symbol: string, start: string, end: string, type = "stock") {
+  const k = `${type}:${symbol}:${start}:${end}`;
+  const hit = histCache.get(k);
+  if (hit && Date.now() - hit.at < 6 * 3600_000) return hit.v;
+  const v = dailyHistoryRaw(symbol, start, end, type);
+  histCache.set(k, { at: Date.now(), v });
+  v.catch(() => histCache.delete(k));
+  if (histCache.size > 1000) histCache.delete(histCache.keys().next().value!);
+  return v;
+}
+async function dailyHistoryRaw(symbol: string, start: string, end: string, type = "stock") {
   if (type === "crypto" && Date.parse(end) - Date.parse(start) <= COINGECKO_MAX_DAYS * 86400000) {
     const id = CRYPTO_IDS[symbol];
     if (!id) throw new Error("Unsupported cryptocurrency");

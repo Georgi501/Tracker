@@ -36,6 +36,34 @@
       "when": 1792442505429,
       "tag": "0004_create_feedback",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792516618956,
+      "tag": "0005_community_profiles_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792516642010,
+      "tag": "0006_portfolio_showcase",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792516738738,
+      "tag": "0007_community_pro_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792522819215,
+      "tag": "0008_investing_journal",
+      "breakpoints": true
     }
   ]
 }

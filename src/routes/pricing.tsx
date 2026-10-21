@@ -8,14 +8,15 @@ import { proCopy } from "@/lib/pro-i18n";
 import { BarsSilhouette, CurveSilhouette, HeatmapSilhouette, ProBadge } from "@/components/ProFeatures";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
+import { planCopy } from "@/lib/plan-i18n";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — folio. Free & Pro plans" },
-      { name: "description", content: "Free plan with 1 broker, Pro for €3.99/month or €39.99/year with up to 4 brokers." },
+      { name: "description", content: "Free plan with 1 broker, Pro for €4.99/month or €49.99/year with up to 4 brokers." },
       { property: "og:title", content: "Pricing — folio." },
-      { property: "og:description", content: "Pro: €3.99/month or €39.99/year, up to 4 broker connections." },
+      { property: "og:description", content: "Pro: €4.99/month or €49.99/year, up to 4 broker connections." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -79,7 +80,7 @@ function Pricing() {
         <Card className="border-primary p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("pro")}</h2>
           <p className="font-display my-3 text-4xl font-bold">
-            {yearly ? "€39.99" : "€3.99"}<span className="text-base font-medium text-muted-foreground"> {yearly ? p.t("perYear") : p.t("perMonth")}</span>
+            {yearly ? "€49.99" : "€4.99"}<span className="text-base font-medium text-muted-foreground"> {yearly ? p.t("perYear") : p.t("perMonth")}</span>
           </p>
           <ul className="space-y-2"><Feature>{p.t("proF1")}</Feature><Feature>{p.t("proF2")}</Feature><Feature>{p.t("proF3")}</Feature><Feature>{pc.heatmap}</Feature><Feature>{pc.income}</Feature><Feature>{pc.fire}</Feature><Feature>{pc.advisor}</Feature></ul>
           <div className="mt-6">
@@ -91,6 +92,23 @@ function Pricing() {
           </div>
         </Card>
       </div>
+      <p className="mt-3 text-center text-xs font-semibold text-primary">{planCopy[p.lang].yearlySave}</p>
+      <section className="mt-12">
+        <h2 className="font-display text-center text-2xl font-bold">{planCopy[p.lang].compareTitle}</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted-foreground">{planCopy[p.lang].compareSub}</p>
+        <Card className="mt-6 overflow-hidden p-0">
+          <div className="grid grid-cols-[1fr_1fr_1.3fr] gap-2 border-b border-border bg-secondary/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <span /><span>{planCopy[p.lang].freeTag}</span><span className="text-primary">{planCopy[p.lang].proTag}</span>
+          </div>
+          {planCopy[p.lang].groups.map((g) => (
+            <div key={g.title} className="grid grid-cols-[1fr_1fr_1.3fr] gap-2 border-b border-border px-4 py-3 text-sm last:border-0">
+              <span className="font-semibold">{g.title}</span>
+              <span className="text-muted-foreground">{g.free}</span>
+              <span className="flex gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-primary" />{g.pro}</span>
+            </div>
+          ))}
+        </Card>
+      </section>
       <section className="mt-14">
         <div className="text-center"><ProBadge /><h2 className="font-display mt-2 text-2xl font-bold">{pc.showcaseTitle}</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{pc.showcaseSub}</p></div>

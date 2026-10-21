@@ -167,3 +167,16 @@ export function detectBrokerFormat(text: string): BrokerFormat | null {
   if (["date", "type", "symbol", "price"].every((v) => h.includes(v))) return "generic";
   return null;
 }
+
+/** Split parsed rows into new vs. already-recorded ones (same ticker, type, date and quantity), so re-importing a CSV never doubles trades. */
+export function splitDuplicates(rows: ImportedTx[], existing: { symbol: string; kind: string; date: string; quantity: number }[]) {
+  const key = (s: string, k: string, d: string, q: number) => `${s.toUpperCase()}|${k}|${d.slice(0, 10)}|${k === "dividend" ? 1 : q.toFixed(6)}`;
+  const seen = new Set(existing.map((e) => key(e.symbol, e.kind, e.date, e.quantity)));
+  const fresh: ImportedTx[] = []; const duplicates: ImportedTx[] = [];
+  for (const r of rows) {
+    const k = key(r.symbol, r.kind, r.date, r.quantity);
+    (seen.has(k) ? duplicates : fresh).push(r);
+    seen.add(k);
+  }
+  return { fresh, duplicates };
+}

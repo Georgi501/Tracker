@@ -2,7 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "./market-search";
 
-export interface MarketNews { id: string; title: string; publisher: string; link: string; at: string | null; tickers: string[] }
+export interface MarketNews { id: string; title: string; publisher: string; link: string; at: string | null; tickers: string[]; image: string | null }
+
+type Thumb = { thumbnail?: { resolutions?: { url: string; width: number }[] } };
+/** Pick the smallest provider thumbnail ≥ 140px wide; https only, never a substitute image. */
+function thumb(n: Thumb): string | null {
+  const r = (n.thumbnail?.resolutions ?? []).filter((x) => /^https:\/\//.test(x.url)).sort((a, b) => a.width - b.width);
+  return (r.find((x) => x.width >= 140) ?? r[r.length - 1])?.url ?? null;
+}
 
 export const searchMarket = createServerFn({ method: "POST" })
   .inputValidator((input) => marketSearchSchema.parse(input))
@@ -19,7 +26,7 @@ export const searchMarket = createServerFn({ method: "POST" })
       const news: MarketNews[] = (result.news ?? []).filter((n) => n.title && /^https:\/\//.test(n.link)).map((n) => ({
         id: n.uuid, title: n.title, publisher: n.publisher ?? "", link: n.link,
         at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
-        tickers: (n.relatedTickers ?? []).slice(0, 4),
+        tickers: (n.relatedTickers ?? []).slice(0, 4), image: thumb(n as Thumb),
       }));
       return { assets: [...assets.values()].slice(0, 20), news, unavailable: false };
     } catch { return { assets: fallback, news: [], unavailable: true }; }
@@ -31,6 +38,32 @@ export const marketQuote = createServerFn({ method: "POST" })
     const { fetchLiveQuote } = await import("./prices.server");
     const quote = await fetchLiveQuote(data.symbol, data.type);
     return { quote, reason: quote ? null : "unavailable" as const };
+  });
+
+export interface ExtendedQuote { session: "pre" | "post"; price: number; change: number; changePct: number; at: string }
+const extCache = new Map<string, { at: number; v: ExtendedQuote | null }>();
+/** Pre-market / after-hours price for US listings; null while the regular session is open or when the provider has none. */
+export const marketExtended = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input))
+  .handler(async ({ data }): Promise<{ ext: ExtendedQuote | null }> => {
+    const k = data.symbol.toUpperCase();
+    const hit = extCache.get(k);
+    if (hit && Date.now() - hit.at < 60_000) return { ext: hit.v };
+    let v: ExtendedQuote | null = null;
+    try {
+      const { yahooClient } = await import("./prices.server");
+      const q = await yahooClient().quote(data.symbol) as Record<string, unknown>;
+      const state = String(q["marketState"] ?? "");
+      const pick = (p: "pre" | "post"): ExtendedQuote | null => {
+        const price = q[`${p}MarketPrice`] as number | undefined, ch = q[`${p}MarketChange`] as number | undefined;
+        const pct = q[`${p}MarketChangePercent`] as number | undefined, t = q[`${p}MarketTime`] as Date | undefined;
+        return price && price > 0 && ch != null && pct != null && t ? { session: p, price, change: ch, changePct: pct, at: new Date(t).toISOString() } : null;
+      };
+      if (state === "PRE" || state === "PREPRE") v = pick("pre");
+      else if (state === "POST" || state === "POSTPOST" || state === "CLOSED") v = pick("post");
+    } catch { v = null; }
+    extCache.set(k, { at: Date.now(), v });
+    return { ext: v };
   });
 
 export const getExchangeRate = createServerFn({ method: "GET" }).handler(async () => {
@@ -128,4 +161,33 @@ export const marketDcf = createServerFn({ method: "POST" })
         shares: n(k?.sharesOutstanding), revenueGrowth: n(f?.revenueGrowth), earningsGrowth: n(f?.earningsGrowth),
       };
     } catch { return null; }
+  });
+
+export interface CompanyOverview {
+  name: string | null; description: string | null; sector: string | null; industry: string | null; country: string | null;
+  city: string | null; website: string | null; employees: number | null; news: MarketNews[];
+}
+
+/** Real Yahoo company profile and symbol-related news; missing fields stay null. */
+export const marketOverview = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/), type: z.enum(["stock", "etf", "crypto"]) }).parse(input))
+  .handler(async ({ data }): Promise<CompanyOverview> => {
+    const { yahooClient } = await import("./prices.server");
+    const yf = yahooClient();
+    const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
+    const [s, r] = await Promise.all([
+      data.type === "crypto" ? null : yf.quoteSummary(symbol, { modules: ["assetProfile", "price"] }).catch(() => null),
+      yf.search(symbol, { newsCount: 8, quotesCount: 0 }).catch(() => null),
+    ]);
+    const a = s?.assetProfile;
+    const news: MarketNews[] = (r?.news ?? []).filter((n) => n.title && /^https:\/\//.test(n.link)).map((n) => ({
+      id: n.uuid, title: n.title, publisher: n.publisher ?? "", link: n.link,
+      at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null, tickers: (n.relatedTickers ?? []).slice(0, 4), image: thumb(n as Thumb),
+    }));
+    return {
+      name: s?.price?.longName ?? s?.price?.shortName ?? null, description: a?.longBusinessSummary ?? null,
+      sector: a?.sector ?? null, industry: a?.industry ?? null, country: a?.country ?? null, city: a?.city ?? null,
+      website: a?.website && /^https?:\/\//.test(a.website) ? a.website : null,
+      employees: typeof a?.fullTimeEmployees === "number" ? a.fullTimeEmployees : null, news,
+    };
   });

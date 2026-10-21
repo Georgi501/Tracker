@@ -32,3 +32,5 @@
 - Asset search provides immediate catalog matches and debounced provider results with stale-response guards, to suggest assets while typing without flooding the provider.
 - Watchlist and price alerts are local preferences in src/lib/watchlist.ts (tickers/targets only), synced across components via a window event; alerts fire only on real quotes.
 - Home-screen install is manifest-only (no service worker), to avoid stale caches in preview.
+- Community (profiles with photo, member directory, opt-in portfolio showcase as cost-weight percentages via public_portfolio(), 1:1 realtime chat in direct_messages) is enforced Pro-only in RLS via is_pro() and in UI via CommunityUpsell; avatars sit in a private bucket served by signed URLs because public buckets are blocked.
+- Investing journal notes live in public.journal_notes (RLS by user_id, one row per symbol) so theses follow the account; snapshots share only class percentages to protect privacy.

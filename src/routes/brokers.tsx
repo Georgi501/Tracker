@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
-import { BROKER_FORMATS, GENERIC_TEMPLATE, brokerLimit, parseBrokerCsv, detectBrokerFormat, type BrokerFormat } from "@/lib/csv-import";
+import { useState } from "react";
+import { BROKER_FORMATS, GENERIC_TEMPLATE, brokerLimit, parseBrokerCsv, detectBrokerFormat, splitDuplicates, type BrokerFormat, type ImportedTx } from "@/lib/csv-import";
 
 export const Route = createFileRoute("/brokers")({
   head: () => ({
@@ -25,8 +25,8 @@ const input = "rounded-xl border border-input bg-background px-3 py-2 text-sm ou
 
 function Brokers() {
   const p = usePortfolio();
-  const [name, setName] = useState("");
-  const [format, setFormat] = useState<BrokerFormat>("trading212");
+  const [preview, setPreview] = useState<{ brokerId: string; format: BrokerFormat; fresh: ImportedTx[]; duplicates: ImportedTx[] } | null>(null);
+  const [busy, setBusy] = useState(false);
   const limit = brokerLimit(p.isPro);
   const full = p.brokers.length >= limit;
 
@@ -38,11 +38,12 @@ function Brokers() {
       </Card>
     );
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("brokers").insert({ name: name || (BROKER_FORMATS.find((f) => f.id === format)?.label ?? format), format });
+  const add = async (format: BrokerFormat) => {
+    const label = BROKER_FORMATS.find((f) => f.id === format)?.label ?? format;
+    const n = p.brokers.filter((b) => b.format === format).length;
+    const { error } = await supabase.from("brokers").insert({ name: n ? `${label} ${n + 1}` : label, format });
     if (error) { toast.error(error.message.includes("BROKER_LIMIT") ? p.t("limitReached") : error.message); return; }
-    setName(""); await p.reload();
+    await p.reload();
   };
   const remove = async (id: string) => { await supabase.from("brokers").delete().eq("id", id); await p.reload(); };
   const upload = async (brokerId: string, fmt: string, file: File) => {
@@ -52,9 +53,18 @@ function Brokers() {
       if (!detected) throw new Error("CSV format not recognized");
       const rows = parseBrokerCsv(detected, text);
       if (!rows.length) { toast.error("0 " + p.t("imported")); return; }
-      toast.success(`${await p.importTransactions(brokerId, rows)} ${p.t("imported")}`);
+      const sym = new Map(p.assets.map((a) => [a.id, a.symbol]));
+      const existing = p.transactions.map((t) => ({ symbol: sym.get(t.assetId) ?? "", kind: t.kind, date: t.date, quantity: t.quantity }));
+      setPreview({ brokerId, format: detected, ...splitDuplicates(rows, existing) });
     }
     catch (err) { toast.error(err instanceof Error ? err.message : "Error"); }
+  };
+  const confirmImport = async () => {
+    if (!preview) return;
+    setBusy(true);
+    try { toast.success(`${await p.importTransactions(preview.brokerId, preview.fresh)} ${p.t("imported")}`); setPreview(null); }
+    catch (err) { toast.error(err instanceof Error ? err.message : "Error"); }
+    finally { setBusy(false); }
   };
   const templateHref = `data:text/csv;charset=utf-8,${encodeURIComponent(GENERIC_TEMPLATE)}`;
 
@@ -78,23 +88,49 @@ function Brokers() {
           <button onClick={() => remove(b.id)} className="text-sm text-destructive">✕</button>
         </Card>
       ))}
-      {full ? (
+      {preview && <ImportPreview bg={p.lang === "bg"} preview={preview} busy={busy} onCancel={() => setPreview(null)} onConfirm={() => void confirmImport()} />}
+      {full && (
         <Card className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm">{p.t("limitReached")}</span>
           {!p.isPro && <Link to="/pricing" className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{p.t("upgrade")}</Link>}
         </Card>
-      ) : (
-        <Card>
-          <form onSubmit={add} className="flex flex-wrap gap-2">
-            <input className={`${input} flex-1`} placeholder={p.t("brokerName")} value={name} onChange={(e) => setName(e.target.value)} />
-            <select className={input} value={format} onChange={(e) => setFormat(e.target.value as BrokerFormat)} aria-label={p.t("format")}>
-              {BROKER_FORMATS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-            </select>
-            <button className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{p.t("addBroker")}</button>
-          </form>
-          <a href={templateHref} download="folio-template.csv" className="mt-3 inline-block text-sm font-semibold text-primary">{p.t("template")}</a>
-        </Card>
       )}
+      <div>
+        <h2 className="mb-3 font-display text-lg font-semibold">{p.t("addBroker")}</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {BROKER_FORMATS.map((f) => (
+            <button key={f.id} type="button" disabled={full} onClick={() => void add(f.id)}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 font-display font-bold text-primary">{f.label.slice(0, 2).toUpperCase()}</span>
+              <span className="flex-1 font-semibold">{f.label}</span>
+              <Plus size={18} className="text-primary" />
+            </button>
+          ))}
+        </div>
+        <a href={templateHref} download="folio-template.csv" className="mt-3 inline-block text-sm font-semibold text-primary">{p.t("template")}</a>
+      </div>
     </div>
+  );
+}
+
+function ImportPreview({ bg, preview, busy, onCancel, onConfirm }: { bg: boolean; busy: boolean; preview: { format: BrokerFormat; fresh: ImportedTx[]; duplicates: ImportedTx[] }; onCancel: () => void; onConfirm: () => void }) {
+  const count = (k: string) => preview.fresh.filter((r) => r.kind === k).length;
+  const currencies = [...new Set(preview.fresh.map((r) => r.currency ?? "USD"))].join(", ");
+  return (
+    <Card className="space-y-3 border-primary">
+      <h2 className="font-display text-lg font-semibold">{bg ? "Преглед преди импорт" : "Review before import"} · {BROKER_FORMATS.find((f) => f.id === preview.format)?.label}</h2>
+      <div className="grid grid-cols-3 gap-2 text-center text-sm">
+        {(["buy", "sell", "dividend"] as const).map((k) => <div key={k} className="rounded-xl bg-secondary p-2"><b className="block text-lg">{count(k)}</b>{bg ? { buy: "покупки", sell: "продажби", dividend: "дивиденти" }[k] : k}</div>)}
+      </div>
+      {currencies && <p className="text-xs text-muted-foreground">{bg ? "Валути" : "Currencies"}: {currencies} · {bg ? "конвертират се по курса за датата" : "converted at each date's rate"}</p>}
+      {preview.duplicates.length > 0 && <p className="rounded-xl bg-accent text-accent-foreground p-2 text-sm">{bg ? `${preview.duplicates.length} реда вече съществуват и ще бъдат пропуснати.` : `${preview.duplicates.length} rows already exist and will be skipped.`}</p>}
+      <div className="max-h-56 overflow-auto rounded-xl border border-border text-xs">
+        {preview.fresh.slice(0, 50).map((r, i) => <div key={i} className="flex justify-between gap-2 border-b border-border px-3 py-1.5 last:border-0"><span>{r.date} · {r.kind}</span><b>{r.symbol}</b><span>{r.quantity} × {r.price} {r.currency ?? "USD"}</span></div>)}
+      </div>
+      <div className="flex justify-end gap-2">
+        <button onClick={onCancel} className="rounded-full px-4 py-2 text-sm text-muted-foreground">{bg ? "Отказ" : "Cancel"}</button>
+        <button disabled={busy || !preview.fresh.length} onClick={onConfirm} className="press rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{bg ? `Импортирай ${preview.fresh.length}` : `Import ${preview.fresh.length}`}</button>
+      </div>
+    </Card>
   );
 }

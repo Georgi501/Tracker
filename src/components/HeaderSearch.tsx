@@ -21,11 +21,11 @@ export function HeaderSearch() {
   useEffect(() => { if (loc.pathname !== "/markets") setValue(""); }, [loc.pathname]);
   const go = (q: string) => navigate({ to: "/markets", search: { q: q || undefined }, replace: loc.pathname === "/markets" });
   return (
-    <form role="search" onSubmit={(e) => { e.preventDefault(); go(value.trim()); }} className="relative order-last w-full md:order-none md:w-auto md:min-w-80 md:flex-1 md:max-w-xl">
+    <form role="search" onSubmit={(e) => { e.preventDefault(); go(value.trim()); }} className="relative w-full">
       <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
       <input aria-label={PLACEHOLDER[p.lang]} placeholder={PLACEHOLDER[p.lang]} maxLength={60} autoComplete="off" value={value}
         onChange={(e) => { setValue(e.target.value); go(e.target.value); }}
-        className="h-11 w-full rounded-full border border-border bg-secondary pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-background" />
+        className="h-9 w-full rounded-full border border-border bg-secondary pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-background" />
     </form>
   );
 }

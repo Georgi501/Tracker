@@ -5,7 +5,18 @@ export const CRYPTO_IDS: Record<string, string> = { BTC: "bitcoin", ETH: "ethere
 export function yahooClient() {
   return new YahooFinance({ suppressNotices: ["yahooSurvey"], fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(10000) }) });
 }
+const cache = new Map<string, { at: number; v: LiveQuote }>();
+const QUOTE_TTL = 60_000;
+/** Short in-memory cache (1 min) so repeated views don't hammer Yahoo/CoinGecko; only successful real quotes are cached. */
 export async function fetchLiveQuote(symbol: string, type: string): Promise<LiveQuote | null> {
+  const k = `${type}:${symbol.toUpperCase()}`;
+  const hit = cache.get(k);
+  if (hit && Date.now() - hit.at < QUOTE_TTL) return hit.v;
+  const v = await fetchLiveQuoteRaw(symbol, type);
+  if (v) { cache.set(k, { at: Date.now(), v }); if (cache.size > 2000) cache.delete(cache.keys().next().value!); }
+  return v;
+}
+async function fetchLiveQuoteRaw(symbol: string, type: string): Promise<LiveQuote | null> {
   try {
     if (type === "crypto") {
       const id = CRYPTO_IDS[symbol.toUpperCase()];
@@ -26,7 +37,14 @@ export async function fetchLiveQuote(symbol: string, type: string): Promise<Live
       at: q.regularMarketTime.toISOString(), currency: q.currency, source: "Yahoo Finance" };
   } catch { return null; }
 }
+let fxCache: { at: number; v: number } | null = null;
 export async function fetchFx(): Promise<number | null> {
+  if (fxCache && Date.now() - fxCache.at < 5 * 60_000) return fxCache.v;
+  const v = await fetchFxRaw();
+  if (v) fxCache = { at: Date.now(), v };
+  return v;
+}
+async function fetchFxRaw(): Promise<number | null> {
   const quote = await fetchLiveQuote("EURUSD=X", "stock");
   return quote && quote.price > 0 ? 1 / quote.price : null;
 }

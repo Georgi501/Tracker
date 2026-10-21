@@ -1,3 +1,4 @@
+import { legalCopy, SUPPORT_EMAIL } from "@/lib/legal";
 import { advisorCopy } from "@/lib/advisor-i18n";
 import { paymentsCopy } from "@/lib/payments-i18n";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -8,11 +9,12 @@ import { marketCopy } from "@/lib/market-i18n";
 import { feedbackCopy } from "@/lib/feedback-i18n";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { HeaderSearch } from "./HeaderSearch";
+import { CommandMenu } from "./CommandMenu";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Languages, LogOut, MessageSquare, Moon, Plus, Sun } from "lucide-react";
+import { ChevronDown, Crown, Globe, Landmark, LayoutDashboard, LogOut, MessageSquare, Moon, PieChart, Plus, Search, Settings2, Sun, UserRound, Wallet } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -29,14 +31,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
     { to: "/markets", label: marketCopy[p.lang].markets },
+    { to: "/watchlist", label: "Watchlist" },
     { to: "/analytics", label: p.t("analytics") },
+    { to: "/compare", label: legalCopy(p.lang).footer.compare },
+    { to: "/timeline", label: p.lang === "bg" ? "Хронология" : "Timeline" },
     { to: "/dividends", label: p.t("dividends") },
     { to: "/tools", label: toolsCopy[p.lang].tools },
     { to: "/advisor", label: advisorCopy[p.lang].advisor },
     { to: "/brokers", label: p.t("brokers") },
+    { to: "/community", label: p.lang === "bg" ? "Общност" : "Community" },
     { to: "/pricing", label: p.t("pricing") },
   ] as const;
-  const seg = "rounded-full px-3 py-1 text-xs font-semibold transition-colors";
   const signOut = async () => {
     await qc.cancelQueries(); qc.clear();
     await supabase.auth.signOut();
@@ -45,80 +50,174 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       {getPaddleEnvironment() === "sandbox" && (
-        <div className="border-b border-border bg-secondary px-4 py-1.5 text-center text-xs text-muted-foreground">{paymentsCopy[p.lang].testBanner}</div>
+        <div className="topband px-4 py-1.5 text-center text-xs">{paymentsCopy[p.lang].testBanner}</div>
       )}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
-          <Link to="/" className="font-display text-xl font-bold tracking-tight">
-            folio<span className="text-primary">.</span>
+      <header className="header-as sticky top-0 z-30">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 lg:gap-4">
+          <Link to="/" className="flex shrink-0 items-center gap-2">
+            <span aria-hidden className="logo-mark grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">f</span>
+            <span className="hidden font-display text-base font-bold uppercase tracking-[0.2em] sm:inline">folio</span>
           </Link>
-          <nav className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:order-none md:mx-0 md:ml-4 md:w-auto md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
-            {nav.map((n) => (
-              <Link key={n.to} to={n.to} activeOptions={{ exact: true }}
-                className="shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground md:py-1.5"
-                activeProps={{ className: "bg-secondary text-foreground" }}>
-                {n.label}
-              </Link>
+          <nav className="ml-2 hidden items-center lg:flex">
+            {nav.slice(0, 5).map((n) => (
+              <Link key={n.to} to={n.to} activeOptions={{ exact: true }} className="as-link" activeProps={{ className: "as-link-active" }}>{n.label}</Link>
             ))}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="as-link flex items-center gap-1">{p.lang === "bg" ? "Още" : "More"}<ChevronDown size={14} /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {nav.slice(5).map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to}>{n.label}</Link></DropdownMenuItem>)}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" aria-label={p.t("language")} title={p.t("language")} className="ml-auto shrink-0 md:ml-0">
-                <Languages size={16} /><span>{p.lang.toUpperCase()}</span><ChevronDown size={12} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuRadioGroup value={p.lang} onValueChange={(l) => { if (isLang(l)) p.setLang(l); }}>
-                {languages.map((l) => <DropdownMenuRadioItem key={l.code} value={l.code} lang={l.code}>
-                  <span className="min-w-7 text-xs text-muted-foreground">{l.code.toUpperCase()}</span>{l.name}
-                </DropdownMenuRadioItem>)}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <HeaderSearch />
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Button variant="secondary" size="icon" aria-label={feedbackCopy[p.lang].title} title={feedbackCopy[p.lang].title} onClick={() => setFeedbackOpen(true)}><MessageSquare size={16} /></Button>
-            <div className="flex items-center gap-1 rounded-full bg-secondary p-0.5" role="group" aria-label={europeCopy[p.lang].base}>
-              <span className="px-2 text-xs text-muted-foreground">{europeCopy[p.lang].base}</span>
-              {(["EUR", "USD"] as Currency[]).map((c) => (
-                <Button key={c} size="sm" variant={p.currency === c ? "default" : "ghost"} aria-pressed={p.currency === c} onClick={() => p.setCurrency(c)}>
-                  {c}
-                </Button>
-              ))}
-            </div>
-            <button onClick={p.toggleTheme} aria-label={p.t("toggleTheme")}
-              className="rounded-full bg-secondary p-2 text-muted-foreground hover:text-foreground">
-              {p.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <button onClick={() => { if (p.user) setOpen(true); else navigate({ to: "/auth" }); }}
-              className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
-              <Plus size={16} /> {p.t("addTx")}
-            </button>
-            {p.user ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden text-sm text-muted-foreground lg:inline">
-                  {p.displayName || p.user.email}
-                  {p.isPro && <span className="ml-1.5 rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">PRO</span>}
-                </span>
-                <button onClick={signOut} aria-label={p.t("signOut")} title={p.t("signOut")}
-                  className="rounded-full bg-secondary p-2 text-muted-foreground hover:text-foreground"><LogOut size={16} /></button>
-              </div>
+          <div className="min-w-0 flex-1 lg:max-w-md"><HeaderSearch /></div>
+          <div className="flex shrink-0 items-center gap-1">
+            <CommandMenu onAddTx={() => setOpen(true)} />
+            {p.isPro ? (
+              <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">PRO</span>
             ) : (
-              <Link to="/auth" className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary">{p.t("signIn")}</Link>
+              <Link to="/pricing" className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline">
+                {p.lang === "bg" ? "Безплатен план" : "Free plan"}
+              </Link>
+            )}
+            <button onClick={() => { if (p.user) setOpen(true); else navigate({ to: "/auth" }); }} aria-label={p.t("addTx")} title={p.t("addTx")}
+              className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid">
+              <Plus size={17} />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button aria-label={p.t("language")} title={p.t("language")} className="press flex h-9 items-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-secondary">
+                  <Globe size={15} className="text-muted-foreground" />{p.lang.toUpperCase()}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">{p.t("language")}</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={p.lang} onValueChange={(l) => { if (isLang(l)) p.setLang(l); }}>
+                  {languages.map((l) => <DropdownMenuRadioItem key={l.code} value={l.code} lang={l.code}>
+                    <span className="min-w-7 text-xs text-muted-foreground">{l.code.toUpperCase()}</span>{l.name}
+                  </DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button aria-label={europeCopy[p.lang].base} title={europeCopy[p.lang].base} className="press grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
+                  <Settings2 size={17} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">{europeCopy[p.lang].base}</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={p.currency} onValueChange={(c) => { if (c === "EUR" || c === "USD") p.setCurrency(c as Currency); }}>
+                  <DropdownMenuRadioItem value="EUR">€ EUR</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="USD">$ USD</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); p.toggleTheme(); }}>
+                  {p.theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}{p.t("toggleTheme")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {p.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button aria-label={p.displayName || p.user.email || "account"} className="press relative ml-1 grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                    {(p.displayName || p.user.email || "?").slice(0, 1).toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60">
+                  <div className="px-2 py-1.5">
+                    <p className="truncate text-sm font-semibold">{p.displayName || p.user.email}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{p.isPro ? "Pro" : (p.lang === "bg" ? "Безплатен план" : "Free plan")}</p>
+                  </div>
+                  {!p.isPro && <DropdownMenuItem asChild><Link to="/pricing" className="font-semibold text-primary"><Crown size={14} />{p.lang === "bg" ? "Надгради до Pro" : "Upgrade to Pro"}</Link></DropdownMenuItem>}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/profile"><UserRound size={14} />{p.lang === "bg" ? "Моят профил" : "My profile"}</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/brokers"><Landmark size={14} />{p.t("brokers")}</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/analytics"><PieChart size={14} />{p.t("analytics")}</Link></DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFeedbackOpen(true)}><MessageSquare size={14} />{feedbackCopy[p.lang].title}</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => void signOut()}><LogOut size={14} />{p.t("signOut")}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth" aria-label={p.t("signIn")} title={p.t("signIn")} className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"><UserRound size={18} /></Link>
             )}
           </div>
         </div>
+        <nav className="as-subnav flex items-center gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden">
+          {nav.slice(0, 5).map((n) => (
+            <Link key={n.to} to={n.to} activeOptions={{ exact: true }} className="as-link shrink-0" activeProps={{ className: "as-link-active" }}>{n.label}</Link>
+          ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="as-link flex shrink-0 items-center gap-1">{p.lang === "bg" ? "Още" : "More"}<ChevronDown size={14} /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {nav.slice(5).map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to}>{n.label}</Link></DropdownMenuItem>)}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
       </header>
-      {!p.user && (
-        <div className="border-b border-border bg-accent/60 text-accent-foreground">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
-            <span>{p.t("signIn")}</span>
-            <Link to="/auth" className="font-semibold text-primary">{p.t("signUp")} →</Link>
+      <main className="page-enter mx-auto max-w-7xl px-4 py-6">{children}</main>
+      <footer className="site-footer mt-10 pb-28 md:pb-0">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div className="font-display text-lg font-bold">Dividend Drift</div>
+            <p className="mt-2 text-sm opacity-75">{legalCopy(p.lang).footer.tagline}</p>
+          </div>
+          <div>
+            <h4 className="footer-h">{legalCopy(p.lang).footer.product}</h4>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li><Link to="/pricing">{p.t("pricing")}</Link></li>
+              <li><Link to="/compare">{legalCopy(p.lang).footer.compare}</Link></li>
+              <li><Link to="/markets">{marketCopy[p.lang].markets}</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="footer-h">{legalCopy(p.lang).footer.legal}</h4>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li><Link to="/terms">{legalCopy(p.lang).terms.title}</Link></li>
+              <li><Link to="/privacy">{legalCopy(p.lang).privacy.title}</Link></li>
+              <li><Link to="/refund">{legalCopy(p.lang).refund.title}</Link></li>
+              <li><Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="footer-h">{legalCopy(p.lang).footer.contact}</h4>
+            <p className="mt-3 text-sm opacity-75">{SUPPORT_EMAIL ? <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> : legalCopy(p.lang).footer.emailSoon}</p>
+            <button type="button" onClick={() => setFeedbackOpen(true)} className="mt-3 inline-flex items-center gap-2 text-sm"><MessageSquare size={16} />{feedbackCopy[p.lang].title}</button>
           </div>
         </div>
-      )}
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
-      <footer className="mx-auto flex max-w-7xl justify-end px-4 pb-6"><Button variant="ghost" onClick={() => setFeedbackOpen(true)}><MessageSquare size={16} />{feedbackCopy[p.lang].title}</Button></footer>
+        <div className="footer-bottom">
+          <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-4 text-xs opacity-70">
+            <span>© {new Date().getFullYear()} Dividend Drift. {legalCopy(p.lang).footer.rights}</span>
+            <span>{legalCopy(p.lang).footer.notAdvice}</span>
+          </div>
+        </div>
+      </footer>
+      <nav aria-label="Quick navigation" className="glass-bar fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden">
+        {([
+          { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+          { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
+        ] as const).map(({ to, label, Icon }) => (
+          <Link key={to} to={to} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
+            <Icon size={20} /><span className="max-w-16 truncate">{label}</span>
+          </Link>
+        ))}
+        <button onClick={() => { if (p.user) setOpen(true); else navigate({ to: "/auth" }); }} aria-label={p.t("addTx")}
+          className="bg-brand-gradient -mt-7 grid size-14 place-items-center rounded-full text-primary-foreground shadow-glow ring-4 ring-background press">
+          <Plus size={24} />
+        </button>
+        {([
+          { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
+          { to: p.user ? "/profile" : "/auth", label: p.user ? (p.lang === "bg" ? "Профил" : "Profile") : p.t("signIn"), Icon: UserRound },
+        ] as const).map(({ to, label, Icon }) => (
+          <Link key={label} to={to} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
+            <Icon size={20} /><span className="max-w-16 truncate">{label}</span>
+          </Link>
+        ))}
+      </nav>
       <AddTransactionDialog open={open} onClose={() => setOpen(false)} />
       <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
@@ -126,7 +225,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-border bg-card p-5 ${className}`}>{children}</div>;
+  return <div className={`card-interactive rounded-2xl border border-border bg-card p-5 ${className}`}>{children}</div>;
 }
 
 export function Delta({ value, children }: { value: number; children: ReactNode }) {
