@@ -16,12 +16,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Crown, Globe, Landmark, LayoutDashboard, LogOut, MessageSquare, Moon, PieChart, Plus, Search, Settings2, Sun, UserRound, Wallet } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
+import { AnalyticsConsent } from "./AnalyticsConsent";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const p = usePortfolio();
@@ -59,6 +61,40 @@ export function AppShell({ children }: { children: ReactNode }) {
       toast.error(error instanceof Error ? error.message : p.lang === "bg" ? "Неуспешно излизане от профила." : "Unable to sign out.");
     }
   };
+  useEffect(() => {
+    if (!p.user) return;
+    let referralCode: string | null = null;
+    let oauthSignupStarted = false;
+    try {
+      referralCode = sessionStorage.getItem("folio-referral-code");
+      oauthSignupStarted = sessionStorage.getItem("folio-oauth-signup-started") === "true";
+      if (oauthSignupStarted) sessionStorage.removeItem("folio-oauth-signup-started");
+    } catch (error) {
+      console.error("Unable to read referral code", error);
+      return;
+    }
+    const createdAt = Date.parse(p.user.created_at);
+    if (oauthSignupStarted && Date.now() >= createdAt && Date.now() - createdAt < 10 * 60_000)
+      trackAnalyticsEvent("signup_completed");
+    if (!referralCode || !/^[a-fA-F0-9]{16}$/.test(referralCode)) return;
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      const token = data.session?.access_token;
+      if (!token) return;
+      const response = await fetch("/api/referrals/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: referralCode }),
+      });
+      if (!response.ok) throw new Error(`Referral could not be linked (${response.status})`);
+      if (active) sessionStorage.removeItem("folio-referral-code");
+    })().catch((error: unknown) => {
+      console.error("Unable to link referral", error);
+    });
+    return () => { active = false; };
+  }, [p.user]);
   return (
     <div className="min-h-screen">
       {getPaddleEnvironment() === "sandbox" && (
@@ -238,6 +274,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AuthForm onSignedIn={() => setAuthOpen(false)} />
         </DialogContent>
       </Dialog>
+      <AnalyticsConsent />
     </div>
   );
 }

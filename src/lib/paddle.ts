@@ -32,6 +32,8 @@ export const paddleListeners = new Set<(e: { name?: string }) => void>();
 export async function openProCheckout(opts: { priceId: "pro_monthly" | "pro_yearly"; userId: string; email?: string | undefined }) {
   await initializePaddle();
   const priceId = await resolvePaddlePrice({ data: { priceId: opts.priceId, environment: getPaddleEnvironment() } });
+  const { trackAnalyticsEvent } = await import("./analytics");
+  trackAnalyticsEvent("checkout_started");
   window.Paddle.Checkout.open({
     items: [{ priceId, quantity: 1 }],
     customer: opts.email ? { email: opts.email } : undefined,

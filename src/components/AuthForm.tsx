@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { usePortfolio } from "@/lib/store";
 import { authCopy, authErrorKey } from "@/lib/auth-i18n";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const input = "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
 
@@ -22,6 +23,15 @@ export function AuthForm({ onSignedIn, redirectOnSignIn = false }: { onSignedIn?
   const c = authCopy[p.lang];
 
   useEffect(() => { if (redirectOnSignIn && p.user) navigate({ to: "/" }); }, [p.user, navigate, redirectOnSignIn]);
+  useEffect(() => {
+    const referralCode = new URLSearchParams(window.location.search).get("ref")?.trim();
+    if (referralCode && /^[a-fA-F0-9]{16}$/.test(referralCode)) {
+      setMode("up");
+      try { sessionStorage.setItem("folio-referral-code", referralCode); } catch (error) {
+        console.error("Unable to retain referral code for sign-in", error);
+      }
+    }
+  }, []);
 
   const switchMode = (m: "in" | "up") => { setMode(m); setError(null); };
 
@@ -29,12 +39,21 @@ export function AuthForm({ onSignedIn, redirectOnSignIn = false }: { onSignedIn?
     e.preventDefault(); setBusy(true); setError(null);
     try {
       if (mode === "up") {
+        const referralCode = new URLSearchParams(window.location.search).get("ref")?.trim();
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(), password, options: { emailRedirectTo: window.location.origin, data: { display_name: name.trim().slice(0, 60) } },
+          email: email.trim(), password, options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+              display_name: name.trim().slice(0, 60),
+              ...(referralCode && /^[a-fA-F0-9]{16}$/.test(referralCode) ? { referral_code: referralCode } : {}),
+            },
+          },
         });
         if (error) throw error;
         if (data.user && (data.user.identities?.length ?? 0) === 0) { setError(c.exists); setMode("in"); return; }
+        if (data.user) trackAnalyticsEvent("signup_completed");
         if (!data.session) setSentTo(email.trim());
+        else onSignedIn?.();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
@@ -52,8 +71,20 @@ export function AuthForm({ onSignedIn, redirectOnSignIn = false }: { onSignedIn?
     if (error) toast.error(error.message); else toast.success(p.t("resetSent"));
   };
   const oauth = async (provider: "google" | "apple") => {
+    if (mode === "up") {
+      try { sessionStorage.setItem("folio-oauth-signup-started", "true"); } catch (error) {
+        console.error("Unable to remember OAuth sign-up intent", error);
+      }
+    }
     const r = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
-    if (r.error) toast.error(r.error.message);
+    if (r.error) {
+      if (mode === "up") {
+        try { sessionStorage.removeItem("folio-oauth-signup-started"); } catch (error) {
+          console.error("Unable to clear OAuth sign-up intent", error);
+        }
+      }
+      toast.error(r.error.message);
+    }
   };
 
   if (sentTo) return (

@@ -17,6 +17,7 @@ const en: Copy = {
     ["5. Acceptable use", "Do not misuse the service, attempt to access other users' data, scrape it automatically or send abusive messages in Community chat. We may suspend accounts that break these rules."],
     ["6. Liability", "The service is provided \"as is\". To the extent permitted by law we are not liable for investment losses or decisions taken based on the app."],
     ["7. Changes", "We may update these terms; material changes are announced in the app. Continued use means acceptance."],
+    ["8. Referrals", "A new referred customer and the referring user each receive one month of Pro after the referred customer completes their first paid Pro subscription transaction. The reward extends an active paid period or starts immediately when no paid period is active. Rewards have no cash value, are not transferable and may be withheld for self-referrals or abuse."],
   ] },
   privacy: { title: "Privacy Policy", updated: "Last updated: October 2026", sections: [
     ["What we store", "Your email, profile (optional photo and bio), brokers, transactions, goals, journal notes, AI conversations and messages. Watchlist, alerts and display preferences stay in your browser."],
@@ -24,7 +25,8 @@ const en: Copy = {
     ["Who can see it", "Your data is private to your account by database rules. Community shows only what you choose to publish; a portfolio showcase shares percentages only, never amounts."],
     ["Processors", "Hosting and database provider, payment provider (handles card data — we never see it), AI provider for Pro AI features (receives only the content needed for your request), market data providers (receive ticker symbols only)."],
     ["Your rights (GDPR)", "You may access, correct, export or delete your data at any time. Deleting your account removes your stored rows. Contact us using the support email."],
-    ["Cookies", "We use only essential storage for sign-in and preferences. No tracking cookies."],
+    ["Optional analytics", "If you opt in, we store event names with a random session-only identifier to understand sign-ups, first holdings and Pro checkout. We do not send portfolio details, email addresses or names to analytics providers. Events are retained for up to 90 days. You can change your choice below."],
+    ["Cookies", "Essential sign-in and preference storage is used to provide the service. Optional first-party analytics are stored only after your consent; no third-party analytics provider is used."],
   ] },
   refund: { title: "Refund & Cancellation Policy", updated: "Last updated: October 2026", sections: [
     ["Cancel anytime", "You can cancel your Pro subscription at any time. Pro remains active until the end of the period you already paid for, and you will not be charged again."],
@@ -50,6 +52,7 @@ const bg: Copy = {
     ["5. Допустима употреба", "Забранено е злоупотребата с услугата, опитите за достъп до чужди данни, автоматичното извличане и обидните съобщения в чата. Можем да спрем профили, които нарушават правилата."],
     ["6. Отговорност", "Услугата се предоставя „както е“. Доколкото законът позволява, не носим отговорност за инвестиционни загуби или решения, взети на база приложението."],
     ["7. Промени", "Можем да обновяваме условията; съществените промени се обявяват в приложението."],
+    ["8. Покани", "Новият поканен клиент и поканилият го потребител получават по един месец Pro, след като поканеният завърши първата си платена Pro транзакция. Наградата удължава активния платен период или започва веднага, ако няма такъв. Няма парична стойност, не може да се прехвърля и може да бъде отказана при самопокани или злоупотреба."],
   ] },
   privacy: { title: "Политика за поверителност", updated: "Последна актуализация: октомври 2026", sections: [
     ["Какво пазим", "Имейл, профил (по желание снимка и описание), брокери, сделки, цели, бележки в дневника, AI разговори и съобщения. Watchlist, известията и настройките остават в браузъра ти."],
@@ -57,7 +60,8 @@ const bg: Copy = {
     ["Кой ги вижда", "Данните ти са достъпни само за твоя профил чрез правила в базата. В Общността се вижда само каквото решиш да публикуваш; витрината на портфолиото показва само проценти, никога суми."],
     ["Обработващи", "Доставчик на хостинг и база данни, платежен доставчик (обработва картата — ние не я виждаме), AI доставчик за Pro функциите (получава само нужното за заявката), доставчици на пазарни данни (получават само тикери)."],
     ["Твоите права (GDPR)", "Можеш по всяко време да достъпиш, коригираш, изтеглиш или изтриеш данните си. Свържи се с нас на имейла за поддръжка."],
-    ["Бисквитки", "Ползваме само необходимото хранилище за вход и настройки. Без проследяващи бисквитки."],
+    ["Аналитика по избор", "Ако дадеш съгласие, пазим само имена на събития и случаен временен идентификатор на сесията, за да разбираме регистрациите, първите позиции и Pro плащанията. Не изпращаме портфейл, имейл или име към аналитичен доставчик. Събитията се пазят до 90 дни. Можеш да промениш избора си по-долу."],
+    ["Бисквитки", "Използваме необходимо хранилище за вход и настройки. Аналитиката от първа страна е по избор и се записва само след съгласие; не използваме външен доставчик за аналитика."],
   ] },
   refund: { title: "Политика за отказ и възстановяване", updated: "Последна актуализация: октомври 2026", sections: [
     ["Откажи по всяко време", "Можеш да откажеш Pro абонамента по всяко време. Pro остава активен до края на вече платения период и няма да бъдеш таксуван повторно."],

@@ -3,7 +3,9 @@ import type { Lang } from "@/lib/i18n";
 type PlanCopy = {
   compareTitle: string; compareSub: string; freeTag: string; proTag: string;
   groups: { title: string; free: string; pro: string }[];
-  gateNote: string; yearlySave: string; seeWhat: string;
+  gateNote: string; yearlySave: string; yearlyDetails: string; monthlyDetails: string; seeWhat: string;
+  referralTitle: string; referralBody: string; referralCopy: string; referralCopied: string;
+  referralStatus: (pending: number, rewarded: number) => string;
 };
 
 const en: PlanCopy = {
@@ -18,7 +20,14 @@ const en: PlanCopy = {
     { title: "Planning", free: "Investment goals", pro: "FIRE calculator & scenarios" },
     { title: "Community", free: "—", pro: "Profile, shared allocation, private chat" },
   ],
-  gateNote: "€4.99/month or €49.99/year", yearlySave: "Save 17% yearly", seeWhat: "See everything in Pro",
+  gateNote: "€4.99/month or €49.99/year", yearlySave: "Save 17% yearly",
+  yearlyDetails: "€49.99 billed yearly; renews automatically. Cancel any time.",
+  monthlyDetails: "Billed monthly; renews automatically. Cancel any time.",
+  seeWhat: "See everything in Pro",
+  referralTitle: "Invite a friend",
+  referralBody: "You and a new friend each get one month of Pro after their first successful paid subscription. The month is added after any active paid period.",
+  referralCopy: "Copy invite link", referralCopied: "Invite link copied",
+  referralStatus: (pending, rewarded) => `${pending} pending · ${rewarded} rewarded`,
 };
 
 const bg: PlanCopy = {
@@ -33,7 +42,14 @@ const bg: PlanCopy = {
     { title: "Планиране", free: "Инвестиционни цели", pro: "FIRE калкулатор и сценарии" },
     { title: "Общност", free: "—", pro: "Профил, споделено разпределение, лични съобщения" },
   ],
-  gateNote: "€4.99/месец или €49.99/година", yearlySave: "Спестяваш 17% годишно", seeWhat: "Виж всичко в Pro",
+  gateNote: "€4.99/месец или €49.99/година", yearlySave: "Спестяваш 17% годишно",
+  yearlyDetails: "€49,99 се таксуват годишно и абонаментът се подновява автоматично. Отказ по всяко време.",
+  monthlyDetails: "Таксуване и автоматично подновяване всеки месец. Отказ по всяко време.",
+  seeWhat: "Виж всичко в Pro",
+  referralTitle: "Покани приятел",
+  referralBody: "Ти и новият ти приятел получавате по един месец Pro след първото му успешно платено плащане. Наградният месец се добавя след активния платен период.",
+  referralCopy: "Копирай покана", referralCopied: "Линкът за покана е копиран",
+  referralStatus: (pending, rewarded) => `${pending} чакащи · ${rewarded} наградени`,
 };
 
 const de: PlanCopy = {
@@ -48,7 +64,14 @@ const de: PlanCopy = {
     { title: "Planung", free: "Anlageziele", pro: "FIRE-Rechner & Szenarien" },
     { title: "Community", free: "—", pro: "Profil, geteilte Aufteilung, private Chats" },
   ],
-  gateNote: "€4,99/Monat oder €49,99/Jahr", yearlySave: "17% sparen jährlich", seeWhat: "Alles in Pro ansehen",
+  gateNote: "€4,99/Monat oder €49,99/Jahr", yearlySave: "17% sparen jährlich",
+  yearlyDetails: "€49,99 jährlich; automatische Verlängerung. Jederzeit kündbar.",
+  monthlyDetails: "Monatliche Abrechnung und automatische Verlängerung. Jederzeit kündbar.",
+  seeWhat: "Alles in Pro ansehen",
+  referralTitle: "Freund einladen",
+  referralBody: "Du und ein neuer Freund erhalten je einen Pro-Monat nach der ersten erfolgreichen Zahlung des Freundes. Der Monat wird an einen aktiven bezahlten Zeitraum angehängt.",
+  referralCopy: "Einladungslink kopieren", referralCopied: "Einladungslink kopiert",
+  referralStatus: (pending, rewarded) => `${pending} ausstehend · ${rewarded} belohnt`,
 };
 
 const es: PlanCopy = {
@@ -63,7 +86,14 @@ const es: PlanCopy = {
     { title: "Planificación", free: "Metas de inversión", pro: "Calculadora FIRE y escenarios" },
     { title: "Comunidad", free: "—", pro: "Perfil, distribución compartida, chat privado" },
   ],
-  gateNote: "€4,99/mes o €49,99/año", yearlySave: "Ahorra 17% al año", seeWhat: "Ver todo en Pro",
+  gateNote: "€4,99/mes o €49,99/año", yearlySave: "Ahorra 17% al año",
+  yearlyDetails: "€49,99 al año, con renovación automática. Cancela cuando quieras.",
+  monthlyDetails: "Facturación y renovación automática mensual. Cancela cuando quieras.",
+  seeWhat: "Ver todo en Pro",
+  referralTitle: "Invita a un amigo",
+  referralBody: "Tú y un nuevo amigo reciben un mes de Pro cada uno tras el primer pago válido del amigo. El mes se añade después de cualquier periodo pagado activo.",
+  referralCopy: "Copiar enlace de invitación", referralCopied: "Enlace copiado",
+  referralStatus: (pending, rewarded) => `${pending} pendientes · ${rewarded} recompensados`,
 };
 
 const it: PlanCopy = {
@@ -78,7 +108,14 @@ const it: PlanCopy = {
     { title: "Pianificazione", free: "Obiettivi d'investimento", pro: "Calcolatore FIRE e scenari" },
     { title: "Community", free: "—", pro: "Profilo, allocazione condivisa, chat privata" },
   ],
-  gateNote: "€4,99/mese o €49,99/anno", yearlySave: "Risparmi il 17% all'anno", seeWhat: "Scopri tutto in Pro",
+  gateNote: "€4,99/mese o €49,99/anno", yearlySave: "Risparmi il 17% all'anno",
+  yearlyDetails: "€49,99 all'anno, con rinnovo automatico. Annulla quando vuoi.",
+  monthlyDetails: "Addebito e rinnovo automatico mensile. Annulla quando vuoi.",
+  seeWhat: "Scopri tutto in Pro",
+  referralTitle: "Invita un amico",
+  referralBody: "Tu e un nuovo amico ricevete un mese di Pro ciascuno dopo il primo pagamento riuscito dell'amico. Il mese si aggiunge al periodo già pagato.",
+  referralCopy: "Copia link d'invito", referralCopied: "Link copiato",
+  referralStatus: (pending, rewarded) => `${pending} in attesa · ${rewarded} premiati`,
 };
 
 export const planCopy: Record<Lang, PlanCopy> = { en, bg, de, es, it };

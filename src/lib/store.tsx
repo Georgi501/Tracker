@@ -11,6 +11,7 @@ import { getExchangeRate } from "./market.functions";
 import { getQuotes } from "./quotes.functions";
 import { convertImport } from "./history.functions";
 import type { ImportedTx } from "./csv-import";
+import { trackAnalyticsEvent } from "./analytics";
 
 export interface Broker { id: string; name: string; format: string }
 
@@ -160,6 +161,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           asset_id: assetId, kind: t.kind, quantity: t.quantity, price: t.price, date: t.date,
         });
         if (error) throw error;
+        if (t.kind === "buy" && transactions.length === 0) trackAnalyticsEvent("first_holding_added");
         await reload();
       },
       importTransactions: async (brokerId, rows) => {
@@ -182,6 +184,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           return { asset_id: assetId, broker_id: brokerId, kind: r.kind, quantity: r.quantity, price: r.price, date: r.date };
         }));
         if (error) throw error;
+        if (transactions.length === 0 && converted.some((transaction) => transaction.kind === "buy"))
+          trackAnalyticsEvent("first_holding_added");
         await reload();
         return rows.length;
       },

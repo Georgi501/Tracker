@@ -36,6 +36,8 @@ import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiThesisRouteImport } from './routes/api/thesis'
 import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
 import { Route as CommunityUserIdRouteImport } from './routes/community.$userId'
+import { Route as ApiPublicAnalyticsRouteImport } from './routes/api/public/analytics'
+import { Route as ApiReferralsClaimRouteImport } from './routes/api/referrals/claim'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -173,6 +175,16 @@ const CommunityUserIdRoute = CommunityUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => CommunityRoute,
 } as any)
+const ApiPublicAnalyticsRoute = ApiPublicAnalyticsRouteImport.update({
+  id: '/api/public/analytics',
+  path: '/api/public/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferralsClaimRoute = ApiReferralsClaimRouteImport.update({
+  id: '/api/referrals/claim',
+  path: '/api/referrals/claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -208,6 +220,8 @@ export interface FileRoutesByFullPath {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
+  '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -238,6 +252,8 @@ export interface FileRoutesByTo {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor': typeof AdvisorIndexRoute
+  '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -269,6 +285,8 @@ export interface FileRoutesById {
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
   '/advisor/': typeof AdvisorIndexRoute
+  '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -301,6 +319,8 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor/'
+    | '/api/public/analytics'
+    | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -331,6 +351,8 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor'
+    | '/api/public/analytics'
+    | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -361,6 +383,8 @@ export interface FileRouteTypes {
     | '/asset/$symbol'
     | '/community/$userId'
     | '/advisor/'
+    | '/api/public/analytics'
+    | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -391,6 +415,8 @@ export interface RootRouteChildren {
   ApiThesisRoute: typeof ApiThesisRoute
   AssetSymbolRoute: typeof AssetSymbolRoute
   AdvisorIndexRoute: typeof AdvisorIndexRoute
+  ApiPublicAnalyticsRoute: typeof ApiPublicAnalyticsRoute
+  ApiReferralsClaimRoute: typeof ApiReferralsClaimRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -585,6 +611,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunityUserIdRouteImport
       parentRoute: typeof CommunityRoute
     }
+    '/api/public/analytics': {
+      id: '/api/public/analytics'
+      path: '/api/public/analytics'
+      fullPath: '/api/public/analytics'
+      preLoaderRoute: typeof ApiPublicAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/referrals/claim': {
+      id: '/api/referrals/claim'
+      path: '/api/referrals/claim'
+      fullPath: '/api/referrals/claim'
+      preLoaderRoute: typeof ApiReferralsClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -634,6 +674,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiThesisRoute: ApiThesisRoute,
   AssetSymbolRoute: AssetSymbolRoute,
   AdvisorIndexRoute: AdvisorIndexRoute,
+  ApiPublicAnalyticsRoute: ApiPublicAnalyticsRoute,
+  ApiReferralsClaimRoute: ApiReferralsClaimRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

@@ -273,6 +273,7 @@ export type Database = {
           investing_style: string
           is_public: boolean
           lang: string
+          referral_code: string
           share_portfolio: boolean
         }
         Insert: {
@@ -285,6 +286,7 @@ export type Database = {
           investing_style?: string
           is_public?: boolean
           lang?: string
+          referral_code?: string
           share_portfolio?: boolean
         }
         Update: {
@@ -297,7 +299,56 @@ export type Database = {
           investing_style?: string
           is_public?: boolean
           lang?: string
+          referral_code?: string
           share_portfolio?: boolean
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_user_id: string
+          referrer_id: string
+          rewarded_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          referrer_id: string
+          rewarded_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          referrer_id?: string
+          rewarded_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          session_id?: string
         }
         Relationships: []
       }
@@ -415,6 +466,9 @@ export type Database = {
     }
     Functions: {
       is_pro: { Args: { _user_id: string }; Returns: boolean }
+      claim_referral_code: { Args: { _user_id: string; _code: string }; Returns: boolean }
+      grant_referral_reward: { Args: { _referred_user_id: string }; Returns: boolean }
+      record_analytics_event: { Args: { _session_id: string; _event_name: string }; Returns: boolean }
       public_portfolio: {
         Args: { _user_id: string }
         Returns: {

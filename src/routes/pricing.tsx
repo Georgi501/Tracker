@@ -9,6 +9,8 @@ import { BarsSilhouette, CurveSilhouette, HeatmapSilhouette, ProBadge } from "@/
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
 import { planCopy } from "@/lib/plan-i18n";
+import { supabase } from "@/integrations/supabase/client";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -29,26 +31,76 @@ function Pricing() {
   const [yearly, setYearly] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCounts, setReferralCounts] = useState({ pending: 0, rewarded: 0 });
   const c = paymentsCopy[p.lang];
   const pc = proCopy[p.lang];
+  const { isPro, reload } = p;
   useEffect(() => {
-    const done = (e: { name?: string }) => { if (e.name === "checkout.completed") setActivating(true); };
+    trackAnalyticsEvent("pricing_view");
+    const done = (e: { name?: string }) => {
+      if (e.name === "checkout.completed") {
+        trackAnalyticsEvent("checkout_completed");
+        setActivating(true);
+      }
+    };
     paddleListeners.add(done);
     if (new URLSearchParams(window.location.search).get("checkout") === "success") setActivating(true);
     return () => { paddleListeners.delete(done); };
   }, []);
+  useEffect(() => {
+    if (!p.user) {
+      setReferralCode(null);
+      setReferralCounts({ pending: 0, rewarded: 0 });
+      return;
+    }
+    let active = true;
+    void Promise.all([
+      supabase.from("profiles").select("referral_code").eq("id", p.user.id).maybeSingle(),
+      supabase.from("referrals").select("status").eq("referrer_id", p.user.id),
+    ]).then(([profile, referrals]) => {
+      if (!active) return;
+      if (profile.error) {
+        toast.error(profile.error.message);
+        return;
+      }
+      if (referrals.error) {
+        toast.error(referrals.error.message);
+        return;
+      }
+      setReferralCode(profile.data?.referral_code ?? null);
+      setReferralCounts({
+        pending: referrals.data.filter((referral) => referral.status === "pending").length,
+        rewarded: referrals.data.filter((referral) => referral.status === "rewarded").length,
+      });
+    }).catch((error: unknown) => {
+      if (active) toast.error(error instanceof Error ? error.message : "Unable to load referral details");
+    });
+    return () => { active = false; };
+  }, [p.user]);
   // Pro is granted only by the verified payment notification; poll until it lands.
   useEffect(() => {
     if (!activating) return;
-    if (p.isPro) { setActivating(false); toast.success(c.success); return; }
-    const t = setInterval(() => { void p.reload(); }, 3000);
+    if (isPro) { setActivating(false); toast.success(c.success); return; }
+    const t = setInterval(() => { void reload(); }, 3000);
     return () => clearInterval(t);
-  }, [activating, p.isPro]);
+  }, [activating, isPro, reload, c.success]);
   const buy = async () => {
     if (!p.user) return;
     setBusy(true);
     try { await initializePaddle(); await openProCheckout({ priceId: yearly ? "pro_yearly" : "pro_monthly", userId: p.user.id, email: p.user.email }); }
     catch { toast.error(c.failed); } finally { setBusy(false); }
+  };
+  const copyReferralLink = async () => {
+    if (!referralCode) return;
+    const link = `${window.location.origin}/auth?ref=${encodeURIComponent(referralCode)}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      trackAnalyticsEvent("referral_link_copied");
+      toast.success(planCopy[p.lang].referralCopied);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to copy referral link");
+    }
   };
   const Feature = ({ children }: { children: string }) => (
     <li className="flex gap-2 text-sm"><Check size={16} className="mt-0.5 text-primary" />{children}</li>
@@ -93,6 +145,21 @@ function Pricing() {
         </Card>
       </div>
       <p className="mt-3 text-center text-xs font-semibold text-primary">{planCopy[p.lang].yearlySave}</p>
+      <p className="mt-1 text-center text-xs text-muted-foreground">{yearly ? planCopy[p.lang].yearlyDetails : planCopy[p.lang].monthlyDetails}</p>
+      {p.user && referralCode && (
+        <Card className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display font-semibold">{planCopy[p.lang].referralTitle}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{planCopy[p.lang].referralBody}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {planCopy[p.lang].referralStatus(referralCounts.pending, referralCounts.rewarded)}
+            </p>
+          </div>
+          <button onClick={() => void copyReferralLink()} className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+            {planCopy[p.lang].referralCopy}
+          </button>
+        </Card>
+      )}
       <section className="mt-12">
         <h2 className="font-display text-center text-2xl font-bold">{planCopy[p.lang].compareTitle}</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted-foreground">{planCopy[p.lang].compareSub}</p>

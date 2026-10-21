@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
+import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePortfolio } from "@/lib/store";
-import type { Lang } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
 
 type Copy = { morning: string; afternoon: string; evening: string; guestTitle: string; guestSub: string; signUp: string; explore: string; emptyTitle: string; emptySub: string; s1: string; s2: string; s3: string; activeSub: string; markets: string; watchlist: string; analytics: string; import: string };
 const COPY: Record<Lang, Copy> = {
@@ -14,6 +14,13 @@ const COPY: Record<Lang, Copy> = {
 };
 
 const chip = "press inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent";
+const GOAL_LABEL: Record<Lang, string> = {
+  en: "Set your first investment goal",
+  bg: "Задай първата си инвестиционна цел",
+  de: "Lege dein erstes Anlageziel fest",
+  es: "Define tu primer objetivo de inversión",
+  it: "Imposta il tuo primo obiettivo d'investimento",
+};
 
 export function WelcomeHero() {
   const p = usePortfolio();
@@ -41,7 +48,7 @@ export function WelcomeHero() {
       <h1 className="font-display mt-1 text-balance text-2xl font-bold leading-tight md:text-4xl">{c.emptyTitle}</h1>
       <p className="mt-2 leading-relaxed text-muted-foreground">{c.emptySub}</p>
       <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
-        {[{ to: "/brokers", icon: Upload, t: c.s1 }, { to: "/holdings", icon: PlusCircle, t: c.s2 }, { to: "/watchlist", icon: Eye, t: c.s3 }].map((s, i) => (
+        {[{ to: "/brokers", icon: Upload, t: c.s1 }, { to: "/holdings", icon: PlusCircle, t: c.s2 }, { to: "/tools", icon: Target, t: GOAL_LABEL[p.lang] }].map((s, i) => (
           <Link key={s.to} to={s.to} className="card-interactive press flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-4">
             <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{i + 1}</span>
             <s.icon className="size-4 text-muted-foreground" /><span className="font-medium">{s.t}</span>
@@ -51,11 +58,26 @@ export function WelcomeHero() {
     </section>
   );
 
+  const quotedHoldings = p.holdings.filter((holding) => !!holding.asset.quoteAt);
+  const latestQuote = quotedHoldings
+    .map((holding) => holding.asset.quoteAt)
+    .filter((at): at is string => !!at)
+    .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+  const quoteDate = latestQuote
+    ? new Intl.DateTimeFormat(languageLocale(p.lang), { dateStyle: "medium", timeStyle: "short" }).format(new Date(latestQuote))
+    : null;
+  const quoteSources = [...new Set(quotedHoldings.map((holding) => holding.asset.type === "crypto" ? "CoinGecko" : "Yahoo Finance"))].join(" & ");
+
   return (
     <section className="rise flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <h1 className="font-display text-2xl font-bold md:text-3xl">{greet}{name ? `, ${name}` : ""}</h1>
         <p className="text-sm text-muted-foreground">{c.activeSub}</p>
+        {quoteDate && <p className="mt-1 text-xs text-muted-foreground">
+          {p.lang === "bg"
+            ? `Пазарни данни от ${quoteSources} · последна налична котировка: ${quoteDate}. Данните може да са забавени.`
+            : `Market data from ${quoteSources} · latest available quote: ${quoteDate}. Data may be delayed.`}
+        </p>}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Link to="/markets" className={chip}><Search className="size-4" />{c.markets}</Link>

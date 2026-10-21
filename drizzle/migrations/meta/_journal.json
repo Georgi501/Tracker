@@ -64,6 +64,13 @@
       "when": 1792522819215,
       "tag": "0008_investing_journal",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792619000000,
+      "tag": "0009_referrals_and_analytics",
+      "breakpoints": true
     }
   ]
 }
