@@ -9,7 +9,7 @@ import { usePortfolio } from "@/lib/store";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDetails, type ChartRange } from "@/lib/market.functions";
 
-const POPULAR = ["AAPL", "MSFT", "NVDA", "META", "AMZN", "GOOGL", "TSLA", "BTC"];
+const POPULAR = ["AAPL", "MSFT", "NVDA", "META", "AMZN", "GOOGL", "AVGO", "BRK-B", "LLY", "JPM", "WMT", "ORCL", "COST", "TSLA", "BTC"];
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y"];
 const T = {
   bg: { title: "Компании, които следиш", popular: "Популярни компании", gain: "Ръст", loss: "Най-слаби", all: "Watchlist →", none: "Няма данни" },
