@@ -36,6 +36,6 @@ export async function openProCheckout(opts: { priceId: "pro_monthly" | "pro_year
     items: [{ priceId, quantity: 1 }],
     customer: opts.email ? { email: opts.email } : undefined,
     customData: { userId: opts.userId },
-    settings: { displayMode: "overlay", successUrl: `${window.location.origin}/pricing?checkout=success`, allowLogout: false, variant: "one-page" },
+    settings: { displayMode: "overlay", successUrl: `${window.location.origin}/pricing?checkout=success`, allowLogout: false, allowDiscountCodes: true, variant: "one-page" },
   });
 }

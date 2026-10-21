@@ -10,12 +10,14 @@ import { feedbackCopy } from "@/lib/feedback-i18n";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { HeaderSearch } from "./HeaderSearch";
 import { CommandMenu } from "./CommandMenu";
-import { Button } from "@/components/ui/button";
+import { AuthForm } from "./AuthForm";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Crown, Globe, Landmark, LayoutDashboard, LogOut, MessageSquare, Moon, PieChart, Plus, Search, Settings2, Sun, UserRound, Wallet } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import type { Currency } from "@/lib/portfolio";
@@ -27,6 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const nav = [
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
@@ -43,9 +46,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/pricing", label: p.t("pricing") },
   ] as const;
   const signOut = async () => {
-    await qc.cancelQueries(); qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      await qc.cancelQueries();
+      qc.clear();
+      await navigate({ to: "/auth", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : p.lang === "bg" ? "Неуспешно излизане от профила." : "Unable to sign out.");
+    }
   };
   return (
     <div className="min-h-screen">
@@ -141,7 +153,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link to="/auth" aria-label={p.t("signIn")} title={p.t("signIn")} className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"><UserRound size={18} /></Link>
+              <button onClick={() => setAuthOpen(true)} aria-label={p.t("signIn")} title={p.t("signIn")} className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"><UserRound size={18} /></button>
             )}
           </div>
         </div>
@@ -213,13 +225,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
           { to: p.user ? "/profile" : "/auth", label: p.user ? (p.lang === "bg" ? "Профил" : "Profile") : p.t("signIn"), Icon: UserRound },
         ] as const).map(({ to, label, Icon }) => (
-          <Link key={label} to={to} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
+          <Link key={label} to={to} onClick={(event) => { if (!p.user) { event.preventDefault(); setAuthOpen(true); } }} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
             <Icon size={20} /><span className="max-w-16 truncate">{label}</span>
           </Link>
         ))}
       </nav>
       <AddTransactionDialog open={open} onClose={() => setOpen(false)} />
       <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border-border bg-background p-0 sm:max-w-md">
+          <DialogTitle className="sr-only">{p.t("signIn")}</DialogTitle>
+          <AuthForm onSignedIn={() => setAuthOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
