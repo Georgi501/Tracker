@@ -51,10 +51,13 @@ export function DashboardMovers() {
   const fmt = (n: number, cur?: string) => { try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD", maximumFractionDigits: 2 }).format(n); } catch { return n.toFixed(2); } };
 
   const Mover = ({ r, up }: { r: (typeof rows)[number]; up: boolean }) => (
-    <li className="flex items-center gap-2 py-1.5">
-      <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} />
-      <span className="flex-1 truncate text-sm font-semibold">{r.a.symbol.replace(/\..*$/, "")}</span>
-      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>{up ? "+" : ""}{r.ret!.toFixed(2)}%</span>
+    <li>
+      <Link to="/asset/$symbol" params={{ symbol: r.a.symbol }}
+        className="flex items-center gap-2 rounded-lg py-1.5 transition-colors hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} />
+        <span className="flex-1 truncate text-sm font-semibold">{r.a.symbol.replace(/\..*$/, "")}</span>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>{up ? "+" : ""}{r.ret!.toFixed(2)}%</span>
+      </Link>
     </li>
   );
 
@@ -90,8 +93,8 @@ export function DashboardMovers() {
       <div className={`-mx-1 px-1 pb-2 ${list.length ? "flex snap-x gap-3 overflow-x-auto" : "market-ticker"}`}>
         {list.length ? rows.map((r) => tickerCard(r)) : (
           <div className="market-ticker-track">
-            {[true, false].map((copy) => (
-              <div key={String(copy)} className="market-ticker-group" aria-hidden={copy || undefined} inert={copy || undefined}>
+            {[false, true].map((copy) => (
+              <div key={String(copy)} className="market-ticker-group" aria-hidden={copy || undefined}>
                 {rows.map((r) => tickerCard(r, copy))}
               </div>
             ))}

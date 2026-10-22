@@ -26,9 +26,9 @@ import { benchmarkCopy } from "@/lib/benchmark-i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — folio. Portfolio Tracker" },
-      { name: "description", content: "Net worth, performance, TTWROR & IRR and allocation of your investment portfolio." },
-      { property: "og:title", content: "folio. — Portfolio Dashboard" },
+      { title: "Dashboard — Capispot Portfolio Tracker" },
+      { name: "description", content: "Net worth, performance, TTWROR & IRR and allocation of your investment portfolio" },
+      { property: "og:title", content: "Capispot — Portfolio Dashboard" },
       { property: "og:description", content: "Track stocks, ETFs, crypto, cash and real estate in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

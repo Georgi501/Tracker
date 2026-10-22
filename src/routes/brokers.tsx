@@ -10,9 +10,9 @@ import { BROKER_FORMATS, GENERIC_TEMPLATE, brokerLimit, parseBrokerCsv, detectBr
 export const Route = createFileRoute("/brokers")({
   head: () => ({
     meta: [
-      { title: "Brokers — folio. CSV import" },
+      { title: "Brokers — Capispot CSV import" },
       { name: "description", content: "Connect brokers via CSV: Trading 212, Interactive Brokers, Revolut or a generic template." },
-      { property: "og:title", content: "Brokers — folio." },
+      { property: "og:title", content: "Brokers — Capispot" },
       { property: "og:description", content: "Import your broker transactions from CSV." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

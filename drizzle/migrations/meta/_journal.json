@@ -78,6 +78,13 @@
       "when": 1792622800000,
       "tag": "0010_account_management",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792673100000,
+      "tag": "0011_pro_broker_limit_5",
+      "breakpoints": true
     }
   ]
 }

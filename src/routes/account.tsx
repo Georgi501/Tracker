@@ -9,13 +9,13 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
-      { title: "Account & billing — folio." },
+      { title: "Account & billing — Capispot" },
       {
         name: "description",
         content: "Manage your subscription, export your portfolio data, or delete your account.",
       },
-      { property: "og:title", content: "Account & billing — folio." },
-      { property: "og:description", content: "Manage your folio. account and subscription." },
+      { property: "og:title", content: "Account & billing — Capispot" },
+      { property: "og:description", content: "Manage your Capispot account and subscription." },
       { property: "og:type", content: "website" },
     ],
   }),

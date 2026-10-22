@@ -11,8 +11,8 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [
-    { title: "My profile — folio." }, { name: "description", content: "Your photo, bio and sharing settings." },
-    { property: "og:title", content: "My profile — folio." }, { property: "og:description", content: "Your investor profile." },
+    { title: "My profile — Capispot" }, { name: "description", content: "Your photo, bio and sharing settings." },
+    { property: "og:title", content: "My profile — Capispot" }, { property: "og:description", content: "Your investor profile." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: ProfilePage,

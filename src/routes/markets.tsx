@@ -20,9 +20,9 @@ const NEWS_LABEL = { en: "News", bg: "Новини", de: "Nachrichten", es: "Not
 
 export const Route = createFileRoute("/markets")({
   head: () => ({ meta: [
-    { title: "Asset search — folio. Portfolio Tracker" },
+    { title: "Asset search — Capispot Portfolio Tracker" },
     { name: "description", content: "Search stocks, ETFs and crypto by company name or ticker and inspect the latest available quote." },
-    { property: "og:title", content: "Asset search — folio." },
+    { property: "og:title", content: "Asset search — Capispot" },
     { property: "og:description", content: "Find Meta, Netflix and other assets with market quote details." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),

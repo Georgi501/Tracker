@@ -29,5 +29,5 @@ it("missing market prices are not replaced by the purchase price", () => {
 import { brokerLimit } from "@/lib/csv-import";
 describe("plan limits", () => {
   it("free allows 1 broker", () => expect(brokerLimit(false)).toBe(1));
-  it("pro allows 4 brokers", () => expect(brokerLimit(true)).toBe(4));
+  it("pro allows 5 brokers", () => expect(brokerLimit(true)).toBe(5));
 });

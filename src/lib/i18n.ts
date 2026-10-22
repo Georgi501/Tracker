@@ -34,7 +34,7 @@ language: "Language", toggleTheme: "Toggle theme", close: "Close", passwordUpdat
   imported: "transactions imported", limitReached: "Broker limit reached for your plan.", upgrade: "Upgrade to Pro",
   free: "Free", pro: "Pro", perMonth: "/ month", perYear: "/ year", currentPlan: "Current plan", comingSoon: "Checkout coming soon",
   freeF1: "1 broker connection (CSV)", freeF2: "Unlimited manual transactions", freeF3: "Dashboard, analytics & dividends",
-  proF1: "Up to 4 broker connections (CSV)", proF2: "Everything in Free", proF3: "Save 2 months with yearly billing",
+  proF1: "Up to 5 broker connections (CSV)", proF2: "Everything in Free", proF3: "Save 2 months with yearly billing",
   signInToUse: "Sign in to connect brokers.", noTx: "No transactions yet. Add one or import a CSV from your broker.",
 };
 type Dict = typeof en;
@@ -68,7 +68,7 @@ language: "Език", toggleTheme: "Смени темата", close: "Затво
   imported: "трансакции импортирани", limitReached: "Достигнат лимит на брокери за вашия план.", upgrade: "Надградете до Pro",
   free: "Безплатен", pro: "Pro", perMonth: "/ месец", perYear: "/ година", currentPlan: "Текущ план", comingSoon: "Плащането предстои",
   freeF1: "1 връзка с брокер (CSV)", freeF2: "Неограничени ръчни трансакции", freeF3: "Табло, анализи и дивиденти",
-  proF1: "До 4 връзки с брокери (CSV)", proF2: "Всичко от безплатния план", proF3: "Спестете 2 месеца с годишно плащане",
+  proF1: "До 5 връзки с брокери (CSV)", proF2: "Всичко от безплатния план", proF3: "Спестете 2 месеца с годишно плащане",
   signInToUse: "Влезте, за да свържете брокери.", noTx: "Няма трансакции. Добавете или импортирайте CSV от брокера си.",
 };
 const de: Dict = {
@@ -171,7 +171,7 @@ const de: Dict = {
   "freeF1": "1 Brokerverbindung (CSV)",
   "freeF2": "Unbegrenzte manuelle Transaktionen",
   "freeF3": "Übersicht, Analysen und Dividenden",
-  "proF1": "Bis zu 4 Brokerverbindungen (CSV)",
+  "proF1": "Bis zu 5 Brokerverbindungen (CSV)",
   "proF2": "Alles aus dem kostenlosen Tarif",
   "proF3": "2 Monate sparen bei jährlicher Zahlung",
   "signInToUse": "Melden Sie sich an, um Broker zu verbinden.",
@@ -281,7 +281,7 @@ const es: Dict = {
   "freeF1": "1 conexión con bróker (CSV)",
   "freeF2": "Operaciones manuales ilimitadas",
   "freeF3": "Resumen, análisis y dividendos",
-  "proF1": "Hasta 4 conexiones con brókeres (CSV)",
+  "proF1": "Hasta 5 conexiones con brókeres (CSV)",
   "proF2": "Todo lo incluido en Gratis",
   "proF3": "Ahorra 2 meses con el pago anual",
   "signInToUse": "Inicia sesión para conectar brókeres.",
@@ -391,7 +391,7 @@ const it: Dict = {
   "freeF1": "1 collegamento a un broker (CSV)",
   "freeF2": "Operazioni manuali illimitate",
   "freeF3": "Panoramica, analisi e dividendi",
-  "proF1": "Fino a 4 collegamenti a broker (CSV)",
+  "proF1": "Fino a 5 collegamenti a broker (CSV)",
   "proF2": "Tutto ciò che include il piano gratuito",
   "proF3": "Risparmia 2 mesi con il pagamento annuale",
   "signInToUse": "Accedi per collegare i broker.",

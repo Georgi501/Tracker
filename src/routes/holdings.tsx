@@ -17,9 +17,9 @@ import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/marke
 export const Route = createFileRoute("/holdings")({
   head: () => ({
     meta: [
-      { title: "Holdings — folio. Portfolio Tracker" },
+      { title: "Holdings — Capispot Portfolio Tracker" },
       { name: "description", content: "Every position with quantity, price, average cost, market value and unrealised P/L, plus live market search." },
-      { property: "og:title", content: "Holdings — folio." },
+      { property: "og:title", content: "Holdings — Capispot" },
       { property: "og:description", content: "Search your positions and live market quotes, then add a buy in one click." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -103,8 +103,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="header-as sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
-            <span aria-hidden className="logo-mark grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">f</span>
-            <span className="hidden font-display text-base font-bold uppercase tracking-[0.2em] sm:inline">folio</span>
+            <span aria-hidden className="logo-mark relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" /></span>
+            <span className="hidden font-display text-base font-bold tracking-tight sm:inline">capispot</span>
           </Link>
           <nav className="ml-2 hidden items-center lg:flex">
             {nav.slice(0, 5).map((n) => (
@@ -212,7 +212,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="site-footer mt-10 pb-28 md:pb-0">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="font-display text-lg font-bold">Dividend Drift</div>
+            <Link to="/" className="inline-flex items-center gap-2">
+              <span aria-hidden className="relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" /></span>
+              <span className="font-display text-lg font-bold tracking-tight">capispot</span>
+            </Link>
+            <p className="mt-1 text-xs font-medium tracking-wide opacity-60">capispot.com</p>
             <p className="mt-2 text-sm opacity-75">{legalCopy(p.lang).footer.tagline}</p>
           </div>
           <div>
@@ -241,7 +245,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div className="footer-bottom">
           <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-4 text-xs opacity-70">
-            <span>© {new Date().getFullYear()} Dividend Drift. {legalCopy(p.lang).footer.rights}</span>
+            <span>© {new Date().getFullYear()} Capispot. {legalCopy(p.lang).footer.rights}</span>
             <span>{legalCopy(p.lang).footer.notAdvice}</span>
           </div>
         </div>

@@ -7,9 +7,9 @@ import { advisorCopy } from "@/lib/advisor-i18n";
 export const Route = createFileRoute("/advisor/")({
   head: () => ({
     meta: [
-      { title: "AI Advisor — folio. Ask about your portfolio" },
+      { title: "AI Advisor — Capispot Ask about your portfolio" },
       { name: "description", content: "Pro: ask questions about your positions and transactions and get answers based on your real portfolio data." },
-      { property: "og:title", content: "AI Advisor — folio." },
+      { property: "og:title", content: "AI Advisor — Capispot" },
       { property: "og:description", content: "Personalized answers about your own portfolio, for Pro members." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

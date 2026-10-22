@@ -18,9 +18,9 @@ import { dividendRows } from "@/lib/insights";
 export const Route = createFileRoute("/dividends")({
   head: () => ({
     meta: [
-      { title: "Dividends — folio. Portfolio Tracker" },
+      { title: "Dividends — Capispot Portfolio Tracker" },
       { name: "description", content: "Dividend calendar, projected annual income and dividend yield." },
-      { property: "og:title", content: "Dividends — folio." },
+      { property: "og:title", content: "Dividends — Capispot" },
       { property: "og:description", content: "Upcoming and past dividend payouts with yield analytics." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

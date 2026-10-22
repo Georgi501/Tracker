@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/review")({
         const { streamText } = await import("ai");
         const result = streamText({
           model,
-          system: `You review an investor's own portfolio. Use ONLY the JSON below; never invent prices, returns or forecasts. null means unavailable — say so. Write in ${LANG_NAMES[lang]}, concise markdown, sections:
+          system: `You review an investor's own portfolio Use ONLY the JSON below; never invent prices, returns or forecasts. null means unavailable — say so. Write in ${LANG_NAMES[lang]}, concise markdown, sections:
 1. Snapshot (size, number of positions, largest weights)
 2. Concentration & diversification (by position, sector, region, asset type)
 3. Risks to review
@@ -68,7 +68,7 @@ No buy/sell recommendations. End with one line: educational information, not fin
 
 PORTFOLIO (JSON):
 ${JSON.stringify(facts)}`,
-          prompt: "Review my portfolio.",
+          prompt: "Review my portfolio",
           abortSignal: request.signal,
           providerOptions: { openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false } },
         });

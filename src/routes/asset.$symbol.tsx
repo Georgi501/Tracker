@@ -12,9 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/asset/$symbol")({
   head: ({ params }) => ({ meta: [
-    { title: `${params.symbol} — position details | folio.` },
+    { title: `${params.symbol} — position details | Capispot` },
     { name: "description", content: `Your ${params.symbol} position: P&L, dividends, transaction history, company overview and investing journal.` },
-    { property: "og:title", content: `${params.symbol} — folio.` },
+    { property: "og:title", content: `${params.symbol} — Capispot` },
     { property: "og:description", content: "Position details, history, news and your investment thesis in one place." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),

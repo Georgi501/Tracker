@@ -18,9 +18,9 @@ import { comparisonReturns, customRange, dateInput, DAY, periodRange, previousRa
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics — folio. Portfolio Tracker" },
+      { title: "Analytics — Capispot Portfolio Tracker" },
       { name: "description", content: "Portfolio returns by period and breakdown by asset, currency and asset class." },
-      { property: "og:title", content: "Analytics — folio." },
+      { property: "og:title", content: "Analytics — Capispot" },
       { property: "og:description", content: "Returns by period, plus breakdowns by asset, currency and class." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

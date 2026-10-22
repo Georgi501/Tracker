@@ -8,9 +8,9 @@ import { usePortfolio } from "@/lib/store";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — folio." },
-      { name: "description", content: "Choose a new password for your folio. account." },
-      { property: "og:title", content: "Reset password — folio." },
+      { title: "Reset password — Capispot" },
+      { name: "description", content: "Choose a new password for your Capispot account." },
+      { property: "og:title", content: "Reset password — Capispot" },
       { property: "og:description", content: "Choose a new password." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -28,9 +28,9 @@ const CRYPTO_SYMBOLS = MARKET_ASSETS.filter((a) => a.type === "crypto").map((a) 
 export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
-      { title: "Tools — folio. Rebalancing, FIFO tax report & risk" },
+      { title: "Tools — Capispot Rebalancing, FIFO tax report & risk" },
       { name: "description", content: "Rebalancing calculator, FIFO realized gains report, risk metrics, watchlist and portfolio export." },
-      { property: "og:title", content: "Investor tools — folio." },
+      { property: "og:title", content: "Investor tools — Capispot" },
       { property: "og:description", content: "Rebalance, report realized gains with FIFO, measure risk and export your data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

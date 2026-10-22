@@ -13,9 +13,9 @@ import { languageLocale } from "@/lib/i18n";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({ meta: [
-    { title: "Compare stocks & ETFs head-to-head — Dividend Drift" },
+    { title: "Compare stocks & ETFs head-to-head — Capispot" },
     { name: "description", content: "Put two stocks or ETFs side by side: valuation, P/E, dividends, beta and 52-week range from real market data." },
-    { property: "og:title", content: "Head-to-head asset comparison — Dividend Drift" },
+    { property: "og:title", content: "Head-to-head asset comparison — Capispot" },
     { property: "og:description", content: "Compare two companies or ETFs side by side with real market data." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),

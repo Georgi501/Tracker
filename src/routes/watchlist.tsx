@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Check, Pencil, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { ProGate } from "@/components/ProFeatures";
 import { useWatchState } from "@/components/AssetExtras";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
@@ -16,9 +17,9 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/watchlist")({
   head: () => ({ meta: [
-    { title: "Watchlist — folio. Portfolio Tracker" },
+    { title: "Watchlist — Capispot Portfolio Tracker" },
     { name: "description", content: "Track favourite stocks, ETFs and crypto with logos, top gainers and losers, buy targets and DCF fair value." },
-    { property: "og:title", content: "Watchlist — folio." },
+    { property: "og:title", content: "Watchlist — Capispot" },
     { property: "og:description", content: "Gainers, losers, buy zone and intrinsic value for your watchlist." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),
@@ -27,13 +28,13 @@ export const Route = createFileRoute("/watchlist")({
 
 const PERIODS: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y"];
 const SUGGEST = ["AAPL", "MSFT", "NVDA", "META", "AMZN", "VWCE.DE", "BTC"];
-type K = "title" | "sub" | "gainers" | "losers" | "opps" | "zone" | "withTarget" | "noneZone" | "empty" | "emptyHint" | "asset" | "graph" | "last" | "buy" | "iv" | "set" | "under" | "over" | "na" | "noData" | "remove" | "browse";
+type K = "title" | "sub" | "gainers" | "losers" | "opps" | "zone" | "withTarget" | "noneZone" | "empty" | "emptyHint" | "asset" | "graph" | "last" | "buy" | "iv" | "set" | "under" | "over" | "na" | "noData" | "remove" | "browse" | "analysis" | "analysisDesc" | "fairValue" | "fairValueDesc";
 const COPY: Record<Lang, Record<K, string>> = {
-  en: { title: "Watchlist", sub: "Live prices, movers and fair value for the assets you follow.", gainers: "Top gainers", losers: "Top losers", opps: "Opportunities", zone: "In buy zone", withTarget: "With target", noneZone: "No asset is at or below your buy price yet.", empty: "Your watchlist is empty", emptyHint: "Tap a ticker to start following it.", asset: "Asset", graph: "Price graph", last: "Last price", buy: "Buy price", iv: "Intrinsic value", set: "Set", under: "Undervalued", over: "Overvalued", na: "n/a", noData: "No data for this period.", remove: "Remove", browse: "Search markets" },
-  bg: { title: "Watchlist", sub: "Цени на живо, най-големи движения и справедлива стойност за активите, които следиш.", gainers: "Най-голям ръст", losers: "Най-голям спад", opps: "Възможности", zone: "В зона за покупка", withTarget: "Със зададена цел", noneZone: "Още няма актив на или под твоята цена за покупка.", empty: "Watchlist-ът ти е празен", emptyHint: "Натисни тикер, за да започнеш да го следиш.", asset: "Актив", graph: "Графика", last: "Последна цена", buy: "Цена за покупка", iv: "Справедлива стойност", set: "Задай", under: "Подценена", over: "Надценена", na: "няма", noData: "Няма данни за периода.", remove: "Премахни", browse: "Търси на пазара" },
-  de: { title: "Watchlist", sub: "Live-Kurse, Top-Bewegungen und fairer Wert deiner beobachteten Werte.", gainers: "Top-Gewinner", losers: "Top-Verlierer", opps: "Chancen", zone: "In Kaufzone", withTarget: "Mit Ziel", noneZone: "Noch kein Wert auf oder unter deinem Kaufpreis.", empty: "Deine Watchlist ist leer", emptyHint: "Tippe auf einen Ticker, um ihm zu folgen.", asset: "Wert", graph: "Kursgrafik", last: "Letzter Kurs", buy: "Kaufpreis", iv: "Innerer Wert", set: "Setzen", under: "Unterbewertet", over: "Überbewertet", na: "k. A.", noData: "Keine Daten für den Zeitraum.", remove: "Entfernen", browse: "Märkte durchsuchen" },
-  es: { title: "Watchlist", sub: "Precios en vivo, mayores movimientos y valor justo de tus activos.", gainers: "Mayores subidas", losers: "Mayores caídas", opps: "Oportunidades", zone: "En zona de compra", withTarget: "Con objetivo", noneZone: "Ningún activo está aún en o bajo tu precio de compra.", empty: "Tu watchlist está vacía", emptyHint: "Toca un ticker para seguirlo.", asset: "Activo", graph: "Gráfico", last: "Último precio", buy: "Precio de compra", iv: "Valor intrínseco", set: "Fijar", under: "Infravalorada", over: "Sobrevalorada", na: "n/d", noData: "Sin datos para el periodo.", remove: "Quitar", browse: "Buscar mercados" },
-  it: { title: "Watchlist", sub: "Prezzi live, maggiori movimenti e valore equo dei titoli che segui.", gainers: "Maggiori rialzi", losers: "Maggiori ribassi", opps: "Opportunità", zone: "In zona acquisto", withTarget: "Con obiettivo", noneZone: "Nessun titolo è ancora al o sotto il tuo prezzo d'acquisto.", empty: "La tua watchlist è vuota", emptyHint: "Tocca un ticker per seguirlo.", asset: "Titolo", graph: "Grafico", last: "Ultimo prezzo", buy: "Prezzo d'acquisto", iv: "Valore intrinseco", set: "Imposta", under: "Sottovalutata", over: "Sopravvalutata", na: "n/d", noData: "Nessun dato per il periodo.", remove: "Rimuovi", browse: "Cerca mercati" },
+  en: { title: "Watchlist", sub: "Live prices, movers and fair value for the assets you follow.", gainers: "Top gainers", losers: "Top losers", opps: "Opportunities", zone: "In buy zone", withTarget: "With target", noneZone: "No asset is at or below your buy price yet.", empty: "Your watchlist is empty", emptyHint: "Tap a ticker to start following it.", asset: "Asset", graph: "Price graph", last: "Last price", buy: "Buy price", iv: "Intrinsic value", set: "Set", under: "Undervalued", over: "Overvalued", na: "n/a", noData: "No data for this period.", remove: "Remove", browse: "Search markets", analysis: "Watchlist analysis", analysisDesc: "Top movers and buy-zone analysis are part of Pro.", fairValue: "Fair value estimates", fairValueDesc: "DCF fair value estimates and valuation comparisons are part of Pro." },
+  bg: { title: "Watchlist", sub: "Цени на живо, най-големи движения и справедлива стойност за активите, които следиш.", gainers: "Най-голям ръст", losers: "Най-голям спад", opps: "Възможности", zone: "В зона за покупка", withTarget: "Със зададена цел", noneZone: "Още няма актив на или под твоята цена за покупка.", empty: "Watchlist-ът ти е празен", emptyHint: "Натисни тикер, за да започнеш да го следиш.", asset: "Актив", graph: "Графика", last: "Последна цена", buy: "Цена за покупка", iv: "Справедлива стойност", set: "Задай", under: "Подценена", over: "Надценена", na: "няма", noData: "Няма данни за периода.", remove: "Премахни", browse: "Търси на пазара", analysis: "Анализ на Watchlist-а", analysisDesc: "Класациите и анализът на зоните за покупка са част от Pro.", fairValue: "Оценка на справедливата стойност", fairValueDesc: "DCF оценките и сравнението със справедливата стойност са част от Pro." },
+  de: { title: "Watchlist", sub: "Live-Kurse, Top-Bewegungen und fairer Wert deiner beobachteten Werte.", gainers: "Top-Gewinner", losers: "Top-Verlierer", opps: "Chancen", zone: "In Kaufzone", withTarget: "Mit Ziel", noneZone: "Noch kein Wert auf oder unter deinem Kaufpreis.", empty: "Deine Watchlist ist leer", emptyHint: "Tippe auf einen Ticker, um ihm zu folgen.", asset: "Wert", graph: "Kursgrafik", last: "Letzter Kurs", buy: "Kaufpreis", iv: "Innerer Wert", set: "Setzen", under: "Unterbewertet", over: "Überbewertet", na: "k. A.", noData: "Keine Daten für den Zeitraum.", remove: "Entfernen", browse: "Märkte durchsuchen", analysis: "Watchlist-Analyse", analysisDesc: "Top-Bewegungen und Kaufzonen-Analysen sind Teil von Pro.", fairValue: "Fair-Value-Schätzungen", fairValueDesc: "DCF-Fair-Value-Schätzungen und Bewertungsvergleiche sind Teil von Pro." },
+  es: { title: "Watchlist", sub: "Precios en vivo, mayores movimientos y valor justo de tus activos.", gainers: "Mayores subidas", losers: "Mayores caídas", opps: "Oportunidades", zone: "En zona de compra", withTarget: "Con objetivo", noneZone: "Ningún activo está aún en o bajo tu precio de compra.", empty: "Tu watchlist está vacía", emptyHint: "Toca un ticker para seguirlo.", asset: "Activo", graph: "Gráfico", last: "Último precio", buy: "Precio de compra", iv: "Valor intrínseco", set: "Fijar", under: "Infravalorada", over: "Sobrevalorada", na: "n/d", noData: "Sin datos para el periodo.", remove: "Quitar", browse: "Buscar mercados", analysis: "Análisis de watchlist", analysisDesc: "Los principales movimientos y el análisis de zonas de compra son parte de Pro.", fairValue: "Estimaciones de valor razonable", fairValueDesc: "Las estimaciones DCF y las comparaciones de valoración son parte de Pro." },
+  it: { title: "Watchlist", sub: "Prezzi live, maggiori movimenti e valore equo dei titoli che segui.", gainers: "Maggiori rialzi", losers: "Maggiori ribassi", opps: "Opportunità", zone: "In zona acquisto", withTarget: "Con obiettivo", noneZone: "Nessun titolo è ancora al o sotto il tuo prezzo d'acquisto.", empty: "La tua watchlist è vuota", emptyHint: "Tocca un ticker per seguirlo.", asset: "Titolo", graph: "Grafico", last: "Ultimo prezzo", buy: "Prezzo d'acquisto", iv: "Valore intrinseco", set: "Imposta", under: "Sottovalutata", over: "Sopravvalutata", na: "n/d", noData: "Nessun dato per il periodo.", remove: "Rimuovi", browse: "Cerca mercati", analysis: "Analisi watchlist", analysisDesc: "I migliori movimenti e l'analisi delle zone d'acquisto fanno parte di Pro.", fairValue: "Stime del fair value", fairValueDesc: "Le stime DCF e i confronti di valutazione fanno parte di Pro." },
 };
 
 const assetOf = (s: string) => MARKET_ASSETS.find((a) => a.symbol.toUpperCase() === s) ?? { symbol: s, name: s, type: "stock" as const };
@@ -61,7 +62,7 @@ function Watchlist() {
   const assets = list.map(assetOf);
   const charts = useQueries({ queries: assets.map((a) => ({ queryKey: ["market-details", a.symbol, a.type, period], queryFn: () => detailsFn({ data: { symbol: a.symbol, type: a.type, range: period } }), staleTime: period === "1D" ? 60_000 : 600_000 })) });
   const quotes = useQueries({ queries: assets.map((a) => ({ queryKey: ["market-quote", a.symbol, a.type], queryFn: () => quoteFn({ data: { symbol: a.symbol, type: a.type } }), refetchInterval: 60_000 })) });
-  const dcfs = useQueries({ queries: assets.map((a) => ({ queryKey: ["market-dcf", a.symbol], queryFn: () => a.type === "stock" ? dcfFn({ data: { symbol: a.symbol } }) : Promise.resolve(null), staleTime: 86_400_000 })) });
+  const dcfs = useQueries({ queries: assets.map((a) => ({ queryKey: ["market-dcf", a.symbol], queryFn: () => a.type === "stock" ? dcfFn({ data: { symbol: a.symbol } }) : Promise.resolve(null), staleTime: 86_400_000, enabled: p.isPro })) });
 
   const rows = assets.map((a, i) => {
     const closes = charts[i]?.data?.closes ?? [];
@@ -117,33 +118,34 @@ function Watchlist() {
       </div>
       <Link to="/markets" className="mt-4 inline-block text-sm font-semibold text-primary">{c.browse} →</Link>
     </Card> : <>
-      <div role="group" className="flex gap-1 overflow-x-auto">
-        {PERIODS.map((r) => <button key={r} onClick={() => setPeriod(r)} aria-pressed={period === r}
-          className={`press rounded-full px-4 py-1.5 text-sm font-semibold ${period === r ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground"}`}>{r}</button>)}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <h2 className="mb-1 flex items-center gap-2 font-semibold"><Target size={16} className="text-primary" />{c.opps}</h2>
-          <div className="my-3 grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-xl bg-secondary p-3"><p className="font-display text-2xl font-bold text-success">{zone.length}</p><p className="text-xs text-muted-foreground">{c.zone}</p></div>
-            <div className="rounded-xl bg-secondary p-3"><p className="font-display text-2xl font-bold">{Object.keys(targets).filter((s) => list.includes(s)).length}/{list.length}</p><p className="text-xs text-muted-foreground">{c.withTarget}</p></div>
-          </div>
-          {zone.length ? <ul className="space-y-2">{zone.map((r) => <li key={r.a.symbol} className="flex items-center gap-2 text-sm"><CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} /><span className="flex-1 font-semibold">{r.a.symbol}</span><span>{fmt(r.q!.price, r.q!.currency)}</span></li>)}</ul>
-            : <p className="text-sm text-muted-foreground">{c.noneZone}</p>}
-        </Card>
-        <Card><h2 className="flex items-center gap-2 font-semibold"><TrendingUp size={16} className="text-success" />{c.gainers} · {period}</h2><Bars items={gainers} up /></Card>
-        <Card><h2 className="flex items-center gap-2 font-semibold"><TrendingDown size={16} className="text-destructive" />{c.losers} · {period}</h2><Bars items={losers} up={false} /></Card>
-      </div>
+      <ProGate title={c.analysis} desc={c.analysisDesc} preview={<div className="grid h-48 grid-cols-3 items-end gap-3 p-3">{[[35, 70, 48], [65, 40, 82], [50, 75, 30]].map((bars, i) => <div key={i} className="flex h-full items-end justify-around gap-1 rounded-lg bg-secondary/70 p-2">{bars.map((height, j) => <span key={j} className={`w-1/5 rounded-t ${i === 2 ? "bg-destructive/40" : "bg-success/40"}`} style={{ height: `${height}%` }} />)}</div>)}</div>} className="p-3">
+        <div role="group" className="mb-3 flex gap-1 overflow-x-auto">
+          {PERIODS.map((r) => <button key={r} onClick={() => setPeriod(r)} aria-pressed={period === r}
+            className={`press rounded-full px-4 py-1.5 text-sm font-semibold ${period === r ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground"}`}>{r}</button>)}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card>
+            <h2 className="mb-1 flex items-center gap-2 font-semibold"><Target size={16} className="text-primary" />{c.opps}</h2>
+            <div className="my-3 grid grid-cols-2 gap-2 text-center">
+              <div className="rounded-xl bg-secondary p-3"><p className="font-display text-2xl font-bold text-success">{zone.length}</p><p className="text-xs text-muted-foreground">{c.zone}</p></div>
+              <div className="rounded-xl bg-secondary p-3"><p className="font-display text-2xl font-bold">{Object.keys(targets).filter((s) => list.includes(s)).length}/{list.length}</p><p className="text-xs text-muted-foreground">{c.withTarget}</p></div>
+            </div>
+            {zone.length ? <ul className="space-y-2">{zone.map((r) => <li key={r.a.symbol} className="flex items-center gap-2 text-sm"><CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} /><span className="flex-1 font-semibold">{r.a.symbol}</span><span>{fmt(r.q!.price, r.q!.currency)}</span></li>)}</ul>
+              : <p className="text-sm text-muted-foreground">{c.noneZone}</p>}
+          </Card>
+          <Card><h2 className="flex items-center gap-2 font-semibold"><TrendingUp size={16} className="text-success" />{c.gainers} · {period}</h2><Bars items={gainers} up /></Card>
+          <Card><h2 className="flex items-center gap-2 font-semibold"><TrendingDown size={16} className="text-destructive" />{c.losers} · {period}</h2><Bars items={losers} up={false} /></Card>
+        </div>
+      </ProGate>
 
       <Card className="p-0">
-        <div className="hidden grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem] gap-3 border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid">
-          <span>{c.asset}</span><span>{c.graph}</span><span className="text-right">{c.last}</span><span className="text-right">{c.buy}</span><span className="text-right">{c.iv}</span><span />
+        <div className={`hidden gap-3 border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid ${p.isPro ? "grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem]" : "grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_2rem]"}`}>
+          <span>{c.asset}</span><span>{c.graph}</span><span className="text-right">{c.last}</span><span className="text-right">{c.buy}</span>{p.isPro && <span className="text-right">{c.iv}</span>}<span />
         </div>
         <ul className="divide-y divide-border">
           {rows.map((r) => {
             const t = targets[r.a.symbol]; const gap = r.iv != null && r.iv > 0 && r.q ? valuationGap(r.iv, r.q.price) : null;
-            return <li key={r.a.symbol} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 md:grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem]">
+            return <li key={r.a.symbol} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 ${p.isPro ? "md:grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem]" : "md:grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_2rem]"}`}>
               <Link to="/asset/$symbol" params={{ symbol: r.a.symbol }} className="flex min-w-0 items-center gap-3">
                 <CompanyLogo symbol={r.a.symbol} type={r.a.type} />
                 <span className="min-w-0"><span className="block truncate font-semibold">{r.a.name}</span><span className="block text-xs text-muted-foreground">{r.a.symbol}{r.ret != null && <b className={`ml-2 ${r.ret >= 0 ? "text-success" : "text-destructive"}`}>{r.ret >= 0 ? "+" : ""}{r.ret.toFixed(2)}%</b>}</span></span>
@@ -158,16 +160,19 @@ function Watchlist() {
                   <span className="md:hidden">{c.buy}: </span>{t ? fmt(t, r.q?.currency) : c.set}<Pencil size={11} />
                 </button>}
               </div>
-              <div className="text-sm md:text-right">
-                <span className="text-xs text-muted-foreground md:hidden">{c.iv}: </span>
-                {r.iv != null && r.iv > 0 && gap != null ? <span><b>{fmt(r.iv, r.q?.currency)}</b> <span className={`ml-1 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${gap >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>{gap >= 0 ? <Check size={11} /> : <X size={11} />}{gap >= 0 ? c.under : c.over} {Math.abs(gap * 100).toFixed(0)}%</span></span>
-                  : <span className="text-xs text-muted-foreground">{c.na}</span>}
-              </div>
+              {p.isPro && <div className="text-sm md:text-right">
+                  <span className="text-xs text-muted-foreground md:hidden">{c.iv}: </span>
+                  {r.iv != null && r.iv > 0 && gap != null ? <span><b>{fmt(r.iv, r.q?.currency)}</b> <span className={`ml-1 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${gap >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>{gap >= 0 ? <Check size={11} /> : <X size={11} />}{gap >= 0 ? c.under : c.over} {Math.abs(gap * 100).toFixed(0)}%</span></span>
+                    : <span className="text-xs text-muted-foreground">{c.na}</span>}
+                </div>}
               <button onClick={() => toggleWatch(r.a.symbol)} aria-label={`${c.remove} ${r.a.symbol}`} title={c.remove} className="justify-self-end text-primary"><Star size={16} className="fill-current" /></button>
             </li>;
           })}
         </ul>
       </Card>
+      {!p.isPro && <ProGate title={c.fairValue} desc={c.fairValueDesc} preview={<div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="flex items-center gap-3"><span className="h-8 w-8 rounded-full bg-primary/25" /><span className="h-3 flex-1 rounded bg-muted" /><span className="h-5 w-20 rounded bg-success/25" /></div>)}</div>}>
+        <span>{c.iv}</span>
+      </ProGate>}
     </>}
   </div>;
 }

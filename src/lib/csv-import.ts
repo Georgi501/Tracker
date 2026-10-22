@@ -156,7 +156,7 @@ export function parseBrokerCsv(format: BrokerFormat, text: string): ImportedTx[]
   return fn(text.replace(/^\uFEFF/, "")).filter((t) => t.symbol && t.quantity > 0 && t.price > 0);
 }
 
-export const brokerLimit = (isPro: boolean) => (isPro ? 4 : 1);
+export const brokerLimit = (isPro: boolean) => (isPro ? 5 : 1);
 
 export function detectBrokerFormat(text: string): BrokerFormat | null {
   const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));

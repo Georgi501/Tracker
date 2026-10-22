@@ -10,8 +10,8 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 
 export const Route = createFileRoute("/community")({
   head: () => ({ meta: [
-    { title: "Community — folio." }, { name: "description", content: "Meet other investors, view shared portfolios and chat." },
-    { property: "og:title", content: "Community — folio." }, { property: "og:description", content: "Investor profiles and private chat." },
+    { title: "Community — Capispot" }, { name: "description", content: "Meet other investors, view shared portfolios and chat." },
+    { property: "og:title", content: "Community — Capispot" }, { property: "og:description", content: "Investor profiles and private chat." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: Community,

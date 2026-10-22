@@ -15,10 +15,10 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — folio. Free & Pro plans" },
-      { name: "description", content: "Free plan with 1 broker, Pro for €4.99/month or €49.99/year with up to 4 brokers." },
-      { property: "og:title", content: "Pricing — folio." },
-      { property: "og:description", content: "Pro: €4.99/month or €49.99/year, up to 4 broker connections." },
+      { title: "Pricing — Capispot Free & Pro plans" },
+      { name: "description", content: "Free plan with 1 broker, Pro for €4.99/month or €49.99/year with up to 5 brokers." },
+      { property: "og:title", content: "Pricing — Capispot" },
+      { property: "og:description", content: "Pro: €4.99/month or €49.99/year, up to 5 broker connections." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -134,7 +134,7 @@ function Pricing() {
           <p className="font-display my-3 text-4xl font-bold">
             {yearly ? "€49.99" : "€4.99"}<span className="text-base font-medium text-muted-foreground"> {yearly ? p.t("perYear") : p.t("perMonth")}</span>
           </p>
-          <ul className="space-y-2"><Feature>{p.t("proF1")}</Feature><Feature>{p.t("proF2")}</Feature><Feature>{p.t("proF3")}</Feature><Feature>{pc.heatmap}</Feature><Feature>{pc.income}</Feature><Feature>{pc.fire}</Feature><Feature>{pc.advisor}</Feature></ul>
+          <ul className="space-y-2"><Feature>{p.t("proF1")}</Feature><Feature>{p.t("proF2")}</Feature><Feature>{p.t("proF3")}</Feature><Feature>{pc.heatmap}</Feature><Feature>{pc.income}</Feature><Feature>{pc.fire}</Feature><Feature>{pc.advisor}</Feature><Feature>{planCopy[p.lang].watchlist}</Feature></ul>
           <div className="mt-6">
             {p.isPro ? <span className="text-sm font-semibold text-primary">{p.t("currentPlan")}</span> : (
               activating ? <span className="text-sm text-muted-foreground">{c.processing}</span>

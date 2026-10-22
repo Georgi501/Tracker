@@ -9,8 +9,8 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 
 export const Route = createFileRoute("/messages")({
   head: () => ({ meta: [
-    { title: "Messages — folio." }, { name: "description", content: "Your private conversations with other investors." },
-    { property: "og:title", content: "Messages — folio." }, { property: "og:description", content: "Private investor chat." },
+    { title: "Messages — Capispot" }, { name: "description", content: "Your private conversations with other investors." },
+    { property: "og:title", content: "Messages — Capispot" }, { property: "og:description", content: "Private investor chat." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: Messages,

@@ -6,7 +6,7 @@ const en = {
   tax: "Tax report (FIFO)", year: "Year", realized: "Realized P/L", proceeds: "Proceeds", costBasis: "Cost basis", dividendsReceived: "Dividends",
   noSales: "No sales or dividends recorded yet.", risk: "Risk metrics", volatility: "Volatility (annualized)", maxDrawdown: "Max drawdown",
   sharpe: "Sharpe ratio", riskHint: "From your real daily portfolio history (all time, risk-free 0%).", riskUnavailable: "Not enough real history data yet.",
-  signInNeeded: "Sign in to use this with your portfolio.", exportTitle: "Export & backup", exportCsv: "Download CSV", exportJson: "Download JSON",
+  signInNeeded: "Sign in to use this with your portfolio", exportTitle: "Export & backup", exportCsv: "Download CSV", exportJson: "Download JSON",
   watchlist: "Watchlist", watchAdd: "Add", watchPlaceholder: "Ticker, e.g. META or BTC", watchEmpty: "No assets on your watchlist.", crypto: "Crypto",
   trailingIncome: "Dividends, last 12 months (confirmed)", exDate: "Ex-dividend", payDate: "Payment", noUpcoming: "No confirmed upcoming dividend dates.",
   dividendSource: "Confirmed events from Yahoo Finance; no estimates.", unavailable: "Unavailable",

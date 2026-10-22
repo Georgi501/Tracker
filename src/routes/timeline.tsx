@@ -7,9 +7,9 @@ import { timelineByMonth } from "@/lib/journey";
 
 export const Route = createFileRoute("/timeline")({
   head: () => ({ meta: [
-    { title: "Portfolio timeline — folio." },
+    { title: "Portfolio timeline — Capispot" },
     { name: "description", content: "Every buy, sale and dividend in your portfolio, month by month." },
-    { property: "og:title", content: "Portfolio timeline — folio." },
+    { property: "og:title", content: "Portfolio timeline — Capispot" },
     { property: "og:description", content: "See the story of your portfolio month by month." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),

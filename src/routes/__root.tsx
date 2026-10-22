@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "folio. — Portfolio Tracker" },
+      { title: "Capispot — Portfolio Tracker" },
       { name: "description", content: "Track your investment portfolio: net worth, allocation, holdings and dividends." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#04503a" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "folio." },
+      { name: "apple-mobile-web-app-title", content: "Capispot" },
     ],
     links: [
       {
