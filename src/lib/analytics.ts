@@ -46,11 +46,13 @@ export function trackAnalyticsEvent(event: AnalyticsEvent): void {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, event }),
       keepalive: true,
-    }).then((response) => {
-      if (!response.ok) console.warn("Analytics event was not recorded", response.status);
-    }).catch((error: unknown) => {
-      console.warn("Analytics event was not recorded", error);
-    });
+    })
+      .then((response) => {
+        if (!response.ok) console.warn("Analytics event was not recorded", response.status);
+      })
+      .catch((error: unknown) => {
+        console.warn("Analytics event was not recorded", error);
+      });
   } catch (error) {
     console.warn("Analytics event was not recorded", error);
   }

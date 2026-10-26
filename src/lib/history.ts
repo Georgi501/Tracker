@@ -1,9 +1,28 @@
 import type { Currency, Transaction } from "./portfolio";
-export interface DailyPrice { date: string; close: number }
-export interface HistoryAsset { id: string; type: string; currency: string; prices: DailyPrice[] }
-export interface PortfolioPoint { t: number; v: number; flow: number }
+export interface DailyPrice {
+  date: string;
+  close: number;
+}
+export interface HistoryAsset {
+  id: string;
+  type: string;
+  currency: string;
+  prices: DailyPrice[];
+}
+export interface PortfolioPoint {
+  t: number;
+  v: number;
+  flow: number;
+}
 export type HistoryPeriod = "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
-const HISTORY_MONTHS: Partial<Record<HistoryPeriod, number>> = { "1M": 1, "3M": 3, "6M": 6, "1Y": 12, "3Y": 36, "5Y": 60 };
+const HISTORY_MONTHS: Partial<Record<HistoryPeriod, number>> = {
+  "1M": 1,
+  "3M": 3,
+  "6M": 6,
+  "1Y": 12,
+  "3Y": 36,
+  "5Y": 60,
+};
 export function periodStart(period: HistoryPeriod, first: string, now: Date): string {
   if (period === "ALL") return first;
   const date = new Date(now);
@@ -12,11 +31,19 @@ export function periodStart(period: HistoryPeriod, first: string, now: Date): st
 }
 export function closeAt(prices: DailyPrice[], date: string): number | null {
   let result: DailyPrice | undefined;
-  for (const p of prices) { if (p.date > date) break; result = p; }
+  for (const p of prices) {
+    if (p.date > date) break;
+    result = p;
+  }
   if (!result || Date.parse(date) - Date.parse(result.date) > 7 * 86400000) return null;
   return result.close > 0 ? result.close : null;
 }
-export function currencyRate(currency: string, date: string, eurUsd: DailyPrice[], gbpUsd: DailyPrice[]): number | null {
+export function currencyRate(
+  currency: string,
+  date: string,
+  eurUsd: DailyPrice[],
+  gbpUsd: DailyPrice[],
+): number | null {
   if (currency === "USD") return 1;
   if (currency === "EUR" || currency === "BGN") {
     const rate = closeAt(eurUsd, date);
@@ -29,7 +56,15 @@ export function currencyRate(currency: string, date: string, eurUsd: DailyPrice[
   }
   return null;
 }
-export function buildPortfolioHistory(assets: HistoryAsset[], txs: Transaction[], start: string, end: string, base: Currency, eurUsd: DailyPrice[], gbpUsd: DailyPrice[]) {
+export function buildPortfolioHistory(
+  assets: HistoryAsset[],
+  txs: Transaction[],
+  start: string,
+  end: string,
+  base: Currency,
+  eurUsd: DailyPrice[],
+  gbpUsd: DailyPrice[],
+) {
   const points: PortfolioPoint[] = [];
   const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
   const qty = new Map<string, number>();
@@ -40,7 +75,14 @@ export function buildPortfolioHistory(assets: HistoryAsset[], txs: Transaction[]
     while (index < sorted.length) {
       const tx = sorted[index];
       if (!tx || tx.date > date) break;
-      if (tx.kind !== "dividend") qty.set(tx.assetId, Math.max(0, (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity)));
+      if (tx.kind !== "dividend")
+        qty.set(
+          tx.assetId,
+          Math.max(
+            0,
+            (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity),
+          ),
+        );
       if (tx.date === date) flow += tx.quantity * tx.price * (tx.kind === "buy" ? 1 : -1);
       index++;
     }
@@ -51,7 +93,10 @@ export function buildPortfolioHistory(assets: HistoryAsset[], txs: Transaction[]
       if (!units) continue;
       const price = asset.type === "cash" ? 1 : closeAt(asset.prices, date);
       const rate = currencyRate(asset.currency, date, eurUsd, gbpUsd);
-      if (price === null || rate === null) { available = false; break; }
+      if (price === null || rate === null) {
+        available = false;
+        break;
+      }
       value += units * price * rate;
     }
     const baseRate = base === "USD" ? 1 : currencyRate("EUR", date, eurUsd, gbpUsd);
@@ -65,7 +110,8 @@ export function historyReturn(points: PortfolioPoint[]): number | null {
   if (points.length < 2) return null;
   let growth = 1;
   for (let i = 1; i < points.length; i++) {
-    const prior = points[i - 1]; const current = points[i];
+    const prior = points[i - 1];
+    const current = points[i];
     if (!prior || !current || prior.v <= 0 || current.v - current.flow < 0) return null;
     growth *= (current.v - current.flow) / prior.v;
   }

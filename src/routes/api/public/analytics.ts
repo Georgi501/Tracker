@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-const eventSchema = z.object({
-  sessionId: z.string().uuid(),
-  event: z.enum([
-    "pricing_view",
-    "signup_completed",
-    "first_holding_added",
-    "checkout_started",
-    "checkout_completed",
-    "referral_link_copied",
-  ]),
-}).strict();
+const eventSchema = z
+  .object({
+    sessionId: z.string().uuid(),
+    event: z.enum([
+      "pricing_view",
+      "signup_completed",
+      "first_holding_added",
+      "checkout_started",
+      "checkout_completed",
+      "referral_link_copied",
+    ]),
+  })
+  .strict();
 
 export const Route = createFileRoute("/api/public/analytics")({
   server: {
@@ -24,7 +26,8 @@ export const Route = createFileRoute("/api/public/analytics")({
           return Response.json({ error: "Invalid JSON" }, { status: 400 });
         }
         const parsed = eventSchema.safeParse(payload);
-        if (!parsed.success) return Response.json({ error: "Invalid analytics event" }, { status: 400 });
+        if (!parsed.success)
+          return Response.json({ error: "Invalid analytics event" }, { status: 400 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin.rpc("record_analytics_event", {

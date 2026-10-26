@@ -1,15 +1,26 @@
 import type { Holding, Transaction } from "./portfolio";
 
-export interface AssetSummary { bought: number; sold: number; dividends: number; buys: number; sells: number; firstDate: string | null }
+export interface AssetSummary {
+  bought: number;
+  sold: number;
+  dividends: number;
+  buys: number;
+  sells: number;
+  firstDate: string | null;
+}
 
 /** Per-asset totals from real transactions (USD). */
 export function assetSummary(txs: Transaction[], assetId: string): AssetSummary {
   const own = txs.filter((t) => t.assetId === assetId);
   const s: AssetSummary = { bought: 0, sold: 0, dividends: 0, buys: 0, sells: 0, firstDate: null };
   for (const t of own) {
-    if (t.kind === "buy") { s.bought += t.quantity * t.price; s.buys++; }
-    else if (t.kind === "sell") { s.sold += t.quantity * t.price; s.sells++; }
-    else s.dividends += t.price * t.quantity;
+    if (t.kind === "buy") {
+      s.bought += t.quantity * t.price;
+      s.buys++;
+    } else if (t.kind === "sell") {
+      s.sold += t.quantity * t.price;
+      s.sells++;
+    } else s.dividends += t.price * t.quantity;
     if (!s.firstDate || t.date < s.firstDate) s.firstDate = t.date;
   }
   return s;
@@ -32,10 +43,15 @@ export function snapshotWeights(holdings: Holding[]): { cls: string; pct: number
   if (!total) return [];
   const by = new Map<string, number>();
   for (const h of priced) by.set(h.asset.type, (by.get(h.asset.type) ?? 0) + h.value);
-  return [...by].map(([cls, v]) => ({ cls, pct: Math.round((v / total) * 1000) / 10 })).sort((a, b) => b.pct - a.pct);
+  return [...by]
+    .map(([cls, v]) => ({ cls, pct: Math.round((v / total) * 1000) / 10 }))
+    .sort((a, b) => b.pct - a.pct);
 }
 
 /** True when a journal review date is today or past. */
-export function reviewDue(reviewDate: string | null, today = new Date().toISOString().slice(0, 10)) {
+export function reviewDue(
+  reviewDate: string | null,
+  today = new Date().toISOString().slice(0, 10),
+) {
   return !!reviewDate && reviewDate <= today;
 }

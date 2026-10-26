@@ -3,14 +3,27 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
-const LANG_NAMES = { en: "English", bg: "Bulgarian", de: "German", es: "Spanish", it: "Italian" } as const;
+const LANG_NAMES = {
+  en: "English",
+  bg: "Bulgarian",
+  de: "German",
+  es: "Spanish",
+  it: "Italian",
+} as const;
 const Body = z.object({ lang: z.enum(["en", "bg", "de", "es", "it"]) });
 
 function userClient(token: string) {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: `Bearer ${token}` }, fetch: (input, init) => { const h = new Headers(init?.headers); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
   });
 }
 
@@ -30,27 +43,56 @@ export const Route = createFileRoute("/api/review")({
         if (!parsed.success) return new Response("Invalid input", { status: 400 });
         const { lang } = parsed.data;
 
-        const [{ data: assets }, { data: txs }] = await Promise.all([sb.from("assets").select("*"), sb.from("transactions").select("*")]);
-        if (!assets?.length || !txs?.length) return new Response("No portfolio data yet", { status: 404 });
+        const [{ data: assets }, { data: txs }] = await Promise.all([
+          sb.from("assets").select("*"),
+          sb.from("transactions").select("*"),
+        ]);
+        if (!assets?.length || !txs?.length)
+          return new Response("No portfolio data yet", { status: 404 });
         const pos = new Map<string, { qty: number; cost: number }>();
         for (const t of [...txs].sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
           if (t.kind === "dividend") continue;
           const p = pos.get(t.asset_id) ?? { qty: 0, cost: 0 };
-          if (t.kind === "buy") { p.qty += Number(t.quantity); p.cost += Number(t.quantity) * Number(t.price); }
-          else if (p.qty > 0) { const avg = p.cost / p.qty; p.qty -= Number(t.quantity); p.cost -= avg * Number(t.quantity); }
+          if (t.kind === "buy") {
+            p.qty += Number(t.quantity);
+            p.cost += Number(t.quantity) * Number(t.price);
+          } else if (p.qty > 0) {
+            const avg = p.cost / p.qty;
+            p.qty -= Number(t.quantity);
+            p.cost -= avg * Number(t.quantity);
+          }
           pos.set(t.asset_id, p);
         }
         const held = assets.filter((a) => (pos.get(a.id)?.qty ?? 0) > 1e-9);
         const { fetchLiveQuote } = await import("@/lib/prices.server");
-        const quotes = await Promise.all(held.map((a) => fetchLiveQuote(a.symbol, a.type).catch(() => null)));
+        const quotes = await Promise.all(
+          held.map((a) => fetchLiveQuote(a.symbol, a.type).catch(() => null)),
+        );
         const totalCost = held.reduce((s, a) => s + pos.get(a.id)!.cost, 0);
         const rows = held.map((a, i) => {
-          const p = pos.get(a.id)!; const q = quotes[i];
-          return { symbol: a.symbol, name: a.name, type: a.type, sector: a.sector, region: a.region, quantity: +p.qty.toFixed(6), costUsd: +p.cost.toFixed(2),
-            costWeightPct: totalCost > 0 ? +(p.cost / totalCost * 100).toFixed(1) : null,
-            livePrice: q?.price ?? null, priceCurrency: q?.currency ?? null, dayChangePct: q?.change ?? null };
+          const p = pos.get(a.id)!;
+          const q = quotes[i];
+          return {
+            symbol: a.symbol,
+            name: a.name,
+            type: a.type,
+            sector: a.sector,
+            region: a.region,
+            quantity: +p.qty.toFixed(6),
+            costUsd: +p.cost.toFixed(2),
+            costWeightPct: totalCost > 0 ? +((p.cost / totalCost) * 100).toFixed(1) : null,
+            livePrice: q?.price ?? null,
+            priceCurrency: q?.currency ?? null,
+            dayChangePct: q?.change ?? null,
+          };
         });
-        const facts = { asOf: new Date().toISOString().slice(0, 10), totalCostUsd: +totalCost.toFixed(2), transactions: txs.length, note: "weights are by cost basis; livePrice is in priceCurrency", positions: rows };
+        const facts = {
+          asOf: new Date().toISOString().slice(0, 10),
+          totalCostUsd: +totalCost.toFixed(2),
+          transactions: txs.length,
+          note: "weights are by cost basis; livePrice is in priceCurrency",
+          positions: rows,
+        };
 
         const { getOpenAIModel } = await import("@/lib/ai/openai.server");
         const model = getOpenAIModel();
@@ -70,7 +112,9 @@ PORTFOLIO (JSON):
 ${JSON.stringify(facts)}`,
           prompt: "Review my portfolio",
           abortSignal: request.signal,
-          providerOptions: { openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false } },
+          providerOptions: {
+            openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false },
+          },
         });
         return result.toTextStreamResponse();
       },

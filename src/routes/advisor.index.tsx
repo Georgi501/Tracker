@@ -8,9 +8,16 @@ export const Route = createFileRoute("/advisor/")({
   head: () => ({
     meta: [
       { title: "AI Advisor — Capispot Ask about your portfolio" },
-      { name: "description", content: "Pro: ask questions about your positions and transactions and get answers based on your real portfolio data." },
+      {
+        name: "description",
+        content:
+          "Pro: ask questions about your positions and transactions and get answers based on your real portfolio data.",
+      },
       { property: "og:title", content: "AI Advisor — Capispot" },
-      { property: "og:description", content: "Personalized answers about your own portfolio, for Pro members." },
+      {
+        property: "og:description",
+        content: "Personalized answers about your own portfolio, for Pro members.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -19,7 +26,8 @@ export const Route = createFileRoute("/advisor/")({
 });
 
 function AdvisorHome() {
-  const p = usePortfolio(); const c = advisorCopy[p.lang];
+  const p = usePortfolio();
+  const c = advisorCopy[p.lang];
   return (
     <AdvisorLayout>
       <Card>

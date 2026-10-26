@@ -1,8 +1,16 @@
-export interface DateRange { start: number; end: number }
-export interface ValuePoint { t: number; v: number }
+export interface DateRange {
+  start: number;
+  end: number;
+}
+export interface ValuePoint {
+  t: number;
+  v: number;
+}
 export const DAY = 86400000;
 
-export function dateInput(t: number) { return new Date(t).toISOString().slice(0, 10); }
+export function dateInput(t: number) {
+  return new Date(t).toISOString().slice(0, 10);
+}
 
 /** Date ranges are inclusive calendar days; the comparison is adjacent, not overlapping. */
 export function customRange(start: string, end: string, today: string): DateRange | null {
@@ -44,7 +52,8 @@ export function comparisonReturns(series: ValuePoint[], range: DateRange, bucket
     const start = range.start + i * step;
     const previousStart = previous.start + i * step;
     return {
-      t: start, previousT: previousStart,
+      t: start,
+      previousT: previousStart,
       current: rangeReturn(series, { start, end: start + step }),
       previous: rangeReturn(series, { start: previousStart, end: previousStart + step }),
     };
@@ -53,9 +62,25 @@ export function comparisonReturns(series: ValuePoint[], range: DateRange, bucket
 
 export type ReturnPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
 export const RETURN_PERIODS: ReturnPeriod[] = ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"];
-const PERIOD_MONTHS: Partial<Record<ReturnPeriod, number>> = { "1M": 1, "3M": 3, "6M": 6, "1Y": 12, "3Y": 36, "5Y": 60 };
+const PERIOD_MONTHS: Partial<Record<ReturnPeriod, number>> = {
+  "1M": 1,
+  "3M": 3,
+  "6M": 6,
+  "1Y": 12,
+  "3Y": 36,
+  "5Y": 60,
+};
 /** Bar counts keep every bar readable: about a day up to half a year. */
-export const RETURN_BUCKETS: Record<ReturnPeriod, number> = { "1W": 7, "1M": 10, "3M": 9, "6M": 12, "1Y": 12, "3Y": 12, "5Y": 10, ALL: 12 };
+export const RETURN_BUCKETS: Record<ReturnPeriod, number> = {
+  "1W": 7,
+  "1M": 10,
+  "3M": 9,
+  "6M": 12,
+  "1Y": 12,
+  "3Y": 12,
+  "5Y": 10,
+  ALL: 12,
+};
 /** Calendar-accurate lookback; ALL uses the earliest real point, or a year back when there is none. */
 export function periodRange(period: ReturnPeriod, anchor: number, firstPoint?: number): DateRange {
   if (period === "ALL") return { start: firstPoint ?? anchor - 365 * DAY, end: anchor };

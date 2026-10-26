@@ -22,11 +22,23 @@ export function LegalPage({ doc }: { doc: LegalKey }) {
             </section>
           ))}
           {doc === "privacy" && (
-            <button onClick={openAnalyticsPreferences} className="rounded-full border border-border px-4 py-2 text-sm font-semibold">
+            <button
+              onClick={openAnalyticsPreferences}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
+            >
               {p.lang === "bg" ? "Настройки за аналитика" : "Manage analytics preferences"}
             </button>
           )}
-          <p className="border-t border-border pt-4 text-sm">{c.footer.contact}: {SUPPORT_EMAIL ? <a className="font-semibold text-primary" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> : <span className="text-muted-foreground">{c.footer.emailSoon}</span>}</p>
+          <p className="border-t border-border pt-4 text-sm">
+            {c.footer.contact}:{" "}
+            {SUPPORT_EMAIL ? (
+              <a className="font-semibold text-primary" href={`mailto:${SUPPORT_EMAIL}`}>
+                {SUPPORT_EMAIL}
+              </a>
+            ) : (
+              <span className="text-muted-foreground">{c.footer.emailSoon}</span>
+            )}
+          </p>
         </div>
       </Card>
     </div>

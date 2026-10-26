@@ -1,8 +1,77 @@
 import type { Lang } from "./i18n";
-export const benchmarkCopy: Record<Lang, { compare: string; none: string; portfolio: string; index: string; difference: string; pp: string; priceReturn: string; unavailable: string; value: string; returns: string }> = {
-  en: { compare: "Compare with index", none: "No comparison", portfolio: "Portfolio", index: "Index", difference: "Difference", pp: "pp", priceReturn: "Index price return · dividends excluded · same base currency", unavailable: "Index comparison unavailable for this period.", value: "Value", returns: "Return" },
-  bg: { compare: "Сравни с индекс", none: "Без сравнение", portfolio: "Портфейл", index: "Индекс", difference: "Разлика", pp: "пр.п.", priceReturn: "Ценова доходност на индекса · без дивиденти · еднаква базова валута", unavailable: "Сравнението с индекса не е налично за този период.", value: "Стойност", returns: "Доходност" },
-  de: { compare: "Mit Index vergleichen", none: "Kein Vergleich", portfolio: "Portfolio", index: "Index", difference: "Differenz", pp: "Prozentpunkte", priceReturn: "Index-Kursrendite · ohne Dividenden · gleiche Basiswährung", unavailable: "Indexvergleich für diesen Zeitraum nicht verfügbar.", value: "Wert", returns: "Rendite" },
-  es: { compare: "Comparar con índice", none: "Sin comparación", portfolio: "Cartera", index: "Índice", difference: "Diferencia", pp: "p. p.", priceReturn: "Rentabilidad de precio del índice · sin dividendos · misma moneda base", unavailable: "Comparación con el índice no disponible para este período.", value: "Valor", returns: "Rentabilidad" },
-  it: { compare: "Confronta con indice", none: "Nessun confronto", portfolio: "Portafoglio", index: "Indice", difference: "Differenza", pp: "p. p.", priceReturn: "Rendimento di prezzo dell’indice · dividendi esclusi · stessa valuta base", unavailable: "Confronto con l’indice non disponibile per questo periodo.", value: "Valore", returns: "Rendimento" },
+export const benchmarkCopy: Record<
+  Lang,
+  {
+    compare: string;
+    none: string;
+    portfolio: string;
+    index: string;
+    difference: string;
+    pp: string;
+    priceReturn: string;
+    unavailable: string;
+    value: string;
+    returns: string;
+  }
+> = {
+  en: {
+    compare: "Compare with index",
+    none: "No comparison",
+    portfolio: "Portfolio",
+    index: "Index",
+    difference: "Difference",
+    pp: "pp",
+    priceReturn: "Index price return · dividends excluded · same base currency",
+    unavailable: "Index comparison unavailable for this period.",
+    value: "Value",
+    returns: "Return",
+  },
+  bg: {
+    compare: "Сравни с индекс",
+    none: "Без сравнение",
+    portfolio: "Портфейл",
+    index: "Индекс",
+    difference: "Разлика",
+    pp: "пр.п.",
+    priceReturn: "Ценова доходност на индекса · без дивиденти · еднаква базова валута",
+    unavailable: "Сравнението с индекса не е налично за този период.",
+    value: "Стойност",
+    returns: "Доходност",
+  },
+  de: {
+    compare: "Mit Index vergleichen",
+    none: "Kein Vergleich",
+    portfolio: "Portfolio",
+    index: "Index",
+    difference: "Differenz",
+    pp: "Prozentpunkte",
+    priceReturn: "Index-Kursrendite · ohne Dividenden · gleiche Basiswährung",
+    unavailable: "Indexvergleich für diesen Zeitraum nicht verfügbar.",
+    value: "Wert",
+    returns: "Rendite",
+  },
+  es: {
+    compare: "Comparar con índice",
+    none: "Sin comparación",
+    portfolio: "Cartera",
+    index: "Índice",
+    difference: "Diferencia",
+    pp: "p. p.",
+    priceReturn: "Rentabilidad de precio del índice · sin dividendos · misma moneda base",
+    unavailable: "Comparación con el índice no disponible para este período.",
+    value: "Valor",
+    returns: "Rentabilidad",
+  },
+  it: {
+    compare: "Confronta con indice",
+    none: "Nessun confronto",
+    portfolio: "Portafoglio",
+    index: "Indice",
+    difference: "Differenza",
+    pp: "p. p.",
+    priceReturn: "Rendimento di prezzo dell’indice · dividendi esclusi · stessa valuta base",
+    unavailable: "Confronto con l’indice non disponibile per questo periodo.",
+    value: "Valore",
+    returns: "Rendimento",
+  },
 };

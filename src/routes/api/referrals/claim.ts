@@ -17,11 +17,13 @@ export const Route = createFileRoute("/api/referrals/claim")({
           return Response.json({ error: "Invalid JSON" }, { status: 400 });
         }
         const parsed = claimSchema.safeParse(payload);
-        if (!parsed.success) return Response.json({ error: "Invalid referral code" }, { status: 400 });
+        if (!parsed.success)
+          return Response.json({ error: "Invalid referral code" }, { status: 400 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(token);
-        if (authError || !auth.user) return Response.json({ error: "Invalid session" }, { status: 401 });
+        if (authError || !auth.user)
+          return Response.json({ error: "Invalid session" }, { status: 401 });
 
         const { data, error } = await supabaseAdmin.rpc("claim_referral_code", {
           _user_id: auth.user.id,

@@ -3,7 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
-const LANG_NAMES = { en: "English", bg: "Bulgarian", de: "German", es: "Spanish", it: "Italian" } as const;
+const LANG_NAMES = {
+  en: "English",
+  bg: "Bulgarian",
+  de: "German",
+  es: "Spanish",
+  it: "Italian",
+} as const;
 const Body = z.object({
   symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
   thesis: z.string().trim().min(10).max(3000),
@@ -14,7 +20,14 @@ function userClient(token: string) {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: `Bearer ${token}` }, fetch: (input, init) => { const h = new Headers(init?.headers); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
   });
 }
 
@@ -35,17 +48,50 @@ export const Route = createFileRoute("/api/thesis")({
         const { symbol, thesis, lang } = parsed.data;
 
         const { yahooClient } = await import("@/lib/prices.server");
-        const s = await yahooClient().quoteSummary(symbol, { modules: ["assetProfile", "price", "financialData", "defaultKeyStatistics", "summaryDetail"] }).catch(() => null);
+        const s = await yahooClient()
+          .quoteSummary(symbol, {
+            modules: [
+              "assetProfile",
+              "price",
+              "financialData",
+              "defaultKeyStatistics",
+              "summaryDetail",
+            ],
+          })
+          .catch(() => null);
         if (!s?.price) return new Response("No company data for this ticker", { status: 404 });
-        const f = s.financialData, k = s.defaultKeyStatistics, d = s.summaryDetail, a = s.assetProfile;
+        const f = s.financialData,
+          k = s.defaultKeyStatistics,
+          d = s.summaryDetail,
+          a = s.assetProfile;
         const facts = {
-          symbol: symbol.toUpperCase(), name: s.price.longName ?? s.price.shortName, currency: s.price.currency,
-          price: s.price.regularMarketPrice, marketCap: s.price.marketCap, sector: a?.sector, industry: a?.industry, country: a?.country,
-          business: a?.longBusinessSummary?.slice(0, 2500), trailingPE: d?.trailingPE, forwardPE: d?.forwardPE, beta: d?.beta,
-          dividendYield: d?.dividendYield, revenue: f?.totalRevenue, revenueGrowth: f?.revenueGrowth, earningsGrowth: f?.earningsGrowth,
-          grossMargin: f?.grossMargins, operatingMargin: f?.operatingMargins, profitMargin: f?.profitMargins, freeCashflow: f?.freeCashflow,
-          totalCash: f?.totalCash, totalDebt: f?.totalDebt, debtToEquity: f?.debtToEquity, returnOnEquity: f?.returnOnEquity,
-          analystTarget: f?.targetMeanPrice, recommendation: f?.recommendationKey, sharesOutstanding: k?.sharesOutstanding,
+          symbol: symbol.toUpperCase(),
+          name: s.price.longName ?? s.price.shortName,
+          currency: s.price.currency,
+          price: s.price.regularMarketPrice,
+          marketCap: s.price.marketCap,
+          sector: a?.sector,
+          industry: a?.industry,
+          country: a?.country,
+          business: a?.longBusinessSummary?.slice(0, 2500),
+          trailingPE: d?.trailingPE,
+          forwardPE: d?.forwardPE,
+          beta: d?.beta,
+          dividendYield: d?.dividendYield,
+          revenue: f?.totalRevenue,
+          revenueGrowth: f?.revenueGrowth,
+          earningsGrowth: f?.earningsGrowth,
+          grossMargin: f?.grossMargins,
+          operatingMargin: f?.operatingMargins,
+          profitMargin: f?.profitMargins,
+          freeCashflow: f?.freeCashflow,
+          totalCash: f?.totalCash,
+          totalDebt: f?.totalDebt,
+          debtToEquity: f?.debtToEquity,
+          returnOnEquity: f?.returnOnEquity,
+          analystTarget: f?.targetMeanPrice,
+          recommendation: f?.recommendationKey,
+          sharesOutstanding: k?.sharesOutstanding,
           asOf: new Date().toISOString().slice(0, 10),
         };
 
@@ -66,7 +112,9 @@ COMPANY DATA (JSON):
 ${JSON.stringify(facts)}`,
           prompt: `My investment thesis for ${facts.symbol}:\n${thesis}`,
           abortSignal: request.signal,
-          providerOptions: { openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false } },
+          providerOptions: {
+            openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false },
+          },
         });
         return result.toTextStreamResponse();
       },

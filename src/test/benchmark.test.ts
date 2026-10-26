@@ -1,8 +1,14 @@
 import { expect, it } from "vitest";
 import { benchmarkSeries, savedBenchmark } from "@/lib/benchmark";
 const dates = [Date.parse("2026-10-01"), Date.parse("2026-10-02")];
-const prices = [{ date: "2026-10-01", close: 100 }, { date: "2026-10-02", close: 110 }];
-const points = [{ t: dates[0] ?? 0, v: 100, flow: 0 }, { t: dates[1] ?? 0, v: 220, flow: 100 }];
+const prices = [
+  { date: "2026-10-01", close: 100 },
+  { date: "2026-10-02", close: 110 },
+];
+const points = [
+  { t: dates[0] ?? 0, v: 100, flow: 0 },
+  { t: dates[1] ?? 0, v: 220, flow: 100 },
+];
 it("restores a valid saved benchmark and rejects unknown values", () => {
   expect(savedBenchmark("^GSPC")).toBe("^GSPC");
   expect(savedBenchmark("^NDX")).toBe("^NDX");
@@ -21,12 +27,17 @@ it("starts both returns at zero and removes portfolio contributions", () => {
   expect(rows[1]?.benchmark).toBeCloseTo(10);
 });
 it("converts index returns to EUR with dated FX", () => {
-  const eur = [{ date: "2026-10-01", close: 1 }, { date: "2026-10-02", close: 1.1 }];
+  const eur = [
+    { date: "2026-10-01", close: 1 },
+    { date: "2026-10-02", close: 1.1 },
+  ];
   expect(benchmarkSeries(points, prices, "USD", "EUR", eur, [])[1]?.benchmark).toBeCloseTo(0);
 });
 it("does not manufacture missing index history", () => {
   expect(benchmarkSeries(points, [], "USD", "USD", [], [])).toEqual([]);
 });
 it("requires a positive opening portfolio valuation", () => {
-  expect(benchmarkSeries([{ t: dates[0] ?? 0, v: 0, flow: 0 }], prices, "USD", "USD", [], [])).toEqual([]);
+  expect(
+    benchmarkSeries([{ t: dates[0] ?? 0, v: 0, flow: 0 }], prices, "USD", "USD", [], []),
+  ).toEqual([]);
 });

@@ -3,12 +3,33 @@ import { alertTriggered, parseAlerts, parseWatchlist } from "@/lib/watchlist";
 import { fifoTaxReport, taxReportCsv } from "@/lib/tools";
 
 describe("price alerts", () => {
-  it("triggers above at or over target", () => { expect(alertTriggered({ symbol: "VWCE.DE", direction: "above", target: 125 }, 125)).toBe(true); });
-  it("triggers below under target", () => { expect(alertTriggered({ symbol: "VWCE.DE", direction: "below", target: 125 }, 124.9)).toBe(true); });
-  it("does not trigger below when price is higher", () => { expect(alertTriggered({ symbol: "VWCE.DE", direction: "below", target: 125 }, 130)).toBe(false); });
-  it("never triggers without a real price", () => { expect(alertTriggered({ symbol: "A", direction: "below", target: 125 }, null)).toBe(false); });
-  it("drops invalid stored alerts", () => { expect(parseAlerts(JSON.stringify([{ symbol: "A", direction: "up", target: 1 }, { symbol: "B", direction: "above", target: 2 }]))).toHaveLength(1); });
-  it("dedupes watchlist symbols", () => { expect(parseWatchlist('["META","META","bad sym"]')).toEqual(["META"]); });
+  it("triggers above at or over target", () => {
+    expect(alertTriggered({ symbol: "VWCE.DE", direction: "above", target: 125 }, 125)).toBe(true);
+  });
+  it("triggers below under target", () => {
+    expect(alertTriggered({ symbol: "VWCE.DE", direction: "below", target: 125 }, 124.9)).toBe(
+      true,
+    );
+  });
+  it("does not trigger below when price is higher", () => {
+    expect(alertTriggered({ symbol: "VWCE.DE", direction: "below", target: 125 }, 130)).toBe(false);
+  });
+  it("never triggers without a real price", () => {
+    expect(alertTriggered({ symbol: "A", direction: "below", target: 125 }, null)).toBe(false);
+  });
+  it("drops invalid stored alerts", () => {
+    expect(
+      parseAlerts(
+        JSON.stringify([
+          { symbol: "A", direction: "up", target: 1 },
+          { symbol: "B", direction: "above", target: 2 },
+        ]),
+      ),
+    ).toHaveLength(1);
+  });
+  it("dedupes watchlist symbols", () => {
+    expect(parseWatchlist('["META","META","bad sym"]')).toEqual(["META"]);
+  });
 });
 
 describe("tax report export", () => {

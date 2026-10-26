@@ -12,10 +12,35 @@ import { HeaderSearch } from "./HeaderSearch";
 import { CommandMenu } from "./CommandMenu";
 import { AuthForm } from "./AuthForm";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Crown, Globe, Landmark, LayoutDashboard, LogOut, MessageSquare, Moon, PieChart, Plus, Search, Settings2, Sun, UserRound, Wallet } from "lucide-react";
+import {
+  ChevronDown,
+  Crown,
+  Globe,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Moon,
+  PieChart,
+  Plus,
+  Search,
+  Settings2,
+  Sun,
+  UserRound,
+  Wallet,
+} from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +48,6 @@ import { usePortfolio } from "@/lib/store";
 import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
-import { trackAnalyticsEvent } from "@/lib/analytics";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const p = usePortfolio();
@@ -58,24 +82,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       qc.clear();
       await navigate({ to: "/auth", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : p.lang === "bg" ? "Неуспешно излизане от профила." : "Unable to sign out.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : p.lang === "bg"
+            ? "Неуспешно излизане от профила."
+            : "Unable to sign out.",
+      );
     }
   };
   useEffect(() => {
     if (!p.user) return;
     let referralCode: string | null = null;
-    let oauthSignupStarted = false;
     try {
       referralCode = sessionStorage.getItem("folio-referral-code");
-      oauthSignupStarted = sessionStorage.getItem("folio-oauth-signup-started") === "true";
-      if (oauthSignupStarted) sessionStorage.removeItem("folio-oauth-signup-started");
     } catch (error) {
       console.error("Unable to read referral code", error);
       return;
     }
-    const createdAt = Date.parse(p.user.created_at);
-    if (oauthSignupStarted && Date.now() >= createdAt && Date.now() - createdAt < 10 * 60_000)
-      trackAnalyticsEvent("signup_completed");
     if (!referralCode || !/^[a-fA-F0-9]{16}$/.test(referralCode)) return;
     let active = true;
     void (async () => {
@@ -93,117 +117,253 @@ export function AppShell({ children }: { children: ReactNode }) {
     })().catch((error: unknown) => {
       console.error("Unable to link referral", error);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [p.user]);
   return (
     <div className="min-h-screen">
       {getPaddleEnvironment() === "sandbox" && (
-        <div className="topband px-4 py-1.5 text-center text-xs">{paymentsCopy[p.lang].testBanner}</div>
+        <div className="topband px-4 py-1.5 text-center text-xs">
+          {paymentsCopy[p.lang].testBanner}
+        </div>
       )}
       <header className="header-as sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
-            <span aria-hidden className="logo-mark relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" /></span>
-            <span className="hidden font-display text-base font-bold tracking-tight sm:inline">capispot</span>
+            <span
+              aria-hidden
+              className="logo-mark relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
+            >
+              C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
+            </span>
+            <span className="hidden font-display text-base font-bold tracking-tight sm:inline">
+              capispot
+            </span>
           </Link>
           <nav className="ml-2 hidden items-center lg:flex">
             {nav.slice(0, 5).map((n) => (
-              <Link key={n.to} to={n.to} activeOptions={{ exact: true }} className="as-link" activeProps={{ className: "as-link-active" }}>{n.label}</Link>
+              <Link
+                key={n.to}
+                to={n.to}
+                activeOptions={{ exact: true }}
+                className="as-link"
+                activeProps={{ className: "as-link-active" }}
+              >
+                {n.label}
+              </Link>
             ))}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="as-link flex items-center gap-1">{p.lang === "bg" ? "Още" : "More"}<ChevronDown size={14} /></button>
+                <button className="as-link flex items-center gap-1">
+                  {p.lang === "bg" ? "Още" : "More"}
+                  <ChevronDown size={14} />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                {nav.slice(5).map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to}>{n.label}</Link></DropdownMenuItem>)}
+                {nav.slice(5).map((n) => (
+                  <DropdownMenuItem key={n.to} asChild>
+                    <Link to={n.to}>{n.label}</Link>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
-          <div className="min-w-0 flex-1 lg:max-w-md"><HeaderSearch /></div>
+          <div className="min-w-0 flex-1 lg:max-w-md">
+            <HeaderSearch />
+          </div>
           <div className="flex shrink-0 items-center gap-1">
             <CommandMenu onAddTx={() => setOpen(true)} />
             {p.isPro ? (
-              <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">PRO</span>
+              <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">
+                PRO
+              </span>
             ) : (
-              <Link to="/pricing" className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline">
+              <Link
+                to="/pricing"
+                className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
+              >
                 {p.lang === "bg" ? "Безплатен план" : "Free plan"}
               </Link>
             )}
-            <button onClick={() => { if (p.user) setOpen(true); else navigate({ to: "/auth" }); }} aria-label={p.t("addTx")} title={p.t("addTx")}
-              className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid">
+            <button
+              onClick={() => {
+                if (p.user) setOpen(true);
+                else navigate({ to: "/auth" });
+              }}
+              aria-label={p.t("addTx")}
+              title={p.t("addTx")}
+              className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid"
+            >
               <Plus size={17} />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button aria-label={p.t("language")} title={p.t("language")} className="press flex h-9 items-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-secondary">
-                  <Globe size={15} className="text-muted-foreground" />{p.lang.toUpperCase()}
+                <button
+                  aria-label={p.t("language")}
+                  title={p.t("language")}
+                  className="press flex h-9 items-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-secondary"
+                >
+                  <Globe size={15} className="text-muted-foreground" />
+                  {p.lang.toUpperCase()}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">{p.t("language")}</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={p.lang} onValueChange={(l) => { if (isLang(l)) p.setLang(l); }}>
-                  {languages.map((l) => <DropdownMenuRadioItem key={l.code} value={l.code} lang={l.code}>
-                    <span className="min-w-7 text-xs text-muted-foreground">{l.code.toUpperCase()}</span>{l.name}
-                  </DropdownMenuRadioItem>)}
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  {p.t("language")}
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={p.lang}
+                  onValueChange={(l) => {
+                    if (isLang(l)) p.setLang(l);
+                  }}
+                >
+                  {languages.map((l) => (
+                    <DropdownMenuRadioItem key={l.code} value={l.code} lang={l.code}>
+                      <span className="min-w-7 text-xs text-muted-foreground">
+                        {l.code.toUpperCase()}
+                      </span>
+                      {l.name}
+                    </DropdownMenuRadioItem>
+                  ))}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button aria-label={europeCopy[p.lang].base} title={europeCopy[p.lang].base} className="press grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
+                <button
+                  aria-label={europeCopy[p.lang].base}
+                  title={europeCopy[p.lang].base}
+                  className="press grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
                   <Settings2 size={17} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">{europeCopy[p.lang].base}</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={p.currency} onValueChange={(c) => { if (c === "EUR" || c === "USD") p.setCurrency(c as Currency); }}>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  {europeCopy[p.lang].base}
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={p.currency}
+                  onValueChange={(c) => {
+                    if (c === "EUR" || c === "USD") p.setCurrency(c as Currency);
+                  }}
+                >
                   <DropdownMenuRadioItem value="EUR">€ EUR</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="USD">$ USD</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); p.toggleTheme(); }}>
-                  {p.theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}{p.t("toggleTheme")}
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    p.toggleTheme();
+                  }}
+                >
+                  {p.theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+                  {p.t("toggleTheme")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {p.user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button aria-label={p.displayName || p.user.email || "account"} className="press relative ml-1 grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                  <button
+                    aria-label={p.displayName || p.user.email || "account"}
+                    className="press relative ml-1 grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
+                  >
                     {(p.displayName || p.user.email || "?").slice(0, 1).toUpperCase()}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">
                   <div className="px-2 py-1.5">
-                    <p className="truncate text-sm font-semibold">{p.displayName || p.user.email}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{p.isPro ? "Pro" : (p.lang === "bg" ? "Безплатен план" : "Free plan")}</p>
+                    <p className="truncate text-sm font-semibold">
+                      {p.displayName || p.user.email}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {p.isPro ? "Pro" : p.lang === "bg" ? "Безплатен план" : "Free plan"}
+                    </p>
                   </div>
-                  {!p.isPro && <DropdownMenuItem asChild><Link to="/pricing" className="font-semibold text-primary"><Crown size={14} />{p.lang === "bg" ? "Надгради до Pro" : "Upgrade to Pro"}</Link></DropdownMenuItem>}
-                  <DropdownMenuItem asChild><Link to="/account"><Settings2 size={14} />{p.lang === "bg" ? "Профил и плащания" : "Account & billing"}</Link></DropdownMenuItem>
+                  {!p.isPro && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/pricing" className="font-semibold text-primary">
+                        <Crown size={14} />
+                        {p.lang === "bg" ? "Надгради до Pro" : "Upgrade to Pro"}
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/account">
+                      <Settings2 size={14} />
+                      {p.lang === "bg" ? "Профил и плащания" : "Account & billing"}
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild><Link to="/profile"><UserRound size={14} />{p.lang === "bg" ? "Моят профил" : "My profile"}</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/brokers"><Landmark size={14} />{p.t("brokers")}</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/analytics"><PieChart size={14} />{p.t("analytics")}</Link></DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFeedbackOpen(true)}><MessageSquare size={14} />{feedbackCopy[p.lang].title}</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <UserRound size={14} />
+                      {p.lang === "bg" ? "Моят профил" : "My profile"}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/brokers">
+                      <Landmark size={14} />
+                      {p.t("brokers")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/analytics">
+                      <PieChart size={14} />
+                      {p.t("analytics")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+                    <MessageSquare size={14} />
+                    {feedbackCopy[p.lang].title}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => void signOut()}><LogOut size={14} />{p.t("signOut")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => void signOut()}>
+                    <LogOut size={14} />
+                    {p.t("signOut")}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <button onClick={() => setAuthOpen(true)} aria-label={p.t("signIn")} title={p.t("signIn")} className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"><UserRound size={18} /></button>
+              <button
+                onClick={() => setAuthOpen(true)}
+                aria-label={p.t("signIn")}
+                title={p.t("signIn")}
+                className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"
+              >
+                <UserRound size={18} />
+              </button>
             )}
           </div>
         </div>
         <nav className="as-subnav flex items-center gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden">
           {nav.slice(0, 5).map((n) => (
-            <Link key={n.to} to={n.to} activeOptions={{ exact: true }} className="as-link shrink-0" activeProps={{ className: "as-link-active" }}>{n.label}</Link>
+            <Link
+              key={n.to}
+              to={n.to}
+              activeOptions={{ exact: true }}
+              className="as-link shrink-0"
+              activeProps={{ className: "as-link-active" }}
+            >
+              {n.label}
+            </Link>
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="as-link flex shrink-0 items-center gap-1">{p.lang === "bg" ? "Още" : "More"}<ChevronDown size={14} /></button>
+              <button className="as-link flex shrink-0 items-center gap-1">
+                {p.lang === "bg" ? "Още" : "More"}
+                <ChevronDown size={14} />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {nav.slice(5).map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to}>{n.label}</Link></DropdownMenuItem>)}
+              {nav.slice(5).map((n) => (
+                <DropdownMenuItem key={n.to} asChild>
+                  <Link to={n.to}>{n.label}</Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
@@ -213,7 +373,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link to="/" className="inline-flex items-center gap-2">
-              <span aria-hidden className="relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" /></span>
+              <span
+                aria-hidden
+                className="relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
+              >
+                C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
+              </span>
               <span className="font-display text-lg font-bold tracking-tight">capispot</span>
             </Link>
             <p className="mt-1 text-xs font-medium tracking-wide opacity-60">capispot.com</p>
@@ -222,53 +387,121 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div>
             <h4 className="footer-h">{legalCopy(p.lang).footer.product}</h4>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><Link to="/pricing">{p.t("pricing")}</Link></li>
-              <li><Link to="/compare">{legalCopy(p.lang).footer.compare}</Link></li>
-              <li><Link to="/markets">{marketCopy[p.lang].markets}</Link></li>
-              <li><Link to="/features">{p.lang === "bg" ? "Функции" : "Features"}</Link></li>
+              <li>
+                <Link to="/pricing">{p.t("pricing")}</Link>
+              </li>
+              <li>
+                <Link to="/compare">{legalCopy(p.lang).footer.compare}</Link>
+              </li>
+              <li>
+                <Link to="/markets">{marketCopy[p.lang].markets}</Link>
+              </li>
+              <li>
+                <Link to="/features">{p.lang === "bg" ? "Функции" : "Features"}</Link>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="footer-h">{legalCopy(p.lang).footer.legal}</h4>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><Link to="/terms">{legalCopy(p.lang).terms.title}</Link></li>
-              <li><Link to="/privacy">{legalCopy(p.lang).privacy.title}</Link></li>
-              <li><Link to="/refund">{legalCopy(p.lang).refund.title}</Link></li>
-              <li><Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link></li>
+              <li>
+                <Link to="/terms">{legalCopy(p.lang).terms.title}</Link>
+              </li>
+              <li>
+                <Link to="/privacy">{legalCopy(p.lang).privacy.title}</Link>
+              </li>
+              <li>
+                <Link to="/refund">{legalCopy(p.lang).refund.title}</Link>
+              </li>
+              <li>
+                <Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="footer-h">{legalCopy(p.lang).footer.contact}</h4>
-            <p className="mt-3 text-sm opacity-75">{SUPPORT_EMAIL ? <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> : legalCopy(p.lang).footer.emailSoon}</p>
-            <button type="button" onClick={() => setFeedbackOpen(true)} className="mt-3 inline-flex items-center gap-2 text-sm"><MessageSquare size={16} />{feedbackCopy[p.lang].title}</button>
+            <p className="mt-3 text-sm opacity-75">
+              {SUPPORT_EMAIL ? (
+                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+              ) : (
+                legalCopy(p.lang).footer.emailSoon
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="mt-3 inline-flex items-center gap-2 text-sm"
+            >
+              <MessageSquare size={16} />
+              {feedbackCopy[p.lang].title}
+            </button>
           </div>
         </div>
         <div className="footer-bottom">
           <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-4 text-xs opacity-70">
-            <span>© {new Date().getFullYear()} Capispot. {legalCopy(p.lang).footer.rights}</span>
+            <span>
+              © {new Date().getFullYear()} Capispot. {legalCopy(p.lang).footer.rights}
+            </span>
             <span>{legalCopy(p.lang).footer.notAdvice}</span>
           </div>
         </div>
       </footer>
-      <nav aria-label="Quick navigation" className="glass-bar fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden">
-        {([
-          { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-          { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
-        ] as const).map(({ to, label, Icon }) => (
-          <Link key={to} to={to} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
-            <Icon size={20} /><span className="max-w-16 truncate">{label}</span>
+      <nav
+        aria-label="Quick navigation"
+        className="glass-bar fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
+      >
+        {(
+          [
+            { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+            { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
+          ] as const
+        ).map(({ to, label, Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            activeOptions={{ exact: true }}
+            className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
+            activeProps={{ className: "text-primary bg-primary/10" }}
+          >
+            <Icon size={20} />
+            <span className="max-w-16 truncate">{label}</span>
           </Link>
         ))}
-        <button onClick={() => { if (p.user) setOpen(true); else navigate({ to: "/auth" }); }} aria-label={p.t("addTx")}
-          className="bg-brand-gradient -mt-7 grid size-14 place-items-center rounded-full text-primary-foreground shadow-glow ring-4 ring-background press">
+        <button
+          onClick={() => {
+            if (p.user) setOpen(true);
+            else navigate({ to: "/auth" });
+          }}
+          aria-label={p.t("addTx")}
+          className="bg-brand-gradient -mt-7 grid size-14 place-items-center rounded-full text-primary-foreground shadow-glow ring-4 ring-background press"
+        >
           <Plus size={24} />
         </button>
-        {([
-          { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
-          { to: p.user ? "/profile" : "/auth", label: p.user ? (p.lang === "bg" ? "Профил" : "Profile") : p.t("signIn"), Icon: UserRound },
-        ] as const).map(({ to, label, Icon }) => (
-          <Link key={label} to={to} onClick={(event) => { if (!p.user) { event.preventDefault(); setAuthOpen(true); } }} activeOptions={{ exact: true }} className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground" activeProps={{ className: "text-primary bg-primary/10" }}>
-            <Icon size={20} /><span className="max-w-16 truncate">{label}</span>
+        {(
+          [
+            { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
+            {
+              to: p.user ? "/profile" : "/auth",
+              label: p.user ? (p.lang === "bg" ? "Профил" : "Profile") : p.t("signIn"),
+              Icon: UserRound,
+            },
+          ] as const
+        ).map(({ to, label, Icon }) => (
+          <Link
+            key={label}
+            to={to}
+            onClick={(event) => {
+              if (!p.user) {
+                event.preventDefault();
+                setAuthOpen(true);
+              }
+            }}
+            activeOptions={{ exact: true }}
+            className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
+            activeProps={{ className: "text-primary bg-primary/10" }}
+          >
+            <Icon size={20} />
+            <span className="max-w-16 truncate">{label}</span>
           </Link>
         ))}
       </nav>
@@ -286,7 +519,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`card-interactive rounded-2xl border border-border bg-card p-5 ${className}`}>{children}</div>;
+  return (
+    <div className={`card-interactive rounded-2xl border border-border bg-card p-5 ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 export function Delta({ value, children }: { value: number; children: ReactNode }) {

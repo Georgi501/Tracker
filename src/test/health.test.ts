@@ -2,11 +2,27 @@ import { describe, expect, it } from "vitest";
 import { portfolioHealth, stressScenarios } from "@/lib/health";
 import type { Holding } from "@/lib/portfolio";
 
-const h = (symbol: string, value: number, type: Holding["asset"]["type"] = "stock", quoteCurrency = "USD"): Holding =>
-  ({ asset: { id: symbol, symbol, name: symbol, type, quoteCurrency, sector: "Tech" }, quantity: 1, avgCost: value, costBasis: value, value, pnl: 0, pnlPct: 0, dayChange: 0 }) as unknown as Holding;
+const h = (
+  symbol: string,
+  value: number,
+  type: Holding["asset"]["type"] = "stock",
+  quoteCurrency = "USD",
+): Holding =>
+  ({
+    asset: { id: symbol, symbol, name: symbol, type, quoteCurrency, sector: "Tech" },
+    quantity: 1,
+    avgCost: value,
+    costBasis: value,
+    value,
+    pnl: 0,
+    pnlPct: 0,
+    dayChange: 0,
+  }) as unknown as Holding;
 
 describe("portfolio health", () => {
-  it("returns null without priced holdings", () => { expect(portfolioHealth([h("A", Number.NaN)])).toBeNull(); });
+  it("returns null without priced holdings", () => {
+    expect(portfolioHealth([h("A", Number.NaN)])).toBeNull();
+  });
   it("flags a single position as fully concentrated", () => {
     const r = portfolioHealth([h("META", 1000)])!;
     expect(r.parts.find((p) => p.key === "position")!.score).toBe(0);

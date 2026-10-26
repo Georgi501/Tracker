@@ -23,10 +23,13 @@ it("records only the allowed event and temporary session identifier after consen
   setAnalyticsConsent(true);
   trackAnalyticsEvent("pricing_view");
 
-  expect(fetch).toHaveBeenCalledWith("/api/public/analytics", expect.objectContaining({
-    method: "POST",
-    body: JSON.stringify({ sessionId, event: "pricing_view" }),
-  }));
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/public/analytics",
+    expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ sessionId, event: "pricing_view" }),
+    }),
+  );
   expect(sessionStorage.getItem("folio-analytics-session")).toBe(sessionId);
 });
 

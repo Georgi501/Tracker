@@ -2,7 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const resolvePaddlePrice = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ priceId: z.enum(["pro_monthly", "pro_yearly"]), environment: z.enum(["sandbox", "live"]) }).parse(d))
+  .inputValidator((d) =>
+    z
+      .object({
+        priceId: z.enum(["pro_monthly", "pro_yearly"]),
+        environment: z.enum(["sandbox", "live"]),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     const { getPaddleClient } = await import("./paddle.server");
     const prices = getPaddleClient(data.environment).prices.list({ perPage: 100 });

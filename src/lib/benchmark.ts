@@ -6,11 +6,18 @@ export const BENCHMARKS = [
   { symbol: "URTH", name: "MSCI World (ETF)" },
   { symbol: "^DJI", name: "Dow Jones 30" },
 ] as const;
-export type BenchmarkSymbol = typeof BENCHMARKS[number]["symbol"];
+export type BenchmarkSymbol = (typeof BENCHMARKS)[number]["symbol"];
 export function savedBenchmark(value: unknown): BenchmarkSymbol | "none" {
   return BENCHMARKS.find((b) => b.symbol === value)?.symbol ?? "none";
 }
-export function benchmarkSeries(points: PortfolioPoint[], prices: DailyPrice[], indexCurrency: string, base: Currency, eur: DailyPrice[], gbp: DailyPrice[]) {
+export function benchmarkSeries(
+  points: PortfolioPoint[],
+  prices: DailyPrice[],
+  indexCurrency: string,
+  base: Currency,
+  eur: DailyPrice[],
+  gbp: DailyPrice[],
+) {
   const start = points[0];
   if (!start || start.v <= 0) return [];
   const values = points.map((p) => {
@@ -18,14 +25,16 @@ export function benchmarkSeries(points: PortfolioPoint[], prices: DailyPrice[], 
     const close = closeAt(prices, date);
     const rate = currencyRate(indexCurrency, date, eur, gbp);
     const baseRate = currencyRate(base, date, eur, gbp);
-    return close === null || rate === null || baseRate === null ? null : close * rate / baseRate;
+    return close === null || rate === null || baseRate === null ? null : (close * rate) / baseRate;
   });
   const first = values[0];
   if (!first || values.some((v) => v === null)) return [];
   let growth = 1;
   const out: { t: number; portfolio: number; benchmark: number }[] = [];
   for (let i = 0; i < points.length; i++) {
-    const p = points[i]; const prior = points[i - 1]; const index = values[i];
+    const p = points[i];
+    const prior = points[i - 1];
+    const index = values[i];
     if (!p || index === null || index === undefined) return [];
     if (prior) {
       if (prior.v <= 0 || p.v - p.flow < 0) return [];

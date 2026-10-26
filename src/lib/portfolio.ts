@@ -104,8 +104,12 @@ export function irr(flows: { date: Date; amount: number }[]): number {
   if (flows.length < 2) return 0;
   const t0 = flows[0]!.date.getTime();
   const npv = (r: number) =>
-    flows.reduce((s, f) => s + f.amount / Math.pow(1 + r, (f.date.getTime() - t0) / 31557600000), 0);
-  let lo = -0.99, hi = 10;
+    flows.reduce(
+      (s, f) => s + f.amount / Math.pow(1 + r, (f.date.getTime() - t0) / 31557600000),
+      0,
+    );
+  let lo = -0.99,
+    hi = 10;
   if (npv(lo) * npv(hi) > 0) return 0;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
@@ -147,5 +151,7 @@ export interface DividendEvent {
 export function groupBy(holdings: Holding[], key: (h: Holding) => string) {
   const m = new Map<string, number>();
   for (const h of holdings) m.set(key(h), (m.get(key(h)) ?? 0) + h.value);
-  return [...m.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  return [...m.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 }

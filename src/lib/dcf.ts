@@ -1,12 +1,25 @@
-export interface DcfInputs { fcf: number; growth: number; discount: number; terminal: number; cash: number; debt: number; shares: number; years?: number }
+export interface DcfInputs {
+  fcf: number;
+  growth: number;
+  discount: number;
+  terminal: number;
+  cash: number;
+  debt: number;
+  shares: number;
+  years?: number;
+}
 export type DcfCase = "bear" | "base" | "bull";
 
 /** Two-stage DCF: explicit FCF growth for N years, Gordon terminal value, net cash added. Returns per-share value or null when not applicable. */
 export function dcfValue(i: DcfInputs): number | null {
   const n = i.years ?? 5;
   if (!(i.fcf > 0) || !(i.shares > 0) || i.discount <= i.terminal) return null;
-  let pv = 0; let f = i.fcf;
-  for (let t = 1; t <= n; t++) { f *= 1 + i.growth; pv += f / (1 + i.discount) ** t; }
+  let pv = 0;
+  let f = i.fcf;
+  for (let t = 1; t <= n; t++) {
+    f *= 1 + i.growth;
+    pv += f / (1 + i.discount) ** t;
+  }
   const tv = (f * (1 + i.terminal)) / (i.discount - i.terminal);
   pv += tv / (1 + i.discount) ** n;
   return (pv + i.cash - i.debt) / i.shares;
