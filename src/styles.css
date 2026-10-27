@@ -334,10 +334,10 @@ body::before {
 }
 .dark body::before {
   background-image:
-    radial-gradient(ellipse 90% 45% at 48% 0%, oklch(0.34 0.1 163 / 32%), transparent 72%),
-    radial-gradient(ellipse 70% 40% at 100% 10%, oklch(0.45 0.16 355 / 38%), transparent 70%),
-    radial-gradient(ellipse 70% 40% at 0% 55%, oklch(0.45 0.14 295 / 32%), transparent 70%),
-    radial-gradient(ellipse 70% 40% at 90% 100%, oklch(0.62 0.15 90 / 24%), transparent 70%);
+    radial-gradient(ellipse 100% 40% at 48% 0%, oklch(0.4 0.13 163 / 55%), transparent 72%),
+    radial-gradient(ellipse 90% 38% at 100% 22%, oklch(0.52 0.2 355 / 60%), transparent 70%),
+    radial-gradient(ellipse 90% 38% at 0% 58%, oklch(0.5 0.18 295 / 55%), transparent 70%),
+    radial-gradient(ellipse 90% 36% at 90% 100%, oklch(0.7 0.17 90 / 42%), transparent 70%);
 }
 /* Rotating accent tint per card in dark mode */
 .dark main .card-interactive:not(.dashboard-primary-card) {

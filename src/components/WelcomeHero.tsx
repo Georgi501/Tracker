@@ -192,7 +192,7 @@ export function WelcomeHero() {
               to={s.to}
               className="card-interactive press flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-4"
             >
-              <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+              <span className="grid size-9 place-items-center rounded-full bg-foreground text-sm font-bold text-background shadow-sm">
                 {i + 1}
               </span>
               <s.icon className="size-4 text-muted-foreground" />
