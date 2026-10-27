@@ -5,5 +5,8 @@ export function getOpenAIModel() {
   if (!apiKey) return null;
 
   const model = process.env["OPENAI_MODEL"] || "gpt-5.4";
+  const baseURL = process.env["OPENAI_BASE_URL"];
+  // OpenAI-compatible providers (Gemini, Groq, OpenRouter) only support chat completions.
+  if (baseURL) return createOpenAI({ apiKey, baseURL }).chat(model);
   return createOpenAI({ apiKey }).responses(model);
 }
