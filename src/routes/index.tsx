@@ -5,7 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { CountUp } from "@/components/Motion";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, Delta } from "@/components/AppShell";
 import { AllocationCard } from "@/components/AllocationCard";
@@ -173,7 +175,7 @@ function Dashboard() {
           </div>
         </div>
         <h1 className="font-display mt-1 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-4xl md:text-5xl">
-          {p.user ? p.money(total) : "—"}
+          {p.user ? <CountUp value={total} format={(n) => p.money(n)} /> : "—"}
         </h1>
         <p className="mt-1 text-sm font-semibold">
           <Delta value={chg}>
@@ -191,9 +193,9 @@ function Dashboard() {
         <div className="relative mt-2 h-32 sm:h-36 md:h-40">
           {chartMode === "performance" ? (
             !performanceSeries.length ? (
-              <p className="py-8 text-sm text-muted-foreground">
-                {history.isFetching ? "…" : p.t("noPeriodData")}
-              </p>
+              <div className="py-8 text-sm text-muted-foreground">
+                {history.isFetching ? <Skeleton className="h-48 w-full" /> : p.t("noPeriodData")}
+              </div>
             ) : (
               <ResponsiveContainer>
                 <LineChart data={performanceChart} margin={{ top: comparison.length ? 34 : 0 }}>
@@ -245,9 +247,9 @@ function Dashboard() {
               </ResponsiveContainer>
             )
           ) : !series.length ? (
-            <p className="py-8 text-sm text-muted-foreground">
-              {history.isFetching ? "…" : p.t("noPeriodData")}
-            </p>
+            <div className="py-8 text-sm text-muted-foreground">
+              {history.isFetching ? <Skeleton className="h-48 w-full" /> : p.t("noPeriodData")}
+            </div>
           ) : (
             <ResponsiveContainer>
               <AreaChart data={series.map((d) => ({ t: d.t, v: d.v }))}>
@@ -371,13 +373,13 @@ function Dashboard() {
       <div className="dashboard-metrics grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5">
         <Metric
           label={p.t("totalPnl")}
-          value={p.user ? p.money(pnl, { sign: true }) : "—"}
+          value={p.user ? <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} /> : "—"}
           sub={pct((pnl / cost) * 100)}
           n={pnl}
         />
         <Metric
           label={p.t("dayChange")}
-          value={p.user ? p.money(day, { sign: true }) : "—"}
+          value={p.user ? <CountUp value={day} format={(n) => p.money(n, { sign: true })} /> : "—"}
           sub={pct((day / (total - day)) * 100)}
           n={day}
         />
@@ -386,10 +388,15 @@ function Dashboard() {
           <Metric label={p.t("irr")} value={pct(irrV)} n={irrV} />
         </div>
         <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
-          <Metric label={p.t("invested")} value={p.user ? p.money(cost) : "—"} />
+          <Metric
+            label={p.t("invested")}
+            value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
+          />
           <Metric
             label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
-            value={p.user ? p.money(realized, { sign: true }) : "—"}
+            value={
+              p.user ? <CountUp value={realized} format={(n) => p.money(n, { sign: true })} /> : "—"
+            }
             n={realized}
           />
         </div>
@@ -434,7 +441,7 @@ function Metric({
   n,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   sub?: string;
   n?: number;
 }) {

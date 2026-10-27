@@ -8,10 +8,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { Card, Delta } from "@/components/AppShell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
 import { pct, usePortfolio } from "@/lib/store";
 import type { AssetType } from "@/lib/portfolio";
 import { marketQuote, searchMarket } from "@/lib/market.functions";
+import { getSparklines } from "@/lib/sparklines.functions";
+import { EmptyIllustration, Sparkline } from "@/components/Motion";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
 
 export const Route = createFileRoute("/holdings")({
@@ -182,6 +185,21 @@ function Holdings() {
     staleTime: 60_000,
   });
 
+  const sparkFn = useServerFn(getSparklines);
+  const sparkItems = p.holdings
+    .flatMap((h) =>
+      h.asset.type === "stock" || h.asset.type === "etf" || h.asset.type === "crypto"
+        ? [{ symbol: h.asset.symbol, type: h.asset.type }]
+        : [],
+    )
+    .slice(0, 40);
+  const sparkKey = sparkItems.map((s) => s.symbol).join(",");
+  const sparks = useQuery({
+    queryKey: ["holdings-sparklines", sparkKey],
+    queryFn: () => sparkFn({ data: { items: sparkItems } }),
+    enabled: sparkItems.length > 0,
+    staleTime: 6 * 3600_000,
+  });
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "value", dir: -1 });
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -376,6 +394,7 @@ function Holdings() {
 
         {!p.holdings.length ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <EmptyIllustration />
             <p className="font-display text-lg font-semibold">{c.empty}</p>
             <p className="max-w-sm text-sm text-muted-foreground">{c.emptyHint}</p>
             <button
@@ -459,6 +478,7 @@ function Holdings() {
                     <Th k="name" label={p.t("name")} left />
                     <Th k="qty" label={p.t("qty")} />
                     <Th k="price" label={p.t("price")} />
+                    <th className="w-24 px-2 text-right font-medium">30d</th>
                     <Th k="change" label="24h %" />
                     <Th k="avgCost" label={p.t("avgCost")} />
                     <Th k="value" label={p.t("value")} />
@@ -497,6 +517,17 @@ function Holdings() {
                       </td>
                       <td className="text-right">{num(h.quantity)}</td>
                       <td className="text-right">{p.money(h.asset.price)}</td>
+                      <td className="px-2">
+                        <div className="flex justify-end">
+                          {sparks.data?.[h.asset.symbol] ? (
+                            <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
+                          ) : sparks.isLoading &&
+                            h.asset.type !== "cash" &&
+                            h.asset.type !== "realEstate" ? (
+                            <Skeleton className="h-5 w-20" />
+                          ) : null}
+                        </div>
+                      </td>
                       <td className="text-right">
                         <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                       </td>
