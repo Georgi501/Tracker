@@ -323,12 +323,21 @@ main input, main select { min-height: 2.5rem; }
 /* Midnight page ambience */
 .dark body {
   background-color: var(--background);
+}
+/* Fixed pseudo-layer: background-attachment:fixed is ignored on mobile browsers, so colors vanished there */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.dark body::before {
   background-image:
-    radial-gradient(72rem 38rem at 48% 4%, oklch(0.34 0.1 163 / 28%), transparent 72%),
-    radial-gradient(48rem 30rem at 100% 8%, oklch(0.45 0.16 355 / 32%), transparent 70%),
-    radial-gradient(44rem 28rem at 0% 55%, oklch(0.45 0.14 295 / 26%), transparent 70%),
-    radial-gradient(40rem 26rem at 90% 100%, oklch(0.62 0.15 90 / 20%), transparent 70%) !important;
-  background-attachment: fixed;
+    radial-gradient(ellipse 90% 45% at 48% 0%, oklch(0.34 0.1 163 / 32%), transparent 72%),
+    radial-gradient(ellipse 70% 40% at 100% 10%, oklch(0.45 0.16 355 / 38%), transparent 70%),
+    radial-gradient(ellipse 70% 40% at 0% 55%, oklch(0.45 0.14 295 / 32%), transparent 70%),
+    radial-gradient(ellipse 70% 40% at 90% 100%, oklch(0.62 0.15 90 / 24%), transparent 70%);
 }
 /* Rotating accent tint per card in dark mode */
 .dark main .card-interactive:not(.dashboard-primary-card) {
@@ -504,13 +513,12 @@ main .card-interactive.dashboard-primary-card {
   border-color: oklch(1 0 0 / 22%);
 }
 
-:root:not(.dark) body {
+:root:not(.dark) body::before {
   background-image:
-    radial-gradient(60rem 32rem at 12% 0%, oklch(0.9 0.08 163 / 55%), transparent 70%),
-    radial-gradient(44rem 28rem at 100% 6%, oklch(0.92 0.07 355 / 50%), transparent 70%),
-    radial-gradient(40rem 26rem at 0% 60%, oklch(0.92 0.06 295 / 40%), transparent 70%),
-    radial-gradient(40rem 24rem at 95% 100%, oklch(0.94 0.09 92 / 55%), transparent 70%);
-  background-attachment: fixed;
+    radial-gradient(ellipse 80% 40% at 12% 0%, oklch(0.9 0.08 163 / 60%), transparent 70%),
+    radial-gradient(ellipse 70% 38% at 100% 8%, oklch(0.92 0.07 355 / 55%), transparent 70%),
+    radial-gradient(ellipse 70% 38% at 0% 60%, oklch(0.92 0.06 295 / 45%), transparent 70%),
+    radial-gradient(ellipse 70% 36% at 95% 100%, oklch(0.94 0.09 92 / 60%), transparent 70%);
 }
 :root:not(.dark) main .card-interactive:not(.dashboard-primary-card) {
   --tint: var(--primary);

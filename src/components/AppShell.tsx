@@ -142,13 +142,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="header-as sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
-            <span
-              aria-hidden
-              className="logo-mark relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
-            >
-              C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
-            </span>
-            <span className="brand-wordmark hidden font-display text-base font-bold tracking-tight sm:inline">
+            <span className="brand-wordmark font-display text-lg font-bold tracking-tight sm:text-xl">
               <span className="b1">Capi</span>
               <span className="b2">Spot</span>
             </span>
@@ -385,12 +379,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link to="/" className="inline-flex items-center gap-2">
-              <span
-                aria-hidden
-                className="relative grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
-              >
-                C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
-              </span>
               <span className="brand-wordmark font-display text-lg font-bold tracking-tight">
                 <span className="b1">Capi</span>
                 <span className="b2">Spot</span>
