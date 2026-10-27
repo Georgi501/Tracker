@@ -162,6 +162,10 @@ export function WelcomeHero() {
             {c.signUp}
             <ArrowRight className="size-4" />
           </Link>
+          <Link to="/demo" className={`${chip} min-h-10 px-4`}>
+            <Eye className="size-4" />
+            {p.lang === "bg" ? "Виж примерно портфолио" : "See a sample portfolio"}
+          </Link>
           <Link to="/markets" className={`${chip} min-h-10 px-4`}>
             <Search className="size-4" />
             {c.explore}
