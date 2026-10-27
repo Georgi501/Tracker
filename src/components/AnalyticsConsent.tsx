@@ -100,11 +100,11 @@ export function AnalyticsConsent() {
   return (
     <aside
       aria-label={c.title}
-      className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-2xl rounded-2xl border border-border bg-card p-4 shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5"
+      className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-sm rounded-2xl border border-border bg-card p-3 shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5"
     >
       <p className="text-sm font-semibold">{c.title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{c.description}</p>
-      <div className="mt-3 flex flex-wrap justify-end gap-2">
+      <p className="mt-1 text-xs leading-snug text-muted-foreground">{c.description}</p>
+      <div className="mt-2 flex flex-wrap justify-end gap-2">
         <button
           onClick={() => choose(false)}
           className="rounded-full border border-border px-4 py-2 text-xs font-semibold"

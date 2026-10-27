@@ -152,7 +152,7 @@ function Pricing() {
           <button
             key={String(y)}
             onClick={() => setYearly(y)}
-            className={`rounded-full px-4 py-1.5 font-semibold ${yearly === y ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+            className={`rounded-full px-4 py-1.5 font-semibold capitalize ${yearly === y ? "bg-card shadow-sm" : "text-muted-foreground"}`}
           >
             {y ? p.t("perYear").replace("/ ", "") : p.t("perMonth").replace("/ ", "")}
           </button>

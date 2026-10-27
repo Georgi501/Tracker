@@ -88,15 +88,42 @@ export async function fetchCryptoQuotes(symbols: string[]): Promise<Record<strin
   return result;
 }
 
+function sessionDay(date: Date, timeZone: string | undefined): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
+  } catch {
+    return date.toISOString().slice(0, 10);
+  }
+}
+
+/** Close of the last completed session before the quote's trading day, independent of the requested window. */
+export function previousSessionClose(
+  bars: { date: Date; close: number | null }[],
+  quoteAt: Date,
+  timeZone?: string,
+): number | null {
+  const today = sessionDay(quoteAt, timeZone);
+  for (let i = bars.length - 1; i >= 0; i--) {
+    const bar = bars[i]!;
+    if (bar.close != null && bar.close > 0 && sessionDay(bar.date, timeZone) < today)
+      return bar.close;
+  }
+  return null;
+}
+
 async function fetchLiveQuoteRaw(symbol: string, type: string): Promise<LiveQuote | null> {
   try {
-    // Intraday chart metadata provides an actual quote and previous close without quote's cookie/crumb flow.
+    // Chart metadata provides an actual quote without quote's cookie/crumb flow; daily bars give a stable previous close.
     const chart = await yahooClient().chart(symbol, {
-      period1: new Date(Date.now() - 86400000),
-      interval: "5m",
+      period1: new Date(Date.now() - 10 * 86400000),
+      interval: "1d",
     });
     const q = chart.meta;
-    const previous = q.previousClose ?? q.chartPreviousClose;
+    const previous =
+      q.regularMarketTime &&
+      (previousSessionClose(chart.quotes, q.regularMarketTime, q.exchangeTimezoneName) ??
+        q.previousClose ??
+        q.chartPreviousClose);
     if (!(q.regularMarketPrice > 0) || !q.regularMarketTime || !q.currency) return null;
     return {
       price: q.regularMarketPrice,

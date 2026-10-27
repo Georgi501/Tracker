@@ -70,6 +70,8 @@ async function portfolioContext(sb: ReturnType<typeof userClient>) {
 export const Route = createFileRoute("/api/advisor")({
   server: {
     handlers: {
+      GET: () =>
+        new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } }),
       POST: async ({ request }) => {
         const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Unauthorized", { status: 401 });
