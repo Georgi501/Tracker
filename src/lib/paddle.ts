@@ -16,7 +16,7 @@ type PaddleInstance = {
         displayMode: "overlay";
         successUrl: string;
         allowLogout: boolean;
-        allowDiscountCodes: boolean;
+        showAddDiscounts: boolean;
         variant: "one-page";
       };
     }) => void;
@@ -79,7 +79,7 @@ export async function openProCheckout(opts: {
       displayMode: "overlay",
       successUrl: `${window.location.origin}/pricing?checkout=success`,
       allowLogout: false,
-      allowDiscountCodes: true,
+      showAddDiscounts: true,
       variant: "one-page",
     },
   });
