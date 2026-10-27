@@ -14,7 +14,8 @@ export const resolvePaddlePrice = createServerFn({ method: "GET" })
     const { getPaddleClient } = await import("./paddle.server");
     const prices = getPaddleClient(data.environment).prices.list({ perPage: 100 });
     for await (const price of prices) {
-      if (price.status === "active" && price.importMeta?.externalId === data.priceId) {
+      const externalId = price.importMeta?.externalId ?? price.customData?.["externalId"];
+      if (price.status === "active" && externalId === data.priceId) {
         return price.id;
       }
     }
