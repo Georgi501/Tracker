@@ -44,6 +44,9 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-success: var(--success);
+  --color-sun: var(--sun);
+  --color-blossom: var(--blossom);
+  --color-violet: var(--violet);
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Sora", ui-sans-serif, sans-serif;
   --color-input: var(--input);
@@ -83,6 +86,9 @@
   --destructive: oklch(0.55 0.15 30);
   --destructive-foreground: oklch(0.99 0 0);
   --success: oklch(0.5 0.1 150);
+  --sun: oklch(0.68 0.14 80);
+  --blossom: oklch(0.62 0.17 355);
+  --violet: oklch(0.55 0.16 295);
   --border: oklch(0.88 0.018 80);
   --input: oklch(0.88 0.018 80);
   --ring: oklch(0.52 0.14 163);
@@ -127,15 +133,18 @@
   --destructive: oklch(0.74 0.14 28);
   --destructive-foreground: oklch(0.99 0 0);
   --success: oklch(0.72 0.13 148);
+  --sun: oklch(0.86 0.15 90);
+  --blossom: oklch(0.76 0.15 355);
+  --violet: oklch(0.73 0.14 295);
   --border: oklch(0.9 0.02 245 / 11%);
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.76 0.13 164);
-  --chart-1: oklch(0.7 0.1 155);
-  --chart-2: oklch(0.74 0.12 190);
-  --chart-3: oklch(0.78 0.11 78);
-  --chart-4: oklch(0.68 0.12 40);
-  --chart-5: oklch(0.7 0.05 110);
-  --gradient-brand: linear-gradient(120deg, oklch(0.68 0.13 163), oklch(0.78 0.1 185));
+  --chart-1: oklch(0.76 0.13 164);
+  --chart-2: oklch(0.86 0.15 90);
+  --chart-3: oklch(0.76 0.15 355);
+  --chart-4: oklch(0.73 0.14 295);
+  --chart-5: oklch(0.79 0.11 225);
+  --gradient-brand: linear-gradient(120deg, oklch(0.72 0.14 163), oklch(0.84 0.14 100));
   --sidebar: oklch(0.15 0.025 163);
   --sidebar-foreground: oklch(0.94 0.012 85);
   --sidebar-primary: oklch(0.76 0.13 164);
@@ -192,6 +201,10 @@ nav a { transition: background-color .2s, color .2s; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 /* Reusable visual utilities */
+.brand-wordmark .b1, .brand-wordmark .b2 { background-clip: text; -webkit-background-clip: text; }
+.dark .brand-wordmark .b1 { background-image: linear-gradient(100deg, var(--sun), var(--blossom)); color: transparent; }
+.dark .brand-wordmark .b2 { background-image: linear-gradient(100deg, var(--violet), var(--primary)); color: transparent; }
+.dark .brand-wordmark { filter: drop-shadow(0 0 10px color-mix(in oklab, var(--blossom) 35%, transparent)); }
 @utility bg-brand-gradient { background-image: var(--gradient-brand); }
 @utility glass-bar { background: color-mix(in oklab, var(--card) 82%, transparent); backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 12px 40px -12px oklch(0 0 0 / 30%); }
 ::selection { background: color-mix(in oklab, var(--primary) 30%, transparent); }
@@ -298,8 +311,25 @@ main input, main select { min-height: 2.5rem; }
   background-color: var(--background);
   background-image:
     radial-gradient(72rem 38rem at 48% 4%, oklch(0.34 0.1 163 / 28%), transparent 72%),
-    radial-gradient(54rem 32rem at 4% 0%, oklch(0.3 0.08 185 / 12%), transparent 72%) !important;
+    radial-gradient(48rem 30rem at 100% 8%, oklch(0.45 0.16 355 / 32%), transparent 70%),
+    radial-gradient(44rem 28rem at 0% 55%, oklch(0.45 0.14 295 / 26%), transparent 70%),
+    radial-gradient(40rem 26rem at 90% 100%, oklch(0.62 0.15 90 / 20%), transparent 70%) !important;
   background-attachment: fixed;
+}
+/* Rotating accent tint per card in dark mode */
+.dark main .card-interactive:not(.dashboard-primary-card) {
+  --tint: var(--primary);
+  background-image: radial-gradient(20rem 9rem at 100% 0%, color-mix(in oklab, var(--tint) 20%, transparent), transparent 72%);
+}
+.dark main .card-interactive:nth-child(4n + 2) { --tint: var(--sun); }
+.dark main .card-interactive:nth-child(4n + 3) { --tint: var(--blossom); }
+.dark main .card-interactive:nth-child(4n + 4) { --tint: var(--violet); }
+.dark main .card-interactive:not(.dashboard-primary-card):hover {
+  border-color: color-mix(in oklab, var(--tint) 50%, var(--border));
+  box-shadow: 0 12px 30px -16px color-mix(in oklab, var(--tint) 55%, transparent);
+}
+.dark main .card-interactive.dashboard-primary-card {
+  background-image: linear-gradient(155deg, color-mix(in oklab, var(--primary) 7%, var(--card)), color-mix(in oklab, var(--blossom) 4%, var(--card)) 70%);
 }
 @media (hover: hover) {
   main .card-interactive {

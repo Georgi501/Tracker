@@ -137,8 +137,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
             </span>
-            <span className="hidden font-display text-base font-bold tracking-tight sm:inline">
-              capispot
+            <span className="brand-wordmark hidden font-display text-base font-bold tracking-tight sm:inline">
+              <span className="b1">Capi</span>
+              <span className="b2">Spot</span>
             </span>
           </Link>
           <nav className="ml-2 hidden items-center lg:flex">
@@ -379,7 +380,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
               </span>
-              <span className="font-display text-lg font-bold tracking-tight">capispot</span>
+              <span className="brand-wordmark font-display text-lg font-bold tracking-tight"><span className="b1">Capi</span><span className="b2">Spot</span></span>
             </Link>
             <p className="mt-1 text-xs font-medium tracking-wide opacity-60">capispot.com</p>
             <p className="mt-2 text-sm opacity-75">{legalCopy(p.lang).footer.tagline}</p>
