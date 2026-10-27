@@ -263,15 +263,43 @@ function Holdings() {
     setPreset(next ?? { symbol: "", name: "", type: "stock" });
   };
   const removeAsset = async (id: string, symbol: string) => {
-    if (!window.confirm(c.confirmRemove.replace("{s}", symbol))) return;
+    const bg = p.lang === "bg";
+    const [assetRow, txRows] = await Promise.all([
+      supabase.from("assets").select("*").eq("id", id).single(),
+      supabase.from("transactions").select("*").eq("asset_id", id),
+    ]);
+    if (assetRow.error || txRows.error) {
+      toast.error((assetRow.error ?? txRows.error)?.message ?? "Error");
+      return;
+    }
     const { error } = await supabase.from("transactions").delete().eq("asset_id", id);
     if (error) {
       toast.error(error.message);
       return;
     }
-    await supabase.from("assets").delete().eq("id", id);
+    const removed = await supabase.from("assets").delete().eq("id", id);
+    if (removed.error) {
+      toast.error(removed.error.message);
+      return;
+    }
     await p.reload();
-    toast.success(`${symbol} ✓`);
+    toast(bg ? `${symbol} е премахнат` : `${symbol} removed`, {
+      duration: 8000,
+      action: {
+        label: bg ? "Отмени" : "Undo",
+        onClick: () => {
+          void (async () => {
+            const a = await supabase.from("assets").insert(assetRow.data);
+            const t = txRows.data.length
+              ? await supabase.from("transactions").insert(txRows.data)
+              : { error: null };
+            if (a.error || t.error) toast.error((a.error ?? t.error)?.message ?? "Error");
+            else toast.success(bg ? `${symbol} е възстановен` : `${symbol} restored`);
+            await p.reload();
+          })();
+        },
+      },
+    });
   };
 
   return (

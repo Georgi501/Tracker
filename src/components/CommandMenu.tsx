@@ -55,6 +55,7 @@ export function CommandMenu({ onAddTx }: { onAddTx: () => void }) {
         className="press hidden size-9 place-items-center rounded-full bg-secondary text-muted-foreground hover:text-foreground md:grid"
       >
         <Command size={16} />
+        <span className="sr-only">Ctrl+K</span>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
@@ -72,7 +73,32 @@ export function CommandMenu({ onAddTx }: { onAddTx: () => void }) {
             >
               {p.t("addTx")}
             </CommandItem>
+            <CommandItem onSelect={() => go(() => p.toggleTheme())}>
+              {p.t("toggleTheme")}
+            </CommandItem>
+            <CommandItem
+              value="language език"
+              onSelect={() => go(() => p.setLang(p.lang === "bg" ? "en" : "bg"))}
+            >
+              {bg ? "Смени езика (EN)" : "Switch language (BG)"}
+            </CommandItem>
           </CommandGroup>
+          {p.holdings.length > 0 && (
+            <CommandGroup heading={bg ? "Моите холдинги" : "My holdings"}>
+              {p.holdings.slice(0, 20).map((h) => (
+                <CommandItem
+                  key={h.asset.id}
+                  value={`${h.asset.symbol} ${h.asset.name}`}
+                  onSelect={() =>
+                    go(() => navigate({ to: "/asset/$symbol", params: { symbol: h.asset.symbol } }))
+                  }
+                >
+                  <span className="font-semibold">{h.asset.symbol}</span>
+                  <span className="text-muted-foreground">{h.asset.name}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
           {assets.length > 0 && (
             <CommandGroup heading={bg ? "Активи" : "Assets"}>
               {assets.map((a) => (

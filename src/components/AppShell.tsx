@@ -56,6 +56,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) > 8) setNavHidden(y > last && y > 120);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const nav = [
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
@@ -380,7 +391,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 C<span className="absolute bottom-1 right-1 size-1 rounded-full bg-emerald-300" />
               </span>
-              <span className="brand-wordmark font-display text-lg font-bold tracking-tight"><span className="b1">Capi</span><span className="b2">Spot</span></span>
+              <span className="brand-wordmark font-display text-lg font-bold tracking-tight">
+                <span className="b1">Capi</span>
+                <span className="b2">Spot</span>
+              </span>
             </Link>
             <p className="mt-1 text-xs font-medium tracking-wide opacity-60">capispot.com</p>
             <p className="mt-2 text-sm opacity-75">{legalCopy(p.lang).footer.tagline}</p>
@@ -449,6 +463,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </footer>
       <nav
         aria-label="Quick navigation"
+        data-hidden={navHidden}
         className="glass-bar fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
         {(

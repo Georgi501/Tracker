@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CountUp } from "@/components/Motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -56,6 +56,7 @@ const PERIODS: HistoryPeriod[] = ["1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"];
 function Dashboard() {
   const p = usePortfolio();
   const [period, setPeriod] = useState<HistoryPeriod>("1Y");
+  const swipeX = useRef<number | null>(null);
   const [chartMode, setChartMode] = useState<"value" | "performance">("value");
   const [benchmark, setBenchmark] = useState<BenchmarkSymbol | "none">("none");
   const [benchmarkLoaded, setBenchmarkLoaded] = useState(false);
@@ -190,7 +191,19 @@ function Dashboard() {
           </Delta>{" "}
           <span className="font-normal text-muted-foreground">{p.t("perPeriod")}</span>
         </p>
-        <div className="relative mt-2 h-32 sm:h-36 md:h-40">
+        <div
+          className="relative mt-2 h-32 touch-pan-y sm:h-36 md:h-40"
+          onTouchStart={(e) => (swipeX.current = e.touches[0]?.clientX ?? null)}
+          onTouchEnd={(e) => {
+            const x0 = swipeX.current;
+            swipeX.current = null;
+            const x1 = e.changedTouches[0]?.clientX;
+            if (x0 === null || x1 === undefined || Math.abs(x1 - x0) < 60) return;
+            const i = PERIODS.indexOf(period) + (x1 < x0 ? 1 : -1);
+            const next = PERIODS[i];
+            if (next) setPeriod(next);
+          }}
+        >
           {chartMode === "performance" ? (
             !performanceSeries.length ? (
               <div className="py-8 text-sm text-muted-foreground">
