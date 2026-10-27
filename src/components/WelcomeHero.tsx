@@ -186,16 +186,15 @@ export function WelcomeHero() {
             { to: "/brokers", icon: Upload, t: c.s1 },
             { to: "/holdings", icon: PlusCircle, t: c.s2 },
             { to: "/tools", icon: Target, t: GOAL_LABEL[p.lang] },
-          ].map((s, i) => (
+          ].map((s) => (
             <Link
               key={s.to}
               to={s.to}
               className="card-interactive press flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-4"
             >
-              <span className="grid size-9 place-items-center rounded-full bg-foreground text-sm font-bold text-background shadow-sm">
-                {i + 1}
+              <span className="grid size-9 place-items-center rounded-full bg-foreground/10 text-foreground">
+                <s.icon className="size-4" />
               </span>
-              <s.icon className="size-4 text-muted-foreground" />
               <span className="font-medium">{s.t}</span>
             </Link>
           ))}
