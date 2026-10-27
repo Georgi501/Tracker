@@ -1,7 +1,7 @@
 import type { Lang } from "@/lib/i18n";
 
 /** Contact email shown in the footer and legal pages; set before go-live. */
-export const SUPPORT_EMAIL: string | null = null;
+export const SUPPORT_EMAIL: string | null = "support@capispot.com";
 
 export type LegalKey = "terms" | "privacy" | "refund" | "disclaimer";
 type Doc = { title: string; updated: string; sections: [string, string][] };
@@ -110,12 +110,16 @@ const en: Copy = {
         "You can cancel your Pro subscription at any time. Pro remains active until the end of the period you already paid for, and you will not be charged again.",
       ],
       [
-        "30-day refund",
-        "If you are not satisfied, request a full refund within 30 days of your first payment or of a yearly renewal. Requests are processed through our payment provider.",
+        "5-day free trial",
+        "New Pro subscriptions start with a 5-day free trial. You enter a payment method at checkout but are not charged during the trial. If you cancel before the trial ends you will not be charged; otherwise the first payment is taken automatically when it ends.",
+      ],
+      [
+        "14-day refund",
+        "If you are not satisfied, request a full refund within 14 days of your first payment or of a yearly renewal. Requests are processed through our payment provider.",
       ],
       [
         "EU withdrawal right",
-        "EU consumers have a 14-day withdrawal right for digital services; our 30-day refund window covers and extends it.",
+        "EU consumers have a 14-day withdrawal right for digital services; our 14-day refund window is aligned with it.",
       ],
       [
         "How to request",
@@ -239,12 +243,16 @@ const bg: Copy = {
         "Можеш да откажеш Pro абонамента по всяко време. Pro остава активен до края на вече платения период и няма да бъдеш таксуван повторно.",
       ],
       [
-        "30 дни връщане на парите",
-        "Ако не си доволен, поискай пълно възстановяване до 30 дни след първото плащане или годишно подновяване. Връщането се обработва от платежния доставчик.",
+        "5 дни безплатен пробен период",
+        "Новите Pro абонаменти започват с 5 дни безплатен пробен период. Въвеждаш начин на плащане при поръчката, но не се таксуваш по време на пробата. Ако откажеш преди края ѝ, няма да бъдеш таксуван; в противен случай първото плащане се взема автоматично при приключването ѝ.",
+      ],
+      [
+        "14 дни връщане на парите",
+        "Ако не си доволен, поискай пълно възстановяване до 14 дни след първото плащане или годишно подновяване. Връщането се обработва от платежния доставчик.",
       ],
       [
         "Право на отказ в ЕС",
-        "Потребителите в ЕС имат 14-дневно право на отказ за дигитални услуги; нашите 30 дни го покриват и разширяват.",
+        "Потребителите в ЕС имат 14-дневно право на отказ за дигитални услуги; нашите 14 дни са съобразени с него.",
       ],
       [
         "Как да поискаш",

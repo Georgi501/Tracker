@@ -62,8 +62,10 @@ const en: PlanCopy = {
   watchlist: "Watchlist analysis: top gainers and losers, buy-zone opportunities & DCF fair values",
   gateNote: "€4.99/month or €49.99/year",
   yearlySave: "Save 17% yearly",
-  yearlyDetails: "€49.99 billed yearly; renews automatically. Cancel any time.",
-  monthlyDetails: "Billed monthly; renews automatically. Cancel any time.",
+  yearlyDetails:
+    "5 days free, then €49.99 billed yearly; renews automatically. Cancel before the trial ends and you won't be charged.",
+  monthlyDetails:
+    "5 days free, then billed monthly; renews automatically. Cancel before the trial ends and you won't be charged.",
   seeWhat: "See everything in Pro",
   referralTitle: "Invite a friend",
   referralBody:
@@ -118,8 +120,9 @@ const bg: PlanCopy = {
   gateNote: "€4.99/месец или €49.99/година",
   yearlySave: "Спестяваш 17% годишно",
   yearlyDetails:
-    "€49,99 се таксуват годишно и абонаментът се подновява автоматично. Отказ по всяко време.",
-  monthlyDetails: "Таксуване и автоматично подновяване всеки месец. Отказ по всяко време.",
+    "5 дни безплатно, после €49,99 годишно с автоматично подновяване. Ако откажеш преди края на пробния период, няма да бъдеш таксуван.",
+  monthlyDetails:
+    "5 дни безплатно, после месечно таксуване с автоматично подновяване. Ако откажеш преди края на пробния период, няма да бъдеш таксуван.",
   seeWhat: "Виж всичко в Pro",
   referralTitle: "Покани приятел",
   referralBody:
@@ -172,8 +175,10 @@ const de: PlanCopy = {
   watchlist: "Watchlist-Analyse: Top-Gewinner und -Verlierer, Kaufchancen & DCF-Fair-Values",
   gateNote: "€4,99/Monat oder €49,99/Jahr",
   yearlySave: "17% sparen jährlich",
-  yearlyDetails: "€49,99 jährlich; automatische Verlängerung. Jederzeit kündbar.",
-  monthlyDetails: "Monatliche Abrechnung und automatische Verlängerung. Jederzeit kündbar.",
+  yearlyDetails:
+    "5 Tage kostenlos, danach €49,99 jährlich; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
+  monthlyDetails:
+    "5 Tage kostenlos, danach monatliche Abrechnung mit automatischer Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
   seeWhat: "Alles in Pro ansehen",
   referralTitle: "Freund einladen",
   referralBody:
@@ -227,8 +232,10 @@ const es: PlanCopy = {
     "Análisis de watchlist: mayores subidas y bajadas, oportunidades de compra & valores razonables DCF",
   gateNote: "€4,99/mes o €49,99/año",
   yearlySave: "Ahorra 17% al año",
-  yearlyDetails: "€49,99 al año, con renovación automática. Cancela cuando quieras.",
-  monthlyDetails: "Facturación y renovación automática mensual. Cancela cuando quieras.",
+  yearlyDetails:
+    "5 días gratis, luego €49,99 al año con renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
+  monthlyDetails:
+    "5 días gratis, luego facturación mensual con renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
   seeWhat: "Ver todo en Pro",
   referralTitle: "Invita a un amigo",
   referralBody:
@@ -282,8 +289,10 @@ const it: PlanCopy = {
     "Analisi watchlist: maggiori rialzi e ribassi, opportunità di acquisto & fair value DCF",
   gateNote: "€4,99/mese o €49,99/anno",
   yearlySave: "Risparmi il 17% all'anno",
-  yearlyDetails: "€49,99 all'anno, con rinnovo automatico. Annulla quando vuoi.",
-  monthlyDetails: "Addebito e rinnovo automatico mensile. Annulla quando vuoi.",
+  yearlyDetails:
+    "5 giorni gratis, poi €49,99 all'anno con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
+  monthlyDetails:
+    "5 giorni gratis, poi addebito mensile con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
   seeWhat: "Scopri tutto in Pro",
   referralTitle: "Invita un amico",
   referralBody:

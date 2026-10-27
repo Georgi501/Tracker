@@ -5,11 +5,11 @@ export const Route = createFileRoute("/refund")({
   head: () => ({
     meta: [
       { title: "Refund & Cancellation Policy — Capispot" },
-      { name: "description", content: "Cancel Pro anytime and get a full refund within 30 days." },
+      { name: "description", content: "Cancel Pro anytime and get a full refund within 14 days." },
       { property: "og:title", content: "Refund & Cancellation Policy — Capispot" },
       {
         property: "og:description",
-        content: "Cancel Pro anytime and get a full refund within 30 days.",
+        content: "Cancel Pro anytime and get a full refund within 14 days.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
