@@ -80,6 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/advisor", label: advisorCopy[p.lang].advisor },
     { to: "/brokers", label: p.t("brokers") },
     { to: "/community", label: p.lang === "bg" ? "Общност" : "Community" },
+    { to: "/demo", label: p.lang === "bg" ? "Примерно портфолио" : "Sample portfolio" },
     { to: "/pricing", label: p.t("pricing") },
   ] as const;
   const signOut = async () => {
@@ -401,6 +402,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </li>
               <li>
                 <Link to="/features">{p.lang === "bg" ? "Функции" : "Features"}</Link>
+              </li>
+              <li>
+                <Link to="/demo">
+                  {p.lang === "bg" ? "Примерно портфолио" : "Sample portfolio"}
+                </Link>
               </li>
             </ul>
           </div>

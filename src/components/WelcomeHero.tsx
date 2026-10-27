@@ -203,6 +203,10 @@ export function WelcomeHero() {
             </Link>
           ))}
         </div>
+        <Link to="/demo" className={`${chip} mt-3 min-h-10 px-4`}>
+          <Eye className="size-4" />
+          {p.lang === "bg" ? "Виж примерно портфолио" : "See a sample portfolio"}
+        </Link>
       </section>
     );
 

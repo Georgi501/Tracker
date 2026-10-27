@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrokersRouteImport } from './routes/brokers'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as FeaturesRouteImport } from './routes/features'
@@ -77,6 +78,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DisclaimerRoute = DisclaimerRouteImport.update({
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/features': typeof FeaturesRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/features': typeof FeaturesRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
   '/features': typeof FeaturesRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/brokers'
     | '/community'
     | '/compare'
+    | '/demo'
     | '/disclaimer'
     | '/dividends'
     | '/features'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/brokers'
     | '/community'
     | '/compare'
+    | '/demo'
     | '/disclaimer'
     | '/dividends'
     | '/features'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/brokers'
     | '/community'
     | '/compare'
+    | '/demo'
     | '/disclaimer'
     | '/dividends'
     | '/features'
@@ -444,6 +456,7 @@ export interface RootRouteChildren {
   BrokersRoute: typeof BrokersRoute
   CommunityRoute: typeof CommunityRouteWithChildren
   CompareRoute: typeof CompareRoute
+  DemoRoute: typeof DemoRoute
   DisclaimerRoute: typeof DisclaimerRoute
   DividendsRoute: typeof DividendsRoute
   FeaturesRoute: typeof FeaturesRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/disclaimer': {
@@ -735,6 +755,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrokersRoute: BrokersRoute,
   CommunityRoute: CommunityRouteWithChildren,
   CompareRoute: CompareRoute,
+  DemoRoute: DemoRoute,
   DisclaimerRoute: DisclaimerRoute,
   DividendsRoute: DividendsRoute,
   FeaturesRoute: FeaturesRoute,

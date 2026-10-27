@@ -38,6 +38,7 @@ export function CommandMenu({ onAddTx }: { onAddTx: () => void }) {
     ["/dividends", p.t("dividends")],
     ["/tools", bg ? "Инструменти (DCF, данъци, AI преглед)" : "Tools (DCF, tax, AI review)"],
     ["/brokers", p.t("brokers")],
+    ["/demo", bg ? "Примерно портфолио" : "Sample portfolio"],
     ["/pricing", p.t("pricing")],
   ] as const;
   const go = (fn: () => void) => {
