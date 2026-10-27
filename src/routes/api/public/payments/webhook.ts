@@ -9,8 +9,13 @@ type Sub = {
   currentBillingPeriod?: { startsAt?: string; endsAt?: string } | null;
   scheduledChange?: { action?: string } | null;
   items: {
-    price?: { importMeta?: { externalId?: string } | null; billingCycle?: { interval?: string } };
-    product?: { importMeta?: { externalId?: string } | null };
+    price?: {
+      id?: string;
+      importMeta?: { externalId?: string } | null;
+      customData?: { externalId?: string } | null;
+      billingCycle?: { interval?: string };
+    };
+    product?: { id?: string; importMeta?: { externalId?: string } | null };
   }[];
 };
 type CompletedTransaction = { subscriptionId?: string | null };
@@ -39,8 +44,8 @@ async function handle(request: Request, env: PaddleEnv) {
   } else if (event.eventType === EventName.SubscriptionCreated) {
     const userId = data.customData?.userId;
     const item = data.items[0];
-    const priceId = item?.price?.importMeta?.externalId;
-    const productId = item?.product?.importMeta?.externalId;
+    const priceId = item?.price?.importMeta?.externalId ?? item?.price?.customData?.externalId;
+    const productId = item?.product?.importMeta?.externalId ?? item?.product?.id;
     if (!userId || !priceId || !productId) {
       console.warn("Skipping subscription without user or catalog ids");
       return;
