@@ -1,3 +1,4 @@
+import { ALLOC_COLORS } from "@/lib/palette";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
@@ -56,14 +57,7 @@ export const Route = createFileRoute("/analytics")({
   component: Analytics,
 });
 
-const COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--muted-foreground)",
-];
+const COLORS = ALLOC_COLORS;
 const tip = {
   background: "var(--popover)",
   border: "1px solid var(--border)",
@@ -363,7 +357,8 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
               nameKey="name"
               innerRadius="60%"
               outerRadius="95%"
-              paddingAngle={2}
+              paddingAngle={3}
+              cornerRadius={6}
               stroke="none"
             >
               {data.map((_, i) => (

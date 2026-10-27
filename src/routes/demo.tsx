@@ -1,6 +1,7 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { ALLOC_COLORS } from "@/lib/palette";
 import { usePortfolio } from "@/lib/store";
 
 export const Route = createFileRoute("/demo")({
@@ -25,7 +26,7 @@ const SAMPLE = [
   { symbol: "BND", name: "Vanguard Total Bond", cls: "Bonds", qty: 30, cost: 74, value: 72 },
 ];
 
-const COLORS = ["#6fe0b8", "#ffd76a", "#ff7ab8", "#a98bff"];
+const COLORS = ALLOC_COLORS;
 
 const COPY = {
   en: {
@@ -125,6 +126,8 @@ function DemoPage() {
                   nameKey="name"
                   innerRadius={34}
                   outerRadius={56}
+                  paddingAngle={3}
+                  cornerRadius={5}
                 >
                   {byClass.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />

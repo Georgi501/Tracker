@@ -2,16 +2,10 @@ import { useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { usePortfolio } from "@/lib/store";
 import { groupBy } from "@/lib/portfolio";
+import { ALLOC_COLORS } from "@/lib/palette";
 import { Card } from "./AppShell";
 
-const COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--muted-foreground)",
-];
+const COLORS = ALLOC_COLORS;
 
 export function AllocationCard() {
   const p = usePortfolio();
@@ -49,7 +43,8 @@ export function AllocationCard() {
               nameKey="name"
               innerRadius="62%"
               outerRadius="95%"
-              paddingAngle={2}
+              paddingAngle={3}
+              cornerRadius={6}
               stroke="none"
             >
               {data.map((_, i) => (
