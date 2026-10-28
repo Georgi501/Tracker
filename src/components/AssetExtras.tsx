@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale } from "@/lib/i18n";
 import { extrasCopy } from "@/lib/extras-i18n";
-import { CHART_RANGES, marketDetails, type ChartRange } from "@/lib/market.functions";
+import {
+  CHART_RANGES,
+  marketDetails,
+  type ChartRange,
+  type MarketCandle,
+} from "@/lib/market.functions";
 import {
   readAlerts,
   readWatchlist,
@@ -36,26 +41,108 @@ export function useWatchState() {
   return { list, alerts };
 }
 
-function Sparkline({ closes }: { closes: { t: number; c: number }[] }) {
+function Sparkline({
+  closes,
+  range,
+  currency,
+  locale,
+  labels,
+}: {
+  closes: MarketCandle[];
+  range: ChartRange;
+  currency: string | null;
+  locale: string;
+  labels: { date: string; close: string; open: string; high: string; low: string };
+}) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const vals = closes.map((x) => x.c);
   const min = Math.min(...vals),
     max = Math.max(...vals),
     span = max - min || 1;
-  const pts = vals
-    .map((v, i) => `${(i / (vals.length - 1)) * 300},${80 - ((v - min) / span) * 76 - 2}`)
-    .join(" ");
+  const points = vals.map((v, i) => ({
+    x: (i / (vals.length - 1)) * 300,
+    y: 80 - ((v - min) / span) * 76 - 2,
+  }));
+  const pts = points.map(({ x, y }) => `${x},${y}`).join(" ");
   const up = vals[vals.length - 1]! >= vals[0]!;
+  const active = activeIndex == null ? null : closes[activeIndex];
+  const money = (value: number | null) =>
+    value == null
+      ? "—"
+      : new Intl.NumberFormat(locale, {
+          style: "currency",
+          currency: currency ?? "USD",
+          maximumFractionDigits: 2,
+        }).format(value);
+  const date = active
+    ? new Date(active.t).toLocaleString(locale, {
+        dateStyle: "medium",
+        timeStyle: range === "1D" || range === "1W" ? "short" : undefined,
+      })
+    : "";
+  const updateActivePoint = (clientX: number, element: SVGSVGElement) => {
+    const bounds = element.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - bounds.left) / bounds.width));
+    setActiveIndex(Math.round(ratio * (closes.length - 1)));
+  };
   return (
-    <svg viewBox="0 0 300 80" preserveAspectRatio="none" className="h-20 w-full" role="img">
-      <polyline
-        points={pts}
-        fill="none"
-        strokeWidth="2"
-        vectorEffect="non-scaling-stroke"
-        className={up ? "stroke-success" : "stroke-destructive"}
-        style={{ stroke: up ? "var(--success, var(--primary))" : "var(--destructive)" }}
-      />
-    </svg>
+    <div className="relative">
+      <svg
+        viewBox="0 0 300 80"
+        preserveAspectRatio="none"
+        className="h-20 w-full touch-pan-y"
+        role="img"
+        aria-label={`${labels.date}: ${labels.close}, ${labels.open}, ${labels.high}, ${labels.low}`}
+        onPointerMove={(event) => updateActivePoint(event.clientX, event.currentTarget)}
+        onPointerDown={(event) => updateActivePoint(event.clientX, event.currentTarget)}
+        onPointerLeave={() => setActiveIndex(null)}
+      >
+        <polyline
+          points={pts}
+          fill="none"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          className={up ? "stroke-success" : "stroke-destructive"}
+          style={{ stroke: up ? "var(--success, var(--primary))" : "var(--destructive)" }}
+        />
+        {activeIndex != null && (
+          <circle
+            cx={points[activeIndex]!.x}
+            cy={points[activeIndex]!.y}
+            r="3"
+            fill={up ? "var(--success, var(--primary))" : "var(--destructive)"}
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+      </svg>
+      {active && activeIndex != null && (
+        <div
+          className="pointer-events-none absolute top-0 z-10 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-xs shadow-md"
+          style={{
+            left: `${Math.min(78, Math.max(22, (activeIndex / (closes.length - 1)) * 100))}%`,
+          }}
+        >
+          <p className="mb-2 font-semibold">
+            {labels.date}: {date}
+          </p>
+          <dl className="space-y-1">
+            {(
+              [
+                [labels.close, active.c],
+                [labels.open, active.o],
+                [labels.high, active.h],
+                [labels.low, active.l],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="font-medium tabular-nums">{money(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -130,7 +217,19 @@ export function AssetExtras({ asset, price }: { asset: MarketAsset; price: numbe
         {ch.isFetching && !ch.data ? (
           <div className="h-20 animate-pulse rounded-md bg-muted" />
         ) : ch.data && ch.data.closes.length > 1 ? (
-          <Sparkline closes={ch.data.closes} />
+          <Sparkline
+            closes={ch.data.closes}
+            range={range}
+            currency={ch.data.currency}
+            locale={languageLocale(p.lang)}
+            labels={{
+              date: c.chartDate,
+              close: c.chartClose,
+              open: c.chartOpen,
+              high: c.chartHigh,
+              low: c.chartLow,
+            }}
+          />
         ) : (
           <p className="text-sm text-muted-foreground">{c.noChart}</p>
         )}
