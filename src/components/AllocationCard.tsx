@@ -52,12 +52,20 @@ export function AllocationCard() {
               ))}
             </Pie>
             <Tooltip
-              formatter={(v: number) => p.money(v)}
-              contentStyle={{
-                background: "var(--popover)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                color: "var(--foreground)",
+              content={({ active, payload }) => {
+                const item = payload?.[0];
+                if (!active || !item) return null;
+                const value = Number(item.value);
+                const share = total > 0 ? (value / total) * 100 : 0;
+                return (
+                  <div className="rounded-xl border border-border bg-popover px-3 py-2 text-popover-foreground shadow-xl">
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="mt-0.5 text-sm">
+                      {p.money(value)}{" "}
+                      <span className="text-muted-foreground">· {share.toFixed(1)}%</span>
+                    </p>
+                  </div>
+                );
               }}
             />
           </PieChart>

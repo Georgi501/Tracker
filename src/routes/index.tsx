@@ -78,6 +78,10 @@ function Dashboard() {
   }, [benchmark, benchmarkLoaded]);
   const c = benchmarkCopy[p.lang];
   const total = p.holdings.reduce((s, h) => s + h.value, 0);
+  const portfolioValue = p.holdings.reduce(
+    (sum, holding) => (Number.isFinite(holding.value) ? sum + holding.value : sum),
+    0,
+  );
   const cost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
   const pnl = total - cost;
   const realized = fifoTaxReport(p.transactions).reduce((s, y) => s + y.realized, 0);
@@ -435,9 +439,15 @@ function Dashboard() {
               </div>
               <div className="text-right text-sm">
                 <p className="font-semibold">{p.money(h.value)}</p>
-                <p className="text-xs">
+                <div className="flex items-center justify-end gap-2 text-xs">
                   <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                </p>
+                  <span className="text-muted-foreground">
+                    {portfolioValue > 0 && Number.isFinite(h.value)
+                      ? ((h.value / portfolioValue) * 100).toFixed(1)
+                      : "0.0"}
+                    % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                  </span>
+                </div>
               </div>
             </li>
           ))}
