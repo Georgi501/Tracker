@@ -124,6 +124,13 @@ export const getExchangeRate = createServerFn({ method: "GET" }).handler(async (
 
 export const CHART_RANGES = ["1D", "1W", "1M", "3M", "6M", "1Y", "3Y", "MAX"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
+export type MarketCandle = {
+  t: number;
+  c: number;
+  o: number | null;
+  h: number | null;
+  l: number | null;
+};
 const RANGE_CFG: Record<
   ChartRange,
   { days: number; interval: "5m" | "30m" | "1d" | "1wk" | "1mo" }
@@ -153,7 +160,7 @@ export const marketDetails = createServerFn({ method: "POST" })
     async ({
       data,
     }): Promise<{
-      closes: { t: number; c: number }[];
+      closes: MarketCandle[];
       low: number | null;
       high: number | null;
       currency: string | null;
@@ -168,7 +175,13 @@ export const marketDetails = createServerFn({ method: "POST" })
         const chart = await yahooClient().chart(symbol, { period1, interval: cfg.interval });
         const closes = chart.quotes
           .filter((q) => q.close != null && q.close > 0)
-          .map((q) => ({ t: q.date.getTime(), c: q.close as number }));
+          .map((q) => ({
+            t: q.date.getTime(),
+            c: q.close as number,
+            o: q.open,
+            h: q.high,
+            l: q.low,
+          }));
         const m = chart.meta as {
           fiftyTwoWeekLow?: number;
           fiftyTwoWeekHigh?: number;

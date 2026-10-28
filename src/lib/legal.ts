@@ -51,18 +51,22 @@ const en: Copy = {
       ],
       [
         "5. Acceptable use",
-        "Do not misuse the service, attempt to access other users' data, scrape it automatically or send abusive messages in Community chat. We may suspend accounts that break these rules.",
+        "Do not misuse the service, attempt to access other users' data, scrape it automatically or send abusive messages in Community chat. Do not use any feature to violate the law, infringe another person's rights or interfere with the service. We may suspend accounts that break these rules.",
       ],
       [
-        "6. Liability",
+        "6. AI features and acceptable use",
+        "The AI Advisor and AI thesis-check features generate informational content, not financial, legal or tax advice. AI outputs may be inaccurate, incomplete or outdated; verify them independently and do not rely on them as the sole basis for any investment decision. You are responsible for your prompts and for decisions or actions based on AI outputs. Do not use these features to create unlawful, deceptive, abusive or harmful content, to bypass safeguards, or to submit confidential information you are not authorized to share. We may restrict access when these rules are violated.",
+      ],
+      [
+        "7. Liability",
         'The service is provided "as is". To the extent permitted by law we are not liable for investment losses or decisions taken based on the app.',
       ],
       [
-        "7. Changes",
+        "8. Changes",
         "We may update these terms; material changes are announced in the app. Continued use means acceptance.",
       ],
       [
-        "8. Referrals",
+        "9. Referrals",
         "A new referred customer and the referring user each receive one month of Pro after the referred customer completes their first paid Pro subscription transaction. The reward extends an active paid period or starts immediately when no paid period is active. Rewards have no cash value, are not transferable and may be withheld for self-referrals or abuse.",
       ],
     ],
@@ -184,18 +188,22 @@ const bg: Copy = {
       ],
       [
         "5. Допустима употреба",
-        "Забранено е злоупотребата с услугата, опитите за достъп до чужди данни, автоматичното извличане и обидните съобщения в чата. Можем да спрем профили, които нарушават правилата.",
+        "Забранено е злоупотребата с услугата, опитите за достъп до чужди данни, автоматичното извличане и обидните съобщения в чата. Не използвай функциите за нарушение на закона, чужди права или работата на услугата. Можем да спрем профили, които нарушават правилата.",
       ],
       [
-        "6. Отговорност",
+        "6. AI функции и допустима употреба",
+        "AI съветникът и проверката на инвестиционна теза генерират информационно съдържание, а не финансов, правен или данъчен съвет. AI резултатите може да са неточни, непълни или остарели; проверявай ги самостоятелно и не ги използвай като единствена основа за инвестиционно решение. Ти носиш отговорност за заявките си и за решенията или действията, основани на AI резултатите. Не използвай функциите за създаване на незаконно, подвеждащо, обидно или вредно съдържание, за заобикаляне на защитите или за подаване на поверителна информация, която нямаш право да споделяш. Можем да ограничим достъпа при нарушение на тези правила.",
+      ],
+      [
+        "7. Отговорност",
         "Услугата се предоставя „както е“. Доколкото законът позволява, не носим отговорност за инвестиционни загуби или решения, взети на база приложението.",
       ],
       [
-        "7. Промени",
+        "8. Промени",
         "Можем да обновяваме условията; съществените промени се обявяват в приложението.",
       ],
       [
-        "8. Покани",
+        "9. Покани",
         "Новият поканен клиент и поканилият го потребител получават по един месец Pro, след като поканеният завърши първата си платена Pro транзакция. Наградата удължава активния платен период или започва веднага, ако няма такъв. Няма парична стойност, не може да се прехвърля и може да бъде отказана при самопокани или злоупотреба.",
       ],
     ],
