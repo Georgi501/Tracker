@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "./market-search";
+import { dedupeMarketNews } from "./market-news";
 
 export interface MarketNews {
   id: string;
@@ -41,48 +42,25 @@ export const searchMarket = createServerFn({ method: "POST" })
             type: a.quoteType === "ETF" ? "etf" : "stock",
           });
         }
-        const news: MarketNews[] = (result.news ?? [])
-          .filter((n) => n.title && /^https:\/\//.test(n.link))
-          .map((n) => ({
-            id: n.uuid,
-            title: n.title,
-            publisher: n.publisher ?? "",
-            link: n.link,
-            at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
-            tickers: (n.relatedTickers ?? []).slice(0, 4),
-            image: thumb(n as Thumb),
-          }));
+        const news = dedupeMarketNews(
+          (result.news ?? [])
+            .filter((n) => n.title && /^https:\/\//.test(n.link))
+            .map((n) => ({
+              id: n.uuid,
+              title: n.title,
+              publisher: n.publisher ?? "",
+              link: n.link,
+              at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
+              tickers: (n.relatedTickers ?? []).slice(0, 4),
+              image: thumb(n as Thumb),
+            })),
+        );
         return { assets: [...assets.values()].slice(0, 20), news, unavailable: false };
       } catch {
         return { assets: fallback, news: [], unavailable: true };
       }
     },
   );
-
-export const marketAssetNews = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
-    z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
-  )
-  .handler(async ({ data }): Promise<{ news: MarketNews[]; unavailable: boolean }> => {
-    try {
-      const { yahooClient } = await import("./prices.server");
-      const result = await yahooClient().search(data.symbol, { newsCount: 6 });
-      const news: MarketNews[] = (result.news ?? [])
-        .filter((item) => item.title && /^https:\/\//.test(item.link))
-        .map((item) => ({
-          id: item.uuid,
-          title: item.title,
-          publisher: item.publisher ?? "",
-          link: item.link,
-          at: item.providerPublishTime ? new Date(item.providerPublishTime).toISOString() : null,
-          tickers: (item.relatedTickers ?? []).slice(0, 4),
-          image: thumb(item as Thumb),
-        }));
-      return { news, unavailable: false };
-    } catch {
-      return { news: [], unavailable: true };
-    }
-  });
 
 export const marketQuote = createServerFn({ method: "POST" })
   .inputValidator((input) =>
@@ -466,17 +444,19 @@ export const marketOverview = createServerFn({ method: "POST" })
       yf.search(symbol, { newsCount: 8, quotesCount: 0 }).catch(() => null),
     ]);
     const a = s?.assetProfile;
-    const news: MarketNews[] = (r?.news ?? [])
-      .filter((n) => n.title && /^https:\/\//.test(n.link))
-      .map((n) => ({
-        id: n.uuid,
-        title: n.title,
-        publisher: n.publisher ?? "",
-        link: n.link,
-        at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
-        tickers: (n.relatedTickers ?? []).slice(0, 4),
-        image: thumb(n as Thumb),
-      }));
+    const news = dedupeMarketNews(
+      (r?.news ?? [])
+        .filter((n) => n.title && /^https:\/\//.test(n.link))
+        .map((n) => ({
+          id: n.uuid,
+          title: n.title,
+          publisher: n.publisher ?? "",
+          link: n.link,
+          at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
+          tickers: (n.relatedTickers ?? []).slice(0, 4),
+          image: thumb(n as Thumb),
+        })),
+    );
     return {
       name: s?.price?.longName ?? s?.price?.shortName ?? null,
       description: a?.longBusinessSummary ?? null,

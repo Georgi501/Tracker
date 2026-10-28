@@ -151,6 +151,7 @@ function Markets() {
           <Input
             aria-label={c.search}
             autoComplete="off"
+            spellCheck={false}
             placeholder={c.placeholder}
             maxLength={60}
             value={query}
@@ -309,35 +310,36 @@ function Markets() {
           </p>
         )}
       </section>
-      {news.length > 0 && (
-        <section className="min-w-0">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <Newspaper size={16} />
-            {NEWS_LABEL[p.lang]}
-          </h2>
-          <ul className="divide-y divide-border">
-            {news.map((n) => (
-              <li key={n.id}>
-                <a
-                  href={n.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block rounded-md px-3 py-3 hover:bg-secondary"
-                >
-                  <span className="block font-semibold leading-snug">{n.title}</span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {n.publisher}
-                    {n.at
-                      ? ` · ${new Date(n.at).toLocaleString(languageLocale(p.lang), { dateStyle: "medium", timeStyle: "short" })}`
-                      : ""}
-                    {n.tickers.length ? ` · ${n.tickers.join(", ")}` : ""}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {news.length > 0 &&
+        (!selected || !results.some((asset) => asset.symbol === selected.symbol)) && (
+          <section className="min-w-0">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <Newspaper size={16} />
+              {NEWS_LABEL[p.lang]}
+            </h2>
+            <ul className="divide-y divide-border">
+              {news.map((n) => (
+                <li key={n.id}>
+                  <a
+                    href={n.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-md px-3 py-3 hover:bg-secondary"
+                  >
+                    <span className="block font-semibold leading-snug">{n.title}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {n.publisher}
+                      {n.at
+                        ? ` · ${new Date(n.at).toLocaleString(languageLocale(p.lang), { dateStyle: "medium", timeStyle: "short" })}`
+                        : ""}
+                      {n.tickers.length ? ` · ${n.tickers.join(", ")}` : ""}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
     </div>
   );
 }

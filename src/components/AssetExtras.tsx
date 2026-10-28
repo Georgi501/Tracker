@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Star } from "lucide-react";
-import { AssetNews } from "@/components/AssetNews";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePortfolio } from "@/lib/store";
@@ -151,7 +150,6 @@ export function AssetExtras({ asset, price }: { asset: MarketAsset; price: numbe
             );
           })()}
       </div>
-      <AssetNews symbol={asset.symbol} lang={p.lang} />
       {data?.low != null && data.high != null && (
         <div>
           <p className="mb-1 text-xs text-muted-foreground">{c.range52}</p>

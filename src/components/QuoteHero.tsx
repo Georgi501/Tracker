@@ -12,7 +12,6 @@ import {
   YAxis,
 } from "recharts";
 import { CompanyLogo } from "@/components/CompanyLogo";
-import { AssetNews } from "@/components/AssetNews";
 import { KeyStats } from "@/components/KeyStats";
 import {
   CHART_RANGES,
@@ -275,7 +274,6 @@ export function QuoteHero({
           <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
         )}
       </div>
-      <AssetNews symbol={symbol} lang={lang} />
       {type !== "crypto" && <KeyStats symbol={symbol} lang={lang} />}
     </section>
   );

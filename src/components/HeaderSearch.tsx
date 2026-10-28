@@ -46,6 +46,7 @@ export function HeaderSearch() {
         placeholder={PLACEHOLDER[p.lang]}
         maxLength={60}
         autoComplete="off"
+        spellCheck={false}
         value={value}
         onChange={(e) => {
           setValue(e.target.value);
