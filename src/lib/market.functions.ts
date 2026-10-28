@@ -59,6 +59,31 @@ export const searchMarket = createServerFn({ method: "POST" })
     },
   );
 
+export const marketAssetNews = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<{ news: MarketNews[]; unavailable: boolean }> => {
+    try {
+      const { yahooClient } = await import("./prices.server");
+      const result = await yahooClient().search(data.symbol, { newsCount: 6 });
+      const news: MarketNews[] = (result.news ?? [])
+        .filter((item) => item.title && /^https:\/\//.test(item.link))
+        .map((item) => ({
+          id: item.uuid,
+          title: item.title,
+          publisher: item.publisher ?? "",
+          link: item.link,
+          at: item.providerPublishTime ? new Date(item.providerPublishTime).toISOString() : null,
+          tickers: (item.relatedTickers ?? []).slice(0, 4),
+          image: thumb(item as Thumb),
+        }));
+      return { news, unavailable: false };
+    } catch {
+      return { news: [], unavailable: true };
+    }
+  });
+
 export const marketQuote = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z

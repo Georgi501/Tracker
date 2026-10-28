@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { AssetNews } from "@/components/AssetNews";
 import { KeyStats } from "@/components/KeyStats";
 import {
   CHART_RANGES,
@@ -205,9 +206,9 @@ export function QuoteHero({
           )}
         </div>
         {ch.isFetching && !ch.data ? (
-          <div className="h-72 animate-pulse rounded-md bg-muted" />
+          <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
         ) : closes.length > 1 ? (
-          <div className="h-72 w-full">
+          <div className="h-48 w-full sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={closes} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
                 <defs>
@@ -274,6 +275,7 @@ export function QuoteHero({
           <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
         )}
       </div>
+      <AssetNews symbol={symbol} lang={lang} />
       {type !== "crypto" && <KeyStats symbol={symbol} lang={lang} />}
     </section>
   );
