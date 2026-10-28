@@ -1,44 +1,59 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { fetchCryptoQuotes } from "@/lib/prices.server";
 
+const { yahooChart } = vi.hoisted(() => ({ yahooChart: vi.fn() }));
+vi.mock("yahoo-finance2", () => ({
+  default: class {
+    chart = yahooChart;
+  },
+}));
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  yahooChart.mockReset();
 });
 
-it("fetches multiple live crypto quotes from CoinGecko in one request", async () => {
-  const updatedAt = Math.floor(Date.now() / 1000) - 60;
-  const fetch = vi.fn().mockResolvedValue(
-    new Response(
-      JSON.stringify({
-        bitcoin: { usd: 65000, usd_24h_change: 1.5, last_updated_at: updatedAt },
-        ethereum: { usd: 3200, usd_24h_change: -0.5, last_updated_at: updatedAt },
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    ),
-  );
-  vi.stubGlobal("fetch", fetch);
+it("fetches multiple current crypto quotes from Yahoo Finance", async () => {
+  const updatedAt = new Date();
+  yahooChart.mockImplementation(async (symbol: string) => ({
+    meta: {
+      regularMarketPrice: symbol === "BTC-USD" ? 65000 : 3200,
+      regularMarketTime: updatedAt,
+      currency: "USD",
+      previousClose: symbol === "BTC-USD" ? 64000 : 3216,
+    },
+    quotes: [],
+  }));
 
   const quotes = await fetchCryptoQuotes(["btc", "ETH", "BTC"]);
 
-  expect(fetch).toHaveBeenCalledTimes(1);
-  expect(String(fetch.mock.calls[0]?.[0])).toContain("ids=bitcoin,ethereum");
-  expect(quotes["BTC"]).toMatchObject({ price: 65000, currency: "USD", source: "CoinGecko" });
-  expect(quotes["ETH"]).toMatchObject({ price: 3200, currency: "USD", change: -0.5 });
+  expect(yahooChart).toHaveBeenCalledTimes(2);
+  expect(yahooChart).toHaveBeenCalledWith("BTC-USD", expect.objectContaining({ interval: "1d" }));
+  expect(yahooChart).toHaveBeenCalledWith("ETH-USD", expect.objectContaining({ interval: "1d" }));
+  expect(quotes["BTC"]).toMatchObject({
+    price: 65000,
+    currency: "USD",
+    source: "Yahoo Finance",
+  });
+  expect(quotes["ETH"]).toMatchObject({ price: 3200, currency: "USD", source: "Yahoo Finance" });
+  expect(quotes["ETH"]?.change).toBeCloseTo(-0.5);
 });
 
-it("does not return stale CoinGecko prices", async () => {
-  const staleUpdatedAt = Math.floor(Date.now() / 1000) - 16 * 60;
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          kaspa: { usd: 0.12, usd_24h_change: 2, last_updated_at: staleUpdatedAt },
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    ),
-  );
+it("does not return stale Yahoo Finance crypto prices", async () => {
+  yahooChart.mockResolvedValue({
+    meta: {
+      regularMarketPrice: 0.12,
+      regularMarketTime: new Date(Date.now() - 16 * 60_000),
+      currency: "USD",
+      previousClose: 0.11,
+    },
+    quotes: [],
+  });
 
   expect(await fetchCryptoQuotes(["KAS"])).toEqual({});
+});
+
+it("does not request unlisted cryptocurrency symbols from Yahoo Finance", async () => {
+  expect(await fetchCryptoQuotes(["NOTACOIN"])).toEqual({});
+  expect(yahooChart).not.toHaveBeenCalled();
 });

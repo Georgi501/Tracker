@@ -221,13 +221,7 @@ export function WelcomeHero() {
         timeStyle: "short",
       }).format(new Date(latestQuote))
     : null;
-  const quoteSources = [
-    ...new Set(
-      quotedHoldings.map((holding) =>
-        holding.asset.type === "crypto" ? "CoinGecko" : "Yahoo Finance",
-      ),
-    ),
-  ].join(" & ");
+  const quoteSources = [...new Set(quotedHoldings.map(() => "Yahoo Finance"))].join(" & ");
 
   return (
     <section className="rise flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

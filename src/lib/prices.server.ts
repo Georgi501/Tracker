@@ -1,14 +1,13 @@
 import YahooFinance from "yahoo-finance2";
-import { CRYPTO_IDS } from "./crypto-assets";
+import { CRYPTO_SYMBOLS } from "./crypto-assets";
 
 export interface LiveQuote {
   price: number;
   change: number | null;
   at: string;
   currency: string;
-  source: "Yahoo Finance" | "CoinGecko";
+  source: "Yahoo Finance";
 }
-export { CRYPTO_IDS } from "./crypto-assets";
 export function yahooClient() {
   return new YahooFinance({
     suppressNotices: ["yahooSurvey"],
@@ -16,8 +15,9 @@ export function yahooClient() {
   });
 }
 const cache = new Map<string, { at: number; v: LiveQuote }>();
+const supportedCryptoSymbols = new Set<string>(CRYPTO_SYMBOLS);
 const QUOTE_TTL = 60_000;
-/** Short in-memory cache (1 min) so repeated views don't hammer Yahoo/CoinGecko; only successful real quotes are cached. */
+/** Short in-memory cache (1 min) so repeated views don't hammer Yahoo Finance; only successful real quotes are cached. */
 export async function fetchLiveQuote(symbol: string, type: string): Promise<LiveQuote | null> {
   if (type === "crypto") {
     const quotes = await fetchCryptoQuotes([symbol]);
@@ -36,55 +36,39 @@ export async function fetchLiveQuote(symbol: string, type: string): Promise<Live
 
 export async function fetchCryptoQuotes(symbols: string[]): Promise<Record<string, LiveQuote>> {
   const result: Record<string, LiveQuote> = {};
-  const missing = new Map<string, string>();
+  const missing: string[] = [];
   for (const symbol of new Set(symbols.map((item) => item.toUpperCase()))) {
-    const id = CRYPTO_IDS[symbol];
-    if (!id) continue;
+    if (!supportedCryptoSymbols.has(symbol)) continue;
     const cached = cache.get(`crypto:${symbol}`);
     if (cached && Date.now() - cached.at < QUOTE_TTL) {
       result[symbol] = cached.v;
     } else {
-      missing.set(symbol, id);
+      missing.push(symbol);
     }
   }
-  if (!missing.size) return result;
+  if (!missing.length) return result;
 
-  try {
-    const ids = [...missing.values()].join(",");
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true`,
-      { signal: AbortSignal.timeout(10000) },
+  for (let i = 0; i < missing.length; i += 4) {
+    const quotes = await Promise.all(
+      missing.slice(i, i + 4).map(async (symbol) => {
+        const quote = await fetchLiveQuoteRaw(`${symbol}-USD`, "crypto");
+        if (
+          !quote ||
+          quote.currency !== "USD" ||
+          !Number.isFinite(Date.parse(quote.at)) ||
+          Date.now() - new Date(quote.at).getTime() > 15 * 60_000
+        )
+          return [symbol, null] as const;
+        return [symbol, quote] as const;
+      }),
     );
-    if (!response.ok) return result;
-    const data = (await response.json()) as Record<
-      string,
-      { usd?: number; usd_24h_change?: number | null; last_updated_at?: number }
-    >;
-    const now = Date.now();
-    for (const [symbol, id] of missing) {
-      const quote = data[id];
-      if (
-        !quote ||
-        !Number.isFinite(quote.usd) ||
-        !quote.usd ||
-        !quote.last_updated_at ||
-        now - quote.last_updated_at * 1000 > 15 * 60_000
-      )
-        continue;
-      const liveQuote: LiveQuote = {
-        price: quote.usd,
-        change: quote.usd_24h_change ?? null,
-        at: new Date(quote.last_updated_at * 1000).toISOString(),
-        currency: "USD",
-        source: "CoinGecko",
-      };
-      cache.set(`crypto:${symbol}`, { at: now, v: liveQuote });
-      result[symbol] = liveQuote;
+    for (const [symbol, quote] of quotes) {
+      if (!quote) continue;
+      cache.set(`crypto:${symbol}`, { at: Date.now(), v: quote });
+      result[symbol] = quote;
     }
-    if (cache.size > 2000) cache.delete(cache.keys().next().value!);
-  } catch {
-    return result;
   }
+  if (cache.size > 2000) cache.delete(cache.keys().next().value!);
   return result;
 }
 

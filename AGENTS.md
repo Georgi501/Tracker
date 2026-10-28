@@ -8,9 +8,9 @@
 - User portfolio rows are RLS-scoped in Supabase; only preferences persist locally. Transaction costs are stored in USD; display FX must come from the market provider, never fixed rates.
 - PortfolioProvider renders children only after mount, to avoid SSR hydration mismatches from locale/time-dependent output.
 - Signed-out visitors see an empty portfolio; signed-in users read/write their own rows (RLS by user_id). Broker limits remain enforced by the is_pro() database trigger.
-- Live quotes use shared server-only yahoo-finance2 chart metadata for stocks/ETFs and direct CoinGecko crypto data; missing quotes remain unavailable and are never replaced by transaction costs.
+- Live quotes use shared server-only yahoo-finance2 chart metadata for stocks/ETFs and Yahoo USD pairs for crypto; missing quotes remain unavailable and are never replaced by transaction costs.
 - Historical portfolio valuation replays actual dated transactions against provider daily closes and dated FX in the selected base currency; missing data and unreconciled stock splits suppress the chart instead of fabricating points. Dividend forecasts require confirmed event data.
-- Crypto history uses CoinGecko only within its 365-day free-API cap and Yahoo's USD pair beyond it, so one provider backs each chart instead of a stitched mix.
+- Crypto history uses Yahoo USD pairs for all ranges so each chart uses one provider without stitched data.
 
 - The i18n language registry is the single source for language selection, persisted preference validation and Intl locales; each supported language supplies a complete typed dictionary.
 - Asset discovery uses public read-only TanStack server functions with Yahoo search and shared quote helpers; authenticated portfolio quotes use the same provider layer, refresh every minute, and never expose account data.
