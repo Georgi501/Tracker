@@ -62,11 +62,10 @@ function Markets() {
   const { q } = Route.useSearch();
   const [query, setQuery] = useState(q ?? "");
   useEffect(() => {
-    if ((q ?? "") !== query) {
-      setQuery(q ?? "");
-      setResults(searchCatalog(q ?? ""));
-    }
-  }, [q, query]);
+    const next = q ?? "";
+    setQuery(next);
+    setResults(searchCatalog(next));
+  }, [q]);
   const [results, setResults] = useState<MarketAsset[]>(MARKET_ASSETS);
   const [selected, setSelected] = useState<MarketAsset | null>(null);
   const [quote, setQuote] = useState<Awaited<ReturnType<typeof marketQuote>> | null>(null);

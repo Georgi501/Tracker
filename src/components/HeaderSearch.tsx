@@ -19,13 +19,14 @@ export function HeaderSearch() {
   const urlQ = loc.pathname === "/markets" ? String((loc.search as { q?: string }).q ?? "") : "";
   const [value, setValue] = useState(urlQ);
   useEffect(() => {
-    if (loc.pathname !== "/markets") setValue("");
-  }, [loc.pathname]);
+    setValue(urlQ);
+  }, [urlQ]);
   const go = (q: string) =>
     navigate({
       to: "/markets",
       search: { q: q || undefined },
       replace: loc.pathname === "/markets",
+      viewTransition: loc.pathname !== "/markets",
     });
   return (
     <form
