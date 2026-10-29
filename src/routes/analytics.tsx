@@ -239,6 +239,8 @@ function Analytics() {
                 <Tooltip
                   cursor={{ fill: "var(--secondary)" }}
                   formatter={(v: number) => pct(v)}
+                  itemStyle={{ color: "var(--foreground)" }}
+                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
                   labelFormatter={(_, payload) => {
                     const row = payload[0]?.payload;
                     return row
@@ -319,6 +321,8 @@ function Analytics() {
               <Tooltip
                 cursor={{ fill: "var(--secondary)" }}
                 formatter={(v: number) => p.money(v, { sign: true })}
+                itemStyle={{ color: "var(--foreground)" }}
+                labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
                 contentStyle={tip}
               />
               <Bar dataKey="v" radius={[4, 4, 4, 4]}>
@@ -365,7 +369,12 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(v: number) => p.money(v)} contentStyle={tip} />
+            <Tooltip
+              formatter={(v: number) => p.money(v)}
+              itemStyle={{ color: "var(--foreground)" }}
+              labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+              contentStyle={tip}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
