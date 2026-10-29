@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { ALLOC_COLORS } from "@/lib/palette";
+import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { usePortfolio } from "@/lib/store";
 
 export const Route = createFileRoute("/demo")({
@@ -26,8 +25,6 @@ const SAMPLE = [
   { symbol: "BND", name: "Vanguard Total Bond", cls: "Bonds", qty: 30, cost: 74, value: 72 },
 ];
 
-const COLORS = ALLOC_COLORS;
-
 const COPY = {
   en: {
     badge: "Sample data",
@@ -36,6 +33,8 @@ const COPY = {
     value: "Sample value",
     gain: "Sample gain",
     alloc: "Allocation",
+    totalValue: "Total value",
+    bonds: "Bonds",
     holdings: "Holdings",
     cols: ["Asset", "Qty", "Avg cost", "Value", "P/L"],
     cta: "Create your free portfolio",
@@ -48,6 +47,8 @@ const COPY = {
     value: "Примерна стойност",
     gain: "Примерна печалба",
     alloc: "Разпределение",
+    totalValue: "Обща стойност",
+    bonds: "Облигации",
     holdings: "Позиции",
     cols: ["Актив", "Бр.", "Ср. цена", "Стойност", "П/З"],
     cta: "Създай безплатно портфолио",
@@ -73,8 +74,14 @@ function DemoPage() {
   const totalValue = rows.reduce((s, r) => s + r.totalValue, 0);
   const totalCost = rows.reduce((s, r) => s + r.totalCost, 0);
   const gain = totalValue - totalCost;
+  const classLabels: Record<string, string> = {
+    ETF: p.t("etf"),
+    Stock: p.t("stock"),
+    Crypto: p.t("crypto"),
+    Bonds: c.bonds,
+  };
   const byClass = [...new Set(rows.map((r) => r.cls))].map((cls) => ({
-    name: cls,
+    name: classLabels[cls] ?? cls,
     value: rows.filter((r) => r.cls === cls).reduce((s, r) => s + r.totalValue, 0),
   }));
 
@@ -104,7 +111,7 @@ function DemoPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="card-interactive rounded-2xl border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">{c.value}</p>
           <p className="font-display mt-1 text-2xl font-bold">{usd(totalValue)}</p>
@@ -115,30 +122,16 @@ function DemoPage() {
             +{usd(gain)} ({((gain / totalCost) * 100).toFixed(1)}%)
           </p>
         </div>
-        <div className="card-interactive rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">{c.alloc}</p>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={byClass}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={34}
-                  outerRadius={56}
-                  paddingAngle={3}
-                  cornerRadius={5}
-                >
-                  {byClass.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v: number) => usd(v)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
       </div>
+
+      <section className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <h2 className="font-display mb-3 text-lg font-semibold">{c.alloc}</h2>
+        <AllocationBreakdown
+          data={byClass}
+          totalLabel={c.totalValue}
+          formatValue={(value) => usd(value)}
+        />
+      </section>
 
       <section className="card-interactive overflow-x-auto rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display mb-3 text-lg font-semibold">{c.holdings}</h2>

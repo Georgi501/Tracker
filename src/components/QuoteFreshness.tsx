@@ -88,11 +88,13 @@ export function QuoteFreshness({
   lang,
   marketState,
   crypto = false,
+  compact = false,
 }: {
   at: string | null | undefined;
   lang: Lang;
   marketState?: string | null | undefined;
   crypto?: boolean;
+  compact?: boolean;
 }) {
   if (!at || !Number.isFinite(Date.parse(at))) return null;
   const copy = COPY[lang];
@@ -101,6 +103,18 @@ export function QuoteFreshness({
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(at));
+  if (compact)
+    return (
+      <p
+        className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[10px] text-muted-foreground"
+        title={`${copy.asOf} ${timestamp} · ${copy.mayBeDelayed}`}
+      >
+        <Clock3 size={10} aria-hidden />
+        <span>{copy.source}</span>
+        <span aria-hidden>·</span>
+        <time dateTime={at}>{timestamp}</time>
+      </p>
+    );
   return (
     <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
       <Clock3 size={12} aria-hidden />

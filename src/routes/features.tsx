@@ -41,6 +41,8 @@ type FeatureCopy = {
   cta: string;
   pricing: string;
   features: { title: string; body: string }[];
+  methodTitle: string;
+  methodology: { title: string; body: string }[];
   trustTitle: string;
   trust: { title: string; body: string }[];
   disclaimer: string;
@@ -68,6 +70,21 @@ const COPY: Record<Lang, FeatureCopy> = {
       {
         title: "Useful free plan, deeper Pro tools",
         body: "Start with the core portfolio tracker for free. Pro adds advanced analysis and planning tools, with transparent monthly and annual billing.",
+      },
+    ],
+    methodTitle: "How the numbers are calculated",
+    methodology: [
+      {
+        title: "Cash-flow-adjusted return",
+        body: "Portfolio performance replays dated buys and sells. Benchmark lines show index price return, not total return including dividends.",
+      },
+      {
+        title: "Historical value",
+        body: "Historical charts use provider daily closes and dated currency rates. Missing prices or unreconciled stock splits are not filled with estimates.",
+      },
+      {
+        title: "Private by default",
+        body: "Portfolio rows are account-scoped. Optional public portfolio sharing shows asset-class percentages, not account values.",
       },
     ],
     trustTitle: "Designed for clarity and privacy",
@@ -112,6 +129,21 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Започни безплатно с основното следене на портфейл. Pro добавя разширени анализи и планиране с ясно месечно или годишно таксуване.",
       },
     ],
+    methodTitle: "Как се изчисляват стойностите",
+    methodology: [
+      {
+        title: "Доходност, коригирана за паричните потоци",
+        body: "Представянето на портфейла преизчислява датираните покупки и продажби. Индексите показват ценова доходност, без дивиденти.",
+      },
+      {
+        title: "Историческа стойност",
+        body: "Историческите графики използват дневни цени на затваряне и датирани валутни курсове от доставчика. Липсващи цени и неотразени сплитове не се заместват с оценки.",
+      },
+      {
+        title: "Поверителност по подразбиране",
+        body: "Редовете в портфейла са достъпни според профила. Публичното споделяне е по избор и показва проценти по класове активи, не стойности.",
+      },
+    ],
     trustTitle: "Яснота и поверителност по дизайн",
     trust: [
       {
@@ -152,6 +184,21 @@ const COPY: Record<Lang, FeatureCopy> = {
       {
         title: "Kostenlos starten, mehr mit Pro",
         body: "Beginne kostenlos mit dem Portfolio-Tracker. Pro ergänzt Analysen und Planung mit transparenter monatlicher oder jährlicher Abrechnung.",
+      },
+    ],
+    methodTitle: "So werden die Werte berechnet",
+    methodology: [
+      {
+        title: "Rendite bereinigt um Zahlungsströme",
+        body: "Die Portfolioentwicklung berücksichtigt datierte Käufe und Verkäufe. Indexlinien zeigen Kursrenditen ohne Dividenden.",
+      },
+      {
+        title: "Historischer Wert",
+        body: "Historische Charts verwenden tägliche Anbieter-Schlusskurse und datierte Wechselkurse. Fehlende Kurse oder nicht abgeglichene Aktiensplits werden nicht geschätzt.",
+      },
+      {
+        title: "Datenschutz als Standard",
+        body: "Portfoliodaten sind kontobasiert geschützt. Eine optionale öffentliche Freigabe zeigt Prozentanteile nach Anlageklasse, keine Kontowerte.",
       },
     ],
     trustTitle: "Klarheit und Datenschutz",
@@ -196,6 +243,21 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Comienza con el seguimiento esencial gratis. Pro añade análisis y planificación con facturación mensual o anual transparente.",
       },
     ],
+    methodTitle: "Cómo se calculan las cifras",
+    methodology: [
+      {
+        title: "Rentabilidad ajustada por flujos",
+        body: "El rendimiento de la cartera considera compras y ventas fechadas. Los índices muestran rentabilidad del precio, sin dividendos.",
+      },
+      {
+        title: "Valor histórico",
+        body: "Los gráficos históricos usan cierres diarios del proveedor y tipos de cambio fechados. No se estiman precios ausentes ni desdoblamientos sin conciliar.",
+      },
+      {
+        title: "Privacidad predeterminada",
+        body: "Los datos de la cartera están limitados a la cuenta. Compartirla públicamente es opcional y muestra porcentajes por clase de activo, no saldos.",
+      },
+    ],
     trustTitle: "Claridad y privacidad desde el diseño",
     trust: [
       {
@@ -236,6 +298,21 @@ const COPY: Record<Lang, FeatureCopy> = {
       {
         title: "Inizia gratis, passa a Pro",
         body: "Inizia con il tracker essenziale gratuito. Pro aggiunge analisi e pianificazione con fatturazione mensile o annuale trasparente.",
+      },
+    ],
+    methodTitle: "Come vengono calcolati i valori",
+    methodology: [
+      {
+        title: "Rendimento corretto per i flussi",
+        body: "L’andamento del portafoglio considera acquisti e vendite datati. Gli indici mostrano il rendimento dei prezzi, senza dividendi.",
+      },
+      {
+        title: "Valore storico",
+        body: "I grafici storici usano chiusure giornaliere del fornitore e cambi datati. Prezzi mancanti e frazionamenti non riconciliati non vengono stimati.",
+      },
+      {
+        title: "Privacy predefinita",
+        body: "I dati del portafoglio sono limitati all’account. La condivisione pubblica è facoltativa e mostra percentuali per classe di attività, non i saldi.",
       },
     ],
     trustTitle: "Chiarezza e privacy integrate",
@@ -300,6 +377,17 @@ function FeaturesPage() {
             </Card>
           );
         })}
+      </section>
+      <section>
+        <h2 className="font-display mb-4 text-center text-2xl font-bold">{c.methodTitle}</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {c.methodology.map((item) => (
+            <Card key={item.title} className="p-5">
+              <h3 className="font-display font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+            </Card>
+          ))}
+        </div>
       </section>
       <section>
         <h2 className="font-display mb-4 text-center text-2xl font-bold">{c.trustTitle}</h2>

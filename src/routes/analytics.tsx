@@ -1,4 +1,4 @@
-import { ALLOC_COLORS } from "@/lib/palette";
+import { allocationColor } from "@/lib/palette";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
@@ -72,7 +72,6 @@ export const Route = createFileRoute("/analytics")({
   component: Analytics,
 });
 
-const COLORS = ALLOC_COLORS;
 const tip = {
   background: "var(--popover)",
   border: "1px solid var(--border)",
@@ -819,8 +818,8 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
               cornerRadius={6}
               stroke="none"
             >
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              {data.map((item) => (
+                <Cell key={item.name} fill={allocationColor(item.name)} />
               ))}
             </Pie>
             <Tooltip
@@ -833,11 +832,11 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
         </ResponsiveContainer>
       </div>
       <ul className="mt-3 space-y-1.5 text-sm">
-        {data.slice(0, 8).map((d, i) => (
+        {data.slice(0, 8).map((d) => (
           <li key={d.name} className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
-              style={{ background: COLORS[i % COLORS.length] }}
+              style={{ background: allocationColor(d.name) }}
             />
             <span className="flex-1">{d.name}</span>
             <span className="font-semibold">{((d.value / total) * 100).toFixed(1)}%</span>

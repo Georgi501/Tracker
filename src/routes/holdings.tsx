@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Plus, Search, Trash2, TrendingUp, X } 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { Card, Delta } from "@/components/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
@@ -501,6 +502,12 @@ function Holdings() {
                       {num(h.quantity)} · {h.asset.symbol} ·{" "}
                       <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                     </p>
+                    <QuoteFreshness
+                      at={h.asset.quoteAt}
+                      lang={p.lang}
+                      crypto={h.asset.type === "crypto"}
+                      compact
+                    />
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">{p.money(h.value)}</p>
@@ -564,6 +571,12 @@ function Holdings() {
                             <p className="text-xs text-muted-foreground">
                               {h.asset.symbol} · {p.t(h.asset.type)}
                             </p>
+                            <QuoteFreshness
+                              at={h.asset.quoteAt}
+                              lang={p.lang}
+                              crypto={h.asset.type === "crypto"}
+                              compact
+                            />
                           </div>
                         </div>
                       </td>
@@ -716,12 +729,13 @@ function MarketRow({
 
 /** Flags quotes older than 4 days (covers weekends/holidays) or missing; never substitutes a price. */
 function StaleBadge({ at, price, bg }: { at?: string | undefined; price: number; bg: boolean }) {
-  const missing = !(price > 0) || !at;
-  const old = !missing && Date.now() - Date.parse(at!) > 4 * 86400000;
+  const timestamp = at ? Date.parse(at) : Number.NaN;
+  const missing = !(price > 0) || !Number.isFinite(timestamp);
+  const old = !missing && Date.now() - timestamp > 4 * 86400000;
   if (!missing && !old) return null;
   return (
     <span
-      title={at ? new Date(at).toLocaleString() : undefined}
+      title={Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString() : undefined}
       className="mt-0.5 inline-block rounded-full bg-destructive/15 px-2 text-[10px] font-semibold text-destructive"
     >
       {missing ? (bg ? "няма цена" : "no quote") : bg ? "остаряла цена" : "stale price"}

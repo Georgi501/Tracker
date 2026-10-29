@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -42,7 +43,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -61,6 +62,9 @@ const SHELL_COPY: Record<
     profile: string;
     account: string;
     owner: string;
+    portfolioGroup: string;
+    planningGroup: string;
+    exploreGroup: string;
   }
 > = {
   en: {
@@ -72,6 +76,9 @@ const SHELL_COPY: Record<
     profile: "Profile",
     account: "Account & billing",
     owner: "Owner console",
+    portfolioGroup: "Portfolio",
+    planningGroup: "Planning",
+    exploreGroup: "Explore",
   },
   bg: {
     watchlist: "Списък за наблюдение",
@@ -82,6 +89,9 @@ const SHELL_COPY: Record<
     profile: "Профил",
     account: "Профил и плащания",
     owner: "Панел на собственика",
+    portfolioGroup: "Портфолио",
+    planningGroup: "Планиране",
+    exploreGroup: "Разглеждане",
   },
   de: {
     watchlist: "Beobachtungsliste",
@@ -92,6 +102,9 @@ const SHELL_COPY: Record<
     profile: "Profil",
     account: "Konto & Abrechnung",
     owner: "Eigentümerkonsole",
+    portfolioGroup: "Portfolio",
+    planningGroup: "Planung",
+    exploreGroup: "Entdecken",
   },
   es: {
     watchlist: "Lista de seguimiento",
@@ -102,6 +115,9 @@ const SHELL_COPY: Record<
     profile: "Perfil",
     account: "Cuenta y facturación",
     owner: "Panel del propietario",
+    portfolioGroup: "Cartera",
+    planningGroup: "Planificación",
+    exploreGroup: "Explorar",
   },
   it: {
     watchlist: "Lista di controllo",
@@ -112,6 +128,9 @@ const SHELL_COPY: Record<
     profile: "Profilo",
     account: "Account e fatturazione",
     owner: "Console proprietario",
+    portfolioGroup: "Portafoglio",
+    planningGroup: "Pianificazione",
+    exploreGroup: "Esplora",
   },
 };
 
@@ -149,7 +168,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/community", label: shellCopy.community },
     { to: "/demo", label: shellCopy.demo },
     { to: "/pricing", label: p.t("pricing") },
-  ] as const;
+  ];
+  const moreGroups = [
+    {
+      label: shellCopy.portfolioGroup,
+      links: nav.filter((item) =>
+        ["/compare", "/timeline", "/dividends", "/brokers"].includes(item.to),
+      ),
+    },
+    {
+      label: shellCopy.planningGroup,
+      links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
+    },
+    {
+      label: shellCopy.exploreGroup,
+      links: nav.filter((item) => ["/community", "/demo", "/pricing"].includes(item.to)),
+    },
+  ];
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -235,10 +270,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                {nav.slice(5).map((n) => (
-                  <DropdownMenuItem key={n.to} asChild>
-                    <Link to={n.to}>{n.label}</Link>
-                  </DropdownMenuItem>
+                {moreGroups.map((group, index) => (
+                  <Fragment key={group.label}>
+                    {index > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        {group.label}
+                      </DropdownMenuLabel>
+                      {group.links.map((n) => (
+                        <DropdownMenuItem key={n.to} asChild>
+                          <Link to={n.to}>{n.label}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </Fragment>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -441,10 +486,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {nav.slice(5).map((n) => (
-                <DropdownMenuItem key={n.to} asChild>
-                  <Link to={n.to}>{n.label}</Link>
-                </DropdownMenuItem>
+              {moreGroups.map((group, index) => (
+                <Fragment key={group.label}>
+                  {index > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      {group.label}
+                    </DropdownMenuLabel>
+                    {group.links.map((n) => (
+                      <DropdownMenuItem key={n.to} asChild>
+                        <Link to={n.to}>{n.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </Fragment>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>

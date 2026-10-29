@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { usePortfolio } from "@/lib/store";
 import { groupBy } from "@/lib/portfolio";
-import { ALLOC_COLORS } from "@/lib/palette";
+import { AllocationBreakdown } from "./AllocationBreakdown";
 import { Card } from "./AppShell";
-
-const COLORS = ALLOC_COLORS;
 
 export function AllocationCard() {
   const p = usePortfolio();
@@ -17,7 +14,6 @@ export function AllocationCard() {
         ? p.t(h.asset.type)
         : p.label(mode === "sector" ? h.asset.sector : h.asset.region),
   );
-  const total = data.reduce((s, d) => s + d.value, 0);
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
@@ -34,58 +30,11 @@ export function AllocationCard() {
           ))}
         </div>
       </div>
-      <div className="h-48">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius="62%"
-              outerRadius="95%"
-              paddingAngle={3}
-              cornerRadius={6}
-              stroke="none"
-            >
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              content={({ active, payload }) => {
-                const item = payload?.[0];
-                if (!active || !item) return null;
-                const value = Number(item.value);
-                const share = total > 0 ? (value / total) * 100 : 0;
-                return (
-                  <div className="rounded-xl border border-border bg-popover px-3 py-2 text-popover-foreground shadow-xl">
-                    <p className="font-semibold">{item.name}</p>
-                    <p className="mt-0.5 text-sm">
-                      {p.money(value)}{" "}
-                      <span className="text-muted-foreground">· {share.toFixed(1)}%</span>
-                    </p>
-                  </div>
-                );
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <ul className="mt-4 space-y-2 text-sm">
-        {data.map((d, i) => (
-          <li key={d.name} className="flex items-center gap-2">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: COLORS[i % COLORS.length] }}
-            />
-            <span className="flex-1">{d.name}</span>
-            <span className="text-muted-foreground">{p.money(d.value, { compact: true })}</span>
-            <span className="w-14 text-right font-semibold">
-              {((d.value / total) * 100).toFixed(1)}%
-            </span>
-          </li>
-        ))}
-      </ul>
+      <AllocationBreakdown
+        data={data}
+        totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}
+        formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
+      />
     </Card>
   );
 }

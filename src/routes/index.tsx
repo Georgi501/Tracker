@@ -6,9 +6,18 @@ import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Info } from "lucide-react";
 import { CountUp } from "@/components/Motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip as ChartTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, Delta } from "@/components/AppShell";
 import { AllocationCard } from "@/components/AllocationCard";
 import { DashboardMovers } from "@/components/DashboardMovers";
@@ -30,6 +39,7 @@ import { Line, LineChart } from "recharts";
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { benchmarkCopy } from "@/lib/benchmark-i18n";
+import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -84,6 +94,92 @@ const CHART_NOTE = {
       "Il rendimento corregge acquisti e vendite datati. I dividendi non sono inclusi nella valutazione storica; l’indice mostra il rendimento di prezzo, non totale.",
   },
 } as const;
+
+const METRIC_HELP: Record<
+  Lang,
+  {
+    totalPnl: string;
+    dayChange: string;
+    ttwror: string;
+    irr: string;
+    invested: string;
+    realized: string;
+  }
+> = {
+  en: {
+    totalPnl:
+      "Current market value minus the remaining cost basis of open positions. Realized gains are shown separately.",
+    dayChange:
+      "Combined daily price movement of your holdings, based on the latest available provider quotes.",
+    ttwror:
+      "Time-weighted return for the selected period. It adjusts for dated buys and sells so deposits and withdrawals do not distort performance.",
+    irr: "Annualized, money-weighted return estimated from your dated transactions and current portfolio value.",
+    invested:
+      "Remaining cost basis of your open positions; it is not the sum of every deposit or trade ever made.",
+    realized:
+      "Realized gain or loss on completed sales, calculated using FIFO from your recorded transactions.",
+  },
+  bg: {
+    totalPnl:
+      "Текуща пазарна стойност минус оставащата себестойност на отворените позиции. Реализираната печалба се показва отделно.",
+    dayChange:
+      "Общото дневно движение на цените в портфейла според последните налични котировки от доставчика.",
+    ttwror:
+      "Доходност с времево претегляне за избрания период. Коригира се за датирани покупки и продажби, така че вноските и тегленията да не изкривяват резултата.",
+    irr: "Годишна доходност, претеглена спрямо паричните потоци, изчислена приблизително от датите на сделките и текущата стойност на портфейла.",
+    invested:
+      "Оставащата себестойност на отворените позиции; не е сборът на всички вноски или сделки.",
+    realized:
+      "Реализирана печалба или загуба от приключени продажби, изчислена по FIFO от записаните сделки.",
+  },
+  de: {
+    totalPnl:
+      "Aktueller Marktwert minus verbleibender Einstandskosten offener Positionen. Realisierte Gewinne werden separat angezeigt.",
+    dayChange:
+      "Kombinierte tägliche Kursbewegung deiner Positionen anhand der letzten verfügbaren Anbieter-Kurse.",
+    ttwror:
+      "Zeitgewichtete Rendite für den ausgewählten Zeitraum. Datierte Käufe und Verkäufe werden berücksichtigt, damit Ein- und Auszahlungen das Ergebnis nicht verzerren.",
+    irr: "Annualisierte, geldgewichtete Rendite, geschätzt anhand deiner datierten Transaktionen und des aktuellen Portfoliowerts.",
+    invested:
+      "Verbleibende Einstandskosten deiner offenen Positionen; nicht die Summe aller Einzahlungen oder Trades.",
+    realized:
+      "Realisierter Gewinn oder Verlust aus abgeschlossenen Verkäufen, nach FIFO anhand deiner erfassten Transaktionen berechnet.",
+  },
+  es: {
+    totalPnl:
+      "Valor de mercado actual menos el coste restante de las posiciones abiertas. Las ganancias realizadas se muestran aparte.",
+    dayChange:
+      "Movimiento diario conjunto de tus posiciones según las últimas cotizaciones disponibles del proveedor.",
+    ttwror:
+      "Rentabilidad ponderada por tiempo del periodo seleccionado. Ajusta las compras y ventas fechadas para que los flujos de efectivo no distorsionen el resultado.",
+    irr: "Rentabilidad anualizada ponderada por dinero, estimada a partir de tus operaciones fechadas y el valor actual de la cartera.",
+    invested:
+      "Coste restante de las posiciones abiertas; no es la suma de todos los depósitos u operaciones.",
+    realized:
+      "Ganancia o pérdida realizada en ventas completadas, calculada por FIFO a partir de tus operaciones registradas.",
+  },
+  it: {
+    totalPnl:
+      "Valore di mercato attuale meno il costo residuo delle posizioni aperte. I guadagni realizzati sono mostrati separatamente.",
+    dayChange:
+      "Movimento giornaliero complessivo delle posizioni, basato sulle ultime quotazioni disponibili del fornitore.",
+    ttwror:
+      "Rendimento ponderato per il tempo nel periodo selezionato. Considera acquisti e vendite datati, così i flussi di cassa non distorcono il risultato.",
+    irr: "Rendimento annualizzato ponderato per il denaro, stimato dalle operazioni datate e dal valore attuale del portafoglio.",
+    invested:
+      "Costo residuo delle posizioni aperte; non è la somma di tutti i depositi o delle operazioni effettuate.",
+    realized:
+      "Guadagno o perdita realizzata sulle vendite completate, calcolata con il metodo FIFO dalle operazioni registrate.",
+  },
+};
+
+const HISTORY_STATUS: Record<Lang, { error: string; retry: string }> = {
+  en: { error: "History could not be loaded.", retry: "Try again" },
+  bg: { error: "Историята не можа да се зареди.", retry: "Опитай отново" },
+  de: { error: "Der Verlauf konnte nicht geladen werden.", retry: "Erneut versuchen" },
+  es: { error: "No se pudo cargar el historial.", retry: "Reintentar" },
+  it: { error: "Impossibile caricare lo storico.", retry: "Riprova" },
+};
 
 function Dashboard() {
   const p = usePortfolio();
@@ -249,11 +345,14 @@ function Dashboard() {
               {chartMode === "performance" ? (
                 !performanceSeries.length ? (
                   <div className="py-8 text-sm text-muted-foreground">
-                    {history.isFetching ? (
-                      <Skeleton className="h-48 w-full" />
-                    ) : (
-                      p.t("noPeriodData")
-                    )}
+                    <HistoryChartStatus
+                      fetching={history.isFetching}
+                      error={history.isError}
+                      noData={p.t("noPeriodData")}
+                      errorText={HISTORY_STATUS[p.lang].error}
+                      retryText={HISTORY_STATUS[p.lang].retry}
+                      onRetry={() => void history.refetch()}
+                    />
                   </div>
                 ) : (
                   <ResponsiveContainer>
@@ -273,7 +372,7 @@ function Dashboard() {
                         axisLine={false}
                         tickLine={false}
                       />
-                      <Tooltip
+                      <ChartTooltip
                         labelFormatter={(t) => fmtT(t as number)}
                         formatter={(v: number) => pct(v)}
                         contentStyle={{
@@ -307,7 +406,14 @@ function Dashboard() {
                 )
               ) : !series.length ? (
                 <div className="py-8 text-sm text-muted-foreground">
-                  {history.isFetching ? <Skeleton className="h-48 w-full" /> : p.t("noPeriodData")}
+                  <HistoryChartStatus
+                    fetching={history.isFetching}
+                    error={history.isError}
+                    noData={p.t("noPeriodData")}
+                    errorText={HISTORY_STATUS[p.lang].error}
+                    retryText={HISTORY_STATUS[p.lang].retry}
+                    onRetry={() => void history.refetch()}
+                  />
                 </div>
               ) : (
                 <ResponsiveContainer>
@@ -327,7 +433,7 @@ function Dashboard() {
                       minTickGap={40}
                     />
                     <YAxis hide domain={["dataMin", "dataMax"]} />
-                    <Tooltip
+                    <ChartTooltip
                       labelFormatter={(t) => fmtT(t as number)}
                       formatter={(v: number) => [
                         new Intl.NumberFormat(locale, {
@@ -439,45 +545,61 @@ function Dashboard() {
               {chartMode === "performance" ? chartNote.performance : chartNote.value}
             </p>
           </Card>
-          <div className="dashboard-metrics grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5">
-            <Metric
-              label={p.t("totalPnl")}
-              value={
-                p.user ? <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} /> : "—"
-              }
-              sub={pct((pnl / cost) * 100)}
-              n={pnl}
-            />
-            <Metric
-              label={p.t("dayChange")}
-              value={
-                p.user ? <CountUp value={day} format={(n) => p.money(n, { sign: true })} /> : "—"
-              }
-              sub={pct((day / (total - day)) * 100)}
-              n={day}
-            />
-            <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
-              <Metric label={`${p.t("ttwror")} · ${period}`} value={pct(tw)} n={tw} />
-              <Metric label={p.t("irr")} value={pct(irrV)} n={irrV} />
-            </div>
-            <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+          <TooltipProvider>
+            <div className="dashboard-metrics grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5">
               <Metric
-                label={p.t("invested")}
-                value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
-              />
-              <Metric
-                label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
+                label={p.t("totalPnl")}
+                help={METRIC_HELP[p.lang].totalPnl}
                 value={
-                  p.user ? (
-                    <CountUp value={realized} format={(n) => p.money(n, { sign: true })} />
-                  ) : (
-                    "—"
-                  )
+                  p.user ? <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} /> : "—"
                 }
-                n={realized}
+                sub={pct((pnl / cost) * 100)}
+                n={pnl}
               />
+              <Metric
+                label={p.t("dayChange")}
+                help={METRIC_HELP[p.lang].dayChange}
+                value={
+                  p.user ? <CountUp value={day} format={(n) => p.money(n, { sign: true })} /> : "—"
+                }
+                sub={pct((day / (total - day)) * 100)}
+                n={day}
+              />
+              <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+                <Metric
+                  label={`${p.t("ttwror")} · ${period}`}
+                  help={METRIC_HELP[p.lang].ttwror}
+                  value={pct(tw)}
+                  n={tw}
+                />
+                <Metric
+                  label={p.t("irr")}
+                  help={METRIC_HELP[p.lang].irr}
+                  value={pct(irrV)}
+                  n={irrV}
+                />
+              </div>
+              <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+                <Metric
+                  label={p.t("invested")}
+                  help={METRIC_HELP[p.lang].invested}
+                  value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
+                />
+                <Metric
+                  label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
+                  help={METRIC_HELP[p.lang].realized}
+                  value={
+                    p.user ? (
+                      <CountUp value={realized} format={(n) => p.money(n, { sign: true })} />
+                    ) : (
+                      "—"
+                    )
+                  }
+                  n={realized}
+                />
+              </div>
             </div>
-          </div>
+          </TooltipProvider>
         </>
       )}
       <PortfolioHealth />
@@ -529,11 +651,13 @@ function Dashboard() {
 
 function Metric({
   label,
+  help,
   value,
   sub,
   n,
 }: {
   label: string;
+  help: string;
   value: ReactNode;
   sub?: string;
   n?: number;
@@ -542,6 +666,20 @@ function Metric({
     <Card className="dashboard-metric min-w-0 p-2.5">
       <p className="text-[10px] font-semibold uppercase leading-snug tracking-[0.08em] text-muted-foreground sm:text-[11px]">
         {label}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={`${label}: ${help}`}
+              className="ml-1 inline-flex align-middle text-muted-foreground/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Info size={12} aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64 text-left normal-case tracking-normal">
+            {help}
+          </TooltipContent>
+        </Tooltip>
       </p>
       <p className="font-display mt-0.5 break-words text-sm font-semibold tracking-tight tabular-nums sm:text-lg">
         {n === undefined ? value : <Delta value={n}>{value}</Delta>}
@@ -552,5 +690,32 @@ function Metric({
         </p>
       )}
     </Card>
+  );
+}
+
+function HistoryChartStatus({
+  fetching,
+  error,
+  noData,
+  errorText,
+  retryText,
+  onRetry,
+}: {
+  fetching: boolean;
+  error: boolean;
+  noData: string;
+  errorText: string;
+  retryText: string;
+  onRetry: () => void;
+}) {
+  if (fetching) return <Skeleton className="h-32 w-full sm:h-36 md:h-40" />;
+  if (!error) return <p className="py-8 text-sm text-muted-foreground">{noData}</p>;
+  return (
+    <div role="alert" className="flex flex-wrap items-center justify-between gap-3 py-8">
+      <p className="text-sm text-muted-foreground">{errorText}</p>
+      <Button size="sm" variant="outline" onClick={onRetry}>
+        {retryText}
+      </Button>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Plus, Upload } from "lucide-react";
+import { CheckCircle2, Plus, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
@@ -48,9 +48,12 @@ type StagedImport = {
   feeColumns: string[];
 };
 
+type ImportResult = { imported: number; duplicates: number; ignoredRows: number };
+
 function Brokers() {
   const p = usePortfolio();
   const [preview, setPreview] = useState<StagedImport | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
   const limit = brokerLimit(p.isPro);
   const full = p.brokers.length >= limit;
@@ -85,6 +88,7 @@ function Brokers() {
     await p.reload();
   };
   const upload = async (brokerId: string, fmt: string, file: File) => {
+    setImportResult(null);
     try {
       const text = await file.text();
       const detected = detectBrokerFormat(text);
@@ -112,9 +116,13 @@ function Brokers() {
     if (!preview) return;
     setBusy(true);
     try {
-      toast.success(
-        `${await p.importTransactions(preview.brokerId, preview.fresh)} ${p.t("imported")}`,
-      );
+      const imported = await p.importTransactions(preview.brokerId, preview.fresh);
+      setImportResult({
+        imported,
+        duplicates: preview.duplicates.length,
+        ignoredRows: preview.ignoredRows,
+      });
+      toast.success(`${imported} ${p.t("imported")}`);
       setPreview(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error");
@@ -132,6 +140,13 @@ function Brokers() {
           {p.brokers.length} / {limit} · {p.isPro ? p.t("pro") : p.t("free")}
         </span>
       </div>
+      {importResult && (
+        <ImportResultCard
+          lang={p.lang}
+          result={importResult}
+          onDismiss={() => setImportResult(null)}
+        />
+      )}
       {p.brokers.map((b) => (
         <Card key={b.id} className="flex flex-wrap items-center gap-3">
           <div className="flex-1">
@@ -374,6 +389,127 @@ function ImportPreview({
     </Card>
   );
 }
+
+function ImportResultCard({
+  lang,
+  result,
+  onDismiss,
+}: {
+  lang: Lang;
+  result: ImportResult;
+  onDismiss: () => void;
+}) {
+  const c = IMPORT_RESULT_COPY[lang];
+  return (
+    <div role="status">
+      <Card className="border-primary/40 bg-primary/5">
+        <div className="flex items-start gap-3">
+          <CheckCircle2 className="mt-0.5 shrink-0 text-primary" size={20} aria-hidden />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display font-semibold">{c.title}</h2>
+            <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+              <div className="rounded-xl bg-background/70 p-3">
+                <dt className="text-muted-foreground">{c.imported}</dt>
+                <dd className="mt-0.5 font-semibold tabular-nums">{result.imported}</dd>
+              </div>
+              <div className="rounded-xl bg-background/70 p-3">
+                <dt className="text-muted-foreground">{c.duplicates}</dt>
+                <dd className="mt-0.5 font-semibold tabular-nums">{result.duplicates}</dd>
+              </div>
+              <div className="rounded-xl bg-background/70 p-3">
+                <dt className="text-muted-foreground">{c.ignored}</dt>
+                <dd className="mt-0.5 font-semibold tabular-nums">{result.ignoredRows}</dd>
+              </div>
+            </dl>
+            {result.ignoredRows > 0 && (
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                {c.reviewIgnored}
+              </p>
+            )}
+            <Link
+              to="/holdings"
+              className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {c.viewHoldings}
+            </Link>
+          </div>
+          <button
+            type="button"
+            aria-label={c.dismiss}
+            onClick={onDismiss}
+            className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <X size={16} aria-hidden />
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+const IMPORT_RESULT_COPY: Record<
+  Lang,
+  {
+    title: string;
+    imported: string;
+    duplicates: string;
+    ignored: string;
+    reviewIgnored: string;
+    viewHoldings: string;
+    dismiss: string;
+  }
+> = {
+  en: {
+    title: "Import complete",
+    imported: "Transactions imported",
+    duplicates: "Duplicates skipped",
+    ignored: "CSV rows not imported",
+    reviewIgnored:
+      "Some CSV rows were not recognized as transactions. Check the original file if you expected additional trades or dividends.",
+    viewHoldings: "View holdings",
+    dismiss: "Dismiss import summary",
+  },
+  bg: {
+    title: "Импортът приключи",
+    imported: "Импортирани трансакции",
+    duplicates: "Пропуснати дубликати",
+    ignored: "Неимпортирани CSV редове",
+    reviewIgnored:
+      "Някои CSV редове не са разпознати като трансакции. Провери оригиналния файл, ако очакваш още сделки или дивиденти.",
+    viewHoldings: "Към позициите",
+    dismiss: "Затвори обобщението за импорта",
+  },
+  de: {
+    title: "Import abgeschlossen",
+    imported: "Importierte Transaktionen",
+    duplicates: "Übersprungene Duplikate",
+    ignored: "Nicht importierte CSV-Zeilen",
+    reviewIgnored:
+      "Einige CSV-Zeilen wurden nicht als Transaktionen erkannt. Prüfe die Originaldatei, wenn du weitere Trades oder Dividenden erwartet hast.",
+    viewHoldings: "Positionen ansehen",
+    dismiss: "Importübersicht schließen",
+  },
+  es: {
+    title: "Importación completada",
+    imported: "Operaciones importadas",
+    duplicates: "Duplicados omitidos",
+    ignored: "Filas CSV no importadas",
+    reviewIgnored:
+      "Algunas filas CSV no se reconocieron como operaciones. Revisa el archivo original si esperabas más operaciones o dividendos.",
+    viewHoldings: "Ver posiciones",
+    dismiss: "Cerrar resumen de importación",
+  },
+  it: {
+    title: "Importazione completata",
+    imported: "Operazioni importate",
+    duplicates: "Duplicati ignorati",
+    ignored: "Righe CSV non importate",
+    reviewIgnored:
+      "Alcune righe CSV non sono state riconosciute come operazioni. Controlla il file originale se ti aspettavi altre operazioni o dividendi.",
+    viewHoldings: "Vedi posizioni",
+    dismiss: "Chiudi riepilogo importazione",
+  },
+};
 
 const IMPORT_COPY: Record<
   Lang,
