@@ -55,6 +55,7 @@ function Sparkline({
   labels: { date: string; close: string; open: string; high: string; low: string };
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [tooltipSide, setTooltipSide] = useState<"left" | "right">("right");
   const vals = closes.map((x) => x.c);
   const min = Math.min(...vals),
     max = Math.max(...vals),
@@ -84,6 +85,13 @@ function Sparkline({
     const bounds = element.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - bounds.left) / bounds.width));
     setActiveIndex(Math.round(ratio * (closes.length - 1)));
+    const leftSpace = clientX - bounds.left;
+    const rightSpace = bounds.right - clientX;
+    setTooltipSide(
+      rightSpace >= 204 || (rightSpace < 204 && leftSpace < 204 && rightSpace >= leftSpace)
+        ? "right"
+        : "left",
+    );
   };
   return (
     <div className="relative">
@@ -117,9 +125,11 @@ function Sparkline({
       </svg>
       {active && activeIndex != null && (
         <div
-          className="pointer-events-none absolute top-0 z-10 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-xs shadow-md"
+          className={`pointer-events-none absolute top-0 z-10 w-48 rounded-lg border border-border bg-popover p-3 text-xs shadow-md ${
+            tooltipSide === "left" ? "-translate-x-full" : ""
+          }`}
           style={{
-            left: `${Math.min(78, Math.max(22, (activeIndex / (closes.length - 1)) * 100))}%`,
+            left: `calc(${(activeIndex / (closes.length - 1)) * 100}% ${tooltipSide === "left" ? "- 12px" : "+ 12px"})`,
           }}
         >
           <p className="mb-2 font-semibold">
