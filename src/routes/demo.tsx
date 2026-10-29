@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { usePortfolio } from "@/lib/store";
+import { languageLocale, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -25,7 +26,23 @@ const SAMPLE = [
   { symbol: "BND", name: "Vanguard Total Bond", cls: "Bonds", qty: 30, cost: 74, value: 72 },
 ];
 
-const COPY = {
+const COPY: Record<
+  Lang,
+  {
+    badge: string;
+    title: string;
+    note: string;
+    value: string;
+    gain: string;
+    alloc: string;
+    totalValue: string;
+    bonds: string;
+    holdings: string;
+    cols: [string, string, string, string, string];
+    cta: string;
+    explore: string;
+  }
+> = {
   en: {
     badge: "Sample data",
     title: "A preview of your portfolio",
@@ -54,10 +71,52 @@ const COPY = {
     cta: "Създай безплатно портфолио",
     explore: "Разгледай пазарите",
   },
-} as const;
+  de: {
+    badge: "Beispieldaten",
+    title: "Ein Einblick in dein Portfolio",
+    note: "Diese Positionen und Werte dienen nur der Illustration. Sie sind keine Live-Kurse und keine Empfehlung.",
+    value: "Beispielwert",
+    gain: "Beispielgewinn",
+    alloc: "Aufteilung",
+    totalValue: "Gesamtwert",
+    bonds: "Anleihen",
+    holdings: "Positionen",
+    cols: ["Wert", "Menge", "Ø Kosten", "Wert", "G/V"],
+    cta: "Kostenloses Portfolio erstellen",
+    explore: "Märkte entdecken",
+  },
+  es: {
+    badge: "Datos de ejemplo",
+    title: "Una vista previa de tu cartera",
+    note: "Estas posiciones y cifras son ficticias y solo ilustrativas. No son cotizaciones en vivo ni una recomendación.",
+    value: "Valor de ejemplo",
+    gain: "Ganancia de ejemplo",
+    alloc: "Distribución",
+    totalValue: "Valor total",
+    bonds: "Bonos",
+    holdings: "Posiciones",
+    cols: ["Activo", "Cant.", "Coste medio", "Valor", "P/G"],
+    cta: "Crea tu cartera gratis",
+    explore: "Explorar mercados",
+  },
+  it: {
+    badge: "Dati di esempio",
+    title: "Un'anteprima del tuo portafoglio",
+    note: "Queste posizioni e cifre sono inventate a scopo illustrativo. Non sono quotazioni in tempo reale né una raccomandazione.",
+    value: "Valore di esempio",
+    gain: "Guadagno di esempio",
+    alloc: "Allocazione",
+    totalValue: "Valore totale",
+    bonds: "Obbligazioni",
+    holdings: "Posizioni",
+    cols: ["Asset", "Qtà", "Costo medio", "Valore", "P/L"],
+    cta: "Crea il tuo portafoglio gratuito",
+    explore: "Esplora i mercati",
+  },
+};
 
-const usd = (n: number) =>
-  new Intl.NumberFormat("en-US", {
+const usd = (n: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
@@ -65,7 +124,8 @@ const usd = (n: number) =>
 
 function DemoPage() {
   const p = usePortfolio();
-  const c = p.lang === "bg" ? COPY.bg : COPY.en;
+  const c = COPY[p.lang];
+  const locale = languageLocale(p.lang);
   const rows = SAMPLE.map((r) => ({
     ...r,
     totalValue: r.qty * r.value,
@@ -114,13 +174,30 @@ function DemoPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="card-interactive rounded-2xl border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">{c.value}</p>
-          <p className="font-display mt-1 text-2xl font-bold">{usd(totalValue)}</p>
+          <p className="numeric-display mt-1 text-2xl font-bold sm:text-3xl">
+            {usd(totalValue, locale)}
+          </p>
         </div>
         <div className="card-interactive rounded-2xl border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">{c.gain}</p>
-          <p className="font-display mt-1 text-2xl font-bold text-primary">
-            +{usd(gain)} ({((gain / totalCost) * 100).toFixed(1)}%)
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p
+              className={`numeric-display text-2xl font-bold sm:text-3xl ${
+                gain >= 0 ? "text-success" : "text-destructive"
+              }`}
+            >
+              {gain >= 0 ? "+" : "−"}
+              {usd(Math.abs(gain), locale)}
+            </p>
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums sm:text-sm ${
+                gain >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              {gain >= 0 ? "+" : "−"}
+              {Math.abs((gain / totalCost) * 100).toFixed(1)}%
+            </span>
+          </div>
         </div>
       </div>
 
@@ -129,7 +206,7 @@ function DemoPage() {
         <AllocationBreakdown
           data={byClass}
           totalLabel={c.totalValue}
-          formatValue={(value) => usd(value)}
+          formatValue={(value) => usd(value, locale)}
         />
       </section>
 
@@ -154,10 +231,14 @@ function DemoPage() {
                     <span className="font-semibold">{r.symbol}</span>
                     <span className="ml-2 text-muted-foreground">{r.name}</span>
                   </td>
-                  <td className="text-right">{r.qty}</td>
-                  <td className="text-right">{usd(r.cost)}</td>
-                  <td className="text-right">{usd(r.totalValue)}</td>
-                  <td className={`text-right ${pl >= 0 ? "text-primary" : "text-destructive"}`}>
+                  <td className="numeric-display text-right">{r.qty}</td>
+                  <td className="numeric-display text-right">{usd(r.cost, locale)}</td>
+                  <td className="numeric-display text-right font-semibold">
+                    {usd(r.totalValue, locale)}
+                  </td>
+                  <td
+                    className={`numeric-display text-right font-semibold ${pl >= 0 ? "text-success" : "text-destructive"}`}
+                  >
                     {pl >= 0 ? "+" : ""}
                     {pl.toFixed(1)}%
                   </td>

@@ -257,7 +257,7 @@ export function DcfCalculator() {
             <div className="text-sm text-muted-foreground">
               {d.name} · {c.intrinsic}
             </div>
-            <div className="font-display text-4xl font-bold">{money(iv)}</div>
+            <div className="numeric-display text-4xl font-bold">{money(iv)}</div>
             {gap != null && (
               <div
                 className={`mt-1 text-sm font-semibold ${gap >= 0 ? "text-success" : "text-destructive"}`}

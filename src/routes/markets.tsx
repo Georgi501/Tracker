@@ -254,7 +254,7 @@ function Markets() {
                   </div>
                   <div className="mt-4" aria-live="polite">
                     <p className="text-sm text-muted-foreground">{c.latest}</p>
-                    <p className="font-display mt-2 min-h-9 text-3xl font-bold">
+                    <p className="numeric-display mt-2 min-h-9 text-3xl font-bold">
                       {quoteBusy ? (
                         <span
                           aria-hidden="true"

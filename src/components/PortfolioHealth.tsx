@@ -51,7 +51,7 @@ const copy: Record<Lang, Copy> = {
     teaserOk:
       "Pro gives you a health score, weekly priorities and stress scenarios for your portfolio",
     unlock: "Unlock Investor Brief",
-    empty: "Add positions with live prices to see your brief.",
+    empty: "Add positions with available market quotes to see your brief.",
   },
   bg: {
     title: "Инвеститорски бриф",
@@ -76,7 +76,7 @@ const copy: Record<Lang, Copy> = {
       `Открихме ${n} рисков(и) сигнал(а) в портфолиото ти. Pro показва кои позиции ги създават и колко би струвал пазарен спад.`,
     teaserOk: "Pro ти дава здравен индекс, седмични приоритети и стрес сценарии за портфолиото.",
     unlock: "Отключи бриф",
-    empty: "Добави позиции с реални цени, за да видиш брифа.",
+    empty: "Добави позиции с налични пазарни котировки, за да видиш брифа.",
   },
   de: {
     title: "Investor-Briefing",
@@ -101,7 +101,7 @@ const copy: Record<Lang, Copy> = {
       `Wir haben ${n} Risikosignal(e) gefunden. Pro zeigt, welche Positionen sie verursachen und was ein Crash kosten würde.`,
     teaserOk: "Pro bietet Gesundheitswert, Wochenprioritäten und Stressszenarien.",
     unlock: "Briefing freischalten",
-    empty: "Füge Positionen mit Kursen hinzu, um dein Briefing zu sehen.",
+    empty: "Füge Positionen mit verfügbaren Marktkursen hinzu, um dein Briefing zu sehen.",
   },
   es: {
     title: "Informe del inversor",
@@ -126,7 +126,7 @@ const copy: Record<Lang, Copy> = {
       `Encontramos ${n} señal(es) de riesgo. Pro muestra qué posiciones las crean y cuánto costaría una caída.`,
     teaserOk: "Pro te da índice de salud, prioridades semanales y escenarios de estrés.",
     unlock: "Desbloquear informe",
-    empty: "Añade posiciones con precios para ver tu informe.",
+    empty: "Añade posiciones con cotizaciones disponibles para ver tu informe.",
   },
   it: {
     title: "Brief dell'investitore",
@@ -151,7 +151,7 @@ const copy: Record<Lang, Copy> = {
       `Abbiamo trovato ${n} segnale/i di rischio. Pro mostra quali posizioni li creano e quanto costerebbe un calo.`,
     teaserOk: "Pro offre indice di salute, priorità settimanali e scenari di stress.",
     unlock: "Sblocca il brief",
-    empty: "Aggiungi posizioni con prezzi per vedere il brief.",
+    empty: "Aggiungi posizioni con quotazioni disponibili per vedere il brief.",
   },
 };
 

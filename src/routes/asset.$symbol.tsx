@@ -65,6 +65,9 @@ const C = {
     buy: "Buy",
     sell: "Sell",
     dividend: "Dividend",
+    noMarketData: "This asset type does not have market quotes or company research.",
+    cash: "Cash",
+    realEstate: "Real estate",
   },
   bg: {
     back: "Позиции",
@@ -89,6 +92,90 @@ const C = {
     buy: "Покупка",
     sell: "Продажба",
     dividend: "Дивидент",
+    noMarketData: "За този тип актив няма пазарни котировки или фирмено проучване.",
+    cash: "Парични средства",
+    realEstate: "Недвижим имот",
+  },
+  de: {
+    back: "Positionen",
+    qty: "Menge",
+    avg: "Durchschnittskosten",
+    value: "Wert",
+    pnl: "Nicht realisierter Gewinn/Verlust",
+    bought: "Investiert",
+    sold: "Verkauft",
+    div: "Erhaltene Dividenden",
+    since: "Im Bestand seit",
+    history: "Transaktionen",
+    journal: "Anlagejournal",
+    thesis: "Warum ich den Wert halte",
+    horizon: "Anlagehorizont",
+    review: "Prüfdatum",
+    save: "Speichern",
+    saved: "Journal gespeichert",
+    due: "Prüfung fällig — ist deine These noch gültig?",
+    none: "Du hältst diesen Wert nicht.",
+    signIn: "Melde dich an, um ein Journal zu führen.",
+    buy: "Kauf",
+    sell: "Verkauf",
+    dividend: "Dividende",
+    noMarketData: "Für diesen Anlagetyp sind keine Marktkurse oder Unternehmensanalysen verfügbar.",
+    cash: "Bargeld",
+    realEstate: "Immobilien",
+  },
+  es: {
+    back: "Posiciones",
+    qty: "Cantidad",
+    avg: "Coste medio",
+    value: "Valor",
+    pnl: "Ganancia/pérdida no realizada",
+    bought: "Invertido",
+    sold: "Vendido",
+    div: "Dividendos recibidos",
+    since: "En cartera desde",
+    history: "Transacciones",
+    journal: "Diario de inversión",
+    thesis: "Por qué lo tengo",
+    horizon: "Horizonte",
+    review: "Fecha de revisión",
+    save: "Guardar",
+    saved: "Diario guardado",
+    due: "Toca revisar: ¿sigue vigente tu tesis?",
+    none: "No tienes este activo.",
+    signIn: "Inicia sesión para llevar un diario.",
+    buy: "Compra",
+    sell: "Venta",
+    dividend: "Dividendo",
+    noMarketData: "Este tipo de activo no dispone de cotizaciones ni análisis de empresas.",
+    cash: "Efectivo",
+    realEstate: "Inmobiliario",
+  },
+  it: {
+    back: "Posizioni",
+    qty: "Quantità",
+    avg: "Costo medio",
+    value: "Valore",
+    pnl: "Profitto/perdita non realizzato",
+    bought: "Investito",
+    sold: "Venduto",
+    div: "Dividendi ricevuti",
+    since: "In portafoglio dal",
+    history: "Transazioni",
+    journal: "Diario degli investimenti",
+    thesis: "Perché lo possiedo",
+    horizon: "Orizzonte",
+    review: "Data di revisione",
+    save: "Salva",
+    saved: "Diario salvato",
+    due: "È il momento di rivedere: la tua tesi è ancora valida?",
+    none: "Non possiedi questo asset.",
+    signIn: "Accedi per tenere un diario.",
+    buy: "Acquisto",
+    sell: "Vendita",
+    dividend: "Dividendo",
+    noMarketData: "Questo tipo di asset non dispone di quotazioni o analisi aziendali.",
+    cash: "Liquidità",
+    realEstate: "Immobili",
   },
 };
 
@@ -141,7 +228,7 @@ const RESEARCH_NAV: Record<
 function AssetPage() {
   const { symbol } = Route.useParams();
   const p = usePortfolio();
-  const c = p.lang === "bg" ? C.bg : C.en;
+  const c = C[p.lang];
   const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
   const asset = h?.asset ?? p.assets.find((a) => a.symbol.toUpperCase() === symbol.toUpperCase());
   const txs = asset
@@ -150,7 +237,10 @@ function AssetPage() {
         .sort((a, b) => b.date.localeCompare(a.date))
     : [];
   const s = asset ? assetSummary(p.transactions, asset.id) : null;
-  const type = asset?.type === "etf" || asset?.type === "crypto" ? asset.type : "stock";
+  const type =
+    asset?.type === "stock" || asset?.type === "etf" || asset?.type === "crypto"
+      ? asset.type
+      : null;
 
   return (
     <div className="page-enter space-y-5">
@@ -162,12 +252,27 @@ function AssetPage() {
         {c.back}
       </Link>
       <div id="overview" className="scroll-mt-24">
-        <QuoteHero
-          symbol={symbol.toUpperCase()}
-          name={asset?.name ?? symbol.toUpperCase()}
-          type={type}
-          lang={p.lang}
-        />
+        {type ? (
+          <QuoteHero
+            symbol={symbol.toUpperCase()}
+            name={asset?.name ?? symbol.toUpperCase()}
+            type={type}
+            lang={p.lang}
+          />
+        ) : (
+          <Card>
+            <h1 className="font-display text-xl font-bold">
+              {asset?.name ?? symbol.toUpperCase()}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {asset?.type === "cash"
+                ? c.cash
+                : asset?.type === "realEstate"
+                  ? c.realEstate
+                  : c.noMarketData}
+            </p>
+          </Card>
+        )}
       </div>
       {type === "stock" && (
         <nav
@@ -241,12 +346,14 @@ function AssetPage() {
           <ProCompanyResearch symbol={symbol.toUpperCase()} lang={p.lang} />
         </div>
       )}
-      <div id="news" className="scroll-mt-24">
-        <CompanyOverview
-          asset={{ symbol: symbol.toUpperCase(), name: asset?.name ?? symbol, type }}
-          lang={p.lang}
-        />
-      </div>
+      {type && (
+        <div id="news" className="scroll-mt-24">
+          <CompanyOverview
+            asset={{ symbol: symbol.toUpperCase(), name: asset?.name ?? symbol, type }}
+            lang={p.lang}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Check, Pencil, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { ProGate } from "@/components/ProFeatures";
 import { useWatchState } from "@/components/AssetExtras";
 import { usePortfolio } from "@/lib/store";
@@ -64,11 +65,14 @@ type K =
   | "analysis"
   | "analysisDesc"
   | "fairValue"
-  | "fairValueDesc";
+  | "fairValueDesc"
+  | "loadError"
+  | "retry"
+  | "unavailable";
 const COPY: Record<Lang, Record<K, string>> = {
   en: {
     title: "Watchlist",
-    sub: "Live prices, movers and fair value for the assets you follow.",
+    sub: "Market quotes, movers and fair value for the assets you follow.",
     gainers: "Top gainers",
     losers: "Top losers",
     opps: "Opportunities",
@@ -93,10 +97,13 @@ const COPY: Record<Lang, Record<K, string>> = {
     analysisDesc: "Top movers and buy-zone analysis are part of Pro.",
     fairValue: "Fair value estimates",
     fairValueDesc: "DCF fair value estimates and valuation comparisons are part of Pro.",
+    loadError: "Could not load market data.",
+    retry: "Retry",
+    unavailable: "Unavailable",
   },
   bg: {
     title: "Watchlist",
-    sub: "Цени на живо, най-големи движения и справедлива стойност за активите, които следиш.",
+    sub: "Пазарни котировки, движения и справедлива стойност за активите, които следиш.",
     gainers: "Най-голям ръст",
     losers: "Най-голям спад",
     opps: "Възможности",
@@ -121,10 +128,13 @@ const COPY: Record<Lang, Record<K, string>> = {
     analysisDesc: "Класациите и анализът на зоните за покупка са част от Pro.",
     fairValue: "Оценка на справедливата стойност",
     fairValueDesc: "DCF оценките и сравнението със справедливата стойност са част от Pro.",
+    loadError: "Пазарните данни не можаха да се заредят.",
+    retry: "Опитай отново",
+    unavailable: "Недостъпно",
   },
   de: {
     title: "Watchlist",
-    sub: "Live-Kurse, Top-Bewegungen und fairer Wert deiner beobachteten Werte.",
+    sub: "Marktkurse, Bewegungen und fairer Wert deiner beobachteten Werte.",
     gainers: "Top-Gewinner",
     losers: "Top-Verlierer",
     opps: "Chancen",
@@ -149,10 +159,13 @@ const COPY: Record<Lang, Record<K, string>> = {
     analysisDesc: "Top-Bewegungen und Kaufzonen-Analysen sind Teil von Pro.",
     fairValue: "Fair-Value-Schätzungen",
     fairValueDesc: "DCF-Fair-Value-Schätzungen und Bewertungsvergleiche sind Teil von Pro.",
+    loadError: "Marktdaten konnten nicht geladen werden.",
+    retry: "Erneut versuchen",
+    unavailable: "Nicht verfügbar",
   },
   es: {
     title: "Watchlist",
-    sub: "Precios en vivo, mayores movimientos y valor justo de tus activos.",
+    sub: "Cotizaciones, movimientos y valor razonable de tus activos.",
     gainers: "Mayores subidas",
     losers: "Mayores caídas",
     opps: "Oportunidades",
@@ -177,10 +190,13 @@ const COPY: Record<Lang, Record<K, string>> = {
     analysisDesc: "Los principales movimientos y el análisis de zonas de compra son parte de Pro.",
     fairValue: "Estimaciones de valor razonable",
     fairValueDesc: "Las estimaciones DCF y las comparaciones de valoración son parte de Pro.",
+    loadError: "No se pudieron cargar los datos de mercado.",
+    retry: "Reintentar",
+    unavailable: "No disponible",
   },
   it: {
     title: "Watchlist",
-    sub: "Prezzi live, maggiori movimenti e valore equo dei titoli che segui.",
+    sub: "Quotazioni, movimenti e fair value degli asset che segui.",
     gainers: "Maggiori rialzi",
     losers: "Maggiori ribassi",
     opps: "Opportunità",
@@ -205,6 +221,9 @@ const COPY: Record<Lang, Record<K, string>> = {
     analysisDesc: "I migliori movimenti e l'analisi delle zone d'acquisto fanno parte di Pro.",
     fairValue: "Stime del fair value",
     fairValueDesc: "Le stime DCF e i confronti di valutazione fanno parte di Pro.",
+    loadError: "Impossibile caricare i dati di mercato.",
+    retry: "Riprova",
+    unavailable: "Non disponibile",
   },
 };
 
@@ -264,10 +283,42 @@ function Watchlist() {
   }, []);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [visibleSymbols, setVisibleSymbols] = useState<Set<string>>(() => new Set());
   const detailsFn = useServerFn(marketDetails);
   const quoteFn = useServerFn(marketQuote);
   const dcfFn = useServerFn(marketDcf);
   const assets = list.map(assetOf);
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleSymbols(new Set(list));
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setVisibleSymbols((current) => {
+          const next = new Set(current);
+          let changed = false;
+          for (const entry of entries) {
+            const symbol = (entry.target as HTMLElement).dataset["watchSymbol"];
+            if (!symbol) continue;
+            if (entry.isIntersecting && !next.has(symbol)) {
+              next.add(symbol);
+              changed = true;
+            } else if (!entry.isIntersecting && next.has(symbol)) {
+              next.delete(symbol);
+              changed = true;
+            }
+          }
+          return changed ? next : current;
+        });
+      },
+      { rootMargin: "200px 0px" },
+    );
+    document.querySelectorAll<HTMLElement>("[data-watch-symbol]").forEach((row) => {
+      observer.observe(row);
+    });
+    return () => observer.disconnect();
+  }, [list]);
   const charts = useQueries({
     queries: assets.map((a) => ({
       queryKey: ["market-details", a.symbol, a.type, period],
@@ -279,7 +330,7 @@ function Watchlist() {
     queries: assets.map((a) => ({
       queryKey: ["market-quote", a.symbol, a.type],
       queryFn: () => quoteFn({ data: { symbol: a.symbol, type: a.type } }),
-      refetchInterval: 60_000,
+      refetchInterval: visibleSymbols.has(a.symbol) ? 60_000 : false,
     })),
   });
   const dcfs = useQueries({
@@ -288,7 +339,7 @@ function Watchlist() {
       queryFn: () =>
         a.type === "stock" ? dcfFn({ data: { symbol: a.symbol } }) : Promise.resolve(null),
       staleTime: 86_400_000,
-      enabled: p.isPro,
+      enabled: p.isPro && visibleSymbols.has(a.symbol),
     })),
   });
 
@@ -308,7 +359,25 @@ function Watchlist() {
         shares: d.shares,
         ...scenario("base", g),
       });
-    return { a, closes, ret, q, iv, loading: !!charts[i]?.isLoading };
+    return {
+      a,
+      closes,
+      ret,
+      q,
+      iv,
+      loading: !!charts[i]?.isLoading,
+      chartError: !!charts[i]?.isError,
+      chartUnavailable: !!charts[i]?.data?.unavailable,
+      quoteError: !!quotes[i]?.isError,
+      quoteUnavailable: quotes[i]?.data?.reason === "unavailable",
+      quoteLoading: !!quotes[i]?.isLoading,
+      dcfLoading: !!dcfs[i]?.isLoading,
+      dcfFetched: !!dcfs[i]?.isFetched,
+      visible: visibleSymbols.has(a.symbol),
+      retryChart: () => void charts[i]?.refetch(),
+      retryQuote: () => void quotes[i]?.refetch(),
+      quoteAt: quotes[i]?.data?.quote?.at,
+    };
   });
   const fmt = (n: number, cur?: string | null) => {
     try {
@@ -510,6 +579,7 @@ function Watchlist() {
                 return (
                   <li
                     key={r.a.symbol}
+                    data-watch-symbol={r.a.symbol}
                     className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 ${p.isPro ? "md:grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem]" : "md:grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_2rem]"}`}
                   >
                     <Link
@@ -536,13 +606,46 @@ function Watchlist() {
                     <div className="justify-self-end md:justify-self-start">
                       {r.loading ? (
                         <span className="block h-10 w-28 animate-pulse rounded bg-muted" />
+                      ) : r.chartError || r.chartUnavailable ? (
+                        <button
+                          type="button"
+                          onClick={r.retryChart}
+                          className="text-xs font-semibold text-destructive underline"
+                        >
+                          {c.retry}
+                        </button>
                       ) : (
                         <Spark closes={r.closes} />
                       )}
                     </div>
                     <p className="text-sm md:text-right">
                       <span className="text-xs text-muted-foreground md:hidden">{c.last}: </span>
-                      <b>{r.q ? fmt(r.q.price, r.q.currency) : "—"}</b>
+                      <b>
+                        {r.q
+                          ? fmt(r.q.price, r.q.currency)
+                          : r.quoteError || r.quoteUnavailable
+                            ? c.unavailable
+                            : r.quoteLoading
+                              ? "…"
+                              : "—"}
+                      </b>
+                      {(r.quoteError || r.quoteUnavailable) && (
+                        <button
+                          type="button"
+                          onClick={r.retryQuote}
+                          className="ml-1 text-xs font-semibold text-destructive underline"
+                        >
+                          {c.retry}
+                        </button>
+                      )}
+                      {r.quoteAt && (
+                        <QuoteFreshness
+                          at={r.quoteAt}
+                          lang={p.lang}
+                          crypto={r.a.type === "crypto"}
+                          compact
+                        />
+                      )}
                     </p>
                     <div className="text-right text-sm">
                       {editing === r.a.symbol ? (
@@ -581,7 +684,9 @@ function Watchlist() {
                     {p.isPro && (
                       <div className="text-sm md:text-right">
                         <span className="text-xs text-muted-foreground md:hidden">{c.iv}: </span>
-                        {r.iv != null && r.iv > 0 && gap != null ? (
+                        {(!r.visible && !r.dcfFetched) || r.dcfLoading ? (
+                          <span role="status">…</span>
+                        ) : r.iv != null && r.iv > 0 && gap != null ? (
                           <span>
                             <b>{fmt(r.iv, r.q?.currency)}</b>{" "}
                             <span

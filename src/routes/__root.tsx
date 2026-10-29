@@ -8,28 +8,28 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { Toaster } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { PortfolioProvider } from "../lib/store";
+import { isLang, type Lang } from "../lib/i18n";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
+  const c = useErrorCopy();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{c.notFound}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{c.notFoundDescription}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {c.home}
           </Link>
         </div>
       </div>
@@ -40,16 +40,13 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
+  const c = useErrorCopy();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">{c.errorTitle}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{c.errorDescription}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -58,19 +55,92 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            {c.retry}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            {c.home}
           </a>
         </div>
       </div>
     </div>
   );
 }
+
+function useErrorCopy() {
+  const [lang, setLang] = useState<Lang>("en");
+  useEffect(() => {
+    try {
+      const preference: unknown = JSON.parse(localStorage.getItem("folio-state-v2") ?? "null");
+      if (
+        preference &&
+        typeof preference === "object" &&
+        "lang" in preference &&
+        isLang(preference.lang)
+      )
+        setLang(preference.lang);
+    } catch {
+      // The English fallback remains usable when the local preference is unavailable.
+    }
+  }, []);
+  return ERROR_COPY[lang];
+}
+
+const ERROR_COPY: Record<
+  Lang,
+  {
+    notFound: string;
+    notFoundDescription: string;
+    errorTitle: string;
+    errorDescription: string;
+    retry: string;
+    home: string;
+  }
+> = {
+  en: {
+    notFound: "Page not found",
+    notFoundDescription: "The page you're looking for doesn't exist or has been moved.",
+    errorTitle: "This page didn't load",
+    errorDescription: "Something went wrong. You can try refreshing or head back home.",
+    retry: "Try again",
+    home: "Go home",
+  },
+  bg: {
+    notFound: "Страницата не е намерена",
+    notFoundDescription: "Страницата не съществува или е преместена.",
+    errorTitle: "Страницата не се зареди",
+    errorDescription: "Възникна проблем. Опитай отново или се върни към началото.",
+    retry: "Опитай отново",
+    home: "Към началото",
+  },
+  de: {
+    notFound: "Seite nicht gefunden",
+    notFoundDescription: "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    errorTitle: "Diese Seite konnte nicht geladen werden",
+    errorDescription:
+      "Es ist ein Fehler aufgetreten. Versuche es erneut oder gehe zurück zur Startseite.",
+    retry: "Erneut versuchen",
+    home: "Startseite",
+  },
+  es: {
+    notFound: "Página no encontrada",
+    notFoundDescription: "La página no existe o se ha movido.",
+    errorTitle: "No se pudo cargar esta página",
+    errorDescription: "Se produjo un error. Inténtalo de nuevo o vuelve al inicio.",
+    retry: "Reintentar",
+    home: "Ir al inicio",
+  },
+  it: {
+    notFound: "Pagina non trovata",
+    notFoundDescription: "La pagina non esiste o è stata spostata.",
+    errorTitle: "Impossibile caricare la pagina",
+    errorDescription: "Si è verificato un errore. Riprova o torna alla pagina iniziale.",
+    retry: "Riprova",
+    home: "Vai alla home",
+  },
+};
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

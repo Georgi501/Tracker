@@ -25,12 +25,12 @@ export const Route = createFileRoute("/holdings")({
       {
         name: "description",
         content:
-          "Every position with quantity, price, average cost, market value and unrealised P/L, plus live market search.",
+          "Every position with quantity, price, average cost, market value and unrealised P/L, plus market quote search.",
       },
       { property: "og:title", content: "Holdings — Capispot" },
       {
         property: "og:description",
-        content: "Search your positions and live market quotes, then add a buy in one click.",
+        content: "Search your positions and market quotes, then add a buy in one click.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -86,13 +86,13 @@ const COPY: Record<
 > = {
   en: {
     placeholder: "Search holdings or any ticker (META, VWCE.DE, BTC)…",
-    market: "Live market",
+    market: "Market quotes",
     searching: "Searching…",
     none: "No market results.",
     add: "Add",
     owned: "In portfolio",
     empty: "Your portfolio is empty",
-    emptyHint: "Search any stock, ETF or crypto above to see its live price and add it.",
+    emptyHint: "Search any stock, ETF or crypto above to see its market quote and add it.",
     addHolding: "Add holding",
     addFirst: "Add first position",
     unavailable: "Quote unavailable",
@@ -102,13 +102,14 @@ const COPY: Record<
   },
   bg: {
     placeholder: "Търси позиции или тикер (META, VWCE.DE, BTC)…",
-    market: "Пазар на живо",
+    market: "Пазарни котировки",
     searching: "Търсене…",
     none: "Няма пазарни резултати.",
     add: "Добави",
     owned: "В портфейла",
     empty: "Портфейлът ти е празен",
-    emptyHint: "Потърси акция, ETF или крипто отгоре, за да видиш цената на живо и да я добавиш.",
+    emptyHint:
+      "Потърси акция, ETF или крипто отгоре, за да видиш пазарната котировка и да я добавиш.",
     addHolding: "Добави холдинг",
     addFirst: "Добави първа позиция",
     unavailable: "Няма котировка",
@@ -118,14 +119,14 @@ const COPY: Record<
   },
   de: {
     placeholder: "Positionen oder Ticker suchen (META, VWCE.DE, BTC)…",
-    market: "Live-Markt",
+    market: "Marktkurse",
     searching: "Suche…",
     none: "Keine Marktergebnisse.",
     add: "Hinzufügen",
     owned: "Im Portfolio",
     empty: "Dein Portfolio ist leer",
     emptyHint:
-      "Suche oben eine Aktie, einen ETF oder Krypto, um den Live-Kurs zu sehen und hinzuzufügen.",
+      "Suche oben eine Aktie, einen ETF oder Krypto, um den Marktkurs zu sehen und hinzuzufügen.",
     addHolding: "Position hinzufügen",
     addFirst: "Erste Position hinzufügen",
     unavailable: "Kurs nicht verfügbar",
@@ -135,13 +136,13 @@ const COPY: Record<
   },
   es: {
     placeholder: "Busca posiciones o un ticker (META, VWCE.DE, BTC)…",
-    market: "Mercado en vivo",
+    market: "Cotizaciones de mercado",
     searching: "Buscando…",
     none: "Sin resultados de mercado.",
     add: "Añadir",
     owned: "En cartera",
     empty: "Tu cartera está vacía",
-    emptyHint: "Busca arriba una acción, ETF o cripto para ver su precio en vivo y añadirla.",
+    emptyHint: "Busca arriba una acción, ETF o cripto para ver su cotización y añadirla.",
     addHolding: "Añadir posición",
     addFirst: "Añadir primera posición",
     unavailable: "Cotización no disponible",
@@ -151,14 +152,14 @@ const COPY: Record<
   },
   it: {
     placeholder: "Cerca posizioni o un ticker (META, VWCE.DE, BTC)…",
-    market: "Mercato live",
+    market: "Quotazioni di mercato",
     searching: "Ricerca…",
     none: "Nessun risultato di mercato.",
     add: "Aggiungi",
     owned: "In portafoglio",
     empty: "Il tuo portafoglio è vuoto",
     emptyHint:
-      "Cerca sopra un'azione, un ETF o una cripto per vederne il prezzo live e aggiungerla.",
+      "Cerca sopra un'azione, un ETF o una cripto per vederne la quotazione e aggiungerla.",
     addHolding: "Aggiungi posizione",
     addFirst: "Aggiungi prima posizione",
     unavailable: "Quotazione non disponibile",
@@ -334,15 +335,13 @@ function Holdings() {
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {bg ? "Обща стойност" : "Holdings Summary"}
                   </p>
-                  <p className="font-display mt-1 text-3xl font-bold tabular-nums">
-                    {p.money(total)}
-                  </p>
+                  <p className="numeric-display mt-1 text-3xl font-bold">{p.money(total)}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {bg ? "Дневна промяна" : "Day Change"}
                   </p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums">
+                  <p className="numeric-display mt-1 text-lg font-semibold">
                     <Delta value={day}>
                       {p.money(day, { sign: true })} ({prev > 0 ? pct((day / prev) * 100) : "—"})
                     </Delta>
@@ -510,8 +509,8 @@ function Holdings() {
                     />
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">{p.money(h.value)}</p>
-                    <p className="text-xs">
+                    <p className="numeric-display font-semibold">{p.money(h.value)}</p>
+                    <p className="numeric-display text-xs">
                       <Delta value={h.pnl}>
                         {p.money(h.pnl, { sign: true })} · {pct(h.pnlPct)}
                       </Delta>
@@ -581,7 +580,7 @@ function Holdings() {
                         </div>
                       </td>
                       <td className="px-2 text-right">{num(h.quantity)}</td>
-                      <td className="px-2 text-right">{p.money(h.asset.price)}</td>
+                      <td className="numeric-display px-2 text-right">{p.money(h.asset.price)}</td>
                       <td className="px-2">
                         <div className="flex justify-end">
                           {sparks.data?.[h.asset.symbol] ? (
@@ -596,11 +595,15 @@ function Holdings() {
                       <td className="text-right">
                         <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                       </td>
-                      <td className="text-right">{p.money(h.avgCost)}</td>
-                      <td className="text-right font-semibold">{p.money(h.value)}</td>
+                      <td className="numeric-display text-right">{p.money(h.avgCost)}</td>
+                      <td className="numeric-display text-right font-semibold">
+                        {p.money(h.value)}
+                      </td>
                       <td className="text-right">
                         <Delta value={h.pnl}>
-                          <span className="font-semibold">{p.money(h.pnl, { sign: true })}</span>
+                          <span className="numeric-display font-semibold">
+                            {p.money(h.pnl, { sign: true })}
+                          </span>
                         </Delta>
                       </td>
                       <td className="text-right">

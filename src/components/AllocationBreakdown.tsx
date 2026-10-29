@@ -23,7 +23,16 @@ export function AllocationBreakdown({
 
   return (
     <div className="grid items-center gap-2 sm:grid-cols-[minmax(160px,0.9fr)_minmax(0,1.1fr)] sm:gap-5">
-      <div className="relative mx-auto h-36 w-full max-w-[240px] sm:h-44">
+      <div
+        role="img"
+        aria-label={`${totalLabel}: ${formatValue(total)}. ${rows
+          .map(
+            (item) =>
+              `${item.name}: ${formatValue(item.value)} (${((item.value / total) * 100).toFixed(1)}%)`,
+          )
+          .join(", ")}`}
+        className="relative mx-auto h-36 w-full max-w-[240px] sm:h-44"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             {total > 0 && (
@@ -72,7 +81,7 @@ export function AllocationBreakdown({
           <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
             {totalLabel}
           </span>
-          <span className="font-display mt-0.5 max-w-full truncate text-sm font-bold tabular-nums sm:text-base">
+          <span className="numeric-display mt-0.5 max-w-full truncate text-sm font-bold sm:text-base">
             {formatValue(total)}
           </span>
         </div>
@@ -103,10 +112,10 @@ export function AllocationBreakdown({
                     style={{ backgroundColor: allocationColor(item.name) }}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                  <span className="numeric-display shrink-0 text-xs text-muted-foreground">
                     {formatValue(item.value, true)}
                   </span>
-                  <span className="w-12 shrink-0 text-right text-sm font-semibold tabular-nums">
+                  <span className="numeric-display w-12 shrink-0 text-right text-sm font-semibold">
                     {share.toFixed(1)}%
                   </span>
                 </span>

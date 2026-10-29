@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const INSTRUCTIONS = `You are Capispot Advisor, an assistant inside a portfolio tracker. Answer questions about the user's own portfolio using ONLY the portfolio data provided below (positions, transactions, live quotes).
+const INSTRUCTIONS = `You are Capispot Advisor, an assistant inside a portfolio tracker. Answer questions about the user's own portfolio using ONLY the portfolio data provided below (positions, transactions, available market quotes).
 Rules:
 - Never invent prices, returns, dividends or holdings. If data is missing or marked unavailable, say so.
 - Show calculations briefly when giving numbers. Amounts are in USD unless stated.

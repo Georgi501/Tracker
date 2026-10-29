@@ -146,7 +146,7 @@ const RANGE_CFG: Record<
   MAX: { days: 0, interval: "1mo" },
 };
 
-/** Real provider closes for the chosen range plus 52-week range; empty when unavailable (never synthesized). */
+/** Real provider closes for the chosen range plus 52-week range; failures are flagged, never synthesized. */
 export const marketDetails = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
@@ -165,9 +165,10 @@ export const marketDetails = createServerFn({ method: "POST" })
       low: number | null;
       high: number | null;
       currency: string | null;
+      unavailable: boolean;
     }> => {
       const { yahooClient } = await import("./prices.server");
-      const empty = { closes: [], low: null, high: null, currency: null };
+      const empty = { closes: [], low: null, high: null, currency: null, unavailable: false };
       const cfg = RANGE_CFG[data.range];
       try {
         const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
@@ -200,9 +201,11 @@ export const marketDetails = createServerFn({ method: "POST" })
           low: m.fiftyTwoWeekLow ?? (fromData && vals.length ? Math.min(...vals) : null),
           high: m.fiftyTwoWeekHigh ?? (fromData && vals.length ? Math.max(...vals) : null),
           currency: m.currency ?? null,
+          unavailable: false,
         };
-      } catch {
-        return empty;
+      } catch (error) {
+        console.error("Unable to load market chart", data.symbol, error);
+        return { ...empty, unavailable: true };
       }
     },
   );

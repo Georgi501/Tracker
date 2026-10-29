@@ -689,11 +689,11 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">{c.currentPrice}</p>
-                    <p className="mt-1 font-display text-2xl font-bold">{money(currentPrice)}</p>
+                    <p className="numeric-display mt-1 text-2xl font-bold">{money(currentPrice)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">{c.average}</p>
-                    <p className="mt-1 font-display text-2xl font-bold text-primary">
+                    <p className="numeric-display mt-1 text-2xl font-bold text-primary">
                       {money(targetMean)}
                     </p>
                   </div>

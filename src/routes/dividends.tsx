@@ -14,6 +14,7 @@ import { monthlyIncome } from "@/lib/pro";
 import { useEffect, useState } from "react";
 import { DividendTable } from "@/components/Insights";
 import { dividendRows } from "@/lib/insights";
+import { ChartDataTable } from "@/components/ChartDataTable";
 
 export const Route = createFileRoute("/dividends")({
   head: () => ({
@@ -169,7 +170,11 @@ function Dividends() {
           )}
         </div>
         {!hasIncome && <p className="py-8 text-sm text-muted-foreground">{p.t("noPeriodData")}</p>}
-        <div className="h-52">
+        <div
+          role="img"
+          aria-label={`${p.t("monthly")} ${p.t("chart")}, ${monthly.length} ${p.t("dataPoints")}${monthly.length ? `, ${p.t("latestValue")} ${p.money(monthly.at(-1)!.v)}` : ""}.`}
+          className="h-52"
+        >
           <ResponsiveContainer>
             <BarChart data={monthly}>
               <XAxis
@@ -192,6 +197,12 @@ function Dividends() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <ChartDataTable
+          summary={p.t("viewChartData")}
+          caption={`${p.t("monthly")} ${p.t("chart")}`}
+          headers={[p.t("date"), p.t("value")]}
+          rows={monthly.map((item) => [item.m, p.money(item.v)])}
+        />
       </ProGate>
       <DividendTable rows={posRows} />
       <Card className="lg:col-span-2">
@@ -236,7 +247,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Card>
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="font-display mt-1 text-3xl font-bold">{value}</p>
+      <p className="numeric-display mt-1 text-3xl font-bold">{value}</p>
     </Card>
   );
 }

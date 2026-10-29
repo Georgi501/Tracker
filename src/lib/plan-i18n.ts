@@ -37,7 +37,7 @@ const en: PlanCopy = {
     },
     {
       title: "Portfolio",
-      free: "Net worth, P&L, holdings, live prices",
+      free: "Net worth, P&L, holdings, market quotes",
       pro: "Everything in Free",
     },
     {
@@ -57,7 +57,7 @@ const en: PlanCopy = {
     },
     {
       title: "Watchlist",
-      free: "Live prices, charts & personal buy targets",
+      free: "Market quotes, charts & personal buy targets",
       pro: "Top gainers & losers, buy-zone opportunities & DCF fair values",
     },
     { title: "Planning", free: "Investment goals", pro: "FIRE calculator & scenarios" },
@@ -184,7 +184,7 @@ const de: PlanCopy = {
     },
     {
       title: "Portfolio",
-      free: "Nettovermögen, G&V, Positionen, Live-Kurse",
+      free: "Nettovermögen, G&V, Positionen, Marktkurse",
       pro: "Alles aus Free",
     },
     {
@@ -204,7 +204,7 @@ const de: PlanCopy = {
     },
     {
       title: "Watchlist",
-      free: "Live-Kurse, Charts & persönliche Kaufziele",
+      free: "Marktkurse, Charts & persönliche Kaufziele",
       pro: "Top-Gewinner und -Verlierer, Kaufchancen & DCF-Fair-Values",
     },
     { title: "Planung", free: "Anlageziele", pro: "FIRE-Rechner & Szenarien" },

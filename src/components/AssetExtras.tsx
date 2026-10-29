@@ -226,6 +226,17 @@ export function AssetExtras({ asset, price }: { asset: MarketAsset; price: numbe
         </div>
         {ch.isFetching && !ch.data ? (
           <div className="h-20 animate-pulse rounded-md bg-muted" />
+        ) : ch.isError || ch.data?.unavailable ? (
+          <p role="alert" className="text-sm text-destructive">
+            {c.noChart}{" "}
+            <button
+              type="button"
+              onClick={() => void ch.refetch()}
+              className="font-semibold underline"
+            >
+              {c.retry}
+            </button>
+          </p>
         ) : ch.data && ch.data.closes.length > 1 ? (
           <Sparkline
             closes={ch.data.closes}

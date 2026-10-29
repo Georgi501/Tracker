@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { usePortfolio } from "@/lib/store";
-import { languageLocale } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { timelineByMonth } from "@/lib/journey";
 
 export const Route = createFileRoute("/timeline")({
@@ -24,24 +24,16 @@ export const Route = createFileRoute("/timeline")({
 
 function Timeline() {
   const p = usePortfolio();
-  const bg = p.lang === "bg";
-  const kind = {
-    buy: bg ? "Покупка" : "Buy",
-    sell: bg ? "Продажба" : "Sell",
-    dividend: bg ? "Дивидент" : "Dividend",
-  };
+  const c = COPY[p.lang];
+  const kind = c.kind;
   const groups = timelineByMonth(p.transactions);
   const fmt = new Intl.DateTimeFormat(languageLocale(p.lang), { month: "long", year: "numeric" });
   return (
     <div className="page-enter space-y-5">
-      <h1 className="font-display text-2xl font-bold">
-        {bg ? "Хронология на портфолиото" : "Portfolio timeline"}
-      </h1>
+      <h1 className="font-display text-2xl font-bold">{c.title}</h1>
       {groups.length === 0 && (
         <Card>
-          <p className="text-sm text-muted-foreground">
-            {bg ? "Още няма сделки." : "No transactions yet."}
-          </p>
+          <p className="text-sm text-muted-foreground">{c.empty}</p>
         </Card>
       )}
       {groups.map((g) => (
@@ -88,3 +80,34 @@ function Timeline() {
     </div>
   );
 }
+
+const COPY: Record<
+  Lang,
+  { title: string; empty: string; kind: Record<"buy" | "sell" | "dividend", string> }
+> = {
+  en: {
+    title: "Portfolio timeline",
+    empty: "No transactions yet.",
+    kind: { buy: "Buy", sell: "Sell", dividend: "Dividend" },
+  },
+  bg: {
+    title: "Хронология на портфолиото",
+    empty: "Още няма сделки.",
+    kind: { buy: "Покупка", sell: "Продажба", dividend: "Дивидент" },
+  },
+  de: {
+    title: "Portfolio-Zeitachse",
+    empty: "Noch keine Transaktionen.",
+    kind: { buy: "Kauf", sell: "Verkauf", dividend: "Dividende" },
+  },
+  es: {
+    title: "Cronología de la cartera",
+    empty: "Todavía no hay transacciones.",
+    kind: { buy: "Compra", sell: "Venta", dividend: "Dividendo" },
+  },
+  it: {
+    title: "Cronologia del portafoglio",
+    empty: "Ancora nessuna transazione.",
+    kind: { buy: "Acquisto", sell: "Vendita", dividend: "Dividendo" },
+  },
+};

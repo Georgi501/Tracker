@@ -21,6 +21,7 @@ import {
 import { Card, Delta } from "@/components/AppShell";
 import { AllocationCard } from "@/components/AllocationCard";
 import { DashboardMovers } from "@/components/DashboardMovers";
+import { ChartDataTable } from "@/components/ChartDataTable";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { PortfolioHealth } from "@/components/PortfolioHealth";
@@ -313,7 +314,7 @@ function Dashboard() {
                 </Button>
               </div>
             </div>
-            <h1 className="font-display mt-1 break-words text-3xl font-bold tracking-tight tabular-nums sm:text-4xl md:text-5xl">
+            <h1 className="numeric-display mt-1 break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
               {p.user ? <CountUp value={total} format={(n) => p.money(n)} /> : "—"}
             </h1>
             <p className="mt-1 text-sm font-semibold">
@@ -330,6 +331,8 @@ function Dashboard() {
               <span className="font-normal text-muted-foreground">{p.t("perPeriod")}</span>
             </p>
             <div
+              role="img"
+              aria-label={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}, ${chartMode === "performance" ? `${performanceSeries.length} ${p.t("dataPoints")}${performanceSeries.length ? `, ${p.t("latestValue")} ${pct(performanceSeries.at(-1)!.v)}` : ""}` : `${series.length} ${p.t("dataPoints")}${series.length ? `, ${p.t("latestValue")} ${p.money(series.at(-1)!.v)}` : ""}`}.`}
               className="relative mt-2 h-32 touch-pan-y sm:h-36 md:h-40"
               onTouchStart={(e) => (swipeX.current = e.touches[0]?.clientX ?? null)}
               onTouchEnd={(e) => {
@@ -497,6 +500,24 @@ function Dashboard() {
                   </p>
                 )}
             </div>
+            <ChartDataTable
+              summary={p.t("viewChartData")}
+              caption={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}`}
+              headers={[
+                p.t("date"),
+                chartMode === "performance" ? c.portfolio : p.t("netWorth"),
+                ...(chartMode === "performance" && comparison.length ? [indexName] : []),
+              ]}
+              rows={
+                chartMode === "performance"
+                  ? performanceChart.map((point, index) => [
+                      fmtT(point.t),
+                      pct(point.v),
+                      ...(comparison[index] ? [pct(comparison[index]!.benchmark)] : []),
+                    ])
+                  : series.map((point) => [fmtT(point.t), p.money(point.v)])
+              }
+            />
             <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
               <div className="flex flex-wrap gap-1">
                 {PERIODS.map((x) => (
@@ -681,7 +702,7 @@ function Metric({
           </TooltipContent>
         </Tooltip>
       </p>
-      <p className="font-display mt-0.5 break-words text-sm font-semibold tracking-tight tabular-nums sm:text-lg">
+      <p className="numeric-display mt-0.5 break-words text-sm font-semibold tracking-tight sm:text-lg">
         {n === undefined ? value : <Delta value={n}>{value}</Delta>}
       </p>
       {sub && (

@@ -6,6 +6,7 @@ import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { useWatchState } from "@/components/AssetExtras";
 import { usePortfolio } from "@/lib/store";
+import { languageLocale } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDetails, type ChartRange } from "@/lib/market.functions";
 
@@ -32,41 +33,61 @@ const T = {
     title: "Компании, които следиш",
     popular: "Популярни компании",
     gain: "Ръст",
-    loss: "Най-слаби",
+    noGainers: "Няма активи с ръст за този период.",
+    loss: "Спадащи",
+    noDecliners: "Няма спадащи активи за този период.",
     all: "Watchlist →",
     none: "Няма данни",
+    unavailable: "Пазарните данни не можаха да се заредят.",
+    retry: "Опитай отново",
   },
   en: {
     title: "Companies you follow",
     popular: "Popular companies",
     gain: "Gainers",
-    loss: "Weakest",
+    noGainers: "No advancing assets for this period.",
+    loss: "Decliners",
+    noDecliners: "No declining assets for this period.",
     all: "Watchlist →",
     none: "No data",
+    unavailable: "Market data could not be loaded.",
+    retry: "Retry",
   },
   de: {
     title: "Beobachtete Unternehmen",
     popular: "Beliebte Unternehmen",
     gain: "Gewinner",
-    loss: "Schwächste",
+    noGainers: "Keine steigenden Werte in diesem Zeitraum.",
+    loss: "Verlierer",
+    noDecliners: "Keine rückläufigen Werte in diesem Zeitraum.",
     all: "Watchlist →",
     none: "Keine Daten",
+    unavailable: "Marktdaten konnten nicht geladen werden.",
+    retry: "Erneut versuchen",
   },
   es: {
     title: "Empresas que sigues",
     popular: "Empresas populares",
     gain: "Subidas",
-    loss: "Más débiles",
+    noGainers: "No hay activos al alza en este periodo.",
+    loss: "Caídas",
+    noDecliners: "No hay activos a la baja en este periodo.",
     all: "Watchlist →",
     none: "Sin datos",
+    unavailable: "No se pudieron cargar los datos de mercado.",
+    retry: "Reintentar",
   },
   it: {
     title: "Aziende che segui",
     popular: "Aziende popolari",
     gain: "Rialzi",
-    loss: "Più deboli",
+    noGainers: "Nessun asset in rialzo in questo periodo.",
+    loss: "Ribassi",
+    noDecliners: "Nessun asset in calo in questo periodo.",
     all: "Watchlist →",
     none: "Nessun dato",
+    unavailable: "Impossibile caricare i dati di mercato.",
+    retry: "Riprova",
   },
 } as const;
 
@@ -104,7 +125,7 @@ function Spark({ v }: { v: number[] }) {
 
 export function DashboardMovers() {
   const p = usePortfolio();
-  const c = T[p.lang] ?? T.en;
+  const c = T[p.lang];
   const { list } = useWatchState();
   const [range, setRange] = useState<ChartRange>("1D");
   const symbols = (list.length ? list : POPULAR).slice(0, 12);
@@ -128,12 +149,16 @@ export function DashboardMovers() {
       loading: !!charts[i]?.isLoading,
     };
   });
+  const unavailable = charts.some((chart) => chart.isError || chart.data?.unavailable);
   const ranked = rows.filter((r) => r.ret != null).sort((x, y) => y.ret! - x.ret!);
   const gainers = ranked.filter((r) => r.ret! > 0).slice(0, 3);
-  const weakest = ranked.slice(-3).reverse();
+  const weakest = ranked
+    .filter((r) => r.ret! < 0)
+    .reverse()
+    .slice(0, 3);
   const fmt = (n: number, cur?: string) => {
     try {
-      return new Intl.NumberFormat(undefined, {
+      return new Intl.NumberFormat(languageLocale(p.lang), {
         style: "currency",
         currency: cur || "USD",
         maximumFractionDigits: 2,
@@ -216,6 +241,18 @@ export function DashboardMovers() {
           </Link>
         </div>
       </div>
+      {unavailable && (
+        <p role="alert" className="mb-2 text-sm text-destructive">
+          {c.unavailable}{" "}
+          <button
+            type="button"
+            onClick={() => void Promise.all(charts.map((chart) => chart.refetch()))}
+            className="font-semibold underline"
+          >
+            {c.retry}
+          </button>
+        </p>
+      )}
       <div
         className={`-mx-1 px-1 pb-2 ${list.length ? "flex snap-x gap-3 overflow-x-auto" : "market-ticker"}`}
       >
@@ -245,7 +282,9 @@ export function DashboardMovers() {
               ))}
             </ul>
           ) : (
-            <p className="py-2 text-xs text-muted-foreground">{c.none}</p>
+            <p className="py-2 text-xs text-muted-foreground">
+              {ranked.length ? c.noGainers : c.none}
+            </p>
           )}
         </div>
         <div>

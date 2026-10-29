@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { ChartDataTable } from "@/components/ChartDataTable";
 import { KeyStats } from "@/components/KeyStats";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
 import {
@@ -29,7 +30,7 @@ type T = "stock" | "etf" | "crypto";
 const L = {
   en: {
     noChart: "Chart data is not available.",
-    noQuote: "Live price unavailable",
+    noQuote: "Current quote unavailable",
     period: "in period",
     pre: "Pre-market",
     post: "After hours",
@@ -38,10 +39,23 @@ const L = {
     open: "Open",
     high: "High",
     low: "Low",
+    quoteError: "Could not load the current quote.",
+    chartError: "Could not load chart data.",
+    retry: "Try again",
+    viewData: "View chart data",
+    chart: (
+      name: string,
+      range: string,
+      count: number,
+      start: string,
+      end: string,
+      change: string,
+    ) =>
+      `${name} ${range} price chart, ${count} data points, from ${start} to ${end}${change ? `, ${change} over the period` : ""}.`,
   },
   bg: {
     noChart: "Няма данни за графиката.",
-    noQuote: "Няма текуща цена",
+    noQuote: "Няма налична текуща котировка",
     period: "за периода",
     pre: "Преди отваряне",
     post: "След затваряне",
@@ -50,6 +64,94 @@ const L = {
     open: "Отваряне",
     high: "Максимум",
     low: "Минимум",
+    quoteError: "Текущата котировка не можа да се зареди.",
+    chartError: "Данните за графиката не можаха да се заредят.",
+    retry: "Опитай отново",
+    viewData: "Виж данните от графиката",
+    chart: (
+      name: string,
+      range: string,
+      count: number,
+      start: string,
+      end: string,
+      change: string,
+    ) =>
+      `${name}, ценова графика за ${range}, ${count} точки с данни, от ${start} до ${end}${change ? `, ${change} за периода` : ""}.`,
+  },
+  de: {
+    noChart: "Keine Kursdaten für das Diagramm verfügbar.",
+    noQuote: "Aktueller Kurs nicht verfügbar",
+    period: "im Zeitraum",
+    pre: "Vor Börsenöffnung",
+    post: "Nach Börsenschluss",
+    date: "Datum",
+    close: "Schlusskurs",
+    open: "Eröffnung",
+    high: "Hoch",
+    low: "Tief",
+    quoteError: "Der aktuelle Kurs konnte nicht geladen werden.",
+    chartError: "Diagrammdaten konnten nicht geladen werden.",
+    retry: "Erneut versuchen",
+    viewData: "Diagrammdaten anzeigen",
+    chart: (
+      name: string,
+      range: string,
+      count: number,
+      start: string,
+      end: string,
+      change: string,
+    ) =>
+      `${name}, Kursdiagramm für ${range}, ${count} Datenpunkte, von ${start} bis ${end}${change ? `, ${change} im Zeitraum` : ""}.`,
+  },
+  es: {
+    noChart: "No hay datos disponibles para el gráfico.",
+    noQuote: "Cotización actual no disponible",
+    period: "en el período",
+    pre: "Preapertura",
+    post: "Posmercado",
+    date: "Fecha",
+    close: "Cierre",
+    open: "Apertura",
+    high: "Máximo",
+    low: "Mínimo",
+    quoteError: "No se pudo cargar la cotización actual.",
+    chartError: "No se pudieron cargar los datos del gráfico.",
+    retry: "Reintentar",
+    viewData: "Ver datos del gráfico",
+    chart: (
+      name: string,
+      range: string,
+      count: number,
+      start: string,
+      end: string,
+      change: string,
+    ) =>
+      `${name}, gráfico de precios de ${range}, ${count} puntos de datos, de ${start} a ${end}${change ? `, ${change} en el período` : ""}.`,
+  },
+  it: {
+    noChart: "Dati del grafico non disponibili.",
+    noQuote: "Quotazione attuale non disponibile",
+    period: "nel periodo",
+    pre: "Pre-apertura",
+    post: "Dopo la chiusura",
+    date: "Data",
+    close: "Chiusura",
+    open: "Apertura",
+    high: "Massimo",
+    low: "Minimo",
+    quoteError: "Impossibile caricare la quotazione attuale.",
+    chartError: "Impossibile caricare i dati del grafico.",
+    retry: "Riprova",
+    viewData: "Visualizza i dati del grafico",
+    chart: (
+      name: string,
+      range: string,
+      count: number,
+      start: string,
+      end: string,
+      change: string,
+    ) =>
+      `${name}, grafico dei prezzi ${range}, ${count} punti dati, da ${start} a ${end}${change ? `, ${change} nel periodo` : ""}.`,
   },
 };
 
@@ -64,7 +166,7 @@ export function QuoteHero({
   type: T;
   lang: Lang;
 }) {
-  const c = lang === "bg" ? L.bg : L.en;
+  const c = L[lang];
   const loc = languageLocale(lang);
   const quoteFn = useServerFn(marketQuote);
   const detailsFn = useServerFn(marketDetails);
@@ -193,7 +295,20 @@ export function QuoteHero({
             )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">{c.noQuote}</p>
+          <div>
+            <p role={q.isError ? "alert" : undefined} className="text-sm text-muted-foreground">
+              {q.isError ? c.quoteError : c.noQuote}
+            </p>
+            {q.isError && (
+              <button
+                type="button"
+                onClick={() => void q.refetch()}
+                className="mt-1 text-sm font-semibold text-primary underline"
+              >
+                {c.retry}
+              </button>
+            )}
+          </div>
         )}
       </div>
       <div className="mt-4 rounded-xl border border-border p-3">
@@ -220,8 +335,30 @@ export function QuoteHero({
         </div>
         {ch.isFetching && !ch.data ? (
           <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
+        ) : ch.isError || ch.data?.unavailable ? (
+          <p role="alert" className="py-16 text-center text-sm text-destructive">
+            {c.chartError}{" "}
+            <button
+              type="button"
+              onClick={() => void ch.refetch()}
+              className="font-semibold underline"
+            >
+              {c.retry}
+            </button>
+          </p>
         ) : closes.length > 1 ? (
-          <div className="h-48 w-full sm:h-56">
+          <div
+            role="img"
+            aria-label={c.chart(
+              name,
+              range,
+              closes.length,
+              money(first!),
+              money(last!),
+              periodPct == null ? "" : `${periodPct >= 0 ? "+" : ""}${num(periodPct)}%`,
+            )}
+            className="h-48 w-full sm:h-56"
+          >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={closes} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
                 <defs>
@@ -310,6 +447,14 @@ export function QuoteHero({
           <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
         )}
       </div>
+      {closes.length > 1 && (
+        <ChartDataTable
+          summary={c.viewData}
+          caption={c.chart(name, range, closes.length, money(first!), money(last!), "")}
+          headers={[c.date, c.close]}
+          rows={closes.map((point) => [fmtT(point.t), money(point.c)])}
+        />
+      )}
       {type !== "crypto" && <KeyStats symbol={symbol} lang={lang} />}
     </section>
   );

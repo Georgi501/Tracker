@@ -170,6 +170,12 @@
   }
 }
 
+@utility numeric-display {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.035em;
+}
+
 /* Minimal markdown styling for AI Advisor answers */
 .prose p { margin: 0.4rem 0; }
 .prose ul { list-style: disc; padding-left: 1.25rem; margin: 0.4rem 0; }
@@ -193,10 +199,8 @@
 @utility press { transition: transform .12s ease, opacity .2s; &:active { transform: scale(.96); } }
 @utility shadow-glow { box-shadow: 0 6px 20px -8px color-mix(in oklab, var(--primary) 70%, transparent); }
 main button, header button, main a { -webkit-tap-highlight-color: transparent; }
-main button:not(:disabled):active, header button:not(:disabled):active { transform: scale(.97); }
 main button, header button { transition: transform .12s ease, background-color .2s, color .2s, opacity .2s; }
 main tbody tr { transition: background-color .15s; }
-main tbody tr:hover { background-color: color-mix(in oklab, var(--primary) 6%, transparent); }
 nav a { transition: background-color .2s, color .2s; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
@@ -248,8 +252,13 @@ nav a { transition: background-color .2s, color .2s; }
 /* Shared layout polish */
 main h1 { letter-spacing: -0.025em; }
 main h2 { letter-spacing: -0.01em; }
-main .card-interactive { background-image: none; border-color: var(--border); box-shadow: var(--shadow-card); }
-main .card-interactive { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; animation-duration: .25s; }
+main .card-interactive {
+  background-image: none;
+  border-color: var(--border);
+  box-shadow: var(--shadow-card);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  animation-duration: .25s;
+}
 main .card-interactive:hover { transform: translateY(-1px); border-color: color-mix(in oklab, var(--primary) 28%, var(--border)); box-shadow: var(--shadow-card-hover); }
 .bg-primary { background-image: none; }
 .page-enter { animation-duration: .22s; }

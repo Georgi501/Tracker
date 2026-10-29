@@ -12,7 +12,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Sign in — Capispot" },
       {
         property: "og:description",
-        content: "Free portfolio tracking with live prices and broker CSV import.",
+        content: "Free portfolio tracking with market quotes and broker CSV import.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

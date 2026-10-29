@@ -1,4 +1,5 @@
 import { allocationColor } from "@/lib/palette";
+import { ChartDataTable } from "@/components/ChartDataTable";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
@@ -474,7 +475,11 @@ function Analytics() {
           </p>
         )}
         {range && currentReturn !== null && (
-          <div className="h-60">
+          <div
+            role="img"
+            aria-label={`${p.t("performance")} ${c.periodReturns} ${p.t("chart")}, ${returns.length} ${p.t("dataPoints")}${returns.length ? `, ${p.t("latestValue")} ${returns.at(-1)!.current == null ? "—" : pct(returns.at(-1)!.current!)}` : ""}.`}
+            className="h-60"
+          >
             <ResponsiveContainer>
               <BarChart data={returns}>
                 <XAxis
@@ -523,6 +528,22 @@ function Analytics() {
             </ResponsiveContainer>
           </div>
         )}
+        {range && currentReturn !== null && (
+          <ChartDataTable
+            summary={p.t("viewChartData")}
+            caption={`${p.t("performance")} ${c.periodReturns}`}
+            headers={[
+              p.t("date"),
+              p.t("selectedPeriod"),
+              ...(compare ? [p.t("previousPeriod")] : []),
+            ]}
+            rows={returns.map((item) => [
+              formatDate(item.t),
+              item.current == null ? "—" : pct(item.current),
+              ...(compare ? [item.previous == null ? "—" : pct(item.previous)] : []),
+            ])}
+          />
+        )}
         {compare && range && (
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-2">
@@ -561,7 +582,11 @@ function Analytics() {
       <Card className="lg:col-span-3">
         <h3 className="font-display mb-1 font-semibold">{c.attribution}</h3>
         <p className="mb-3 text-xs text-muted-foreground">{c.attributionNote}</p>
-        <div style={{ height: Math.max(160, contrib.length * 30) }}>
+        <div
+          role="img"
+          aria-label={`${c.attribution}: ${contrib.map((item) => `${item.name}, ${p.money(item.v, { sign: true })}`).join("; ")}.`}
+          style={{ height: Math.max(160, contrib.length * 30) }}
+        >
           <ResponsiveContainer>
             <BarChart data={contrib} layout="vertical">
               <XAxis type="number" hide />
@@ -662,7 +687,11 @@ function Analytics() {
               </label>
             </div>
             {benchmark !== "none" && benchmarkData.length > 0 ? (
-              <div className="h-64">
+              <div
+                role="img"
+                aria-label={`${c.benchmark}: ${c.portfolioReturn} ${benchmarkData.length ? pct(benchmarkData.at(-1)!.portfolio) : "—"}; ${c.indexPriceReturn} ${benchmarkData.length ? pct(benchmarkData.at(-1)!.benchmark) : "—"}.`}
+                className="h-64"
+              >
                 <ResponsiveContainer>
                   <LineChart data={benchmarkData}>
                     <XAxis
@@ -716,6 +745,18 @@ function Analytics() {
                     : c.benchmarkUnavailable}
               </p>
             ) : null}
+            {benchmarkData.length > 0 && (
+              <ChartDataTable
+                summary={p.t("viewChartData")}
+                caption={c.benchmark}
+                headers={[p.t("date"), c.portfolioReturn, c.indexPriceReturn]}
+                rows={benchmarkData.map((item) => [
+                  item.label,
+                  pct(item.portfolio),
+                  pct(item.benchmark),
+                ])}
+              />
+            )}
             <p className="mt-2 text-xs text-muted-foreground">{c.benchmarkCaveat}</p>
           </section>
           <section aria-labelledby="analytics-risk-title">
@@ -805,7 +846,11 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
   return (
     <Card>
       <h3 className="font-display mb-2 font-semibold">{title}</h3>
-      <div className="h-40">
+      <div
+        role="img"
+        aria-label={`${title}: ${data.map((item) => `${item.name} ${((item.value / total) * 100).toFixed(1)}%`).join(", ")}.`}
+        className="h-40"
+      >
         <ResponsiveContainer>
           <PieChart>
             <Pie
@@ -832,7 +877,7 @@ function Breakdown({ title, data }: { title: string; data: { name: string; value
         </ResponsiveContainer>
       </div>
       <ul className="mt-3 space-y-1.5 text-sm">
-        {data.slice(0, 8).map((d) => (
+        {data.map((d) => (
           <li key={d.name} className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
