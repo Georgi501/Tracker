@@ -414,13 +414,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             <h4 className="footer-h">{legalCopy(p.lang).footer.legal}</h4>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <Link to="/terms">{legalCopy(p.lang).terms.title}</Link>
+                <a href="/policies/terms.html">{legalCopy(p.lang).terms.title}</a>
               </li>
               <li>
-                <Link to="/privacy">{legalCopy(p.lang).privacy.title}</Link>
+                <a href="/policies/privacy.html">{legalCopy(p.lang).privacy.title}</a>
               </li>
               <li>
-                <Link to="/refund">{legalCopy(p.lang).refund.title}</Link>
+                <a href="/policies/refund.html">{legalCopy(p.lang).refund.title}</a>
+              </li>
+              <li>
+                <a href="/policies/ai-acceptable-use.html">
+                  {p.lang === "bg" ? "Правила за AI" : "AI Acceptable Use"}
+                </a>
               </li>
               <li>
                 <Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link>

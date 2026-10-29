@@ -33,6 +33,12 @@ function AdvisorHome() {
       <Card>
         <h1 className="font-display mb-2 text-2xl font-bold">{c.advisor}</h1>
         <p className="text-muted-foreground">{c.disclaimer}</p>
+        <a
+          href="/policies/ai-acceptable-use.html"
+          className="mt-3 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          {p.lang === "bg" ? "Правила за използване на AI" : "AI Acceptable Use Policy"}
+        </a>
       </Card>
     </AdvisorLayout>
   );

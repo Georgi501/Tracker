@@ -117,6 +117,17 @@ export function ThesisCheck() {
   return (
     <div>
       <p className="mb-3 text-sm text-muted-foreground">{c.desc}</p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        {p.lang === "bg"
+          ? "AI резултатите са обща информация, не са инвестиционен съвет или препоръка."
+          : "AI output is general information, not investment advice or a recommendation."}{" "}
+        <a
+          href="/policies/ai-acceptable-use.html"
+          className="font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          {p.lang === "bg" ? "Правила за AI" : "AI policy"}
+        </a>
+      </p>
       <form onSubmit={run} className="space-y-2">
         <Input
           aria-label={c.ticker}

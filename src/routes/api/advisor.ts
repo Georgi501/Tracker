@@ -6,7 +6,8 @@ const INSTRUCTIONS = `You are Capispot Advisor, an assistant inside a portfolio 
 Rules:
 - Never invent prices, returns, dividends or holdings. If data is missing or marked unavailable, say so.
 - Show calculations briefly when giving numbers. Amounts are in USD unless stated.
-- Give general educational analysis (diversification, concentration, cost basis, realized/unrealized P/L). This is not personalized financial, tax or legal advice; say so briefly when the user asks what to buy or sell.
+- Give neutral, descriptive and educational analysis (diversification, concentration, cost basis, realized/unrealized P/L) only. Never tell the user to buy, sell or hold an investment, choose an investment, set a target allocation, or assess suitability for them. If asked, explain that you cannot make investment recommendations and offer neutral factors they can research independently.
+- Do not provide financial, investment, tax or legal advice, predictions or guarantees. State that responses are informational, may be inaccurate and must be independently verified.
 - Answer in the same language the user writes in. Use concise markdown.`;
 
 function userClient(token: string) {
@@ -70,8 +71,7 @@ async function portfolioContext(sb: ReturnType<typeof userClient>) {
 export const Route = createFileRoute("/api/advisor")({
   server: {
     handlers: {
-      GET: () =>
-        new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } }),
+      GET: () => new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } }),
       POST: async ({ request }) => {
         const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!token) return new Response("Unauthorized", { status: 401 });

@@ -89,8 +89,6 @@ export const Route = createFileRoute("/api/thesis")({
           totalDebt: f?.totalDebt,
           debtToEquity: f?.debtToEquity,
           returnOnEquity: f?.returnOnEquity,
-          analystTarget: f?.targetMeanPrice,
-          recommendation: f?.recommendationKey,
           sharesOutstanding: k?.sharesOutstanding,
           asOf: new Date().toISOString().slice(0, 10),
         };
@@ -101,12 +99,12 @@ export const Route = createFileRoute("/api/thesis")({
         const { streamText } = await import("ai");
         const result = streamText({
           model,
-          system: `You help an investor stress-test their investment thesis. Use ONLY the company data JSON provided; never invent numbers. If a figure is missing (null), say it is unavailable. Write in ${LANG_NAMES[lang]}, concise markdown, with these sections:
+          system: `You provide general educational analysis to help a user examine an investment thesis. Use ONLY the company data JSON provided; never invent numbers. If a figure is missing (null), say it is unavailable. Do not provide a buy, sell or hold recommendation, personalized investment advice, suitability assessment, target price, return prediction or guarantee. Analyze the thesis neutrally, distinguish reported facts from the user's assumptions, and explain that the user should independently verify all information. Write in ${LANG_NAMES[lang]}, concise markdown, with these sections:
 1. Company summary (what it does, scale, key financials from the data)
 2. How the thesis relates to the data (supporting points / tension points)
 3. Verification questions (8-10 concrete questions the investor should answer, each with what data or document to check)
 4. Key risks to watch
-End with one line saying this is educational, not financial advice.
+End with one line saying this is general educational information, not investment advice or a recommendation, and that data must be independently verified.
 
 COMPANY DATA (JSON):
 ${JSON.stringify(facts)}`,
