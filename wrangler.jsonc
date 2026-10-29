@@ -4,6 +4,17 @@
   "compatibility_date": "2026-10-19",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "capispot.com", "custom_domain": true },
+    { "pattern": "www.capispot.com", "custom_domain": true }
+  ],
+  "vars": {
+    "CREEM_MODE": "prod",
+    "CREEM_PRODUCT_ID_MONTHLY": "prod_Vrcc1dmOhlbmYS9RQ9wzk",
+    "CREEM_PRODUCT_ID_YEARLY": "prod_1wpAdq44KeXo7c2TwlrZAR",
+    "PUBLIC_APP_URL": "https://capispot.com"
+  },
   "observability": {
     "enabled": true
   }

@@ -8,6 +8,9 @@ type PlanCopy = {
   groups: { title: string; free: string; pro: string }[];
   watchlist: string;
   gateNote: string;
+  taxIncluded: string;
+  trialFaqTitle: string;
+  trialFaq: [string, string][];
   yearlySave: string;
   yearlyDetails: string;
   monthlyDetails: string;
@@ -60,12 +63,28 @@ const en: PlanCopy = {
     { title: "Community", free: "—", pro: "Profile, shared allocation, private chat" },
   ],
   watchlist: "Watchlist analysis: top gainers and losers, buy-zone opportunities & DCF fair values",
-  gateNote: "€4.99/month or €49.99/year",
+  gateNote: "€4.99/month or €49.99/year, incl. VAT",
+  taxIncluded: "Prices include VAT; the total shown above is what you'll pay.",
+  trialFaqTitle: "Your free trial, clearly explained",
+  trialFaq: [
+    [
+      "Do I need to enter a card?",
+      "Yes. Checkout asks for your card details to start the trial and securely saves the card for later. You are not charged during the 5-day free trial.",
+    ],
+    [
+      "When will I pay, and how much?",
+      "Your first payment is taken automatically when the 5-day trial ends: €4.99 for the monthly plan or €49.99 for the yearly plan, including VAT. The trial is before the paid billing period; it does not reduce the month or year you pay for.",
+    ],
+    [
+      "What if I cancel before the trial ends?",
+      "Cancel before the trial end date and you will not be charged. If you keep the subscription, it renews automatically every month or year at the selected price.",
+    ],
+  ],
   yearlySave: "Save 17% yearly",
   yearlyDetails:
-    "5 days free, then €49.99 billed yearly; renews automatically. Cancel before the trial ends and you won't be charged.",
+    "5 days free, then €49.99 per year including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
   monthlyDetails:
-    "5 days free, then billed monthly; renews automatically. Cancel before the trial ends and you won't be charged.",
+    "5 days free, then €4.99 per month including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
   seeWhat: "See everything in Pro",
   referralTitle: "Invite a friend",
   referralBody:
@@ -117,12 +136,28 @@ const bg: PlanCopy = {
   ],
   watchlist:
     "Анализ на Watchlist-а: най-печеливши и губещи, възможности в зона за покупка и DCF справедливи стойности",
-  gateNote: "€4.99/месец или €49.99/година",
+  gateNote: "€4.99/месец или €49.99/година с ДДС",
+  taxIncluded: "Посочените цени са с включен ДДС — това е крайната сума, която ще платиш.",
+  trialFaqTitle: "Безплатният пробен период — ясно и накратко",
+  trialFaq: [
+    [
+      "Трябва ли да въведа карта?",
+      "Да. При започване на пробния период checkout-ът изисква данни за карта и я запазва сигурно за по-късно. През 5-те безплатни дни не се извършва таксуване.",
+    ],
+    [
+      "Кога и колко ще платя?",
+      "Първото плащане се извършва автоматично след края на 5-дневния пробен период: €4,99 за месечния план или €49,99 за годишния план, с включен ДДС. Пробният период е преди платения период — не се приспада от месеца или годината, за които плащаш.",
+    ],
+    [
+      "Какво става, ако отменя преди края на пробния период?",
+      "Ако отмениш преди посочената крайна дата, няма да бъдеш таксуван. Ако запазиш абонамента, той се подновява автоматично всеки месец или година на избраната цена.",
+    ],
+  ],
   yearlySave: "Спестяваш 17% годишно",
   yearlyDetails:
-    "5 дни безплатно, после €49,99 годишно с автоматично подновяване. Ако откажеш преди края на пробния период, няма да бъдеш таксуван.",
+    "5 дни безплатно, после €49,99 годишно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
   monthlyDetails:
-    "5 дни безплатно, после месечно таксуване с автоматично подновяване. Ако откажеш преди края на пробния период, няма да бъдеш таксуван.",
+    "5 дни безплатно, после €4,99 месечно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
   seeWhat: "Виж всичко в Pro",
   referralTitle: "Покани приятел",
   referralBody:
@@ -173,12 +208,29 @@ const de: PlanCopy = {
     { title: "Community", free: "—", pro: "Profil, geteilte Aufteilung, private Chats" },
   ],
   watchlist: "Watchlist-Analyse: Top-Gewinner und -Verlierer, Kaufchancen & DCF-Fair-Values",
-  gateNote: "€4,99/Monat oder €49,99/Jahr",
+  gateNote: "€4,99/Monat oder €49,99/Jahr inkl. MwSt.",
+  taxIncluded:
+    "Die angezeigten Preise enthalten die Mehrwertsteuer; der Betrag oben ist der Gesamtpreis.",
+  trialFaqTitle: "Deine kostenlose Testphase, einfach erklärt",
+  trialFaq: [
+    [
+      "Muss ich eine Karte angeben?",
+      "Ja. Beim Start der Testphase gibst du deine Kartendaten im Checkout ein. Die Karte wird sicher für später gespeichert. Während der 5-tägigen kostenlosen Testphase wird nichts abgebucht.",
+    ],
+    [
+      "Wann und wie viel zahle ich?",
+      "Die erste Zahlung wird automatisch nach der 5-tägigen Testphase fällig: €4,99 für den Monatsplan oder €49,99 für den Jahresplan, inklusive Mehrwertsteuer. Die Testphase liegt vor dem bezahlten Zeitraum und wird nicht vom bezahlten Monat oder Jahr abgezogen.",
+    ],
+    [
+      "Was passiert, wenn ich vor Ende der Testphase kündige?",
+      "Kündige vor dem Enddatum der Testphase, wird dir nichts berechnet. Wenn du das Abo behältst, verlängert es sich automatisch jeden Monat oder jedes Jahr zum gewählten Preis.",
+    ],
+  ],
   yearlySave: "17% sparen jährlich",
   yearlyDetails:
-    "5 Tage kostenlos, danach €49,99 jährlich; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
+    "5 Tage kostenlos, danach €49,99 pro Jahr inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
   monthlyDetails:
-    "5 Tage kostenlos, danach monatliche Abrechnung mit automatischer Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
+    "5 Tage kostenlos, danach €4,99 pro Monat inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
   seeWhat: "Alles in Pro ansehen",
   referralTitle: "Freund einladen",
   referralBody:
@@ -230,12 +282,29 @@ const es: PlanCopy = {
   ],
   watchlist:
     "Análisis de watchlist: mayores subidas y bajadas, oportunidades de compra & valores razonables DCF",
-  gateNote: "€4,99/mes o €49,99/año",
+  gateNote: "€4,99/mes o €49,99/año, IVA incluido",
+  taxIncluded:
+    "Los precios mostrados incluyen el IVA; el importe indicado arriba es el total que pagarás.",
+  trialFaqTitle: "Tu prueba gratuita, explicada claramente",
+  trialFaq: [
+    [
+      "¿Tengo que introducir una tarjeta?",
+      "Sí. Para iniciar la prueba, el checkout solicita los datos de tu tarjeta y la guarda de forma segura para más adelante. No se te cobrará durante los 5 días gratuitos.",
+    ],
+    [
+      "¿Cuándo y cuánto pagaré?",
+      "El primer pago se realiza automáticamente al terminar la prueba de 5 días: €4,99 para el plan mensual o €49,99 para el anual, con IVA incluido. La prueba precede al periodo de pago; no se descuenta del mes o año que pagas.",
+    ],
+    [
+      "¿Qué pasa si cancelo antes de que termine la prueba?",
+      "Cancela antes de la fecha de finalización y no se te cobrará. Si mantienes la suscripción, se renovará automáticamente cada mes o año al precio elegido.",
+    ],
+  ],
   yearlySave: "Ahorra 17% al año",
   yearlyDetails:
-    "5 días gratis, luego €49,99 al año con renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
+    "5 días gratis, luego €49,99 al año con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
   monthlyDetails:
-    "5 días gratis, luego facturación mensual con renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
+    "5 días gratis, luego €4,99 al mes con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
   seeWhat: "Ver todo en Pro",
   referralTitle: "Invita a un amigo",
   referralBody:
@@ -287,12 +356,28 @@ const it: PlanCopy = {
   ],
   watchlist:
     "Analisi watchlist: maggiori rialzi e ribassi, opportunità di acquisto & fair value DCF",
-  gateNote: "€4,99/mese o €49,99/anno",
+  gateNote: "€4,99/mese o €49,99/anno, IVA inclusa",
+  taxIncluded: "I prezzi indicati includono l'IVA; l'importo sopra è il totale che pagherai.",
+  trialFaqTitle: "La prova gratuita, spiegata chiaramente",
+  trialFaq: [
+    [
+      "Devo inserire una carta?",
+      "Sì. Per iniziare la prova, il checkout richiede i dati della carta e la salva in modo sicuro per un addebito successivo. Non pagherai nulla durante i 5 giorni gratuiti.",
+    ],
+    [
+      "Quando e quanto pagherò?",
+      "Il primo pagamento viene addebitato automaticamente al termine della prova di 5 giorni: €4,99 per il piano mensile o €49,99 per quello annuale, IVA inclusa. La prova precede il periodo a pagamento e non viene sottratta dal mese o dall'anno acquistato.",
+    ],
+    [
+      "Cosa succede se annullo prima della fine della prova?",
+      "Annulla prima della data di fine e non ti verrà addebitato nulla. Se mantieni l'abbonamento, si rinnoverà automaticamente ogni mese o anno al prezzo scelto.",
+    ],
+  ],
   yearlySave: "Risparmi il 17% all'anno",
   yearlyDetails:
-    "5 giorni gratis, poi €49,99 all'anno con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
+    "5 giorni gratis, poi €49,99 all'anno IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
   monthlyDetails:
-    "5 giorni gratis, poi addebito mensile con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
+    "5 giorni gratis, poi €4,99 al mese IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
   seeWhat: "Scopri tutto in Pro",
   referralTitle: "Invita un amico",
   referralBody:

@@ -24,12 +24,12 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Free plan with 1 broker, Pro for €4.99/month or €49.99/year with up to 5 brokers.",
+          "Free plan with 1 broker, Pro for €4.99/month or €49.99/year including VAT, with up to 5 brokers.",
       },
       { property: "og:title", content: "Pricing — Capispot" },
       {
         property: "og:description",
-        content: "Pro: €4.99/month or €49.99/year, up to 5 broker connections.",
+        content: "Pro: €4.99/month or €49.99/year including VAT, up to 5 broker connections.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -238,6 +238,24 @@ function Pricing() {
       <p className="mt-1 text-center text-xs text-muted-foreground">
         {yearly ? planCopy[p.lang].yearlyDetails : planCopy[p.lang].monthlyDetails}
       </p>
+      <p className="mt-1 text-center text-xs text-muted-foreground">
+        {planCopy[p.lang].taxIncluded}
+      </p>
+      <section className="mt-8" aria-labelledby="trial-faq-title">
+        <h2 id="trial-faq-title" className="font-display text-center text-xl font-bold">
+          {planCopy[p.lang].trialFaqTitle}
+        </h2>
+        <div className="mx-auto mt-4 max-w-2xl divide-y divide-border rounded-2xl border border-border px-4">
+          {planCopy[p.lang].trialFaq.map(([question, answer]) => (
+            <details key={question} className="group py-4">
+              <summary className="cursor-pointer font-semibold marker:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                {question}
+              </summary>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
       {p.user && referralCode && (
         <Card className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

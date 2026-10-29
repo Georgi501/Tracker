@@ -254,16 +254,26 @@ function Markets() {
                   </div>
                   <div className="mt-4" aria-live="polite">
                     <p className="text-sm text-muted-foreground">{c.latest}</p>
-                    <p className="font-display mt-2 text-3xl font-bold">
-                      {quoteBusy
-                        ? "…"
-                        : quote?.quote
-                          ? new Intl.NumberFormat(languageLocale(p.lang), {
-                              style: "currency",
-                              currency: quote.quote.currency,
-                            }).format(quote.quote.price)
-                          : "—"}
+                    <p className="font-display mt-2 min-h-9 text-3xl font-bold">
+                      {quoteBusy ? (
+                        <span
+                          aria-hidden="true"
+                          className="mt-1 block h-8 w-36 animate-pulse rounded bg-muted"
+                        />
+                      ) : quote?.quote ? (
+                        new Intl.NumberFormat(languageLocale(p.lang), {
+                          style: "currency",
+                          currency: quote.quote.currency,
+                        }).format(quote.quote.price)
+                      ) : (
+                        "—"
+                      )}
                     </p>
+                    {quoteBusy && (
+                      <p role="status" className="mt-2 text-sm text-muted-foreground">
+                        {c.loadingQuote}
+                      </p>
+                    )}
                     {quote?.quote && (
                       <>
                         <p className="mt-2 text-sm">

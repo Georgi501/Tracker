@@ -177,8 +177,16 @@ function Compare() {
       </div>
       <ProGate
         title={bg ? "Сравни активи" : "Compare assets"}
-        desc={bg ? "Сравнението на активи е част от Pro." : "Asset comparison is part of Pro."}
-        preview={<BarsSilhouette />}
+        desc={
+          bg
+            ? "Сравни пазарна капитализация, P/E, EPS, дивидентна доходност, ръст на приходите, бета, 52-седмичен диапазон и цели на анализаторите. DCF оценка и потенциален ръст се показват при достатъчно реални пазарни данни."
+            : "Compare market cap, P/E, EPS, dividend yield, revenue growth, beta, 52-week range and analyst targets. DCF fair value and upside appear when supported by available real market data."
+        }
+        preview={
+          <div className="flex min-h-80 items-center">
+            <BarsSilhouette />
+          </div>
+        }
       >
         <div className="grid grid-cols-2 gap-3">
           <Input

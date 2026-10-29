@@ -24,37 +24,54 @@ function timestamp(value: unknown): string | null {
   return typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : null;
 }
 
-async function applyWebhook(eventType: string, data: Record<string, unknown>, mode: CreemMode) {
+function metadataUserId(...values: unknown[]): string | null {
+  for (const value of values) {
+    const metadata = object(value);
+    if (!metadata) continue;
+    const customData = object(metadata["custom_data"]);
+    for (const candidate of [metadata["user_id"], customData?.["user_id"]]) {
+      const parsed = idSchema.safeParse(candidate);
+      if (parsed.success) return parsed.data;
+    }
+  }
+  return null;
+}
+
+export async function applyWebhook(
+  eventType: string,
+  data: Record<string, unknown>,
+  mode: CreemMode,
+) {
   if (mode === "test") return;
   const environment = "live";
   const { getCreemPlan } = await import("@/lib/creem.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   if (eventType === "checkout.completed") {
     const order = object(data["order"]);
-    if (data["status"] !== "completed" || order?.["status"] !== "paid") return;
     const subscription = object(data["subscription"]);
+    const isTrialing = subscription?.["status"] === "trialing";
+    if (data["status"] !== "completed" || (!isTrialing && order?.["status"] !== "paid")) return;
     const subscriptionId = entityId(data["subscription"]);
     const customerId = entityId(data["customer"]);
     const productId = entityId(data["product"]) ?? entityId(subscription?.["product"]);
-    const metadata = object(data["metadata"]);
-    const userId = idSchema.safeParse(metadata?.["user_id"]);
+    const userId = metadataUserId(data["metadata"], subscription?.["metadata"]);
     const plan = productId ? getCreemPlan(productId) : null;
     const periodEnd = timestamp(subscription?.["current_period_end_date"]);
-    if (!subscriptionId || !customerId || !productId || !plan || !userId.success || !periodEnd) {
+    if (!subscriptionId || !customerId || !productId || !plan || !userId || !periodEnd) {
       console.error("Creem checkout is missing valid subscription metadata");
       throw new Error("Unmatched completed Creem checkout");
     }
 
     const { error } = await supabaseAdmin.from("subscriptions").upsert(
       {
-        user_id: userId.data,
+        user_id: userId,
         provider_subscription_id: subscriptionId,
         provider_customer_id: customerId,
         product_id: productId,
         price_id: null,
         plan: "pro",
         interval: plan.interval,
-        status: "active",
+        status: isTrialing ? "trialing" : "active",
         current_period_start: timestamp(subscription?.["current_period_start_date"]),
         current_period_end: periodEnd,
         cancel_at_period_end: false,
@@ -65,12 +82,74 @@ async function applyWebhook(eventType: string, data: Record<string, unknown>, mo
     );
     if (error) throw error;
 
-    if (mode === "prod") {
+    if (!isTrialing && mode === "prod") {
       const { error: referralError } = await supabaseAdmin.rpc("grant_referral_reward", {
-        _referred_user_id: userId.data,
+        _referred_user_id: userId,
       });
       if (referralError) throw referralError;
     }
+
+    return;
+  }
+
+  if (eventType === "subscription.trialing") {
+    const subscriptionId = entityId(data);
+    if (!subscriptionId) throw new Error("Creem subscription event is missing its ID");
+
+    const customerId = entityId(data["customer"]);
+    const productId = entityId(data["product"]);
+    const userId = metadataUserId(data["metadata"]);
+    const plan = productId ? getCreemPlan(productId) : null;
+    const periodEnd = timestamp(data["current_period_end_date"]);
+
+    if (customerId && productId && userId && plan && periodEnd) {
+      const { error } = await supabaseAdmin.from("subscriptions").upsert(
+        {
+          user_id: userId,
+          provider_subscription_id: subscriptionId,
+          provider_customer_id: customerId,
+          product_id: productId,
+          price_id: null,
+          plan: "pro",
+          interval: plan.interval,
+          status: "trialing",
+          current_period_start: timestamp(data["current_period_start_date"]),
+          current_period_end: periodEnd,
+          cancel_at_period_end: false,
+          environment,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "provider_subscription_id" },
+      );
+      if (error) throw error;
+      return;
+    }
+
+    const { data: current, error: lookupError } = await supabaseAdmin
+      .from("subscriptions")
+      .select("id")
+      .eq("provider_subscription_id", subscriptionId)
+      .eq("environment", environment)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    if (!current) {
+      console.error("Creem trial event is missing valid subscription metadata");
+      throw new Error("Unmatched trialing Creem subscription");
+    }
+
+    const { error } = await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        status: "trialing",
+        ...(timestamp(data["current_period_start_date"])
+          ? { current_period_start: timestamp(data["current_period_start_date"]) }
+          : {}),
+        ...(periodEnd ? { current_period_end: periodEnd } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("provider_subscription_id", subscriptionId)
+      .eq("environment", environment);
+    if (error) throw error;
     return;
   }
 
@@ -87,7 +166,7 @@ async function applyWebhook(eventType: string, data: Record<string, unknown>, mo
   if (!subscriptionId) throw new Error("Creem subscription event is missing its ID");
   const { data: current, error: lookupError } = await supabaseAdmin
     .from("subscriptions")
-    .select("id")
+    .select("id, user_id")
     .eq("provider_subscription_id", subscriptionId)
     .eq("environment", environment)
     .maybeSingle();
@@ -120,6 +199,13 @@ async function applyWebhook(eventType: string, data: Record<string, unknown>, mo
     .eq("provider_subscription_id", subscriptionId)
     .eq("environment", environment);
   if (error) throw error;
+
+  if (eventType === "subscription.paid" && mode === "prod") {
+    const { error: referralError } = await supabaseAdmin.rpc("grant_referral_reward", {
+      _referred_user_id: current.user_id,
+    });
+    if (referralError) throw referralError;
+  }
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
