@@ -9,7 +9,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
       .object({
-        period: z.enum(["1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"]),
+        period: z.enum(["1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL"]),
         currency: z.enum(["EUR", "USD"]),
       })
       .parse(input),

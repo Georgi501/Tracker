@@ -14,7 +14,7 @@ export interface PortfolioPoint {
   v: number;
   flow: number;
 }
-export type HistoryPeriod = "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
+export type HistoryPeriod = "1M" | "3M" | "6M" | "YTD" | "1Y" | "3Y" | "5Y" | "ALL";
 const HISTORY_MONTHS: Partial<Record<HistoryPeriod, number>> = {
   "1M": 1,
   "3M": 3,
@@ -26,6 +26,9 @@ const HISTORY_MONTHS: Partial<Record<HistoryPeriod, number>> = {
 export function periodStart(period: HistoryPeriod, first: string, now: Date): string {
   if (period === "ALL") return first;
   const date = new Date(now);
+  if (period === "YTD") {
+    return new Date(Date.UTC(date.getUTCFullYear(), 0, 1)).toISOString().slice(0, 10);
+  }
   date.setUTCMonth(date.getUTCMonth() - (HISTORY_MONTHS[period] ?? 12));
   return date.toISOString().slice(0, 10);
 }

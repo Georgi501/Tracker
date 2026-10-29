@@ -69,6 +69,15 @@ describe("custom return periods", () => {
     expect(periodRange("3Y", anchor)).toEqual({ start: Date.UTC(2023, 9, 20), end: anchor });
     expect(periodRange("5Y", anchor)).toEqual({ start: Date.UTC(2021, 9, 20), end: anchor });
   });
+  it("starts YTD at January 1 of the current calendar year", () => {
+    const anchor = Date.UTC(2026, 9, 20);
+    expect(periodRange("YTD", anchor)).toEqual({ start: Date.UTC(2026, 0, 1), end: anchor });
+    const newYearAnchor = Date.UTC(2027, 0, 1);
+    expect(periodRange("YTD", newYearAnchor)).toEqual({
+      start: Date.UTC(2026, 0, 1),
+      end: newYearAnchor,
+    });
+  });
   it("uses the earliest real point for ALL and a year back when there is none", () => {
     const anchor = Date.UTC(2026, 9, 20);
     expect(periodRange("ALL", anchor, Date.UTC(2019, 0, 5))).toEqual({
@@ -78,8 +87,9 @@ describe("custom return periods", () => {
     expect(periodRange("ALL", anchor).start).toBe(Date.UTC(2025, 9, 20));
   });
   it("offers every new period with a readable bar count", () => {
-    expect(RETURN_PERIODS).toEqual(["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"]);
+    expect(RETURN_PERIODS).toEqual(["1W", "1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL"]);
     expect(RETURN_BUCKETS["3M"]).toBe(9);
+    expect(RETURN_BUCKETS.YTD).toBe(12);
     expect(RETURN_BUCKETS["5Y"]).toBe(10);
   });
 });

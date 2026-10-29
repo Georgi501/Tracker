@@ -26,7 +26,7 @@ const POPULAR = [
   "TSLA",
   "BTC",
 ];
-const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y"];
+const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];
 const T = {
   bg: {
     title: "Компании, които следиш",

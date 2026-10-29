@@ -36,7 +36,7 @@ export const Route = createFileRoute("/watchlist")({
   component: Watchlist,
 });
 
-const PERIODS: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y"];
+const PERIODS: ChartRange[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];
 const SUGGEST = ["AAPL", "MSFT", "NVDA", "META", "AMZN", "VWCE.DE", "BTC"];
 type K =
   | "title"

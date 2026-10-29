@@ -51,7 +51,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-const PERIODS: HistoryPeriod[] = ["1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"];
+const PERIODS: HistoryPeriod[] = ["1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL"];
 
 function Dashboard() {
   const p = usePortfolio();
@@ -141,7 +141,7 @@ function Dashboard() {
   const fmtT = (t: number) =>
     new Date(t).toLocaleString(
       locale,
-      ["1Y", "3Y", "5Y", "ALL"].includes(period)
+      ["YTD", "1Y", "3Y", "5Y", "ALL"].includes(period)
         ? { month: "short", year: "2-digit" }
         : { day: "numeric", month: "short" },
     );
@@ -368,8 +368,15 @@ function Dashboard() {
             <Select
               value={benchmark}
               onValueChange={(value) => {
-                if (value === "none" || BENCHMARKS.some((b) => b.symbol === value))
-                  setBenchmark(value as BenchmarkSymbol | "none");
+                if (value === "none") {
+                  setBenchmark("none");
+                  return;
+                }
+                const selected = BENCHMARKS.find((item) => item.symbol === value);
+                if (selected) {
+                  setBenchmark(selected.symbol);
+                  setChartMode("performance");
+                }
               }}
             >
               <SelectTrigger aria-label={c.compare} className="w-full text-foreground sm:w-52">

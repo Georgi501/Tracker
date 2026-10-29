@@ -122,7 +122,7 @@ export const getExchangeRate = createServerFn({ method: "GET" }).handler(async (
   return { eurPerUsd: await fetchFx() };
 });
 
-export const CHART_RANGES = ["1D", "1W", "1M", "3M", "6M", "1Y", "3Y", "MAX"] as const;
+export const CHART_RANGES = ["1D", "1W", "1M", "3M", "6M", "YTD", "1Y", "3Y", "MAX"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
 export type MarketCandle = {
   t: number;
@@ -140,6 +140,7 @@ const RANGE_CFG: Record<
   "1M": { days: 31, interval: "1d" },
   "3M": { days: 92, interval: "1d" },
   "6M": { days: 183, interval: "1d" },
+  YTD: { days: 0, interval: "1d" },
   "1Y": { days: 366, interval: "1d" },
   "3Y": { days: 1096, interval: "1wk" },
   MAX: { days: 0, interval: "1mo" },
@@ -170,8 +171,13 @@ export const marketDetails = createServerFn({ method: "POST" })
       const cfg = RANGE_CFG[data.range];
       try {
         const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
+        const now = new Date();
         const period1 =
-          cfg.days > 0 ? new Date(Date.now() - cfg.days * 86400000) : new Date("1970-01-02");
+          data.range === "YTD"
+            ? new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+            : cfg.days > 0
+              ? new Date(now.getTime() - cfg.days * 86400000)
+              : new Date("1970-01-02");
         const chart = await yahooClient().chart(symbol, { period1, interval: cfg.interval });
         const closes = chart.quotes
           .filter((q) => q.close != null && q.close > 0)

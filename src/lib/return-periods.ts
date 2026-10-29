@@ -60,8 +60,18 @@ export function comparisonReturns(series: ValuePoint[], range: DateRange, bucket
   });
 }
 
-export type ReturnPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
-export const RETURN_PERIODS: ReturnPeriod[] = ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"];
+export type ReturnPeriod = "1W" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "3Y" | "5Y" | "ALL";
+export const RETURN_PERIODS: ReturnPeriod[] = [
+  "1W",
+  "1M",
+  "3M",
+  "6M",
+  "YTD",
+  "1Y",
+  "3Y",
+  "5Y",
+  "ALL",
+];
 const PERIOD_MONTHS: Partial<Record<ReturnPeriod, number>> = {
   "1M": 1,
   "3M": 3,
@@ -76,6 +86,7 @@ export const RETURN_BUCKETS: Record<ReturnPeriod, number> = {
   "1M": 10,
   "3M": 9,
   "6M": 12,
+  YTD: 12,
   "1Y": 12,
   "3Y": 12,
   "5Y": 10,
@@ -85,6 +96,10 @@ export const RETURN_BUCKETS: Record<ReturnPeriod, number> = {
 export function periodRange(period: ReturnPeriod, anchor: number, firstPoint?: number): DateRange {
   if (period === "ALL") return { start: firstPoint ?? anchor - 365 * DAY, end: anchor };
   if (period === "1W") return { start: anchor - 7 * DAY, end: anchor };
+  if (period === "YTD") {
+    const year = new Date(anchor - 1).getUTCFullYear();
+    return { start: Date.UTC(year, 0, 1), end: anchor };
+  }
   const from = new Date(anchor);
   from.setUTCMonth(from.getUTCMonth() - (PERIOD_MONTHS[period] ?? 12));
   return { start: from.getTime(), end: anchor };
