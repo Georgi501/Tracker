@@ -74,6 +74,7 @@ const COPY: Record<
     | "owned"
     | "empty"
     | "emptyHint"
+    | "addHolding"
     | "addFirst"
     | "unavailable"
     | "popular"
@@ -91,6 +92,7 @@ const COPY: Record<
     owned: "In portfolio",
     empty: "Your portfolio is empty",
     emptyHint: "Search any stock, ETF or crypto above to see its live price and add it.",
+    addHolding: "Add holding",
     addFirst: "Add first position",
     unavailable: "Quote unavailable",
     popular: "Popular",
@@ -106,6 +108,7 @@ const COPY: Record<
     owned: "В портфейла",
     empty: "Портфейлът ти е празен",
     emptyHint: "Потърси акция, ETF или крипто отгоре, за да видиш цената на живо и да я добавиш.",
+    addHolding: "Добави холдинг",
     addFirst: "Добави първа позиция",
     unavailable: "Няма котировка",
     popular: "Популярни",
@@ -122,6 +125,7 @@ const COPY: Record<
     empty: "Dein Portfolio ist leer",
     emptyHint:
       "Suche oben eine Aktie, einen ETF oder Krypto, um den Live-Kurs zu sehen und hinzuzufügen.",
+    addHolding: "Position hinzufügen",
     addFirst: "Erste Position hinzufügen",
     unavailable: "Kurs nicht verfügbar",
     popular: "Beliebt",
@@ -137,6 +141,7 @@ const COPY: Record<
     owned: "En cartera",
     empty: "Tu cartera está vacía",
     emptyHint: "Busca arriba una acción, ETF o cripto para ver su precio en vivo y añadirla.",
+    addHolding: "Añadir posición",
     addFirst: "Añadir primera posición",
     unavailable: "Cotización no disponible",
     popular: "Populares",
@@ -153,6 +158,7 @@ const COPY: Record<
     empty: "Il tuo portafoglio è vuoto",
     emptyHint:
       "Cerca sopra un'azione, un ETF o una cripto per vederne il prezzo live e aggiungerla.",
+    addHolding: "Aggiungi posizione",
     addFirst: "Aggiungi prima posizione",
     unavailable: "Quotazione non disponibile",
     popular: "Popolari",
@@ -338,6 +344,14 @@ function Holdings() {
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="font-display mr-auto text-2xl font-bold">{p.t("holdings")}</h1>
+          <button
+            type="button"
+            onClick={() => openAdd(null)}
+            className="bg-brand-gradient shadow-glow press flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus size={16} />
+            {c.addHolding}
+          </button>
           <div className="relative w-full sm:w-96">
             <Search
               size={15}
