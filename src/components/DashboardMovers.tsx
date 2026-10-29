@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { useWatchState } from "@/components/AssetExtras";
@@ -128,6 +128,14 @@ export function DashboardMovers() {
   const c = T[p.lang];
   const { list } = useWatchState();
   const [range, setRange] = useState<ChartRange>("1D");
+  const tickerDrag = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startScrollLeft: number;
+    dragging: boolean;
+  } | null>(null);
+  const suppressTickerClick = useRef(false);
   const symbols = (list.length ? list : POPULAR).slice(0, 12);
   const assets = symbols.map(assetOf);
   const fn = useServerFn(marketDetails);
@@ -255,6 +263,53 @@ export function DashboardMovers() {
       )}
       <div
         className={`-mx-1 px-1 pb-2 ${list.length ? "flex snap-x gap-3 overflow-x-auto" : "market-ticker"}`}
+        onPointerDown={(event) => {
+          if (list.length || event.pointerType === "mouse") return;
+          tickerDrag.current = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            startScrollLeft: event.currentTarget.scrollLeft,
+            dragging: false,
+          };
+        }}
+        onPointerMove={(event) => {
+          const drag = tickerDrag.current;
+          if (!drag || drag.pointerId !== event.pointerId) return;
+          const dx = event.clientX - drag.startX;
+          const dy = event.clientY - drag.startY;
+          if (!drag.dragging) {
+            if (Math.abs(dx) < 8 || Math.abs(dy) > Math.abs(dx)) return;
+            drag.dragging = true;
+            suppressTickerClick.current = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.currentTarget.classList.add("is-dragging");
+          }
+          event.currentTarget.scrollLeft = drag.startScrollLeft - dx * 2;
+        }}
+        onPointerUp={(event) => {
+          const drag = tickerDrag.current;
+          if (!drag || drag.pointerId !== event.pointerId) return;
+          if (drag.dragging) {
+            event.currentTarget.classList.remove("is-dragging");
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+          }
+          tickerDrag.current = null;
+        }}
+        onPointerCancel={(event) => {
+          if (tickerDrag.current?.pointerId !== event.pointerId) return;
+          event.currentTarget.classList.remove("is-dragging");
+          tickerDrag.current = null;
+          suppressTickerClick.current = false;
+        }}
+        onClickCapture={(event) => {
+          if (!suppressTickerClick.current) return;
+          event.preventDefault();
+          event.stopPropagation();
+          suppressTickerClick.current = false;
+        }}
       >
         {list.length ? (
           rows.map((r) => tickerCard(r))

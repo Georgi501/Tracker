@@ -493,6 +493,20 @@ main .card-interactive.dashboard-primary-card {
     padding-inline: .55rem;
     font-size: .8125rem;
   }
+  .market-ticker {
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-y;
+  }
+  .market-ticker::-webkit-scrollbar {
+    display: none;
+  }
+  .market-ticker.is-dragging {
+    user-select: none;
+  }
+  .market-ticker.is-dragging .market-ticker-track {
+    animation-play-state: paused;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .market-ticker {

@@ -153,6 +153,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  useEffect(() => {
+    const openTransactionDialog = () => setOpen(true);
+    window.addEventListener("folio-open-add-transaction", openTransactionDialog);
+    return () => window.removeEventListener("folio-open-add-transaction", openTransactionDialog);
+  }, []);
   const nav = [
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },

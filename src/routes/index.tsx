@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Info } from "lucide-react";
+import { ArrowRight, Clock3, Info, Lightbulb, Plus, Upload } from "lucide-react";
 import { CountUp } from "@/components/Motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -182,6 +182,93 @@ const HISTORY_STATUS: Record<Lang, { error: string; retry: string }> = {
   it: { error: "Impossibile caricare lo storico.", retry: "Riprova" },
 };
 
+const DASHBOARD_COPY: Record<
+  Lang,
+  {
+    quickActions: string;
+    addInvestment: string;
+    importCsv: string;
+    chooseIndex: string;
+    snapshot: string;
+    unavailableSnapshot: string;
+    largestPosition: (name: string, share: string) => string;
+    recentActivity: string;
+    viewAll: string;
+    noRecentActivity: string;
+    units: string;
+  }
+> = {
+  en: {
+    quickActions: "Quick actions",
+    addInvestment: "Add investment",
+    importCsv: "Import CSV",
+    chooseIndex: "Choose an index",
+    snapshot: "Portfolio snapshot",
+    unavailableSnapshot: "Portfolio values are not currently available.",
+    largestPosition: (name, share) =>
+      `${name} is your largest position at ${share} of the portfolio.`,
+    recentActivity: "Recent activity",
+    viewAll: "View all",
+    noRecentActivity: "No recent transactions.",
+    units: "units",
+  },
+  bg: {
+    quickActions: "Бързи действия",
+    addInvestment: "Добави инвестиция",
+    importCsv: "Импортирай CSV",
+    chooseIndex: "Избери индекс",
+    snapshot: "Портфолиото накратко",
+    unavailableSnapshot: "Стойностите на портфолиото не са налични в момента.",
+    largestPosition: (name, share) =>
+      `${name} е най-голямата ти позиция с дял ${share} от портфолиото.`,
+    recentActivity: "Последни трансакции",
+    viewAll: "Виж всички",
+    noRecentActivity: "Няма скорошни трансакции.",
+    units: "бр.",
+  },
+  de: {
+    quickActions: "Schnellzugriff",
+    addInvestment: "Investment hinzufügen",
+    importCsv: "CSV importieren",
+    chooseIndex: "Index auswählen",
+    snapshot: "Portfolio im Überblick",
+    unavailableSnapshot: "Portfoliowerte sind derzeit nicht verfügbar.",
+    largestPosition: (name, share) =>
+      `${name} ist deine größte Position mit ${share} des Portfolios.`,
+    recentActivity: "Letzte Aktivitäten",
+    viewAll: "Alle anzeigen",
+    noRecentActivity: "Keine aktuellen Transaktionen.",
+    units: "Einheiten",
+  },
+  es: {
+    quickActions: "Acciones rápidas",
+    addInvestment: "Añadir inversión",
+    importCsv: "Importar CSV",
+    chooseIndex: "Elegir un índice",
+    snapshot: "Resumen de cartera",
+    unavailableSnapshot: "El valor de la cartera no está disponible en este momento.",
+    largestPosition: (name, share) => `${name} es tu mayor posición con un ${share} de la cartera.`,
+    recentActivity: "Actividad reciente",
+    viewAll: "Ver todas",
+    noRecentActivity: "No hay operaciones recientes.",
+    units: "unidades",
+  },
+  it: {
+    quickActions: "Azioni rapide",
+    addInvestment: "Aggiungi investimento",
+    importCsv: "Importa CSV",
+    chooseIndex: "Scegli un indice",
+    snapshot: "Riepilogo del portafoglio",
+    unavailableSnapshot: "I valori del portafoglio non sono al momento disponibili.",
+    largestPosition: (name, share) =>
+      `${name} è la tua posizione principale con il ${share} del portafoglio.`,
+    recentActivity: "Attività recenti",
+    viewAll: "Vedi tutte",
+    noRecentActivity: "Nessuna operazione recente.",
+    units: "unità",
+  },
+};
+
 function Dashboard() {
   const p = usePortfolio();
   const [period, setPeriod] = useState<HistoryPeriod>("1Y");
@@ -268,6 +355,22 @@ function Dashboard() {
     p.holdings.length && Number.isFinite(total) ? portfolioIrr(p.transactions, total) : Number.NaN;
   const chg = series.length > 1 ? (series.at(-1)?.v ?? 0) - (series[0]?.v ?? 0) : Number.NaN;
   const locale = languageLocale(p.lang);
+  const dashboardCopy = DASHBOARD_COPY[p.lang];
+  const largestHolding = p.holdings
+    .filter((holding) => Number.isFinite(holding.value))
+    .reduce<(typeof p.holdings)[number] | null>(
+      (largest, holding) => (!largest || holding.value > largest.value ? holding : largest),
+      null,
+    );
+  const largestShare =
+    largestHolding && portfolioValue > 0
+      ? new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(
+          largestHolding.value / portfolioValue,
+        )
+      : null;
+  const recentTransactions = [...p.transactions]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 4);
   const fmtT = (t: number) =>
     new Date(t).toLocaleString(
       locale,
@@ -281,6 +384,58 @@ function Dashboard() {
       <div className="lg:col-span-3">
         <WelcomeHero />
       </div>
+      {p.user && p.holdings.length > 0 && (
+        <Card className="flex flex-col gap-4 border-primary/20 bg-primary/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Lightbulb size={19} aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {dashboardCopy.snapshot}
+              </p>
+              <p className="mt-1 text-sm font-medium leading-relaxed">
+                {largestHolding && largestShare
+                  ? dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
+                  : dashboardCopy.unavailableSnapshot}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
+            <p className="w-full text-xs font-semibold text-muted-foreground sm:hidden">
+              {dashboardCopy.quickActions}
+            </p>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("folio-open-add-transaction"))}
+              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <Plus size={16} aria-hidden />
+              {dashboardCopy.addInvestment}
+            </button>
+            <Link
+              to="/brokers"
+              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <Upload size={15} aria-hidden />
+              {dashboardCopy.importCsv}
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setChartMode("performance");
+                document
+                  .getElementById("dashboard-benchmark")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              {dashboardCopy.chooseIndex}
+              <ArrowRight size={15} aria-hidden />
+            </button>
+          </div>
+        </Card>
+      )}
       {p.user && p.holdings.length > 0 && (
         <>
           <Card className="dashboard-primary-card min-w-0 p-4 sm:p-5 lg:col-span-2">
@@ -548,7 +703,11 @@ function Dashboard() {
                     }
                   }}
                 >
-                  <SelectTrigger aria-label={c.compare} className="w-full text-foreground sm:w-52">
+                  <SelectTrigger
+                    id="dashboard-benchmark"
+                    aria-label={c.compare}
+                    className="w-full text-foreground sm:w-52"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -664,6 +823,67 @@ function Dashboard() {
               </li>
             ))}
           </ul>
+        </Card>
+      )}
+      {p.user && p.holdings.length > 0 && (
+        <Card className="min-w-0">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 font-display font-semibold">
+              <Clock3 size={16} className="text-muted-foreground" aria-hidden />
+              {dashboardCopy.recentActivity}
+            </h3>
+            <Link
+              to="/timeline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+            >
+              {dashboardCopy.viewAll}
+              <ArrowRight size={14} aria-hidden />
+            </Link>
+          </div>
+          {recentTransactions.length ? (
+            <ul className="divide-y divide-border">
+              {recentTransactions.map((transaction) => {
+                const asset = p.assets.find((item) => item.id === transaction.assetId);
+                const amount =
+                  transaction.kind === "dividend"
+                    ? transaction.price
+                    : transaction.quantity * transaction.price;
+                const date = new Date(`${transaction.date}T12:00:00`);
+                return (
+                  <li key={transaction.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">
+                        {asset?.name ?? p.t("asset")}
+                        {asset?.symbol ? (
+                          <span className="ml-1.5 font-normal text-muted-foreground">
+                            {asset.symbol}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {p.t(transaction.kind)}
+                        {transaction.kind !== "dividend" &&
+                          ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
+                        {" · "}
+                        {Number.isNaN(date.getTime())
+                          ? transaction.date
+                          : date.toLocaleDateString(locale, {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
+                      {p.money(amount, { sign: transaction.kind === "dividend" })}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="py-6 text-sm text-muted-foreground">{dashboardCopy.noRecentActivity}</p>
+          )}
         </Card>
       )}
     </div>
