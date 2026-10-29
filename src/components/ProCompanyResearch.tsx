@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BarChart3, Building2, ChartNoAxesCombined, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { marketCompanyResearch, marketStats } from "@/lib/market.functions";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
@@ -52,6 +53,8 @@ const COPY = {
     sell: "Sell",
     strongSell: "Strong sell",
     estimates: "Earnings & revenue estimates",
+    estimatesNote:
+      "Provider consensus averages are estimates, not company guidance or guaranteed results. Analyst counts may differ by metric.",
     revisions: "EPS estimate revisions · last 30 days",
     epsTrend: "Current vs. 30 days ago",
     upRevisions: "Raised",
@@ -61,6 +64,19 @@ const COPY = {
     estimatedEps: "Estimated EPS",
     surprisePercent: "Surprise",
     retrieved: "Data retrieved",
+    ratioNote:
+      "TTM covers the latest 12 reported months. Forward figures are estimates; valuation ratios vary with the share price.",
+    targetNote: "Analyst targets are consensus estimates, not guaranteed future prices.",
+    metricHelp: {
+      trailingPe: "Current share price divided by earnings per share from the latest 12 months.",
+      forwardPe:
+        "Current share price divided by forecast earnings per share; forecasts can change.",
+      pegRatio: "P/E divided by expected earnings growth. Inputs and conventions vary by provider.",
+      beta: "Historical sensitivity to broad market moves, not a forecast of future volatility.",
+      eps: "Earnings per share over the latest 12 reported months.",
+      forwardEps: "Analyst-estimated earnings per share for a future period.",
+      debtToEquity: "Reported debt relative to equity; compare within similar industries.",
+    },
     period: "Period",
     epsAverage: "EPS average",
     epsRange: "EPS low–high",
@@ -129,6 +145,8 @@ const COPY = {
     sell: "Продажба",
     strongSell: "Силна продажба",
     estimates: "Прогнози за печалбата и приходите",
+    estimatesNote:
+      "Средните стойности са консенсусни оценки, не прогноза на компанията или гарантиран резултат. Броят анализатори може да се различава по показател.",
     revisions: "Промени в прогнозите за EPS · последни 30 дни",
     epsTrend: "Сега спрямо преди 30 дни",
     upRevisions: "Повишени",
@@ -138,6 +156,21 @@ const COPY = {
     estimatedEps: "Прогнозен EPS",
     surprisePercent: "Изненада",
     retrieved: "Данните са изтеглени",
+    ratioNote:
+      "TTM обхваща последните 12 отчетени месеца. Прогнозните стойности са оценки; коефициентите се променят с цената на акцията.",
+    targetNote: "Целевите цени са консенсусни оценки на анализатори, не гарантирани бъдещи цени.",
+    metricHelp: {
+      trailingPe:
+        "Текущата цена на акцията, разделена на печалбата на акция за последните 12 месеца.",
+      forwardPe:
+        "Текущата цена на акцията, разделена на прогнозната печалба на акция; прогнозите се променят.",
+      pegRatio:
+        "P/E, разделено на очаквания ръст на печалбата. Методите на доставчиците може да се различават.",
+      beta: "Историческа чувствителност към движенията на пазара, не прогноза за бъдещата волатилност.",
+      eps: "Печалба на акция за последните 12 отчетени месеца.",
+      forwardEps: "Прогнозна печалба на акция за бъдещ период според анализаторите.",
+      debtToEquity: "Отчетен дълг спрямо собствения капитал; сравнявай сходни отрасли.",
+    },
     period: "Период",
     epsAverage: "Средна печалба на акция",
     epsRange: "Печалба на акция мин.–макс.",
@@ -207,6 +240,8 @@ const COPY = {
     sell: "Verkauf",
     strongSell: "Starker Verkauf",
     estimates: "Gewinn- und Umsatzschätzungen",
+    estimatesNote:
+      "Konsensdurchschnitte sind Schätzungen, keine Unternehmensprognosen oder garantierten Ergebnisse. Die Analystenzahl kann je Kennzahl variieren.",
     revisions: "EPS-Schätzungsänderungen · letzte 30 Tage",
     epsTrend: "Aktuell gegenüber vor 30 Tagen",
     upRevisions: "Angehoben",
@@ -216,6 +251,21 @@ const COPY = {
     estimatedEps: "Geschätzter EPS",
     surprisePercent: "Überraschung",
     retrieved: "Daten abgerufen",
+    ratioNote:
+      "TTM umfasst die letzten 12 gemeldeten Monate. Zukunftswerte sind Schätzungen; Bewertungskennzahlen ändern sich mit dem Aktienkurs.",
+    targetNote: "Analystenkursziele sind Konsensschätzungen, keine garantierten zukünftigen Kurse.",
+    metricHelp: {
+      trailingPe: "Aktueller Aktienkurs geteilt durch den Gewinn je Aktie der letzten 12 Monate.",
+      forwardPe:
+        "Aktueller Kurs geteilt durch den geschätzten künftigen Gewinn je Aktie; Schätzungen ändern sich.",
+      pegRatio:
+        "KGV geteilt durch das erwartete Gewinnwachstum. Anbieter können unterschiedliche Methoden nutzen.",
+      beta: "Historische Sensitivität gegenüber Marktbewegungen, keine Prognose künftiger Volatilität.",
+      eps: "Gewinn je Aktie für die letzten 12 gemeldeten Monate.",
+      forwardEps: "Analystenschätzung des Gewinns je Aktie für einen künftigen Zeitraum.",
+      debtToEquity:
+        "Gemeldete Schulden im Verhältnis zum Eigenkapital; mit ähnlichen Branchen vergleichen.",
+    },
     period: "Zeitraum",
     epsAverage: "EPS-Durchschnitt",
     epsRange: "EPS-Tief–Hoch",
@@ -285,6 +335,8 @@ const COPY = {
     sell: "Vender",
     strongSell: "Venta fuerte",
     estimates: "Estimaciones de beneficios e ingresos",
+    estimatesNote:
+      "Los promedios de consenso son estimaciones, no previsiones de la empresa ni resultados garantizados. El número de analistas puede variar según la métrica.",
     revisions: "Revisiones de estimaciones de BPA · últimos 30 días",
     epsTrend: "Actual frente a hace 30 días",
     upRevisions: "Al alza",
@@ -294,6 +346,23 @@ const COPY = {
     estimatedEps: "BPA estimado",
     surprisePercent: "Sorpresa",
     retrieved: "Datos obtenidos",
+    ratioNote:
+      "TTM abarca los últimos 12 meses publicados. Las cifras futuras son estimaciones; los múltiplos varían con el precio de la acción.",
+    targetNote:
+      "Los precios objetivo son estimaciones de consenso, no precios futuros garantizados.",
+    metricHelp: {
+      trailingPe:
+        "Precio actual de la acción dividido por el beneficio por acción de los últimos 12 meses.",
+      forwardPe:
+        "Precio actual dividido por el beneficio por acción previsto; las previsiones pueden cambiar.",
+      pegRatio:
+        "PER dividido por el crecimiento de beneficios esperado. Las metodologías pueden variar.",
+      beta: "Sensibilidad histórica a los movimientos del mercado; no predice la volatilidad futura.",
+      eps: "Beneficio por acción de los últimos 12 meses publicados.",
+      forwardEps: "Estimación de analistas del beneficio por acción para un período futuro.",
+      debtToEquity:
+        "Deuda publicada en relación con el capital propio; compárala dentro de sectores similares.",
+    },
     period: "Período",
     epsAverage: "BPA medio",
     epsRange: "BPA mínimo–máximo",
@@ -363,6 +432,8 @@ const COPY = {
     sell: "Vendere",
     strongSell: "Vendita forte",
     estimates: "Stime di utili e ricavi",
+    estimatesNote:
+      "Le medie di consenso sono stime, non previsioni aziendali né risultati garantiti. Il numero di analisti può variare in base alla metrica.",
     revisions: "Revisioni delle stime EPS · ultimi 30 giorni",
     epsTrend: "Attuale rispetto a 30 giorni fa",
     upRevisions: "Al rialzo",
@@ -372,6 +443,19 @@ const COPY = {
     estimatedEps: "EPS stimato",
     surprisePercent: "Sorpresa",
     retrieved: "Dati aggiornati",
+    ratioNote:
+      "TTM comprende gli ultimi 12 mesi riportati. I dati previsionali sono stime; i multipli variano con il prezzo dell'azione.",
+    targetNote: "I prezzi obiettivo sono stime di consenso, non prezzi futuri garantiti.",
+    metricHelp: {
+      trailingPe: "Prezzo attuale dell'azione diviso per l'utile per azione degli ultimi 12 mesi.",
+      forwardPe:
+        "Prezzo attuale diviso per l'utile per azione previsto; le stime possono cambiare.",
+      pegRatio: "P/E diviso per la crescita degli utili prevista. Le metodologie possono variare.",
+      beta: "Sensibilità storica ai movimenti del mercato, non una previsione della volatilità futura.",
+      eps: "Utile per azione degli ultimi 12 mesi riportati.",
+      forwardEps: "Stima degli analisti dell'utile per azione per un periodo futuro.",
+      debtToEquity: "Debito dichiarato rispetto al patrimonio netto; confrontare settori simili.",
+    },
     period: "Periodo",
     epsAverage: "EPS medio",
     epsRange: "EPS minimo–massimo",
@@ -397,7 +481,7 @@ const COPY = {
     source:
       "Fonte: Yahoo Finance. I dati possono essere ritardati o incompleti; non è consulenza finanziaria.",
   },
-} as const satisfies Record<Lang, Record<string, string>>;
+} as const satisfies Record<Lang, Record<string, unknown>>;
 
 export function ProCompanyResearch({ symbol, lang }: { symbol: string; lang: Lang }) {
   const c = COPY[lang];
@@ -483,17 +567,27 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
   )
     return <p className="py-6 text-sm text-muted-foreground">{c.unavailable}</p>;
 
-  const rows = (items: { label: string; value: string }[]) => (
+  const rows = (items: { label: string; value: string; help?: string }[]) => (
     <dl className="divide-y divide-border/70">
       {items.map((item) => (
         <div key={item.label} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-          <dt className="text-muted-foreground">{item.label}</dt>
+          <dt
+            className="text-muted-foreground"
+            title={item.help}
+            aria-label={item.help ? `${item.label}. ${item.help}` : undefined}
+          >
+            {item.label}
+          </dt>
           <dd className="text-right font-semibold tabular-nums">{item.value}</dd>
         </div>
       ))}
     </dl>
   );
-  const group = (title: string, icon: ReactNode, items: { label: string; value: string }[]) => (
+  const group = (
+    title: string,
+    icon: ReactNode,
+    items: { label: string; value: string; help?: string }[],
+  ) => (
     <section className="rounded-xl border border-border bg-background/70 p-4">
       <h4 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold">
         <span className="text-primary">{icon}</span>
@@ -538,20 +632,25 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
     group(c.valuation, <ChartNoAxesCombined size={16} />, [
       { label: c.marketCap, value: money(stats?.marketCap, true) },
       { label: c.enterpriseValue, value: money(stats?.enterpriseValue, true) },
-      { label: c.trailingPe, value: multiple(stats?.trailingPe) },
-      { label: c.forwardPe, value: multiple(stats?.forwardPe) },
+      {
+        label: c.trailingPe,
+        value: multiple(stats?.trailingPe),
+        help: c.metricHelp.trailingPe,
+      },
+      { label: c.forwardPe, value: multiple(stats?.forwardPe), help: c.metricHelp.forwardPe },
       { label: c.priceToSales, value: multiple(stats?.priceToSales) },
       { label: c.priceToBook, value: multiple(stats?.priceToBook) },
-      { label: c.pegRatio, value: ratio(stats?.pegRatio) },
-      { label: c.beta, value: ratio(stats?.beta) },
+      { label: c.pegRatio, value: ratio(stats?.pegRatio), help: c.metricHelp.pegRatio },
+      { label: c.beta, value: ratio(stats?.beta), help: c.metricHelp.beta },
     ]),
     group(c.profitability, <BarChart3 size={16} />, [
-      { label: c.eps, value: money(stats?.eps) },
-      { label: c.forwardEps, value: money(stats?.forwardEps) },
+      { label: c.eps, value: money(stats?.eps), help: c.metricHelp.eps },
+      { label: c.forwardEps, value: money(stats?.forwardEps), help: c.metricHelp.forwardEps },
       { label: c.roe, value: percent(stats?.returnOnEquity) },
       {
         label: c.debtToEquity,
         value: stats?.debtToEquity == null ? "—" : `${number(stats.debtToEquity)}%`,
+        help: c.metricHelp.debtToEquity,
       },
       { label: c.operatingMargin, value: percent(stats?.operatingMargins) },
       { label: c.profitMargin, value: percent(stats?.profitMargins) },
@@ -574,6 +673,8 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
     <div className="space-y-8">
       <section id="statistics" className="scroll-mt-24 space-y-3">
         <SectionHeading icon={<ChartNoAxesCombined size={18} />} title={c.statistics} />
+        <QuoteFreshness at={stats?.quoteAt} lang={lang} marketState={stats?.marketState} />
+        <p className="text-xs text-muted-foreground">{c.ratioNote}</p>
         <div className="grid gap-3 lg:grid-cols-2">{statGroups}</div>
       </section>
 
@@ -582,6 +683,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         <div className="grid gap-3 lg:grid-cols-2">
           <section className="rounded-xl border border-border bg-background/70 p-4">
             <h4 className="mb-3 font-display text-sm font-semibold">{c.target}</h4>
+            <p className="mb-3 text-xs text-muted-foreground">{c.targetNote}</p>
             {targetRangeValid ? (
               <>
                 <div className="flex items-end justify-between gap-3">
@@ -674,7 +776,8 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         </div>
 
         <section className="rounded-xl border border-border bg-background/70 p-4">
-          <h4 className="mb-3 font-display text-sm font-semibold">{c.estimates}</h4>
+          <h4 className="font-display text-sm font-semibold">{c.estimates}</h4>
+          <p className="mb-3 mt-1 text-xs text-muted-foreground">{c.estimatesNote}</p>
           {estimates.length ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-sm">

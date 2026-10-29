@@ -208,6 +208,8 @@ export const marketDetails = createServerFn({ method: "POST" })
   );
 
 export interface KeyStats {
+  quoteAt: string | null;
+  marketState: string | null;
   currentPrice: number | null;
   previousClose: number | null;
   open: number | null;
@@ -372,6 +374,11 @@ export const marketStats = createServerFn({ method: "POST" })
       const k = s?.defaultKeyStatistics;
       const d = s?.summaryDetail;
       return {
+        quoteAt:
+          q.regularMarketTime instanceof Date && !Number.isNaN(q.regularMarketTime.getTime())
+            ? q.regularMarketTime.toISOString()
+            : null,
+        marketState: typeof q.marketState === "string" ? q.marketState : null,
         currentPrice: n(q.regularMarketPrice),
         previousClose: n(q.regularMarketPreviousClose),
         open: n(q.regularMarketOpen),

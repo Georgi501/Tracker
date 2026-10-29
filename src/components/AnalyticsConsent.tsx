@@ -63,7 +63,6 @@ export function AnalyticsConsent() {
       console.error("Unable to read analytics preference", error);
     }
     if (stored === "accepted" || stored === "rejected") setChoice(stored);
-    else setOpen(true);
 
     const refresh = () => {
       let value: string | null = null;
@@ -95,7 +94,7 @@ export function AnalyticsConsent() {
     }
   };
 
-  if (!open && choice !== null) return null;
+  if (!open) return null;
   const c = COPY[p.lang];
   return (
     <aside

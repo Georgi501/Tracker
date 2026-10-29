@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { GENERIC_TEMPLATE, parseBrokerCsv, detectBrokerFormat } from "@/lib/csv-import";
+import {
+  GENERIC_TEMPLATE,
+  parseBrokerCsv,
+  detectBrokerFormat,
+  detectFeeColumns,
+} from "@/lib/csv-import";
 
 describe("CSV import", () => {
   it("parses the generic template", () => {
@@ -13,6 +18,19 @@ describe("CSV import", () => {
       date: "2024-01-15",
     });
     expect(r[1]!.assetType).toBe("crypto");
+  });
+  it("keeps valid rows when another transaction row is malformed", () => {
+    const csv =
+      "date,type,symbol,quantity,price,currency\n" +
+      "2024-01-15,buy,AAPL,2,100,USD\n" +
+      "not-a-date,buy,MSFT,1,200,USD\n" +
+      "2024-02-01,sell,AAPL,1,110,USD\n";
+    expect(parseBrokerCsv("generic", csv).map((row) => row.symbol)).toEqual(["AAPL", "AAPL"]);
+  });
+  it("reports fee columns without implying that fee values were imported", () => {
+    const csv = "date,type,symbol,quantity,price,currency,commission\n";
+    expect(detectFeeColumns("generic", csv)).toEqual(["commission"]);
+    expect(detectFeeColumns("generic", "date,type,symbol,price\n")).toEqual([]);
   });
   it("parses Trading 212 buys and dividends", () => {
     const csv =

@@ -13,10 +13,12 @@ import {
 } from "recharts";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { KeyStats } from "@/components/KeyStats";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import {
   CHART_RANGES,
   marketDetails,
   marketExtended,
+  marketStats,
   marketQuote,
   type ChartRange,
   type MarketCandle,
@@ -28,9 +30,7 @@ const L = {
   en: {
     noChart: "Chart data is not available.",
     noQuote: "Live price unavailable",
-    asOf: "As of",
     period: "in period",
-    atClose: "At close:",
     pre: "Pre-market",
     post: "After hours",
     date: "Date",
@@ -42,9 +42,7 @@ const L = {
   bg: {
     noChart: "Няма данни за графиката.",
     noQuote: "Няма текуща цена",
-    asOf: "Към",
     period: "за периода",
-    atClose: "При затваряне:",
     pre: "Преди отваряне",
     post: "След затваряне",
     date: "Дата",
@@ -71,6 +69,7 @@ export function QuoteHero({
   const quoteFn = useServerFn(marketQuote);
   const detailsFn = useServerFn(marketDetails);
   const extFn = useServerFn(marketExtended);
+  const statsFn = useServerFn(marketStats);
   const [range, setRange] = useState<ChartRange>("1D");
   const q = useQuery({
     queryKey: ["market-quote", symbol, type],
@@ -90,6 +89,12 @@ export function QuoteHero({
     enabled: usListing,
     staleTime: 60_000,
     refetchInterval: 60_000,
+  });
+  const stats = useQuery({
+    queryKey: ["market-stats", symbol],
+    queryFn: () => statsFn({ data: { symbol } }),
+    enabled: type !== "crypto",
+    staleTime: 300_000,
   });
   const ext = e.data?.ext ?? null;
   const quote = q.data?.quote ?? null;
@@ -161,14 +166,12 @@ export function QuoteHero({
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {ext ? c.atClose : c.asOf}{" "}
-                {new Date(quote.at).toLocaleString(loc, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}{" "}
-                · {quote.source}
-              </p>
+              <QuoteFreshness
+                at={quote.at}
+                lang={lang}
+                marketState={stats.data?.marketState}
+                crypto={type === "crypto"}
+              />
             </div>
             {ext && (
               <div>

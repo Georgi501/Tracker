@@ -91,100 +91,117 @@ const day = (s: string) => {
 };
 const CRYPTO = new Set([...CRYPTO_SYMBOLS, "MATIC"]);
 const guessType = (sym: string): AssetType => (CRYPTO.has(sym.toUpperCase()) ? "crypto" : "stock");
+const parseSafely = (parse: () => ImportedTx[]) => {
+  try {
+    return parse();
+  } catch {
+    return [];
+  }
+};
 
 function generic(text: string): ImportedTx[] {
   return table(text).flatMap((g) => {
-    const kind = g("type").toLowerCase() as TxKind;
-    if (!["buy", "sell", "dividend"].includes(kind)) return [];
-    const symbol = g("symbol").toUpperCase();
-    const at = (g("asset_type") || guessType(symbol)) as AssetType;
-    return [
-      {
-        symbol,
-        name: g("name") || symbol,
-        assetType: at,
-        kind,
-        quantity: kind === "dividend" ? 1 : num(g("quantity")),
-        price: toUsd(
-          num(g("price")) * (kind === "dividend" ? Math.max(num(g("quantity")), 1) : 1),
-          g("currency"),
-        ),
-        date: day(g("date")),
-        currency: currency(g("currency")),
-      },
-    ];
+    return parseSafely(() => {
+      const kind = g("type").toLowerCase() as TxKind;
+      if (!["buy", "sell", "dividend"].includes(kind)) return [];
+      const symbol = g("symbol").toUpperCase();
+      const at = (g("asset_type") || guessType(symbol)) as AssetType;
+      return [
+        {
+          symbol,
+          name: g("name") || symbol,
+          assetType: at,
+          kind,
+          quantity: kind === "dividend" ? 1 : num(g("quantity")),
+          price: toUsd(
+            num(g("price")) * (kind === "dividend" ? Math.max(num(g("quantity")), 1) : 1),
+            g("currency"),
+          ),
+          date: day(g("date")),
+          currency: currency(g("currency")),
+        },
+      ];
+    });
   });
 }
 
 function trading212(text: string): ImportedTx[] {
   return table(text).flatMap((g) => {
-    const a = g("action").toLowerCase();
-    const symbol = g("ticker").toUpperCase();
-    if (!symbol) return [];
-    const base = {
-      symbol,
-      name: g("name") || symbol,
-      assetType: "stock" as AssetType,
-      date: day(g("time")),
-    };
-    if (a.includes("dividend")) {
-      const total = num(g("total")) || num(g("no. of shares")) * num(g("price / share"));
+    return parseSafely(() => {
+      const a = g("action").toLowerCase();
+      const symbol = g("ticker").toUpperCase();
+      if (!symbol) return [];
+      const base = {
+        symbol,
+        name: g("name") || symbol,
+        assetType: "stock" as AssetType,
+        date: day(g("time")),
+      };
+      if (a.includes("dividend")) {
+        const total = num(g("total")) || num(g("no. of shares")) * num(g("price / share"));
+        return [
+          {
+            ...base,
+            kind: "dividend" as TxKind,
+            quantity: 1,
+            currency: currency(g("currency (total)") || g("currency (price / share)")),
+            price: toUsd(total),
+          },
+        ];
+      }
+      const kind: TxKind | null = a.includes("buy") ? "buy" : a.includes("sell") ? "sell" : null;
+      if (!kind) return [];
       return [
         {
           ...base,
-          kind: "dividend" as TxKind,
-          quantity: 1,
-          currency: currency(g("currency (total)") || g("currency (price / share)")),
-          price: toUsd(total),
+          kind,
+          currency: currency(g("currency (price / share)")),
+          quantity: num(g("no. of shares")),
+          price: toUsd(num(g("price / share")), g("currency (price / share)")),
         },
       ];
-    }
-    const kind: TxKind | null = a.includes("buy") ? "buy" : a.includes("sell") ? "sell" : null;
-    if (!kind) return [];
-    return [
-      {
-        ...base,
-        kind,
-        currency: currency(g("currency (price / share)")),
-        quantity: num(g("no. of shares")),
-        price: toUsd(num(g("price / share")), g("currency (price / share)")),
-      },
-    ];
+    });
   });
 }
 
 function revolut(text: string): ImportedTx[] {
   return table(text).flatMap((g) => {
-    const t = g("type").toUpperCase();
-    const symbol = g("ticker").toUpperCase();
-    if (!symbol) return [];
-    const cur = g("currency") || g("price per share").match(/[A-Z]{3}/)?.[0];
-    const base = {
-      symbol,
-      name: symbol,
-      assetType: guessType(symbol),
-      currency: currency(cur || "USD"),
-      date: day(g("date")),
-    };
-    if (t.includes("DIVIDEND"))
+    return parseSafely(() => {
+      const t = g("type").toUpperCase();
+      const symbol = g("ticker").toUpperCase();
+      if (!symbol) return [];
+      const cur = g("currency") || g("price per share").match(/[A-Z]{3}/)?.[0];
+      const base = {
+        symbol,
+        name: symbol,
+        assetType: guessType(symbol),
+        currency: currency(cur || "USD"),
+        date: day(g("date")),
+      };
+      if (t.includes("DIVIDEND"))
+        return [
+          {
+            ...base,
+            kind: "dividend" as TxKind,
+            quantity: 1,
+            price: toUsd(num(g("total amount")), cur),
+          },
+        ];
+      const kind: TxKind | null = t.startsWith("BUY")
+        ? "buy"
+        : t.startsWith("SELL")
+          ? "sell"
+          : null;
+      if (!kind) return [];
       return [
         {
           ...base,
-          kind: "dividend" as TxKind,
-          quantity: 1,
-          price: toUsd(num(g("total amount")), cur),
+          kind,
+          quantity: Math.abs(num(g("quantity"))),
+          price: toUsd(num(g("price per share")), cur),
         },
       ];
-    const kind: TxKind | null = t.startsWith("BUY") ? "buy" : t.startsWith("SELL") ? "sell" : null;
-    if (!kind) return [];
-    return [
-      {
-        ...base,
-        kind,
-        quantity: Math.abs(num(g("quantity"))),
-        price: toUsd(num(g("price per share")), cur),
-      },
-    ];
+    });
   });
 }
 
@@ -197,38 +214,46 @@ function ibkr(text: string): ImportedTx[] {
     if (r[0] === "Trades" && r[1] === "Header") tradeHead = r.map((x) => x.toLowerCase());
     else if (r[0] === "Dividends" && r[1] === "Header") divHead = r.map((x) => x.toLowerCase());
     else if (r[0] === "Trades" && r[1] === "Data" && tradeHead.length) {
-      const g = (k: string) => r[tradeHead.indexOf(k)] ?? "";
-      if (g("datadiscriminator") && g("datadiscriminator") !== "Order") continue;
-      const qty = num(g("quantity"));
-      if (!qty) continue;
-      const cat = g("asset category").toLowerCase();
-      const symbol = g("symbol").toUpperCase();
-      out.push({
-        symbol,
-        name: symbol,
-        assetType: cat.includes("crypto") ? "crypto" : "stock",
-        kind: qty > 0 ? "buy" : "sell",
-        quantity: Math.abs(qty),
-        currency: currency(g("currency")),
-        price: toUsd(num(g("t. price"))),
-        date: day(g("date/time")),
-      });
+      try {
+        const g = (k: string) => r[tradeHead.indexOf(k)] ?? "";
+        if (g("datadiscriminator") && g("datadiscriminator") !== "Order") continue;
+        const qty = num(g("quantity"));
+        if (!qty) continue;
+        const cat = g("asset category").toLowerCase();
+        const symbol = g("symbol").toUpperCase();
+        out.push({
+          symbol,
+          name: symbol,
+          assetType: cat.includes("crypto") ? "crypto" : "stock",
+          kind: qty > 0 ? "buy" : "sell",
+          quantity: Math.abs(qty),
+          currency: currency(g("currency")),
+          price: toUsd(num(g("t. price"))),
+          date: day(g("date/time")),
+        });
+      } catch {
+        continue;
+      }
     } else if (r[0] === "Dividends" && r[1] === "Data" && divHead.length) {
-      const g = (k: string) => r[divHead.indexOf(k)] ?? "";
-      if (g("currency").toLowerCase().startsWith("total")) continue;
-      const symbol = (g("description").match(/^([A-Z.]+)\s*\(/)?.[1] ?? "").toUpperCase();
-      const amt = num(g("amount"));
-      if (!symbol || amt <= 0) continue;
-      out.push({
-        symbol,
-        name: symbol,
-        assetType: "stock",
-        kind: "dividend",
-        quantity: 1,
-        currency: currency(g("currency")),
-        price: toUsd(amt),
-        date: day(g("date")),
-      });
+      try {
+        const g = (k: string) => r[divHead.indexOf(k)] ?? "";
+        if (g("currency").toLowerCase().startsWith("total")) continue;
+        const symbol = (g("description").match(/^([A-Z.]+)\s*\(/)?.[1] ?? "").toUpperCase();
+        const amt = num(g("amount"));
+        if (!symbol || amt <= 0) continue;
+        out.push({
+          symbol,
+          name: symbol,
+          assetType: "stock",
+          kind: "dividend",
+          quantity: 1,
+          currency: currency(g("currency")),
+          price: toUsd(amt),
+          date: day(g("date")),
+        });
+      } catch {
+        continue;
+      }
     }
   }
   return out;
@@ -237,6 +262,21 @@ function ibkr(text: string): ImportedTx[] {
 export function parseBrokerCsv(format: BrokerFormat, text: string): ImportedTx[] {
   const fn = { generic, trading212, ibkr, revolut }[format];
   return fn(text.replace(/^\uFEFF/, "")).filter((t) => t.symbol && t.quantity > 0 && t.price > 0);
+}
+
+export function detectFeeColumns(format: BrokerFormat, text: string): string[] {
+  const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));
+  const headers =
+    format === "ibkr"
+      ? rows.filter((row) => row[1] === "Header").flatMap((row) => row.slice(2))
+      : (rows[0] ?? []);
+  return [
+    ...new Map(
+      headers
+        .filter((header) => /fee|commission|stamp duty|levy|charge/i.test(header))
+        .map((header) => [header.toLowerCase(), header]),
+    ).values(),
+  ];
 }
 
 export const brokerLimit = (isPro: boolean) => (isPro ? 5 : 1);

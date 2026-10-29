@@ -25,6 +25,7 @@ type Copy = {
   na: string;
   loading: string;
   explain: (g: string, n: string) => string;
+  sliderHelp: Record<"growth" | "discount" | "terminal", string>;
   disclaimer: string;
 };
 export const dcfCopy: Record<Lang, Copy> = {
@@ -45,6 +46,12 @@ export const dcfCopy: Record<Lang, Copy> = {
     loading: "Loading real financials…",
     explain: (g, n) =>
       `Discounted cash flow model: ${n}'s free cash flow grows ${g} a year for 5 years, then at the terminal rate.`,
+    sliderHelp: {
+      growth: "Your assumed annual free-cash-flow growth for the next five years.",
+      discount:
+        "The return used to discount future cash flows to today's value; a higher rate lowers estimated value.",
+      terminal: "Assumed annual growth after year five; keep it below the discount rate.",
+    },
     disclaimer: "Estimate based on your assumptions, not investment advice.",
   },
   bg: {
@@ -64,6 +71,13 @@ export const dcfCopy: Record<Lang, Copy> = {
     loading: "Зареждане на реални финансови данни…",
     explain: (g, n) =>
       `Модел на дисконтираните парични потоци: свободният паричен поток на ${n} расте с ${g} годишно за 5 години, след това с терминалния темп.`,
+    sliderHelp: {
+      growth: "Предполагаемият годишен ръст на свободния паричен поток през следващите пет години.",
+      discount:
+        "Процентът, с който бъдещите потоци се преизчисляват към днешна стойност; по-висок процент намалява оценката.",
+      terminal:
+        "Предполагаемият годишен ръст след петата година; трябва да е под дисконтовия процент.",
+    },
     disclaimer: "Оценка по твоите допускания, не е инвестиционен съвет.",
   },
   de: {
@@ -83,6 +97,13 @@ export const dcfCopy: Record<Lang, Copy> = {
     loading: "Lade echte Finanzdaten…",
     explain: (g, n) =>
       `DCF-Modell: Der Free Cashflow von ${n} wächst 5 Jahre lang um ${g} pro Jahr, danach mit der Endrate.`,
+    sliderHelp: {
+      growth: "Angenommenes jährliches Free-Cashflow-Wachstum in den nächsten fünf Jahren.",
+      discount:
+        "Satz zur Abzinsung künftiger Cashflows auf den heutigen Wert; ein höherer Satz senkt den Schätzwert.",
+      terminal:
+        "Angenommenes jährliches Wachstum nach Jahr fünf; es muss unter dem Diskontsatz liegen.",
+    },
     disclaimer: "Schätzung nach deinen Annahmen, keine Anlageberatung.",
   },
   es: {
@@ -102,6 +123,13 @@ export const dcfCopy: Record<Lang, Copy> = {
     loading: "Cargando datos financieros reales…",
     explain: (g, n) =>
       `Modelo DCF: el flujo de caja libre de ${n} crece un ${g} anual durante 5 años y luego a la tasa terminal.`,
+    sliderHelp: {
+      growth: "Crecimiento anual supuesto del flujo de caja libre durante los próximos cinco años.",
+      discount:
+        "Tasa para descontar los flujos futuros a valor actual; una tasa mayor reduce el valor estimado.",
+      terminal:
+        "Crecimiento anual supuesto después del quinto año; debe ser inferior a la tasa de descuento.",
+    },
     disclaimer: "Estimación según tus supuestos, no es asesoramiento.",
   },
   it: {
@@ -121,6 +149,13 @@ export const dcfCopy: Record<Lang, Copy> = {
     loading: "Caricamento dati finanziari reali…",
     explain: (g, n) =>
       `Modello DCF: il free cash flow di ${n} cresce del ${g} annuo per 5 anni, poi al tasso terminale.`,
+    sliderHelp: {
+      growth: "Crescita annua ipotizzata del free cash flow nei prossimi cinque anni.",
+      discount:
+        "Tasso per attualizzare i flussi futuri al valore odierno; un tasso maggiore riduce il valore stimato.",
+      terminal:
+        "Crescita annua ipotizzata dopo il quinto anno; deve restare sotto il tasso di sconto.",
+    },
     disclaimer: "Stima basata sulle tue ipotesi, non è consulenza.",
   },
 };
@@ -271,7 +306,7 @@ export function DcfCalculator() {
           ).map(([k, min, mx]) => (
             <label key={k} className="grid gap-1 text-sm">
               <span className="flex justify-between">
-                <span>{c[k]}</span>
+                <span title={c.sliderHelp[k]}>{c[k]}</span>
                 <span className="font-semibold">{pctFmt(a[k])}</span>
               </span>
               <input
@@ -283,6 +318,9 @@ export function DcfCalculator() {
                 className="h-6 accent-primary"
                 onChange={(e) => setCustom({ ...a, [k]: Number(e.target.value) })}
               />
+              <span className="text-xs leading-relaxed text-muted-foreground">
+                {c.sliderHelp[k]}
+              </span>
             </label>
           ))}
           <p className="text-sm text-muted-foreground">{c.explain(pctFmt(a.growth), d.name)}</p>
