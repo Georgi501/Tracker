@@ -441,14 +441,24 @@ export function AppShell({ children }: { children: ReactNode }) {
                 legalCopy(p.lang).footer.emailSoon
               )}
             </p>
-            <button
-              type="button"
-              onClick={() => setFeedbackOpen(true)}
-              className="mt-3 inline-flex items-center gap-2 text-sm"
-            >
-              <MessageSquare size={16} />
-              {feedbackCopy[p.lang].title}
-            </button>
+            {SUPPORT_EMAIL ? (
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("CapiSpot feedback")}`}
+                className="mt-3 inline-flex items-center gap-2 text-sm"
+              >
+                <MessageSquare size={16} />
+                {feedbackCopy[p.lang].title}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFeedbackOpen(true)}
+                className="mt-3 inline-flex items-center gap-2 text-sm"
+              >
+                <MessageSquare size={16} />
+                {feedbackCopy[p.lang].title}
+              </button>
+            )}
           </div>
         </div>
         <div className="footer-bottom">

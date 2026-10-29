@@ -78,7 +78,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Real sources, visible limits",
-        body: "Quotes come from Yahoo Finance and CoinGecko. Provider delays, gaps and unavailable data are disclosed rather than filled with invented prices.",
+        body: "Quotes come from Yahoo Finance. Provider delays, gaps and unavailable data are disclosed rather than filled with invented prices.",
       },
       {
         title: "Not investment advice",
@@ -120,7 +120,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Реални източници и видими ограничения",
-        body: "Котировките идват от Yahoo Finance и CoinGecko. Забавянията, липсващите стойности и недостъпните данни се показват, без измислени цени.",
+        body: "Котировките идват от Yahoo Finance. Забавянията, липсващите стойности и недостъпните данни се показват, без измислени цени.",
       },
       {
         title: "Не е инвестиционен съвет",
@@ -162,7 +162,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Echte Quellen, sichtbare Grenzen",
-        body: "Kurse stammen von Yahoo Finance und CoinGecko. Verzögerungen und Datenlücken werden nicht durch erfundene Preise ersetzt.",
+        body: "Kurse stammen von Yahoo Finance. Verzögerungen und Datenlücken werden nicht durch erfundene Preise ersetzt.",
       },
       {
         title: "Keine Anlageberatung",
@@ -204,7 +204,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Fuentes reales, límites visibles",
-        body: "Las cotizaciones proceden de Yahoo Finance y CoinGecko. No se rellenan retrasos ni datos ausentes con precios inventados.",
+        body: "Las cotizaciones proceden de Yahoo Finance. No se rellenan retrasos ni datos ausentes con precios inventados.",
       },
       {
         title: "No es asesoramiento financiero",
@@ -246,7 +246,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Fonti reali, limiti visibili",
-        body: "Le quotazioni provengono da Yahoo Finance e CoinGecko. Ritardi e dati mancanti non vengono sostituiti da prezzi inventati.",
+        body: "Le quotazioni provengono da Yahoo Finance. Ritardi e dati mancanti non vengono sostituiti da prezzi inventati.",
       },
       {
         title: "Non è consulenza finanziaria",

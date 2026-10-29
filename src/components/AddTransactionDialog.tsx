@@ -245,6 +245,7 @@ export function AddTransactionDialog({
             <input
               className={input}
               autoFocus
+              spellCheck={false}
               placeholder={`${p.t("assetName")} / ${p.t("ticker")}`}
               value={query}
               onChange={(e) => {

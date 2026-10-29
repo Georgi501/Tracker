@@ -19,6 +19,7 @@ import {
   marketExtended,
   marketQuote,
   type ChartRange,
+  type MarketCandle,
 } from "@/lib/market.functions";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
@@ -32,6 +33,11 @@ const L = {
     atClose: "At close:",
     pre: "Pre-market",
     post: "After hours",
+    date: "Date",
+    close: "Close",
+    open: "Open",
+    high: "High",
+    low: "Low",
   },
   bg: {
     noChart: "Няма данни за графиката.",
@@ -41,6 +47,11 @@ const L = {
     atClose: "При затваряне:",
     pre: "Преди отваряне",
     post: "След затваряне",
+    date: "Дата",
+    close: "Затваряне",
+    open: "Отваряне",
+    high: "Максимум",
+    low: "Минимум",
   },
 };
 
@@ -205,9 +216,9 @@ export function QuoteHero({
           )}
         </div>
         {ch.isFetching && !ch.data ? (
-          <div className="h-72 animate-pulse rounded-md bg-muted" />
+          <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
         ) : closes.length > 1 ? (
-          <div className="h-72 w-full">
+          <div className="h-48 w-full sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={closes} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
                 <defs>
@@ -245,19 +256,41 @@ export function QuoteHero({
                   />
                 )}
                 <Tooltip
-                  labelFormatter={(t) =>
-                    new Date(Number(t)).toLocaleString(loc, {
-                      dateStyle: "medium",
-                      timeStyle: intraday ? "short" : undefined,
-                    })
-                  }
-                  formatter={(v) => [money(Number(v)), symbol]}
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
+                  content={(props) => {
+                    const point = props.payload?.[0]?.payload as MarketCandle | undefined;
+                    if (!props.active || !point) return null;
+                    const rows: [string, number | null][] = [
+                      [c.close, point.c],
+                      [c.open, point.o],
+                      [c.high, point.h],
+                      [c.low, point.l],
+                    ];
+                    return (
+                      <div
+                        className="rounded-lg border border-border bg-popover p-3 text-xs shadow-md"
+                        style={{ fontSize: 12 }}
+                      >
+                        <p className="mb-2 font-semibold">
+                          {c.date}:{" "}
+                          {new Date(point.t).toLocaleString(loc, {
+                            dateStyle: "medium",
+                            timeStyle: intraday ? "short" : undefined,
+                          })}
+                        </p>
+                        <dl className="space-y-1">
+                          {rows.map(([label, value]) => (
+                            <div key={label} className="flex justify-between gap-6">
+                              <dt className="text-muted-foreground">{label}</dt>
+                              <dd className="font-medium tabular-nums">
+                                {value == null ? "—" : money(value)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    );
                   }}
+                  cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
                 />
                 <Area
                   type="monotone"

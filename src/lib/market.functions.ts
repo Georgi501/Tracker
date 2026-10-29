@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "./market-search";
+import { dedupeMarketNews } from "./market-news";
 
 export interface MarketNews {
   id: string;
@@ -41,17 +42,19 @@ export const searchMarket = createServerFn({ method: "POST" })
             type: a.quoteType === "ETF" ? "etf" : "stock",
           });
         }
-        const news: MarketNews[] = (result.news ?? [])
-          .filter((n) => n.title && /^https:\/\//.test(n.link))
-          .map((n) => ({
-            id: n.uuid,
-            title: n.title,
-            publisher: n.publisher ?? "",
-            link: n.link,
-            at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
-            tickers: (n.relatedTickers ?? []).slice(0, 4),
-            image: thumb(n as Thumb),
-          }));
+        const news = dedupeMarketNews(
+          (result.news ?? [])
+            .filter((n) => n.title && /^https:\/\//.test(n.link))
+            .map((n) => ({
+              id: n.uuid,
+              title: n.title,
+              publisher: n.publisher ?? "",
+              link: n.link,
+              at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
+              tickers: (n.relatedTickers ?? []).slice(0, 4),
+              image: thumb(n as Thumb),
+            })),
+        );
         return { assets: [...assets.values()].slice(0, 20), news, unavailable: false };
       } catch {
         return { assets: fallback, news: [], unavailable: true };
@@ -121,6 +124,13 @@ export const getExchangeRate = createServerFn({ method: "GET" }).handler(async (
 
 export const CHART_RANGES = ["1D", "1W", "1M", "3M", "6M", "1Y", "3Y", "MAX"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
+export type MarketCandle = {
+  t: number;
+  c: number;
+  o: number | null;
+  h: number | null;
+  l: number | null;
+};
 const RANGE_CFG: Record<
   ChartRange,
   { days: number; interval: "5m" | "30m" | "1d" | "1wk" | "1mo" }
@@ -150,42 +160,28 @@ export const marketDetails = createServerFn({ method: "POST" })
     async ({
       data,
     }): Promise<{
-      closes: { t: number; c: number }[];
+      closes: MarketCandle[];
       low: number | null;
       high: number | null;
       currency: string | null;
     }> => {
-      const { yahooClient, CRYPTO_IDS } = await import("./prices.server");
+      const { yahooClient } = await import("./prices.server");
       const empty = { closes: [], low: null, high: null, currency: null };
       const cfg = RANGE_CFG[data.range];
       try {
-        // CoinGecko free API covers up to 365 days; longer crypto ranges use Yahoo's USD pair for the whole chart.
-        if (data.type === "crypto" && cfg.days > 0 && cfg.days <= 366) {
-          const id = CRYPTO_IDS[data.symbol.toUpperCase()];
-          if (!id) return empty;
-          const days = Math.min(cfg.days, 365);
-          const r = await fetch(
-            `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}${days > 90 ? "&interval=daily" : ""}`,
-            { signal: AbortSignal.timeout(10000) },
-          );
-          if (!r.ok) return empty;
-          const json = (await r.json()) as { prices?: [number, number][] };
-          const closes = (json.prices ?? []).filter(([, c]) => c > 0).map(([t, c]) => ({ t, c }));
-          const vals = closes.map((x) => x.c);
-          return {
-            closes,
-            low: vals.length ? Math.min(...vals) : null,
-            high: vals.length ? Math.max(...vals) : null,
-            currency: "USD",
-          };
-        }
         const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
         const period1 =
           cfg.days > 0 ? new Date(Date.now() - cfg.days * 86400000) : new Date("1970-01-02");
         const chart = await yahooClient().chart(symbol, { period1, interval: cfg.interval });
         const closes = chart.quotes
           .filter((q) => q.close != null && q.close > 0)
-          .map((q) => ({ t: q.date.getTime(), c: q.close as number }));
+          .map((q) => ({
+            t: q.date.getTime(),
+            c: q.close as number,
+            o: q.open,
+            h: q.high,
+            l: q.low,
+          }));
         const m = chart.meta as {
           fiftyTwoWeekLow?: number;
           fiftyTwoWeekHigh?: number;
@@ -461,17 +457,19 @@ export const marketOverview = createServerFn({ method: "POST" })
       yf.search(symbol, { newsCount: 8, quotesCount: 0 }).catch(() => null),
     ]);
     const a = s?.assetProfile;
-    const news: MarketNews[] = (r?.news ?? [])
-      .filter((n) => n.title && /^https:\/\//.test(n.link))
-      .map((n) => ({
-        id: n.uuid,
-        title: n.title,
-        publisher: n.publisher ?? "",
-        link: n.link,
-        at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
-        tickers: (n.relatedTickers ?? []).slice(0, 4),
-        image: thumb(n as Thumb),
-      }));
+    const news = dedupeMarketNews(
+      (r?.news ?? [])
+        .filter((n) => n.title && /^https:\/\//.test(n.link))
+        .map((n) => ({
+          id: n.uuid,
+          title: n.title,
+          publisher: n.publisher ?? "",
+          link: n.link,
+          at: n.providerPublishTime ? new Date(n.providerPublishTime).toISOString() : null,
+          tickers: (n.relatedTickers ?? []).slice(0, 4),
+          image: thumb(n as Thumb),
+        })),
+    );
     return {
       name: s?.price?.longName ?? s?.price?.shortName ?? null,
       description: a?.longBusinessSummary ?? null,

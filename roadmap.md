@@ -2,7 +2,7 @@
 - [x] Add account-linked feedback form and verify submission
 - [x] Show live asset suggestions while typing, including Uber
 - [x] Accounts (email, Google, Apple), per-user saved data
-- [x] Replace Finnhub with Yahoo Finance stocks/ETFs and CoinGecko crypto; refresh actual quotes
+- [x] Replace Finnhub with Yahoo Finance for stocks, ETFs and crypto; refresh actual quotes
 - [x] Brokers + CSV import (generic, Trading 212, IBKR, Revolut); Free 1 / Pro 4
 - [x] Pricing page Free vs Pro (€3.99/mo, €39.99/yr)
 - [x] Return charts by period + breakdown by asset, currency, asset class
