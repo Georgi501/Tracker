@@ -300,6 +300,15 @@ function Pricing() {
             </div>
           ))}
         </Card>
+        <div className="mt-4 text-center">
+          <Link
+            to="/asset/$symbol"
+            params={{ symbol: "ORCL" }}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            {planCopy[p.lang].researchDemo}
+          </Link>
+        </div>
       </section>
       <section className="mt-14">
         <div className="text-center">

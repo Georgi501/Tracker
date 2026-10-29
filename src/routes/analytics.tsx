@@ -333,6 +333,7 @@ function Analytics() {
         [c.availableQuotes, pricedHoldings.length],
         [c.missingQuotes, missingQuoteCount],
         [c.latestQuote, latestQuote],
+        [c.historyScopeLabel, c.historyScope],
         [
           c.historyStatus,
           !historyQuery.data
@@ -620,6 +621,7 @@ function Analytics() {
           </div>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">{c.currencyNote}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{c.historyScope}</p>
         {p.holdings.some((holding) => !holding.asset.quoteAt) && (
           <p className="mt-1 text-xs text-muted-foreground">{c.quoteTimestampMissing}</p>
         )}

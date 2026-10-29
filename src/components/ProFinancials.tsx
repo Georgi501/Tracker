@@ -21,6 +21,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Statement period",
     rangeLabel: "History range",
+    history: "Reported financial history",
+    period: "Period",
     years: (n: number) => `${n}Y`,
     revenue: "Revenue",
     operatingIncome: "Operating income",
@@ -51,6 +53,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Период на отчета",
     rangeLabel: "Исторически период",
+    history: "Исторически финансови отчети",
+    period: "Период",
     years: (n: number) => `${n} г.`,
     revenue: "Приходи",
     operatingIncome: "Оперативна печалба",
@@ -82,6 +86,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Berichtszeitraum",
     rangeLabel: "Historischer Zeitraum",
+    history: "Gemeldete Finanzhistorie",
+    period: "Zeitraum",
     years: (n: number) => `${n}J`,
     revenue: "Umsatz",
     operatingIncome: "Betriebsergebnis",
@@ -113,6 +119,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Período del informe",
     rangeLabel: "Período histórico",
+    history: "Historial financiero publicado",
+    period: "Período",
     years: (n: number) => `${n}A`,
     revenue: "Ingresos",
     operatingIncome: "Resultado operativo",
@@ -144,6 +152,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Periodo del bilancio",
     rangeLabel: "Intervallo storico",
+    history: "Storico finanziario dichiarato",
+    period: "Periodo",
     years: (n: number) => `${n}A`,
     revenue: "Ricavi",
     operatingIncome: "Risultato operativo",
@@ -304,6 +314,13 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
               />
             ))}
           </div>
+          <FinancialHistoryTable
+            rows={rows}
+            copy={c}
+            format={(key, value) =>
+              key === "dilutedEps" ? formatMetric("dilutedEps", value) : compact(value)
+            }
+          />
           <RevenueBreakdown
             rows={rows}
             currency={query.data?.currency ?? null}
@@ -314,6 +331,64 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
         </>
       )}
     </div>
+  );
+}
+
+type StatementKey = Exclude<keyof FinancialSeriesRow, "date">;
+
+function FinancialHistoryTable({
+  rows,
+  copy,
+  format,
+}: {
+  rows: FinancialSeriesRow[];
+  copy: FinancialCopy;
+  format: (key: StatementKey, value: number) => string;
+}) {
+  const columns: { key: StatementKey; label: string }[] = [
+    { key: "revenue", label: copy.revenue },
+    { key: "costOfRevenue", label: copy.costOfRevenue },
+    { key: "grossProfit", label: copy.grossProfit },
+    { key: "operatingIncome", label: copy.operatingIncome },
+    { key: "operatingExpense", label: copy.operatingExpenseLabel },
+    { key: "netIncome", label: copy.netIncome },
+    { key: "dilutedEps", label: copy.dilutedEps },
+    { key: "operatingCashFlow", label: copy.operatingCashFlow },
+    { key: "freeCashFlow", label: copy.freeCashFlow },
+  ];
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-background/70">
+      <h4 className="px-4 pb-2 pt-4 font-display text-sm font-semibold">{copy.history}</h4>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-y border-border text-xs text-muted-foreground">
+            <tr>
+              <th className="sticky left-0 bg-card px-3 py-2 font-medium">{copy.period}</th>
+              {columns.map((column) => (
+                <th key={column.key} className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/70">
+            {[...rows].reverse().map((row) => (
+              <tr key={row.date} className="hover:bg-secondary/40">
+                <th className="sticky left-0 bg-card px-3 py-2.5 font-semibold">{row.date}</th>
+                {columns.map((column) => (
+                  <td
+                    key={column.key}
+                    className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums"
+                  >
+                    {row[column.key] == null ? "—" : format(column.key, row[column.key]!)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

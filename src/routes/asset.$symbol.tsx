@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  BookOpen,
+  ChartNoAxesCombined,
+  CircleDollarSign,
+  Newspaper,
+  UsersRound,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/AppShell";
 import { QuoteHero } from "@/components/QuoteHero";
@@ -11,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { pct, usePortfolio } from "@/lib/store";
 import { assetSummary, reviewDue } from "@/lib/journey";
 import { supabase } from "@/integrations/supabase/client";
+import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/asset/$symbol")({
   head: ({ params }) => ({
@@ -83,6 +92,52 @@ const C = {
   },
 };
 
+const RESEARCH_NAV: Record<
+  Lang,
+  readonly (readonly [string, string, typeof ChartNoAxesCombined])[]
+> = {
+  en: [
+    ["overview", "Overview", ChartNoAxesCombined],
+    ["financials", "Financials", CircleDollarSign],
+    ["statistics", "Key statistics", BarChart3],
+    ["analysis", "Analysis", ChartNoAxesCombined],
+    ["holders", "Holders", UsersRound],
+    ["news", "News", Newspaper],
+  ],
+  bg: [
+    ["overview", "Общ преглед", ChartNoAxesCombined],
+    ["financials", "Финанси", CircleDollarSign],
+    ["statistics", "Показатели", BarChart3],
+    ["analysis", "Анализ", ChartNoAxesCombined],
+    ["holders", "Акционери", UsersRound],
+    ["news", "Новини", Newspaper],
+  ],
+  de: [
+    ["overview", "Übersicht", ChartNoAxesCombined],
+    ["financials", "Finanzen", CircleDollarSign],
+    ["statistics", "Kennzahlen", BarChart3],
+    ["analysis", "Analyse", ChartNoAxesCombined],
+    ["holders", "Anteilseigner", UsersRound],
+    ["news", "Nachrichten", Newspaper],
+  ],
+  es: [
+    ["overview", "Resumen", ChartNoAxesCombined],
+    ["financials", "Finanzas", CircleDollarSign],
+    ["statistics", "Estadísticas", BarChart3],
+    ["analysis", "Análisis", ChartNoAxesCombined],
+    ["holders", "Accionistas", UsersRound],
+    ["news", "Noticias", Newspaper],
+  ],
+  it: [
+    ["overview", "Panoramica", ChartNoAxesCombined],
+    ["financials", "Finanze", CircleDollarSign],
+    ["statistics", "Statistiche", BarChart3],
+    ["analysis", "Analisi", ChartNoAxesCombined],
+    ["holders", "Azionisti", UsersRound],
+    ["news", "Notizie", Newspaper],
+  ],
+};
+
 function AssetPage() {
   const { symbol } = Route.useParams();
   const p = usePortfolio();
@@ -106,12 +161,33 @@ function AssetPage() {
         <ArrowLeft className="h-4 w-4" />
         {c.back}
       </Link>
-      <QuoteHero
-        symbol={symbol.toUpperCase()}
-        name={asset?.name ?? symbol.toUpperCase()}
-        type={type}
-        lang={p.lang}
-      />
+      <div id="overview" className="scroll-mt-24">
+        <QuoteHero
+          symbol={symbol.toUpperCase()}
+          name={asset?.name ?? symbol.toUpperCase()}
+          type={type}
+          lang={p.lang}
+        />
+      </div>
+      {type === "stock" && (
+        <nav
+          aria-label={p.lang === "bg" ? "Раздели за проучване" : "Research sections"}
+          className="sticky top-16 z-10 -mx-1 overflow-x-auto rounded-xl border border-border bg-background/90 p-1 shadow-sm backdrop-blur"
+        >
+          <div className="flex min-w-max gap-1">
+            {RESEARCH_NAV[p.lang].map(([id, label, Icon]) => (
+              <a
+                key={id}
+                href={`#${!p.isPro && ["statistics", "analysis", "holders"].includes(id) ? "research" : id}`}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+              >
+                <Icon size={15} />
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+      )}
       {h && s ? (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
@@ -155,12 +231,22 @@ function AssetPage() {
         </Card>
       )}
       <Journal symbol={symbol.toUpperCase()} c={c} />
-      {type === "stock" && <ProFinancials symbol={symbol.toUpperCase()} lang={p.lang} />}
-      {type === "stock" && <ProCompanyResearch symbol={symbol.toUpperCase()} lang={p.lang} />}
-      <CompanyOverview
-        asset={{ symbol: symbol.toUpperCase(), name: asset?.name ?? symbol, type }}
-        lang={p.lang}
-      />
+      {type === "stock" && (
+        <div id="financials" className="scroll-mt-24">
+          <ProFinancials symbol={symbol.toUpperCase()} lang={p.lang} />
+        </div>
+      )}
+      {type === "stock" && (
+        <div id="research" className="scroll-mt-24">
+          <ProCompanyResearch symbol={symbol.toUpperCase()} lang={p.lang} />
+        </div>
+      )}
+      <div id="news" className="scroll-mt-24">
+        <CompanyOverview
+          asset={{ symbol: symbol.toUpperCase(), name: asset?.name ?? symbol, type }}
+          lang={p.lang}
+        />
+      </div>
     </div>
   );
 }

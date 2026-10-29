@@ -15,6 +15,7 @@ type PlanCopy = {
   yearlyDetails: string;
   monthlyDetails: string;
   seeWhat: string;
+  researchDemo: string;
   referralTitle: string;
   referralBody: string;
   referralCopy: string;
@@ -52,7 +53,7 @@ const en: PlanCopy = {
     {
       title: "Research",
       free: "Search, news, key stats",
-      pro: "DCF fair value, AI thesis check, AI advisor",
+      pro: "Financial statements, forecasts & revisions, earnings surprises, holders, DCF and AI thesis check",
     },
     {
       title: "Watchlist",
@@ -86,6 +87,7 @@ const en: PlanCopy = {
   monthlyDetails:
     "5 days free, then €4.99 per month including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
   seeWhat: "See everything in Pro",
+  researchDemo: "Explore real company research with Oracle (ORCL)",
   referralTitle: "Invite a friend",
   referralBody:
     "You and a new friend each get one month of Pro after their first successful paid subscription. The month is added after any active paid period.",
@@ -124,7 +126,7 @@ const bg: PlanCopy = {
     {
       title: "Проучване",
       free: "Търсене, новини, ключови показатели",
-      pro: "DCF справедлива цена, AI проверка на теза, AI съветник",
+      pro: "Финансови отчети, прогнози и промени, изненади в печалбата, акционери, DCF и AI проверка на теза",
     },
     {
       title: "Watchlist",
@@ -159,6 +161,7 @@ const bg: PlanCopy = {
   monthlyDetails:
     "5 дни безплатно, после €4,99 месечно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
   seeWhat: "Виж всичко в Pro",
+  researchDemo: "Разгледай реален фирмен анализ — Oracle (ORCL)",
   referralTitle: "Покани приятел",
   referralBody:
     "Ти и новият ти приятел получавате по един месец Pro след първото му успешно платено плащане. Наградният месец се добавя след активния платен период.",
@@ -197,7 +200,7 @@ const de: PlanCopy = {
     {
       title: "Research",
       free: "Suche, News, Kennzahlen",
-      pro: "DCF-Fair-Value, KI-Thesencheck, KI-Berater",
+      pro: "Finanzberichte, Prognosen & Revisionen, Gewinnüberraschungen, Anteilseigner, DCF und KI-Theseprüfung",
     },
     {
       title: "Watchlist",
@@ -232,6 +235,7 @@ const de: PlanCopy = {
   monthlyDetails:
     "5 Tage kostenlos, danach €4,99 pro Monat inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
   seeWhat: "Alles in Pro ansehen",
+  researchDemo: "Echte Unternehmensanalyse ansehen — Oracle (ORCL)",
   referralTitle: "Freund einladen",
   referralBody:
     "Du und ein neuer Freund erhalten je einen Pro-Monat nach der ersten erfolgreichen Zahlung des Freundes. Der Monat wird an einen aktiven bezahlten Zeitraum angehängt.",
@@ -270,7 +274,7 @@ const es: PlanCopy = {
     {
       title: "Investigación",
       free: "Búsqueda, noticias, datos clave",
-      pro: "Valor justo DCF, revisión de tesis con IA, asesor IA",
+      pro: "Estados financieros, previsiones y revisiones, sorpresas de resultados, accionistas, DCF y análisis de tesis con IA",
     },
     {
       title: "Watchlist",
@@ -306,6 +310,7 @@ const es: PlanCopy = {
   monthlyDetails:
     "5 días gratis, luego €4,99 al mes con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
   seeWhat: "Ver todo en Pro",
+  researchDemo: "Explora un análisis real de empresa — Oracle (ORCL)",
   referralTitle: "Invita a un amigo",
   referralBody:
     "Tú y un nuevo amigo reciben un mes de Pro cada uno tras el primer pago válido del amigo. El mes se añade después de cualquier periodo pagado activo.",
@@ -340,7 +345,7 @@ const it: PlanCopy = {
     {
       title: "Ricerca",
       free: "Ricerca, notizie, dati chiave",
-      pro: "Fair value DCF, verifica tesi con IA, consulente IA",
+      pro: "Bilanci, stime e revisioni, sorprese sugli utili, azionisti, DCF e verifica della tesi con IA",
     },
     {
       title: "Watchlist",
@@ -379,6 +384,7 @@ const it: PlanCopy = {
   monthlyDetails:
     "5 giorni gratis, poi €4,99 al mese IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
   seeWhat: "Scopri tutto in Pro",
+  researchDemo: "Esplora un'analisi aziendale reale — Oracle (ORCL)",
   referralTitle: "Invita un amico",
   referralBody:
     "Tu e un nuovo amico ricevete un mese di Pro ciascuno dopo il primo pagamento riuscito dell'amico. Il mese si aggiunge al periodo già pagato.",

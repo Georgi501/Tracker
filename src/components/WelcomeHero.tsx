@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart, Target } from "lucide-react";
+import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
@@ -16,9 +16,7 @@ type Copy = {
   emptySub: string;
   s1: string;
   s2: string;
-  s3: string;
   activeSub: string;
-  sampleTitle: string;
   sampleSub: string;
   sampleLink: string;
   markets: string;
@@ -39,9 +37,7 @@ const COPY: Record<Lang, Copy> = {
     emptySub: "Three quick steps to get started:",
     s1: "Import a broker CSV",
     s2: "Or add a trade manually",
-    s3: "Follow companies in your watchlist",
     activeSub: "Here's how your portfolio is doing today.",
-    sampleTitle: "Want to see an example first?",
     sampleSub: "Explore a sample portfolio to see how holdings and allocation are presented.",
     sampleLink: "View sample portfolio",
     markets: "Markets",
@@ -61,9 +57,7 @@ const COPY: Record<Lang, Copy> = {
     emptySub: "Три бързи стъпки за начало:",
     s1: "Импортирай CSV от брокер",
     s2: "Или добави сделка ръчно",
-    s3: "Следи компании в Watchlist",
     activeSub: "Ето как се представя портфолиото ти днес.",
-    sampleTitle: "Искаш първо да разгледаш пример?",
     sampleSub: "Виж примерно портфолио, за да разбереш как изглеждат позициите и разпределението.",
     sampleLink: "Разгледай примерното портфолио",
     markets: "Пазари",
@@ -83,9 +77,7 @@ const COPY: Record<Lang, Copy> = {
     emptySub: "Drei schnelle Schritte:",
     s1: "Broker-CSV importieren",
     s2: "Oder Trade manuell hinzufügen",
-    s3: "Unternehmen auf der Watchlist folgen",
     activeSub: "So entwickelt sich dein Portfolio heute.",
-    sampleTitle: "Möchtest du zuerst ein Beispiel sehen?",
     sampleSub: "Sieh dir ein Beispielportfolio mit Positionen und Aufteilung an.",
     sampleLink: "Beispielportfolio ansehen",
     markets: "Märkte",
@@ -105,9 +97,7 @@ const COPY: Record<Lang, Copy> = {
     emptySub: "Tres pasos rápidos:",
     s1: "Importa un CSV del bróker",
     s2: "O añade una operación manual",
-    s3: "Sigue empresas en tu watchlist",
     activeSub: "Así va tu cartera hoy.",
-    sampleTitle: "¿Quieres ver un ejemplo primero?",
     sampleSub:
       "Explora una cartera de ejemplo para ver cómo se muestran las posiciones y la distribución.",
     sampleLink: "Ver cartera de ejemplo",
@@ -128,9 +118,7 @@ const COPY: Record<Lang, Copy> = {
     emptySub: "Tre passi veloci:",
     s1: "Importa un CSV del broker",
     s2: "Oppure aggiungi un'operazione",
-    s3: "Segui aziende nella watchlist",
     activeSub: "Ecco come va il tuo portafoglio oggi.",
-    sampleTitle: "Vuoi vedere prima un esempio?",
     sampleSub:
       "Esplora un portafoglio di esempio per vedere come vengono mostrate le posizioni e l'allocazione.",
     sampleLink: "Guarda il portafoglio di esempio",
@@ -184,7 +172,7 @@ export function WelcomeHero() {
           </Link>
           <Link to="/demo" className={`${chip} min-h-10 px-4`}>
             <Eye className="size-4" />
-            {p.lang === "bg" ? "Виж примерно портфолио" : "See a sample portfolio"}
+            {c.sampleLink}
           </Link>
           <Link to="/markets" className={`${chip} min-h-10 px-4`}>
             <Search className="size-4" />
@@ -209,7 +197,7 @@ export function WelcomeHero() {
           {[
             { to: "/brokers", icon: Upload, t: c.s1 },
             { to: "/holdings", icon: PlusCircle, t: c.s2 },
-            { to: "/tools", icon: Target, t: GOAL_LABEL[p.lang] },
+            { to: "/demo", icon: Eye, t: c.sampleLink },
           ].map((s) => (
             <Link
               key={s.to}
@@ -223,19 +211,12 @@ export function WelcomeHero() {
             </Link>
           ))}
         </div>
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-semibold">{c.sampleTitle}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{c.sampleSub}</p>
-          </div>
-          <Link
-            to="/demo"
-            className="press inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-accent"
-          >
-            <Eye className="size-4" />
-            {c.sampleLink}
+        <p className="mt-3 text-sm text-muted-foreground">
+          {c.sampleSub}{" "}
+          <Link to="/tools" className="font-semibold text-primary hover:underline">
+            {GOAL_LABEL[p.lang]}
           </Link>
-        </div>
+        </p>
       </section>
     );
 

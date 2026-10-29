@@ -208,6 +208,7 @@ export const marketDetails = createServerFn({ method: "POST" })
   );
 
 export interface KeyStats {
+  currentPrice: number | null;
   previousClose: number | null;
   open: number | null;
   dayLow: number | null;
@@ -215,12 +216,25 @@ export interface KeyStats {
   low52: number | null;
   high52: number | null;
   marketCap: number | null;
+  enterpriseValue: number | null;
+  trailingPe: number | null;
+  forwardPe: number | null;
+  priceToSales: number | null;
+  priceToBook: number | null;
+  pegRatio: number | null;
   beta: number | null;
   pe: number | null;
   eps: number | null;
+  forwardEps: number | null;
+  cash: number | null;
+  totalDebt: number | null;
+  currentRatio: number | null;
+  quickRatio: number | null;
+  targetLow: number | null;
   dividendRate: number | null;
   dividendYield: number | null;
   target: number | null;
+  targetHigh: number | null;
   recommendation: string | null;
   returnOnEquity: number | null;
   debtToEquity: number | null;
@@ -347,13 +361,18 @@ export const marketStats = createServerFn({ method: "POST" })
       const [q, s] = await Promise.all([
         yf.quote(data.symbol),
         yf
-          .quoteSummary(data.symbol, { modules: ["defaultKeyStatistics", "financialData"] })
+          .quoteSummary(data.symbol, {
+            modules: ["defaultKeyStatistics", "financialData", "summaryDetail"],
+          })
           .catch(() => null),
       ]);
       if (!q) return null;
       const earn = q.earningsTimestampStart ?? q.earningsTimestamp;
       const f = s?.financialData;
+      const k = s?.defaultKeyStatistics;
+      const d = s?.summaryDetail;
       return {
+        currentPrice: n(q.regularMarketPrice),
         previousClose: n(q.regularMarketPreviousClose),
         open: n(q.regularMarketOpen),
         dayLow: n(q.regularMarketDayLow),
@@ -361,12 +380,25 @@ export const marketStats = createServerFn({ method: "POST" })
         low52: n(q.fiftyTwoWeekLow),
         high52: n(q.fiftyTwoWeekHigh),
         marketCap: n(q.marketCap),
-        beta: n(s?.defaultKeyStatistics?.beta),
+        enterpriseValue: n(k?.enterpriseValue),
+        trailingPe: n(q.trailingPE),
+        forwardPe: n(k?.forwardPE ?? d?.forwardPE),
+        priceToSales: n(d?.priceToSalesTrailing12Months),
+        priceToBook: n(k?.priceToBook),
+        pegRatio: n(k?.pegRatio),
+        beta: n(k?.beta),
         pe: n(q.trailingPE),
         eps: n(q.epsTrailingTwelveMonths),
+        forwardEps: n(k?.forwardEps),
+        cash: n(f?.totalCash),
+        totalDebt: n(f?.totalDebt),
+        currentRatio: n(f?.currentRatio),
+        quickRatio: n(f?.quickRatio),
+        targetLow: n(f?.targetLowPrice),
         dividendRate: n(q.dividendRate),
         dividendYield: n(q.dividendYield),
         target: n(f?.targetMeanPrice),
+        targetHigh: n(f?.targetHighPrice),
         recommendation: typeof f?.recommendationKey === "string" ? f.recommendationKey : null,
         returnOnEquity: n(f?.returnOnEquity),
         debtToEquity: n(f?.debtToEquity),
@@ -381,6 +413,152 @@ export const marketStats = createServerFn({ method: "POST" })
     } catch {
       return null;
     }
+  });
+
+export interface CompanyResearchData {
+  retrievedAt: string;
+  recommendations: {
+    period: string;
+    strongBuy: number;
+    buy: number;
+    hold: number;
+    sell: number;
+    strongSell: number;
+  }[];
+  estimates: {
+    period: string;
+    endDate: string | null;
+    analystCount: number | null;
+    epsAverage: number | null;
+    epsLow: number | null;
+    epsHigh: number | null;
+    epsGrowth: number | null;
+    revenueAverage: number | null;
+    revenueLow: number | null;
+    revenueHigh: number | null;
+    revenueGrowth: number | null;
+    epsCurrent: number | null;
+    eps30DaysAgo: number | null;
+    revisionsUp30Days: number | null;
+    revisionsDown30Days: number | null;
+  }[];
+  earningsHistory: {
+    period: string;
+    quarter: string | null;
+    epsActual: number | null;
+    epsEstimate: number | null;
+    surprisePercent: number | null;
+  }[];
+  ownership: {
+    insiderPercent: number | null;
+    institutionalPercent: number | null;
+    institutionsCount: number | null;
+    institutions: {
+      name: string;
+      percentHeld: number | null;
+      value: number | null;
+      reportDate: string | null;
+    }[];
+    insiders: {
+      name: string;
+      relation: string;
+      shares: number | null;
+      reportDate: string | null;
+    }[];
+  };
+}
+
+/** Real analyst estimates and reported ownership data; missing provider fields remain null. */
+export const marketCompanyResearch = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<CompanyResearchData> => {
+    const empty: CompanyResearchData = {
+      retrievedAt: new Date().toISOString(),
+      recommendations: [],
+      estimates: [],
+      earningsHistory: [],
+      ownership: {
+        insiderPercent: null,
+        institutionalPercent: null,
+        institutionsCount: null,
+        institutions: [],
+        insiders: [],
+      },
+    };
+    const { yahooClient } = await import("./prices.server");
+    const summary = await yahooClient().quoteSummary(data.symbol, {
+      modules: [
+        "earningsHistory",
+        "earningsTrend",
+        "recommendationTrend",
+        "majorHoldersBreakdown",
+        "institutionOwnership",
+        "insiderHolders",
+      ],
+    });
+    if (!summary) return empty;
+    const numberOrNull = (value: unknown) =>
+      typeof value === "number" && Number.isFinite(value) ? value : null;
+    const dateOrNull = (value: unknown) => {
+      if (!(value instanceof Date) || Number.isNaN(value.getTime())) return null;
+      return value.toISOString();
+    };
+    return {
+      retrievedAt: new Date().toISOString(),
+      recommendations: (summary.recommendationTrend?.trend ?? []).map((item) => ({
+        period: item.period,
+        strongBuy: item.strongBuy,
+        buy: item.buy,
+        hold: item.hold,
+        sell: item.sell,
+        strongSell: item.strongSell,
+      })),
+      estimates: (summary.earningsTrend?.trend ?? []).map((item) => ({
+        period: item.period,
+        endDate: dateOrNull(item.endDate),
+        analystCount: numberOrNull(item.earningsEstimate.numberOfAnalysts),
+        epsAverage: numberOrNull(item.earningsEstimate.avg),
+        epsLow: numberOrNull(item.earningsEstimate.low),
+        epsHigh: numberOrNull(item.earningsEstimate.high),
+        epsGrowth: numberOrNull(item.earningsEstimate.growth),
+        revenueAverage: numberOrNull(item.revenueEstimate.avg),
+        revenueLow: numberOrNull(item.revenueEstimate.low),
+        revenueHigh: numberOrNull(item.revenueEstimate.high),
+        revenueGrowth: numberOrNull(item.revenueEstimate.growth),
+        epsCurrent: numberOrNull(item.epsTrend.current),
+        eps30DaysAgo: numberOrNull(item.epsTrend["30daysAgo"]),
+        revisionsUp30Days: numberOrNull(item.epsRevisions.upLast30days),
+        revisionsDown30Days: numberOrNull(item.epsRevisions.downLast30days),
+      })),
+      earningsHistory: (summary.earningsHistory?.history ?? []).map((item) => ({
+        period: item.period,
+        quarter: dateOrNull(item.quarter),
+        epsActual: numberOrNull(item.epsActual),
+        epsEstimate: numberOrNull(item.epsEstimate),
+        surprisePercent: numberOrNull(item.surprisePercent),
+      })),
+      ownership: {
+        insiderPercent: numberOrNull(summary.majorHoldersBreakdown?.insidersPercentHeld),
+        institutionalPercent: numberOrNull(summary.majorHoldersBreakdown?.institutionsPercentHeld),
+        institutionsCount: numberOrNull(summary.majorHoldersBreakdown?.institutionsCount),
+        institutions: (summary.institutionOwnership?.ownershipList ?? [])
+          .slice(0, 10)
+          .map((item) => ({
+            name: item.organization,
+            percentHeld: numberOrNull(item.pctHeld),
+            value: numberOrNull(item.value),
+            reportDate: dateOrNull(item.reportDate),
+          })),
+        insiders: (summary.insiderHolders?.holders ?? []).slice(0, 10).map((item) => ({
+          name: item.name,
+          relation: String(item.relation ?? ""),
+          shares: numberOrNull(item.positionSummary),
+          reportDate: dateOrNull(item.positionSummaryDate),
+        })),
+      },
+    };
   });
 
 export interface DcfData {

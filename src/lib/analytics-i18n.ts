@@ -59,6 +59,9 @@ const en = {
   quoteTimestampMissing: "Some quote timestamps are unavailable.",
   currencyNote:
     "Historical FX is included in base-currency valuation; a separate currency-effect attribution is not available.",
+  historyScope:
+    "Historical valuation includes recorded holdings and cash positions. Dividend transactions are excluded; record cash separately if you want it included.",
+  historyScopeLabel: "Historical valuation scope",
   historyInsufficient: "Not enough historical points for this period.",
   popupBlocked: "Allow pop-ups to print or save the report as PDF.",
   reportPeriod: "Selected period",
@@ -127,6 +130,9 @@ const bg: AnalyticsCopy = {
   quoteTimestampMissing: "За някои котировки липсва времева отметка.",
   currencyNote:
     "Историческият валутен курс е включен в оценката в базова валута; отделен анализ на валутния ефект не е наличен.",
+  historyScope:
+    "Историческата оценка включва записаните позиции и парични активи. Дивидентните сделки не се включват; наличностите трябва да се въведат отделно.",
+  historyScopeLabel: "Обхват на историческата оценка",
   historyInsufficient: "Няма достатъчно исторически точки за този период.",
   popupBlocked: "Разреши изскачащите прозорци, за да отпечаташ или запазиш отчета като PDF.",
   reportPeriod: "Избран период",
@@ -193,6 +199,9 @@ const de: AnalyticsCopy = {
   quoteTimestampMissing: "Für einige Kurse fehlt ein Zeitstempel.",
   currencyNote:
     "Historische Wechselkurse sind in der Basiswährungsbewertung enthalten; eine separate Währungsbeitragsanalyse ist nicht verfügbar.",
+  historyScope:
+    "Die historische Bewertung umfasst erfasste Positionen und Bargeldbestände. Dividendentransaktionen sind ausgeschlossen; Bargeld muss separat erfasst werden.",
+  historyScopeLabel: "Umfang der historischen Bewertung",
   historyInsufficient: "Nicht genügend historische Punkte für diesen Zeitraum.",
   popupBlocked: "Erlaube Pop-ups, um den Bericht zu drucken oder als PDF zu speichern.",
   reportPeriod: "Gewählter Zeitraum",
@@ -259,6 +268,9 @@ const es: AnalyticsCopy = {
   quoteTimestampMissing: "Falta la marca de tiempo de algunas cotizaciones.",
   currencyNote:
     "El cambio histórico se incluye en la valoración en moneda base; no está disponible una atribución separada del efecto de divisa.",
+  historyScope:
+    "La valoración histórica incluye posiciones y efectivo registrados. Se excluyen las transacciones de dividendos; registra el efectivo por separado para incluirlo.",
+  historyScopeLabel: "Alcance de la valoración histórica",
   historyInsufficient: "No hay suficientes puntos históricos para este período.",
   popupBlocked: "Permite las ventanas emergentes para imprimir o guardar el informe como PDF.",
   reportPeriod: "Período seleccionado",
@@ -325,6 +337,9 @@ const it: AnalyticsCopy = {
   quoteTimestampMissing: "Manca il timestamp per alcune quotazioni.",
   currencyNote:
     "I cambi storici sono inclusi nella valutazione in valuta base; non è disponibile un’attribuzione separata dell’effetto valutario.",
+  historyScope:
+    "La valutazione storica include posizioni e liquidità registrate. Le operazioni sui dividendi sono escluse; registra la liquidità separatamente per includerla.",
+  historyScopeLabel: "Ambito della valutazione storica",
   historyInsufficient: "Punti storici insufficienti per questo periodo.",
   popupBlocked: "Consenti i popup per stampare o salvare il report come PDF.",
   reportPeriod: "Periodo selezionato",

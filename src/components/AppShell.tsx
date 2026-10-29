@@ -4,7 +4,7 @@ import { paymentsCopy } from "@/lib/payments-i18n";
 import { isCreemTestMode } from "@/lib/creem";
 import { toolsCopy } from "@/lib/tools-i18n";
 import { europeCopy } from "@/lib/europe-i18n";
-import { isLang, languages } from "@/lib/i18n";
+import { isLang, languages, type Lang } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
 import { feedbackCopy } from "@/lib/feedback-i18n";
 import { FeedbackDialog } from "./FeedbackDialog";
@@ -50,10 +50,76 @@ import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
 
+const SHELL_COPY: Record<
+  Lang,
+  {
+    watchlist: string;
+    timeline: string;
+    community: string;
+    demo: string;
+    more: string;
+    profile: string;
+    account: string;
+    owner: string;
+  }
+> = {
+  en: {
+    watchlist: "Watchlist",
+    timeline: "Timeline",
+    community: "Community",
+    demo: "Sample portfolio",
+    more: "More",
+    profile: "Profile",
+    account: "Account & billing",
+    owner: "Owner console",
+  },
+  bg: {
+    watchlist: "Списък за наблюдение",
+    timeline: "Хронология",
+    community: "Общност",
+    demo: "Примерно портфолио",
+    more: "Още",
+    profile: "Профил",
+    account: "Профил и плащания",
+    owner: "Панел на собственика",
+  },
+  de: {
+    watchlist: "Beobachtungsliste",
+    timeline: "Zeitleiste",
+    community: "Community",
+    demo: "Beispielportfolio",
+    more: "Mehr",
+    profile: "Profil",
+    account: "Konto & Abrechnung",
+    owner: "Eigentümerkonsole",
+  },
+  es: {
+    watchlist: "Lista de seguimiento",
+    timeline: "Cronología",
+    community: "Comunidad",
+    demo: "Cartera de ejemplo",
+    more: "Más",
+    profile: "Perfil",
+    account: "Cuenta y facturación",
+    owner: "Panel del propietario",
+  },
+  it: {
+    watchlist: "Lista di controllo",
+    timeline: "Cronologia",
+    community: "Community",
+    demo: "Portafoglio di esempio",
+    more: "Altro",
+    profile: "Profilo",
+    account: "Account e fatturazione",
+    owner: "Console proprietario",
+  },
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   const p = usePortfolio();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const shellCopy = SHELL_COPY[p.lang];
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -72,16 +138,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
     { to: "/markets", label: marketCopy[p.lang].markets },
-    { to: "/watchlist", label: "Watchlist" },
+    { to: "/watchlist", label: shellCopy.watchlist },
     { to: "/analytics", label: p.t("analytics") },
     { to: "/compare", label: legalCopy(p.lang).footer.compare },
-    { to: "/timeline", label: p.lang === "bg" ? "Хронология" : "Timeline" },
+    { to: "/timeline", label: shellCopy.timeline },
     { to: "/dividends", label: p.t("dividends") },
     { to: "/tools", label: toolsCopy[p.lang].tools },
     { to: "/advisor", label: advisorCopy[p.lang].advisor },
     { to: "/brokers", label: p.t("brokers") },
-    { to: "/community", label: p.lang === "bg" ? "Общност" : "Community" },
-    { to: "/demo", label: p.lang === "bg" ? "Примерно портфолио" : "Sample portfolio" },
+    { to: "/community", label: shellCopy.community },
+    { to: "/demo", label: shellCopy.demo },
     { to: "/pricing", label: p.t("pricing") },
   ] as const;
   const signOut = async () => {
@@ -164,7 +230,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="as-link flex items-center gap-1">
-                  {p.lang === "bg" ? "Още" : "More"}
+                  {shellCopy.more}
                   <ChevronDown size={14} />
                 </button>
               </DropdownMenuTrigger>
@@ -302,14 +368,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuItem asChild>
                     <Link to="/account">
                       <Settings2 size={14} />
-                      {p.lang === "bg" ? "Профил и плащания" : "Account & billing"}
+                      {shellCopy.account}
                     </Link>
                   </DropdownMenuItem>
                   {p.isAdmin && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin">
                         <ShieldCheck size={14} />
-                        {p.lang === "bg" ? "Административен панел" : "Owner console"}
+                        {shellCopy.owner}
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -317,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuItem asChild>
                     <Link to="/profile">
                       <UserRound size={14} />
-                      {p.lang === "bg" ? "Моят профил" : "My profile"}
+                      {shellCopy.profile}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -370,7 +436,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="as-link flex shrink-0 items-center gap-1">
-                {p.lang === "bg" ? "Още" : "More"}
+                {shellCopy.more}
                 <ChevronDown size={14} />
               </button>
             </DropdownMenuTrigger>
@@ -384,8 +450,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </DropdownMenu>
         </nav>
       </header>
-      <main className="page-enter mx-auto max-w-7xl px-4 py-6">{children}</main>
-      <footer className="site-footer mt-10 pb-28 md:pb-0">
+      <main className="page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6">
+        {children}
+      </main>
+      <footer className="site-footer mt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link to="/" className="inline-flex items-center gap-2">
@@ -482,7 +550,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Quick navigation"
         data-hidden={navHidden}
-        className="glass-bar fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
+        className="glass-bar fixed inset-x-3         bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
         {(
           [
@@ -516,7 +584,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
             {
               to: p.user ? "/profile" : "/auth",
-              label: p.user ? (p.lang === "bg" ? "Профил" : "Profile") : p.t("signIn"),
+              label: p.user ? shellCopy.profile : p.t("signIn"),
               Icon: UserRound,
             },
           ] as const
