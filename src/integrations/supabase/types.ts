@@ -355,10 +355,9 @@ export type Database = {
           environment: string;
           id: string;
           interval: string | null;
-          paddle_customer_id: string | null;
-          paddle_subscription_id: string | null;
           plan: string;
           price_id: string | null;
+          provider_customer_id: string | null;
           product_id: string | null;
           provider_subscription_id: string | null;
           status: string;
@@ -373,10 +372,9 @@ export type Database = {
           environment?: string;
           id?: string;
           interval?: string | null;
-          paddle_customer_id?: string | null;
-          paddle_subscription_id?: string | null;
           plan?: string;
           price_id?: string | null;
+          provider_customer_id?: string | null;
           product_id?: string | null;
           provider_subscription_id?: string | null;
           status?: string;
@@ -391,10 +389,9 @@ export type Database = {
           environment?: string;
           id?: string;
           interval?: string | null;
-          paddle_customer_id?: string | null;
-          paddle_subscription_id?: string | null;
           plan?: string;
           price_id?: string | null;
+          provider_customer_id?: string | null;
           product_id?: string | null;
           provider_subscription_id?: string | null;
           status?: string;

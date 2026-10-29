@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { openProCheckout, initializePaddle, paddleListeners } from "@/lib/paddle";
+import { isCreemTestMode } from "@/lib/creem";
 import { paymentsCopy } from "@/lib/payments-i18n";
 import { Check, Bot, Flame, LayoutGrid, CalendarRange, Layers } from "lucide-react";
 import { proCopy } from "@/lib/pro-i18n";
@@ -50,19 +50,12 @@ function Pricing() {
   const { isPro, reload } = p;
   useEffect(() => {
     trackAnalyticsEvent("pricing_view");
-    const done = (e: { name?: string }) => {
-      if (e.name === "checkout.completed") {
-        trackAnalyticsEvent("checkout_completed");
-        setActivating(true);
-      }
-    };
-    paddleListeners.add(done);
-    if (new URLSearchParams(window.location.search).get("checkout") === "success")
-      setActivating(true);
-    return () => {
-      paddleListeners.delete(done);
-    };
-  }, []);
+    if (new URLSearchParams(window.location.search).get("checkout") === "success") {
+      trackAnalyticsEvent("checkout_completed");
+      if (isCreemTestMode()) toast.success(c.testSuccess);
+      else setActivating(true);
+    }
+  }, [c.testSuccess]);
   useEffect(() => {
     if (!p.user) {
       setReferralCode(null);
@@ -115,14 +108,28 @@ function Pricing() {
     if (!p.user) return;
     setBusy(true);
     try {
-      await initializePaddle();
-      await openProCheckout({
-        priceId: yearly ? "pro_yearly" : "pro_monthly",
-        userId: p.user.id,
-        email: p.user.email,
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!data.session?.access_token) throw new Error("Sign-in session expired");
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({ interval: yearly ? "year" : "month" }),
       });
-    } catch {
-      toast.error(c.failed);
+      const result = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || c.failed);
+      const checkoutUrl = new URL(result.url);
+      if (
+        checkoutUrl.protocol !== "https:" ||
+        (checkoutUrl.hostname !== "creem.io" && !checkoutUrl.hostname.endsWith(".creem.io"))
+      )
+        throw new Error(c.failed);
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : c.failed);
     } finally {
       setBusy(false);
     }

@@ -109,20 +109,28 @@ CREATE POLICY "own tx" ON public.transactions FOR ALL TO authenticated USING (au
 CREATE INDEX ON public.transactions(user_id);
 CREATE INDEX ON public.assets(user_id);
 
--- Source: 0001_paddle_subscriptions.sql
 ALTER TABLE public.subscriptions
-  ADD COLUMN IF NOT EXISTS paddle_subscription_id text UNIQUE,
-  ADD COLUMN IF NOT EXISTS paddle_customer_id text,
   ADD COLUMN IF NOT EXISTS product_id text,
   ADD COLUMN IF NOT EXISTS price_id text,
   ADD COLUMN IF NOT EXISTS current_period_start timestamptz,
   ADD COLUMN IF NOT EXISTS cancel_at_period_end boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS environment text NOT NULL DEFAULT 'sandbox',
+  ADD COLUMN IF NOT EXISTS provider_customer_id text,
   ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 DO $$ DECLARE c text; BEGIN
-  FOR c IN SELECT conname FROM pg_constraint WHERE conrelid='public.subscriptions'::regclass AND contype='u' AND conname <> 'subscriptions_paddle_subscription_id_key' LOOP
+  FOR c IN SELECT conname FROM pg_constraint WHERE conrelid='public.subscriptions'::regclass AND contype='u' AND conname <> 'subscriptions_provider_subscription_id_key' LOOP
     EXECUTE format('ALTER TABLE public.subscriptions DROP CONSTRAINT %I', c);
   END LOOP; END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.subscriptions'::regclass
+      AND conname='subscriptions_provider_subscription_id_key'
+  ) THEN
+    ALTER TABLE public.subscriptions
+      ADD CONSTRAINT subscriptions_provider_subscription_id_key UNIQUE (provider_subscription_id);
+  END IF;
+END $$;
 GRANT SELECT ON public.subscriptions TO authenticated;
 GRANT ALL ON public.subscriptions TO service_role;
 CREATE OR REPLACE FUNCTION public.is_pro(_user_id uuid)

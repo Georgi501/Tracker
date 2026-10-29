@@ -1,7 +1,7 @@
 import { legalCopy, SUPPORT_EMAIL } from "@/lib/legal";
 import { advisorCopy } from "@/lib/advisor-i18n";
 import { paymentsCopy } from "@/lib/payments-i18n";
-import { getPaddleEnvironment } from "@/lib/paddle";
+import { isCreemTestMode } from "@/lib/creem";
 import { toolsCopy } from "@/lib/tools-i18n";
 import { europeCopy } from "@/lib/europe-i18n";
 import { isLang, languages } from "@/lib/i18n";
@@ -135,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [p.user]);
   return (
     <div className="min-h-screen">
-      {getPaddleEnvironment() === "sandbox" && (
+      {isCreemTestMode() && (
         <div className="topband px-4 py-1.5 text-center text-xs">
           {paymentsCopy[p.lang].testBanner}
         </div>

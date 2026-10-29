@@ -23,7 +23,7 @@ GitHub Actions runs type-checking, tests, and the production build for pushes an
 
 ## Services and deployment
 
-The app uses Supabase Auth directly for email/password and OAuth sign-in, OpenAI directly for AI features, and the Paddle API directly for billing. Cloudflare Workers is the configured deployment target.
+The app uses Supabase Auth directly for email/password and OAuth sign-in, OpenAI directly for AI features, and Creem for billing. Cloudflare Workers is the configured deployment target.
 
 Configure Supabase OAuth providers and redirect URLs in the Supabase dashboard. Confirm that you own or control the current Supabase project before changing it; this code change does not move user accounts, portfolio rows, or avatar files.
 
@@ -31,22 +31,23 @@ Copy `.env.example` to `.env` for public build-time values, and `.dev.vars.examp
 
 - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENAI_API_KEY`; optionally `OPENAI_MODEL` (defaults to `gpt-5.4`)
-- `PADDLE_SANDBOX_API_KEY`, `PADDLE_LIVE_API_KEY`, `PAYMENTS_SANDBOX_WEBHOOK_SECRET`, and `PAYMENTS_LIVE_WEBHOOK_SECRET`
+- `CREEM_MODE` (`test` locally or `prod` in production), `CREEM_API_KEY`, `CREEM_WEBHOOK_SECRET`, `CREEM_PRODUCT_ID_MONTHLY`, and `CREEM_PRODUCT_ID_YEARLY`
+- `PUBLIC_APP_URL` (for example `http://localhost:8080` locally and `https://capispot.com` in production)
 - `CRON_SECRET` and optionally `CRON_SECRET_PREVIOUS` for protected scheduled routes
 - `DATABASE_URL` for Drizzle migration commands only
-- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_PAYMENTS_CLIENT_TOKEN` as build-time public variables
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_CREEM_MODE` (`test` for previews/test builds, `prod` for the live site) as build-time public variables
 
-Configure Google and Apple OAuth providers and the production redirect allow-list in Supabase. Configure Paddle webhook endpoints to `/api/public/payments/webhook?env=live` and `?env=sandbox` as appropriate, with the matching signing secrets.
+Configure Google and Apple OAuth providers and the production redirect allow-list in Supabase. In Creem, create two recurring products (monthly and yearly), copy their product IDs into `CREEM_PRODUCT_ID_MONTHLY` and `CREEM_PRODUCT_ID_YEARLY`, and configure a webhook to `https://capispot.com/api/public/payments/webhook` with the `checkout.completed`, `subscription.paid`, `subscription.active`, `subscription.scheduled_cancel`, `subscription.canceled`, and `subscription.expired` events. Store the webhook signing secret in `CREEM_WEBHOOK_SECRET`.
 
-Use `npm run deploy` only after configuring the Cloudflare account, environment variables, Supabase OAuth redirect allow-list, and Paddle webhook URLs. It deploys the Worker; it does not migrate the Supabase database or change provider dashboards. OpenAI receives the portfolio or company data needed to answer each AI request; review its privacy and retention terms for your account before enabling the feature for users.
+Use Creem Test Mode and test API credentials before switching Cloudflare to the production API key, products, webhook secret, and `CREEM_MODE=prod`. Test-mode webhooks are acknowledged but do not write subscription access or referral rewards. Configure the matching `VITE_CREEM_MODE` before building (`test` locally, `prod` for the live site). Use `npm run deploy` only after configuring the Cloudflare account, Creem settings, environment variables, Supabase OAuth redirect allow-list, and applying the database migrations. It deploys the Worker; it does not migrate the Supabase database or change provider dashboards. OpenAI receives the portfolio or company data needed to answer each AI request; review its privacy and retention terms for your account before enabling the feature for users.
 
 ## Referral rewards and analytics setup
 
-Apply `drizzle/migrations/0009_referrals_and_analytics.sql` and `drizzle/migrations/0010_account_management.sql` to the connected Supabase database before enabling referrals or account deletion. In Paddle, subscribe the production webhook to `transaction.completed` in addition to the subscription lifecycle events; referral rewards are issued only after a live subscription payment is matched to its verified subscription record. Sandbox payments never grant rewards.
+Apply `drizzle/migrations/0009_referrals_and_analytics.sql`, `drizzle/migrations/0010_account_management.sql`, and `drizzle/migrations/0012_creem_billing.sql` to the connected Supabase database before enabling referrals, account deletion, or Creem billing. Referral rewards are issued only after a live, signature-verified Creem checkout is matched to its subscription record. Test-mode payments never grant rewards.
 
 First-party analytics are opt-in. The app stores only allowlisted event names and a random session ID, without account IDs, emails or portfolio data; events older than 90 days are removed as new events are recorded. Users can change their consent from the Privacy Policy page.
 
-Account and billing tools require configured Paddle API keys for each environment and a Supabase service-role key. The account portal creates a short-lived Paddle customer portal session. If account deletion is requested while Pro access is active, the app cancels renewal but keeps the account and data available through the current paid period; the user can return afterward to delete the account. It does not refund the current paid period. If Paddle cancellation or data cleanup fails, account deletion stops and reports an error.
+Account and billing tools require configured Creem API credentials and a Supabase service-role key. The account portal creates a Creem customer portal link. If account deletion is requested while Pro access is active, the app schedules cancellation and keeps the account and data available through the current paid period; the user can return afterward to delete the account. It does not refund the current paid period. If Creem cancellation or data cleanup fails, account deletion stops and reports an error.
 
 Add `/features` to the public sitemap when one is configured. The feature page is static and available in all supported app languages.
 

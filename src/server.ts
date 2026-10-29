@@ -44,7 +44,7 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
-// Directives that cannot break inline scripts, fonts, Supabase or Paddle.
+// Directives that cannot break inline scripts, fonts, Supabase or Creem.
 const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   "X-Content-Type-Options": "nosniff",

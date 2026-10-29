@@ -60,7 +60,7 @@ const COPY: Record<Lang, Copy> = {
     status: "Status",
     nextRenewal: "Paid through",
     canceledAt: "Renewal canceled · access until",
-    manage: "Manage billing in Paddle",
+    manage: "Manage billing in Creem",
     billingUnavailable: "Billing portal unavailable. Contact support.",
     exportTitle: "Export your data",
     exportBody:
@@ -70,7 +70,7 @@ const COPY: Record<Lang, Copy> = {
     deleteTitle: "Delete account",
     deleteBody:
       "If you have active Pro access, your renewal will be canceled first and your account and data will stay available until the paid period ends. You can return here after that to permanently delete your account. No refund is issued for the current paid period.",
-    deleteBilling: "If Paddle cannot cancel the renewal, your account will remain unchanged.",
+    deleteBilling: "If Creem cannot cancel the renewal, your account will remain unchanged.",
     deleteData: "This permanently removes your portfolio and cannot be undone.",
     confirmLabel: "Type your account email to confirm",
     delete: "Delete my account",
@@ -93,7 +93,7 @@ const COPY: Record<Lang, Copy> = {
     status: "Статус",
     nextRenewal: "Платено до",
     canceledAt: "Подновяването е спряно · достъп до",
-    manage: "Управление на плащанията в Paddle",
+    manage: "Управление на плащанията в Creem",
     billingUnavailable: "Платежният портал не е достъпен. Свържи се с поддръжката.",
     exportTitle: "Изтегли данните си",
     exportBody:
@@ -103,7 +103,7 @@ const COPY: Record<Lang, Copy> = {
     deleteTitle: "Изтриване на профила",
     deleteBody:
       "Ако имаш активен Pro достъп, първо ще спрем подновяването, а профилът и данните ти ще останат достъпни до края на платения период. След това можеш да се върнеш тук и да изтриеш профила окончателно. Текущият платен период не се възстановява.",
-    deleteBilling: "Ако Paddle не може да спре подновяването, профилът ти остава непроменен.",
+    deleteBilling: "Ако Creem не може да спре подновяването, профилът ти остава непроменен.",
     deleteData: "Портфолиото ще бъде изтрито необратимо.",
     confirmLabel: "Въведи имейла на профила, за да потвърдиш",
     delete: "Изтрий профила ми",
@@ -126,7 +126,7 @@ const COPY: Record<Lang, Copy> = {
     status: "Status",
     nextRenewal: "Bezahlt bis",
     canceledAt: "Verlängerung beendet · Zugriff bis",
-    manage: "Abrechnung bei Paddle verwalten",
+    manage: "Abrechnung bei Creem verwalten",
     billingUnavailable: "Abrechnungsportal nicht verfügbar. Bitte kontaktiere den Support.",
     exportTitle: "Daten exportieren",
     exportBody:
@@ -136,7 +136,7 @@ const COPY: Record<Lang, Copy> = {
     deleteTitle: "Konto löschen",
     deleteBody:
       "Wenn du aktiven Pro-Zugriff hast, wird zuerst die Verlängerung beendet; dein Konto und deine Daten bleiben bis zum Ende des bezahlten Zeitraums verfügbar. Danach kannst du zurückkehren und dein Konto endgültig löschen. Für den aktuellen Zeitraum gibt es keine Rückerstattung.",
-    deleteBilling: "Kann Paddle die Verlängerung nicht beenden, bleibt dein Konto unverändert.",
+    deleteBilling: "Kann Creem die Verlängerung nicht beenden, bleibt dein Konto unverändert.",
     deleteData: "Dein Portfolio wird unwiderruflich gelöscht.",
     confirmLabel: "Gib zur Bestätigung deine Konto-E-Mail ein",
     delete: "Konto löschen",
@@ -159,7 +159,7 @@ const COPY: Record<Lang, Copy> = {
     status: "Estado",
     nextRenewal: "Pagado hasta",
     canceledAt: "Renovación cancelada · acceso hasta",
-    manage: "Administrar pagos en Paddle",
+    manage: "Administrar pagos en Creem",
     billingUnavailable: "Portal de pagos no disponible. Contacta con soporte.",
     exportTitle: "Exportar tus datos",
     exportBody:
@@ -169,7 +169,7 @@ const COPY: Record<Lang, Copy> = {
     deleteTitle: "Eliminar cuenta",
     deleteBody:
       "Si tienes acceso Pro activo, primero se cancelará la renovación y tu cuenta y tus datos seguirán disponibles hasta que termine el periodo pagado. Después puedes volver aquí para eliminar la cuenta permanentemente. No se reembolsa el periodo pagado actual.",
-    deleteBilling: "Si Paddle no puede cancelar la renovación, tu cuenta no cambiará.",
+    deleteBilling: "Si Creem no puede cancelar la renovación, tu cuenta no cambiará.",
     deleteData: "Tu cartera se eliminará permanentemente.",
     confirmLabel: "Escribe el correo de tu cuenta para confirmar",
     delete: "Eliminar mi cuenta",
@@ -192,7 +192,7 @@ const COPY: Record<Lang, Copy> = {
     status: "Stato",
     nextRenewal: "Pagato fino al",
     canceledAt: "Rinnovo annullato · accesso fino al",
-    manage: "Gestisci pagamenti su Paddle",
+    manage: "Gestisci pagamenti su Creem",
     billingUnavailable: "Portale pagamenti non disponibile. Contatta l'assistenza.",
     exportTitle: "Esporta i tuoi dati",
     exportBody:
@@ -202,8 +202,7 @@ const COPY: Record<Lang, Copy> = {
     deleteTitle: "Elimina account",
     deleteBody:
       "Se hai accesso Pro attivo, prima verrà annullato il rinnovo e il tuo account e i tuoi dati resteranno disponibili fino alla fine del periodo pagato. Dopo potrai tornare qui per eliminare definitivamente l'account. Il periodo pagato corrente non viene rimborsato.",
-    deleteBilling:
-      "Se Paddle non riesce ad annullare il rinnovo, il tuo account resterà invariato.",
+    deleteBilling: "Se Creem non riesce ad annullare il rinnovo, il tuo account resterà invariato.",
     deleteData: "Il portafoglio verrà eliminato in modo permanente.",
     confirmLabel: "Inserisci l'email dell'account per confermare",
     delete: "Elimina il mio account",
@@ -226,7 +225,8 @@ type Subscription = {
   status: string;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  paddle_subscription_id: string | null;
+  provider_customer_id: string | null;
+  provider_subscription_id: string | null;
 };
 
 function AccountPage() {
@@ -249,7 +249,7 @@ function AccountPage() {
         const { data, error } = await supabase
           .from("subscriptions")
           .select(
-            "plan,interval,status,current_period_end,cancel_at_period_end,paddle_subscription_id",
+            "plan,interval,status,current_period_end,cancel_at_period_end,provider_customer_id,provider_subscription_id",
           )
           .eq("user_id", user.id)
           .order("updated_at", { ascending: false })
@@ -437,7 +437,7 @@ function AccountPage() {
           </p>
         )}
         {loading && <p className="text-sm text-muted-foreground">…</p>}
-        {subscription?.paddle_subscription_id && (
+        {subscription?.provider_customer_id && (
           <button
             disabled={busy}
             onClick={() => void manageBilling()}

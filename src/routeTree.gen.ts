@@ -41,6 +41,7 @@ import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
 import { Route as CommunityUserIdRouteImport } from './routes/community.$userId'
 import { Route as ApiAccountDeleteRouteImport } from './routes/api/account/delete'
 import { Route as ApiAccountPortalRouteImport } from './routes/api/account/portal'
+import { Route as ApiPaymentsCheckoutRouteImport } from './routes/api/payments/checkout'
 import { Route as ApiPublicAnalyticsRouteImport } from './routes/api/public/analytics'
 import { Route as ApiReferralsClaimRouteImport } from './routes/api/referrals/claim'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -205,6 +206,11 @@ const ApiAccountPortalRoute = ApiAccountPortalRouteImport.update({
   path: '/api/account/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaymentsCheckoutRoute = ApiPaymentsCheckoutRouteImport.update({
+  id: '/api/payments/checkout',
+  path: '/api/payments/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAnalyticsRoute = ApiPublicAnalyticsRouteImport.update({
   id: '/api/public/analytics',
   path: '/api/public/analytics',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/advisor/': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
+  '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/advisor': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
+  '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/advisor/': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
+  '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/advisor/'
     | '/api/account/delete'
     | '/api/account/portal'
+    | '/api/payments/checkout'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/advisor'
     | '/api/account/delete'
     | '/api/account/portal'
+    | '/api/payments/checkout'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/advisor/'
     | '/api/account/delete'
     | '/api/account/portal'
+    | '/api/payments/checkout'
     | '/api/public/analytics'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
@@ -480,6 +492,7 @@ export interface RootRouteChildren {
   AdvisorIndexRoute: typeof AdvisorIndexRoute
   ApiAccountDeleteRoute: typeof ApiAccountDeleteRoute
   ApiAccountPortalRoute: typeof ApiAccountPortalRoute
+  ApiPaymentsCheckoutRoute: typeof ApiPaymentsCheckoutRoute
   ApiPublicAnalyticsRoute: typeof ApiPublicAnalyticsRoute
   ApiReferralsClaimRoute: typeof ApiReferralsClaimRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -711,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAccountPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/payments/checkout': {
+      id: '/api/payments/checkout'
+      path: '/api/payments/checkout'
+      fullPath: '/api/payments/checkout'
+      preLoaderRoute: typeof ApiPaymentsCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/analytics': {
       id: '/api/public/analytics'
       path: '/api/public/analytics'
@@ -779,6 +799,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdvisorIndexRoute: AdvisorIndexRoute,
   ApiAccountDeleteRoute: ApiAccountDeleteRoute,
   ApiAccountPortalRoute: ApiAccountPortalRoute,
+  ApiPaymentsCheckoutRoute: ApiPaymentsCheckoutRoute,
   ApiPublicAnalyticsRoute: ApiPublicAnalyticsRoute,
   ApiReferralsClaimRoute: ApiReferralsClaimRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

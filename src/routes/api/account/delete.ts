@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import type { PaddleEnv } from "@/lib/paddle.server";
 
 const requestSchema = z.object({ confirmEmail: z.string().email().max(320) }).strict();
 
@@ -30,7 +29,7 @@ export const Route = createFileRoute("/api/account/delete")({
         const { data: subscriptions, error: subscriptionError } = await supabaseAdmin
           .from("subscriptions")
           .select(
-            "paddle_subscription_id,environment,status,cancel_at_period_end,current_period_end",
+            "id,provider_subscription_id,environment,status,cancel_at_period_end,current_period_end",
           )
           .eq("user_id", user.id)
           .in("status", ["active", "trialing", "past_due", "canceled"]);
@@ -48,19 +47,27 @@ export const Route = createFileRoute("/api/account/delete")({
           if (subscription.cancel_at_period_end) continue;
           if (subscription.current_period_end && Date.parse(subscription.current_period_end) <= now)
             continue;
-          if (!subscription.paddle_subscription_id) {
-            console.error("Active subscription is missing its Paddle ID", { userId: user.id });
+          if (!subscription.provider_subscription_id) {
+            console.error("Active subscription is missing its Creem ID", { userId: user.id });
             return Response.json(
               { error: "Unable to cancel subscription renewal; account was not deleted" },
               { status: 502 },
             );
           }
           try {
-            const env: PaddleEnv = subscription.environment === "live" ? "live" : "sandbox";
-            const { getPaddleClient } = await import("@/lib/paddle.server");
-            await getPaddleClient(env).subscriptions.cancel(subscription.paddle_subscription_id, {
-              effectiveFrom: "next_billing_period",
-            });
+            if (subscription.environment !== "live" && subscription.environment !== "sandbox")
+              throw new Error("Unsupported Creem environment");
+            const { cancelCreemSubscription } = await import("@/lib/creem.server");
+            await cancelCreemSubscription(
+              subscription.environment === "live" ? "prod" : "test",
+              subscription.provider_subscription_id,
+            );
+            const { error } = await supabaseAdmin
+              .from("subscriptions")
+              .update({ cancel_at_period_end: true, updated_at: new Date().toISOString() })
+              .eq("id", subscription.id)
+              .eq("user_id", user.id);
+            if (error) throw error;
           } catch (error) {
             console.error("Unable to cancel renewal before account deletion", error);
             return Response.json(

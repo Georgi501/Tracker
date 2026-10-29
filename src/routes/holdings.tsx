@@ -226,9 +226,19 @@ function Holdings() {
       if (!Number.isFinite(bv)) return -1;
       return (av - bv) * sort.dir;
     });
-  const Th = ({ k, label, left }: { k: SortKey; label: string; left?: boolean }) => (
+  const Th = ({
+    k,
+    label,
+    left,
+    className = "",
+  }: {
+    k: SortKey;
+    label: string;
+    left?: boolean;
+    className?: string;
+  }) => (
     <th
-      className={`py-2 font-medium ${left ? "" : "text-right"}`}
+      className={`py-2 font-medium ${left ? "" : "text-right"} ${className}`}
       aria-sort={sort.key === k ? (sort.dir === 1 ? "ascending" : "descending") : "none"}
     >
       <button
@@ -518,8 +528,8 @@ function Holdings() {
                 <thead className="text-left text-xs text-muted-foreground">
                   <tr className="border-b border-border">
                     <Th k="name" label={p.t("name")} left />
-                    <Th k="qty" label={p.t("qty")} />
-                    <Th k="price" label={p.t("price")} />
+                    <Th k="qty" label={p.t("qty")} className="px-2" />
+                    <Th k="price" label={p.t("price")} className="px-2" />
                     <th className="w-24 px-2 text-right font-medium">30d</th>
                     <Th k="change" label="24h %" />
                     <Th k="avgCost" label={p.t("avgCost")} />
@@ -557,8 +567,8 @@ function Holdings() {
                           </div>
                         </div>
                       </td>
-                      <td className="text-right">{num(h.quantity)}</td>
-                      <td className="text-right">{p.money(h.asset.price)}</td>
+                      <td className="px-2 text-right">{num(h.quantity)}</td>
+                      <td className="px-2 text-right">{p.money(h.asset.price)}</td>
                       <td className="px-2">
                         <div className="flex justify-end">
                           {sparks.data?.[h.asset.symbol] ? (

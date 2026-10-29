@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import type { PaddleEnv } from "@/lib/paddle.server";
 
 const requestSchema = z.object({}).strict();
 
@@ -26,9 +25,7 @@ export const Route = createFileRoute("/api/account/portal")({
 
         const { data: rows, error } = await supabaseAdmin
           .from("subscriptions")
-          .select(
-            "paddle_subscription_id,paddle_customer_id,environment,status,current_period_end,cancel_at_period_end",
-          )
+          .select("provider_customer_id,environment,status,current_period_end")
           .eq("user_id", auth.user.id)
           .in("status", ["active", "trialing", "past_due", "canceled"]);
         if (error) {
@@ -38,26 +35,26 @@ export const Route = createFileRoute("/api/account/portal")({
         const now = Date.now();
         const subscription = rows.find(
           (row) =>
-            row.paddle_subscription_id &&
-            row.paddle_customer_id &&
+            row.provider_customer_id &&
             (!row.current_period_end || Date.parse(row.current_period_end) > now),
         );
-        if (!subscription?.paddle_subscription_id || !subscription.paddle_customer_id)
+        if (!subscription?.provider_customer_id)
           return Response.json(
-            { error: "No active Paddle subscription was found" },
+            { error: "No active Creem subscription was found" },
             { status: 404 },
           );
 
         try {
-          const env: PaddleEnv = subscription.environment === "live" ? "live" : "sandbox";
-          const { getPaddleClient } = await import("@/lib/paddle.server");
-          const session = await getPaddleClient(env).customerPortalSessions.create(
-            subscription.paddle_customer_id,
-            [subscription.paddle_subscription_id],
+          if (subscription.environment !== "live" && subscription.environment !== "sandbox")
+            throw new Error("Unsupported Creem environment");
+          const { createCreemBillingLink } = await import("@/lib/creem.server");
+          const url = await createCreemBillingLink(
+            subscription.environment === "live" ? "prod" : "test",
+            subscription.provider_customer_id,
           );
-          return Response.json({ url: session.urls.general.overview });
+          return Response.json({ url });
         } catch (error) {
-          console.error("Unable to create Paddle customer portal session", error);
+          console.error("Unable to create Creem customer portal session", error);
           return Response.json({ error: "Unable to open billing portal" }, { status: 502 });
         }
       },
