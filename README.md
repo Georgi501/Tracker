@@ -43,7 +43,36 @@ Use Creem Test Mode and test API credentials before switching Cloudflare to the 
 
 ## Referral rewards and analytics setup
 
-Apply `drizzle/migrations/0009_referrals_and_analytics.sql`, `drizzle/migrations/0010_account_management.sql`, and `drizzle/migrations/0012_creem_billing.sql` to the connected Supabase database before enabling referrals, account deletion, or Creem billing. Referral rewards are issued only after a live, signature-verified Creem checkout is matched to its subscription record. Test-mode payments never grant rewards.
+Apply `drizzle/migrations/0009_referrals_and_analytics.sql`, `drizzle/migrations/0010_account_management.sql`, `drizzle/migrations/0012_creem_billing.sql`, and `drizzle/migrations/0013_owner_admin_access.sql` to the connected Supabase database before enabling referrals, account deletion, Creem billing, or the owner console. Referral rewards are issued only after a live, signature-verified Creem checkout is matched to its subscription record. Test-mode payments never grant rewards.
+
+### Owner console setup
+
+After applying `0013_owner_admin_access.sql`, provision the existing owner account once in the Supabase SQL Editor. Replace the placeholder with the email of the owner account that already exists in `auth.users`; this inserts only that account as a site admin and grants permanent Pro access. The console exposes aggregate account/subscription counts and Pro status by email, but never other users' portfolios or messages.
+
+```sql
+DO $$
+DECLARE
+  owner_id uuid;
+BEGIN
+  SELECT id INTO owner_id
+  FROM auth.users
+  WHERE lower(email) = lower('replace-with-owner-email');
+
+  IF owner_id IS NULL THEN
+    RAISE EXCEPTION 'Owner account was not found';
+  END IF;
+
+  INSERT INTO public.site_admins (user_id)
+  VALUES (owner_id)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  INSERT INTO public.pro_access_grants (user_id, granted_by)
+  VALUES (owner_id, owner_id)
+  ON CONFLICT (user_id) WHERE revoked_at IS NULL DO NOTHING;
+END $$;
+```
+
+Sign out and back in after provisioning. The owner console then appears in the account menu and is also available at `/admin`.
 
 First-party analytics are opt-in. The app stores only allowlisted event names and a random session ID, without account IDs, emails or portfolio data; events older than 90 days are removed as new events are recorded. Users can change their consent from the Privacy Policy page.
 

@@ -165,7 +165,10 @@ function Dashboard() {
               size="sm"
               variant={chartMode === "value" ? "secondary" : "ghost"}
               aria-pressed={chartMode === "value"}
-              onClick={() => setChartMode("value")}
+              onClick={() => {
+                setChartMode("value");
+                setBenchmark("none");
+              }}
             >
               {p.t("netWorth")}
             </Button>
@@ -438,24 +441,30 @@ function Dashboard() {
         </div>
         <ul className="divide-y divide-border">
           {p.holdings.slice(0, 6).map((h) => (
-            <li key={h.asset.id} className="flex items-center gap-3 py-2.5">
-              <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold">{h.asset.name}</p>
-                <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
-              </div>
-              <div className="text-right text-sm">
-                <p className="font-semibold">{p.money(h.value)}</p>
-                <div className="flex items-center justify-end gap-2 text-xs">
-                  <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                  <span className="text-muted-foreground">
-                    {portfolioValue > 0 && Number.isFinite(h.value)
-                      ? ((h.value / portfolioValue) * 100).toFixed(1)
-                      : "0.0"}
-                    % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
-                  </span>
+            <li key={h.asset.id}>
+              <Link
+                to="/asset/$symbol"
+                params={{ symbol: h.asset.symbol }}
+                className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">{h.asset.name}</p>
+                  <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
                 </div>
-              </div>
+                <div className="text-right text-sm">
+                  <p className="font-semibold">{p.money(h.value)}</p>
+                  <div className="flex items-center justify-end gap-2 text-xs">
+                    <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
+                    <span className="text-muted-foreground">
+                      {portfolioValue > 0 && Number.isFinite(h.value)
+                        ? ((h.value / portfolioValue) * 100).toFixed(1)
+                        : "0.0"}
+                      % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                    </span>
+                  </div>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>

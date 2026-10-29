@@ -400,6 +400,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_admins: {
+        Row: {
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      pro_access_grants: {
+        Row: {
+          created_at: string;
+          granted_by: string;
+          id: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          granted_by: string;
+          id?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          granted_by?: string;
+          id?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       transactions: {
         Row: {
           asset_id: string;
@@ -457,6 +499,31 @@ export type Database = {
     };
     Functions: {
       is_pro: { Args: { _user_id: string }; Returns: boolean };
+      is_site_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          active_subscriptions: number;
+          pro_accounts: number;
+          total_users: number;
+        }[];
+      };
+      admin_user_summary: {
+        Args: { _email: string };
+        Returns: {
+          created_at: string;
+          current_period_end: string | null;
+          email: string;
+          has_admin_grant: boolean;
+          pro: boolean;
+          subscription_status: string | null;
+          user_id: string;
+        }[];
+      };
+      admin_set_pro_access: {
+        Args: { _actor_id: string; _enabled: boolean; _user_id: string };
+        Returns: boolean;
+      };
       claim_referral_code: { Args: { _user_id: string; _code: string }; Returns: boolean };
       grant_referral_reward: { Args: { _referred_user_id: string }; Returns: boolean };
       record_analytics_event: {

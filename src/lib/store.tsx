@@ -40,6 +40,7 @@ interface State {
   toggleTheme: () => void;
   user: User | null;
   isPro: boolean;
+  isAdmin: boolean;
   displayName: string;
   assets: Asset[];
   transactions: Transaction[];
@@ -78,6 +79,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [user, setUser] = useState<User | null>(null);
   const [isPro, setIsPro] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [assets, setAssets] = useState<Asset[]>([]);
   const [transactions, setTx] = useState<Transaction[]>([]);
@@ -143,17 +145,20 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setTx([]);
       setBrokers([]);
       setIsPro(false);
+      setIsAdmin(false);
       setPricesLive(false);
       return;
     }
-    const [a, t, b, p, pro] = await Promise.all([
+    const [a, t, b, p, pro, admin] = await Promise.all([
       supabase.from("assets").select("*"),
       supabase.from("transactions").select("*"),
       supabase.from("brokers").select("id,name,format").order("created_at"),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.rpc("is_pro", { _user_id: user.id }),
+      supabase.rpc("is_site_admin"),
     ]);
     setIsPro(!!pro.data);
+    setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
     if (p.data) {
       setDisplayName(p.data.display_name ?? "");
@@ -250,6 +255,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       theme,
       user,
       isPro,
+      isAdmin,
       displayName,
       assets,
       transactions,
@@ -355,6 +361,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     theme,
     user,
     isPro,
+    isAdmin,
     displayName,
     assets,
     transactions,

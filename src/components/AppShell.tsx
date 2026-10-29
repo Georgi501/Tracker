@@ -36,6 +36,7 @@ import {
   PieChart,
   Plus,
   Search,
+  ShieldCheck,
   Settings2,
   Sun,
   UserRound,
@@ -304,6 +305,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                       {p.lang === "bg" ? "Профил и плащания" : "Account & billing"}
                     </Link>
                   </DropdownMenuItem>
+                  {p.isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin">
+                        <ShieldCheck size={14} />
+                        {p.lang === "bg" ? "Административен панел" : "Owner console"}
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/profile">

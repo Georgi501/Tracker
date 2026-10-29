@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrokersRouteImport } from './routes/brokers'
@@ -34,6 +35,7 @@ import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
 import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
+import { Route as ApiAdminRouteImport } from './routes/api/admin'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiThesisRouteImport } from './routes/api/thesis'
@@ -54,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -171,6 +178,11 @@ const AdvisorThreadIdRoute = AdvisorThreadIdRouteImport.update({
   path: '/advisor/$threadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminRoute = ApiAdminRouteImport.update({
+  id: '/api/admin',
+  path: '/api/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
   id: '/api/advisor',
   path: '/api/advisor',
@@ -231,6 +243,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -253,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
@@ -269,6 +283,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -291,6 +306,7 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
@@ -308,6 +324,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -330,6 +347,7 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
@@ -348,6 +366,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/admin'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -370,6 +389,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/watchlist'
     | '/advisor/$threadId'
+    | '/api/admin'
     | '/api/advisor'
     | '/api/review'
     | '/api/thesis'
@@ -386,6 +406,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/admin'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -408,6 +429,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/watchlist'
     | '/advisor/$threadId'
+    | '/api/admin'
     | '/api/advisor'
     | '/api/review'
     | '/api/thesis'
@@ -424,6 +446,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/account'
+    | '/admin'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -446,6 +469,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/watchlist'
     | '/advisor/$threadId'
+    | '/api/admin'
     | '/api/advisor'
     | '/api/review'
     | '/api/thesis'
@@ -463,6 +487,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   BrokersRoute: typeof BrokersRoute
@@ -485,6 +510,7 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   WatchlistRoute: typeof WatchlistRoute
   AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
+  ApiAdminRoute: typeof ApiAdminRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiThesisRoute: typeof ApiThesisRoute
@@ -512,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -675,6 +708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdvisorThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin': {
+      id: '/api/admin'
+      path: '/api/admin'
+      fullPath: '/api/admin'
+      preLoaderRoute: typeof ApiAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/advisor': {
       id: '/api/advisor'
       path: '/api/advisor'
@@ -770,6 +810,7 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   BrokersRoute: BrokersRoute,
@@ -792,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   WatchlistRoute: WatchlistRoute,
   AdvisorThreadIdRoute: AdvisorThreadIdRoute,
+  ApiAdminRoute: ApiAdminRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiThesisRoute: ApiThesisRoute,
