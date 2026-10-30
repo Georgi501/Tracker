@@ -290,8 +290,14 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hasPassword, setHasPassword] = useState(true);
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => {
+      const identities = data.user?.identities;
+      if (identities) setHasPassword(identities.some((i) => i.provider === "email"));
+    });
+  }, []);
   const close = () => {
-    setOpen(null);
     setCurrent("");
     setNewEmail("");
     setPw("");
@@ -380,7 +386,14 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
       <p className="text-sm">
         {t.email}: <strong>{email}</strong>
       </p>
-      {open === null && (
+      {open === null && !hasPassword && (
+        <p className="text-sm text-muted-foreground">
+          {bg
+            ? "Влезли сте с Google — имейлът и паролата се управляват от Google акаунта ви."
+            : "You signed in with Google — your email and password are managed by your Google account."}
+        </p>
+      )}
+      {open === null && hasPassword && (
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setOpen("email")} className={ghost}>
             {t.changeEmail}
