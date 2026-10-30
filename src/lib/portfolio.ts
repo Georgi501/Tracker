@@ -14,6 +14,7 @@ export interface Asset {
   dividendPerShare: number; // annual USD
   payMonths: number[]; // 0-11
   quoteCurrency?: string;
+  quoteNativePrice?: number; // price in quoteCurrency, as quoted by the provider
   quoteAt?: string;
 }
 

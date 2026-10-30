@@ -12,7 +12,7 @@ import { Card, Delta } from "@/components/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
 import { pct, usePortfolio } from "@/lib/store";
-import type { AssetType } from "@/lib/portfolio";
+import type { Asset, AssetType } from "@/lib/portfolio";
 import { marketQuote, searchMarket } from "@/lib/market.functions";
 import { getSparklines } from "@/lib/sparklines.functions";
 import { EmptyIllustration, Sparkline } from "@/components/Motion";
@@ -271,6 +271,21 @@ function Holdings() {
     pnlPct: `${p.t("pnl")} %`,
   };
   const num = (n: number) => n.toLocaleString(languageLocale(p.lang), { maximumFractionDigits: 6 });
+  // Show the quote in the asset's own trading currency; fall back to the base currency.
+  const nativePrice = (a: Asset) => {
+    const cur = a.quoteCurrency;
+    const raw = a.quoteNativePrice;
+    if (!cur || raw === undefined || !Number.isFinite(raw)) return p.money(a.price);
+    const pence = cur === "GBX" || cur === "GBp";
+    try {
+      return new Intl.NumberFormat(languageLocale(p.lang), {
+        style: "currency",
+        currency: pence ? "GBP" : cur,
+      }).format(pence ? raw / 100 : raw);
+    } catch {
+      return p.money(a.price);
+    }
+  };
   const owned = new Set(p.assets.map((a) => a.symbol.toUpperCase()));
 
   const openAdd = (next: TxPreset | null) => {
@@ -580,7 +595,7 @@ function Holdings() {
                         </div>
                       </td>
                       <td className="px-2 text-right">{num(h.quantity)}</td>
-                      <td className="numeric-display px-2 text-right">{p.money(h.asset.price)}</td>
+                      <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
                       <td className="px-2">
                         <div className="flex justify-end">
                           {sparks.data?.[h.asset.symbol] ? (

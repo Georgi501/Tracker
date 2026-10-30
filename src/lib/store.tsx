@@ -202,6 +202,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                 price: q.price,
                 change24h: q.change ?? Number.NaN,
                 quoteCurrency: q.currency,
+                quoteNativePrice: q.nativePrice,
                 quoteAt: q.at,
               }
             : x;

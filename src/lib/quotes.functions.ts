@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export type Quote = {
   price: number;
+  nativePrice: number;
   change: number | null;
   at: string;
   currency: string;
@@ -53,7 +54,7 @@ export const getQuotes = createServerFn({ method: "POST" })
             missing.push(item.symbol);
             return;
           }
-          quotes[item.symbol] = { ...q, price: q.price * rate };
+          quotes[item.symbol] = { ...q, price: q.price * rate, nativePrice: q.price };
         }),
       );
     }
