@@ -8,6 +8,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
+  Pencil,
   Plus,
   Search,
   Trash2,
@@ -340,42 +341,142 @@ function Holdings() {
       },
     });
   };
+  const [editing, setEditing] = useState<{
+    id: string;
+    quantity: string;
+    price: string;
+    date: string;
+    editPrice: boolean;
+  } | null>(null);
+  const saveLot = async () => {
+    if (!editing) return;
+    const bg = p.lang === "bg";
+    const quantity = Number(editing.quantity);
+    const price = Number(editing.price);
+    if (
+      !Number.isFinite(quantity) ||
+      quantity <= 0 ||
+      !editing.date ||
+      (editing.editPrice && (!Number.isFinite(price) || price < 0))
+    ) {
+      toast.error(bg ? "Невалидни стойности" : "Invalid values");
+      return;
+    }
+    const patch = {
+      quantity,
+      date: editing.date,
+      ...(editing.editPrice ? { price } : {}),
+    };
+    const { error } = await supabase.from("transactions").update(patch).eq("id", editing.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setEditing(null);
+    await p.reload();
+    toast.success(bg ? "Лотът е обновен" : "Lot updated");
+  };
   const lotsPanel = (assetId: string) => {
     const bg = p.lang === "bg";
     const lotAsset = p.assets.find((a) => a.id === assetId);
+    // Stored prices are USD, so they are only edited directly when the asset is quoted in USD.
+    const priceEditable = !lotAsset?.quoteCurrency || lotAsset.quoteCurrency === "USD";
     const lots = p.transactions
       .filter((t) => t.assetId === assetId)
       .sort((a, b) => b.date.localeCompare(a.date));
     const kindLabel = { buy: bg ? "Покупка" : "Buy", sell: bg ? "Продажба" : "Sell" } as const;
+    const field = "rounded-lg border border-input bg-background px-2 py-1 text-sm";
     return (
       <div className="rounded-xl border border-border bg-background/60 p-3">
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {lotsLabel}
         </p>
         <ul className="divide-y divide-border">
-          {lots.map((t) => (
-            <li key={t.id} className="flex items-center gap-3 py-2 text-sm">
-              <span className="w-24 text-muted-foreground">
-                {new Date(t.date).toLocaleDateString(languageLocale(p.lang))}
-              </span>
-              <span className="w-24 font-medium">
-                {t.kind === "dividend" ? (bg ? "Дивидент" : "Dividend") : kindLabel[t.kind]}
-              </span>
-              <span className="flex-1">
-                {t.kind === "dividend"
-                  ? p.moneyFor(t.price, lotAsset)
-                  : `${num(t.quantity)} × ${p.moneyFor(t.price, lotAsset)}`}
-              </span>
-              <button
-                onClick={() => void removeLot(t.id)}
-                aria-label={bg ? "Изтрий лота" : "Delete lot"}
-                title={bg ? "Изтрий лота" : "Delete lot"}
-                className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 size={16} />
-              </button>
-            </li>
-          ))}
+          {lots.map((t) =>
+            editing?.id === t.id ? (
+              <li key={t.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
+                <input
+                  type="date"
+                  value={editing.date}
+                  onChange={(e) => setEditing({ ...editing, date: e.target.value })}
+                  aria-label={bg ? "Дата" : "Date"}
+                  className={field}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={editing.quantity}
+                  onChange={(e) => setEditing({ ...editing, quantity: e.target.value })}
+                  aria-label={bg ? "Количество" : "Quantity"}
+                  className={`${field} w-24`}
+                />
+                {editing.editPrice && (
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={editing.price}
+                    onChange={(e) => setEditing({ ...editing, price: e.target.value })}
+                    aria-label={bg ? "Цена (USD)" : "Price (USD)"}
+                    className={`${field} w-28`}
+                  />
+                )}
+                <button
+                  onClick={() => void saveLot()}
+                  className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground"
+                >
+                  {bg ? "Запази" : "Save"}
+                </button>
+                <button
+                  onClick={() => setEditing(null)}
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-semibold"
+                >
+                  {bg ? "Отказ" : "Cancel"}
+                </button>
+              </li>
+            ) : (
+              <li key={t.id} className="flex items-center gap-3 py-2 text-sm">
+                <span className="w-24 text-muted-foreground">
+                  {new Date(t.date).toLocaleDateString(languageLocale(p.lang))}
+                </span>
+                <span className="w-24 font-medium">
+                  {t.kind === "dividend" ? (bg ? "Дивидент" : "Dividend") : kindLabel[t.kind]}
+                </span>
+                <span className="flex-1">
+                  {t.kind === "dividend"
+                    ? p.moneyFor(t.price, lotAsset)
+                    : `${num(t.quantity)} × ${p.moneyFor(t.price, lotAsset)}`}
+                </span>
+                {t.kind !== "dividend" && (
+                  <button
+                    onClick={() =>
+                      setEditing({
+                        id: t.id,
+                        quantity: String(t.quantity),
+                        price: String(t.price),
+                        date: t.date.slice(0, 10),
+                        editPrice: priceEditable,
+                      })
+                    }
+                    aria-label={bg ? "Редактирай лота" : "Edit lot"}
+                    title={bg ? "Редактирай лота" : "Edit lot"}
+                    className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+                <button
+                  onClick={() => void removeLot(t.id)}
+                  aria-label={bg ? "Изтрий лота" : "Delete lot"}
+                  title={bg ? "Изтрий лота" : "Delete lot"}
+                  className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </li>
+            ),
+          )}
         </ul>
       </div>
     );
