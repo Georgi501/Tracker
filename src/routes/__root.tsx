@@ -12,7 +12,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Toaster } from "sonner";
 import { AppShell } from "../components/AppShell";
-import { PortfolioProvider } from "../lib/store";
+import { PortfolioProvider, usePortfolio } from "../lib/store";
 import { isLang, type Lang } from "../lib/i18n";
 import appCss from "../styles.css?url";
 
@@ -88,6 +88,26 @@ function useErrorCopy() {
   return ERROR_COPY[lang];
 }
 
+function AssetRefreshNotice() {
+  const p = usePortfolio();
+  const c = ERROR_COPY[p.lang];
+  return (
+    <div
+      role="alert"
+      className="fixed inset-x-0 top-0 z-[100] flex items-center justify-center gap-3 bg-primary px-4 py-3 text-center text-sm text-primary-foreground shadow-lg"
+    >
+      <span>{c.updateAvailable}</span>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="rounded-full border border-current px-3 py-1 font-semibold"
+      >
+        {c.reload}
+      </button>
+    </div>
+  );
+}
+
 const ERROR_COPY: Record<
   Lang,
   {
@@ -97,6 +117,8 @@ const ERROR_COPY: Record<
     errorDescription: string;
     retry: string;
     home: string;
+    updateAvailable: string;
+    reload: string;
   }
 > = {
   en: {
@@ -106,6 +128,8 @@ const ERROR_COPY: Record<
     errorDescription: "Something went wrong. You can try refreshing or head back home.",
     retry: "Try again",
     home: "Go home",
+    updateAvailable: "A new version is available. Reload to continue.",
+    reload: "Reload",
   },
   bg: {
     notFound: "Страницата не е намерена",
@@ -114,6 +138,8 @@ const ERROR_COPY: Record<
     errorDescription: "Възникна проблем. Опитай отново или се върни към началото.",
     retry: "Опитай отново",
     home: "Към началото",
+    updateAvailable: "Има нова версия. Презареди страницата, за да продължиш.",
+    reload: "Презареди",
   },
   de: {
     notFound: "Seite nicht gefunden",
@@ -123,6 +149,8 @@ const ERROR_COPY: Record<
       "Es ist ein Fehler aufgetreten. Versuche es erneut oder gehe zurück zur Startseite.",
     retry: "Erneut versuchen",
     home: "Startseite",
+    updateAvailable: "Eine neue Version ist verfügbar. Lade die Seite neu, um fortzufahren.",
+    reload: "Neu laden",
   },
   es: {
     notFound: "Página no encontrada",
@@ -131,6 +159,8 @@ const ERROR_COPY: Record<
     errorDescription: "Se produjo un error. Inténtalo de nuevo o vuelve al inicio.",
     retry: "Reintentar",
     home: "Ir al inicio",
+    updateAvailable: "Hay una nueva versión. Recarga la página para continuar.",
+    reload: "Recargar",
   },
   it: {
     notFound: "Pagina non trovata",
@@ -139,6 +169,8 @@ const ERROR_COPY: Record<
     errorDescription: "Si è verificato un errore. Riprova o torna alla pagina iniziale.",
     retry: "Riprova",
     home: "Vai alla home",
+    updateAvailable: "È disponibile una nuova versione. Ricarica la pagina per continuare.",
+    reload: "Ricarica",
   },
 };
 
@@ -201,11 +233,35 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [assetRefreshRequired, setAssetRefreshRequired] = useState(false);
+
+  useEffect(() => {
+    const handlePreloadError = (event: Event) => {
+      event.preventDefault();
+      setAssetRefreshRequired(true);
+    };
+    const handleResourceError = (event: Event) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLScriptElement &&
+        target.src.startsWith(`${window.location.origin}/assets/`)
+      )
+        setAssetRefreshRequired(true);
+    };
+
+    window.addEventListener("vite:preloadError", handlePreloadError);
+    window.addEventListener("error", handleResourceError, true);
+    return () => {
+      window.removeEventListener("vite:preloadError", handlePreloadError);
+      window.removeEventListener("error", handleResourceError, true);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <PortfolioProvider>
+        {assetRefreshRequired && <AssetRefreshNotice />}
         <AppShell>
           <Outlet />
         </AppShell>

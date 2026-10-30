@@ -50,19 +50,14 @@ export function ProGate({
             <p className="max-w-xs text-sm text-foreground">{desc}</p>
             <Link
               to="/pricing"
+              hash="plan-comparison"
               className="press rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               {c.unlock}
             </Link>
             <span className="text-xs font-medium text-muted-foreground">
-              {planCopy[p.lang].gateNote}
+              {planCopy[p.lang].freeRemains}
             </span>
-            <Link
-              to="/pricing"
-              className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
-            >
-              {planCopy[p.lang].seeWhat}
-            </Link>
           </div>
         </div>
       )}

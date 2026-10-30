@@ -20,6 +20,8 @@ type Copy = {
   sampleTitle: string;
   sampleSub: string;
   sampleLink: string;
+  dataTrust: string;
+  dataTrustLink: string;
   markets: string;
   watchlist: string;
   analytics: string;
@@ -43,6 +45,9 @@ const COPY: Record<Lang, Copy> = {
     sampleTitle: "Want to see an example first?",
     sampleSub: "Explore a sample portfolio to see how holdings and allocation are presented.",
     sampleLink: "View sample portfolio",
+    dataTrust:
+      "Quotes come from Yahoo Finance; missing historical data is never replaced with estimates.",
+    dataTrustLink: "How market data works",
     markets: "Markets",
     watchlist: "Watchlist",
     analytics: "Analytics",
@@ -65,6 +70,9 @@ const COPY: Record<Lang, Copy> = {
     sampleTitle: "Искаш първо да разгледаш пример?",
     sampleSub: "Виж примерно портфолио, за да разбереш как изглеждат позициите и разпределението.",
     sampleLink: "Разгледай примерното портфолио",
+    dataTrust:
+      "Котировките идват от Yahoo Finance; липсващите исторически данни не се заместват с оценки.",
+    dataTrustLink: "Как работят пазарните данни",
     markets: "Пазари",
     watchlist: "Watchlist",
     analytics: "Анализи",
@@ -87,6 +95,9 @@ const COPY: Record<Lang, Copy> = {
     sampleTitle: "Möchtest du zuerst ein Beispiel sehen?",
     sampleSub: "Sieh dir ein Beispielportfolio mit Positionen und Aufteilung an.",
     sampleLink: "Beispielportfolio ansehen",
+    dataTrust:
+      "Kurse stammen von Yahoo Finance; fehlende historische Daten werden nicht durch Schätzungen ersetzt.",
+    dataTrustLink: "So funktionieren Marktdaten",
     markets: "Märkte",
     watchlist: "Watchlist",
     analytics: "Analysen",
@@ -110,6 +121,9 @@ const COPY: Record<Lang, Copy> = {
     sampleSub:
       "Explora una cartera de ejemplo para ver cómo se muestran las posiciones y la distribución.",
     sampleLink: "Ver cartera de ejemplo",
+    dataTrust:
+      "Las cotizaciones proceden de Yahoo Finance; los datos históricos que faltan no se sustituyen por estimaciones.",
+    dataTrustLink: "Cómo funcionan los datos de mercado",
     markets: "Mercados",
     watchlist: "Watchlist",
     analytics: "Análisis",
@@ -133,6 +147,9 @@ const COPY: Record<Lang, Copy> = {
     sampleSub:
       "Esplora un portafoglio di esempio per vedere come vengono mostrate le posizioni e l'allocazione.",
     sampleLink: "Guarda il portafoglio di esempio",
+    dataTrust:
+      "Le quotazioni provengono da Yahoo Finance; i dati storici mancanti non vengono sostituiti con stime.",
+    dataTrustLink: "Come funzionano i dati di mercato",
     markets: "Mercati",
     watchlist: "Watchlist",
     analytics: "Analisi",
@@ -190,6 +207,16 @@ export function WelcomeHero() {
             {c.explore}
           </Link>
         </div>
+        <p className="mt-4 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+          {c.dataTrust}{" "}
+          <Link
+            to="/features"
+            hash="methodology"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            {c.dataTrustLink}
+          </Link>
+        </p>
       </section>
     );
 

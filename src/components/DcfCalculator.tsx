@@ -26,6 +26,7 @@ type Copy = {
   loading: string;
   explain: (g: string, n: string) => string;
   sliderHelp: Record<"growth" | "discount" | "terminal", string>;
+  gateDescription: string;
   disclaimer: string;
 };
 export const dcfCopy: Record<Lang, Copy> = {
@@ -52,6 +53,8 @@ export const dcfCopy: Record<Lang, Copy> = {
         "The return used to discount future cash flows to today's value; a higher rate lowers estimated value.",
       terminal: "Assumed annual growth after year five; keep it below the discount rate.",
     },
+    gateDescription:
+      "Build bear, base and bull DCF scenarios from real company financials and assumptions you control.",
     disclaimer: "Estimate based on your assumptions, not investment advice.",
   },
   bg: {
@@ -78,6 +81,8 @@ export const dcfCopy: Record<Lang, Copy> = {
       terminal:
         "Предполагаемият годишен ръст след петата година; трябва да е под дисконтовия процент.",
     },
+    gateDescription:
+      "Изгради песимистичен, базов и оптимистичен DCF сценарий по реални финансови данни и твои допускания.",
     disclaimer: "Оценка по твоите допускания, не е инвестиционен съвет.",
   },
   de: {
@@ -104,6 +109,8 @@ export const dcfCopy: Record<Lang, Copy> = {
       terminal:
         "Angenommenes jährliches Wachstum nach Jahr fünf; es muss unter dem Diskontsatz liegen.",
     },
+    gateDescription:
+      "Erstelle Bären-, Basis- und Bullen-DCF-Szenarien mit echten Unternehmensdaten und eigenen Annahmen.",
     disclaimer: "Schätzung nach deinen Annahmen, keine Anlageberatung.",
   },
   es: {
@@ -130,6 +137,8 @@ export const dcfCopy: Record<Lang, Copy> = {
       terminal:
         "Crecimiento anual supuesto después del quinto año; debe ser inferior a la tasa de descuento.",
     },
+    gateDescription:
+      "Crea escenarios DCF pesimistas, base y optimistas con datos financieros reales y tus propios supuestos.",
     disclaimer: "Estimación según tus supuestos, no es asesoramiento.",
   },
   it: {
@@ -156,6 +165,8 @@ export const dcfCopy: Record<Lang, Copy> = {
       terminal:
         "Crescita annua ipotizzata dopo il quinto anno; deve restare sotto il tasso di sconto.",
     },
+    gateDescription:
+      "Crea scenari DCF ribassista, base e rialzista con dati finanziari reali e ipotesi personalizzate.",
     disclaimer: "Stima basata sulle tue ipotesi, non è consulenza.",
   },
 };

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -8,6 +8,68 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
+
+const GOOGLE_WEB_CLIENT_ID =
+  "306300201431-r984q2kfae6tm75kt29htl8npnajbjh0.apps.googleusercontent.com";
+const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
+
+type GoogleCredentialResponse = { credential?: string };
+type GoogleButtonOptions = {
+  theme: "outline";
+  size: "large";
+  text: "continue_with";
+  shape: "pill";
+  logo_alignment: "left";
+  width: number;
+  locale: string;
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            nonce: string;
+            callback: (response: GoogleCredentialResponse) => void;
+          }) => void;
+          renderButton: (container: HTMLElement, options: GoogleButtonOptions) => void;
+        };
+      };
+    };
+  }
+}
+
+let googleScriptPromise: Promise<void> | null = null;
+
+function loadGoogleIdentityScript(): Promise<void> {
+  if (window.google?.accounts.id) return Promise.resolve();
+  if (googleScriptPromise) return googleScriptPromise;
+
+  googleScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = GOOGLE_IDENTITY_SCRIPT;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      googleScriptPromise = null;
+      reject(new Error("Unable to load Google Identity Services"));
+    };
+    document.head.append(script);
+  });
+  return googleScriptPromise;
+}
+
+function createGoogleNonce(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashGoogleNonce(nonce: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nonce));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 export function AuthForm({
   onSignedIn,
@@ -26,6 +88,9 @@ export function AuthForm({
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleSignInRef = useRef<(credential: string, nonce: string) => void>(() => {});
   const c = authCopy[p.lang];
 
   useEffect(() => {
@@ -90,18 +155,80 @@ export function AuthForm({
       setBusy(false);
     }
   };
-  const google = async () => {
-    setError(null);
+  const google = async (credential: string, nonce: string) => {
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (error) {
-      setError(error.message);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: credential,
+        nonce,
+      });
+      if (error) throw error;
+      onSignedIn?.();
+    } catch (err) {
+      setError(err instanceof Error ? `${c.googleFailed} ${err.message}` : c.googleFailed);
+    } finally {
       setBusy(false);
     }
   };
+  googleSignInRef.current = (credential, nonce) => void google(credential, nonce);
+
+  useEffect(() => {
+    let active = true;
+    let resizeObserver: ResizeObserver | undefined;
+    const container = googleButtonRef.current;
+    if (!container) return;
+    setGoogleReady(false);
+
+    void loadGoogleIdentityScript()
+      .then(() => {
+        if (!active) return;
+        const googleIdentity = window.google?.accounts.id;
+        if (!googleIdentity) throw new Error("Google Identity Services did not initialize");
+        const nonce = createGoogleNonce();
+        return hashGoogleNonce(nonce).then((hashedNonce) => {
+          if (!active) return;
+          googleIdentity.initialize({
+            client_id: GOOGLE_WEB_CLIENT_ID,
+            nonce: hashedNonce,
+            callback: (response) => {
+              if (response.credential) googleSignInRef.current(response.credential, nonce);
+              else setError(c.googleFailed);
+            },
+          });
+          const renderButton = () => {
+            if (!active) return;
+            const width = Math.min(400, Math.max(200, Math.floor(container.clientWidth)));
+            googleIdentity.renderButton(container, {
+              theme: "outline",
+              size: "large",
+              text: "continue_with",
+              shape: "pill",
+              logo_alignment: "left",
+              width,
+              locale: p.lang,
+            });
+          };
+          renderButton();
+          setGoogleReady(true);
+          resizeObserver = new ResizeObserver(renderButton);
+          resizeObserver.observe(container);
+        });
+      })
+      .catch(() => {
+        if (active) {
+          setGoogleReady(false);
+          setError(c.googleLoadError);
+        }
+      });
+
+    return () => {
+      active = false;
+      resizeObserver?.disconnect();
+      container.replaceChildren();
+    };
+  }, [c.googleFailed, c.googleLoadError, p.lang]);
   const forgot = async () => {
     const target = email.trim();
     if (!target) {
@@ -199,32 +326,16 @@ export function AuthForm({
         {p.lang === "bg" ? "или" : "or"}
         <span className="h-px flex-1 bg-border" />
       </div>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={google}
-        className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background py-2.5 text-sm font-semibold disabled:opacity-60"
-      >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-          <path
-            fill="#4285F4"
-            d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9z"
-          />
-          <path
-            fill="#34A853"
-            d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.100 0-5.700-2.100-6.600-4.900H1.400v3.100A12 12 0 0 0 12 24z"
-          />
-          <path
-            fill="#FBBC05"
-            d="M5.400 14.400a7.200 7.200 0 0 1 0-4.800V6.500H1.400a12 12 0 0 0 0 10.900l4-3z"
-          />
-          <path
-            fill="#EA4335"
-            d="M12 4.800c1.800 0 3.300.6 4.600 1.800l3.400-3.400A12 12 0 0 0 1.400 6.500l4 3.100C6.300 6.900 8.900 4.800 12 4.800z"
-          />
-        </svg>
-        {p.lang === "bg" ? "Продължи с Google" : "Continue with Google"}
-      </button>
+      <div
+        ref={googleButtonRef}
+        className={`flex min-h-10 justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}
+        aria-label={p.lang === "bg" ? "Продължи с Google" : "Continue with Google"}
+      />
+      {!googleReady && !error && (
+        <p role="status" className="mt-1 text-center text-xs text-muted-foreground">
+          {c.googleLoading}
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
         <button
           onClick={() => switchMode(mode === "in" ? "up" : "in")}

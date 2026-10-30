@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import { advisorCopy } from "@/lib/advisor-i18n";
+import { planCopy } from "@/lib/plan-i18n";
 import { Card } from "./AppShell";
 import { Button } from "./ui/button";
 
@@ -59,12 +60,25 @@ export function AdvisorLayout({ activeId, children }: { activeId?: string; child
       <Card className="mx-auto max-w-lg text-center">
         <h1 className="font-display mb-2 text-2xl font-bold">{c.advisor}</h1>
         <p className="mb-4 text-muted-foreground">{p.user ? c.proOnly : c.signIn}</p>
-        <Link
-          to={p.user ? "/pricing" : "/auth"}
-          className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          {p.user ? c.upgrade : p.t("signIn")}
-        </Link>
+        {p.user && (
+          <p className="mb-4 text-sm text-muted-foreground">{planCopy[p.lang].freeRemains}</p>
+        )}
+        {p.user ? (
+          <Link
+            to="/pricing"
+            hash="plan-comparison"
+            className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {planCopy[p.lang].comparePlans}
+          </Link>
+        ) : (
+          <Link
+            to="/auth"
+            className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {p.t("signIn")}
+          </Link>
+        )}
       </Card>
     );
   return (

@@ -378,7 +378,7 @@ function FeaturesPage() {
           );
         })}
       </section>
-      <section>
+      <section id="methodology">
         <h2 className="font-display mb-4 text-center text-2xl font-bold">{c.methodTitle}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {c.methodology.map((item) => (

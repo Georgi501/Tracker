@@ -7,15 +7,16 @@ type PlanCopy = {
   proTag: string;
   groups: { title: string; free: string; pro: string }[];
   watchlist: string;
-  gateNote: string;
   taxIncluded: string;
   trialFaqTitle: string;
   trialFaq: [string, string][];
   yearlySave: string;
   yearlyDetails: string;
   monthlyDetails: string;
-  seeWhat: string;
+  comparePlans: string;
+  freeRemains: string;
   researchDemo: string;
+  interactiveDemo: string;
   referralTitle: string;
   referralBody: string;
   referralCopy: string;
@@ -64,7 +65,6 @@ const en: PlanCopy = {
     { title: "Community", free: "—", pro: "Profile, shared allocation, private chat" },
   ],
   watchlist: "Watchlist analysis: top gainers and losers, buy-zone opportunities & DCF fair values",
-  gateNote: "€4.99/month or €49.99/year, incl. VAT",
   taxIncluded: "Prices include VAT; the total shown above is what you'll pay.",
   trialFaqTitle: "Your free trial, clearly explained",
   trialFaq: [
@@ -83,11 +83,13 @@ const en: PlanCopy = {
   ],
   yearlySave: "Save 17% yearly",
   yearlyDetails:
-    "5 days free, then €49.99 per year including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
+    "5 days free (card required), then €49.99 per year including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
   monthlyDetails:
-    "5 days free, then €4.99 per month including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
-  seeWhat: "See everything in Pro",
+    "5 days free (card required), then €4.99 per month including VAT; renews automatically. Cancel before the trial ends and you won't be charged.",
+  comparePlans: "Compare plans",
+  freeRemains: "Your Free plan and existing portfolio stay available if you choose not to upgrade.",
   researchDemo: "Explore real company research with Oracle (ORCL)",
+  interactiveDemo: "Try the interactive Pro preview with sample data",
   referralTitle: "Invite a friend",
   referralBody:
     "You and a new friend each get one month of Pro after their first successful paid subscription. The month is added after any active paid period.",
@@ -138,7 +140,6 @@ const bg: PlanCopy = {
   ],
   watchlist:
     "Анализ на Watchlist-а: най-печеливши и губещи, възможности в зона за покупка и DCF справедливи стойности",
-  gateNote: "€4.99/месец или €49.99/година с ДДС",
   taxIncluded: "Посочените цени са с включен ДДС — това е крайната сума, която ще платиш.",
   trialFaqTitle: "Безплатният пробен период — ясно и накратко",
   trialFaq: [
@@ -157,11 +158,13 @@ const bg: PlanCopy = {
   ],
   yearlySave: "Спестяваш 17% годишно",
   yearlyDetails:
-    "5 дни безплатно, после €49,99 годишно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
+    "5 дни безплатно (изисква се карта), после €49,99 годишно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
   monthlyDetails:
-    "5 дни безплатно, после €4,99 месечно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
-  seeWhat: "Виж всичко в Pro",
+    "5 дни безплатно (изисква се карта), после €4,99 месечно с включен ДДС и автоматично подновяване. Ако отмениш преди края на пробния период, няма да бъдеш таксуван.",
+  comparePlans: "Сравни плановете",
+  freeRemains: "Безплатният ти план и портфолиото ти остават достъпни, ако не избереш надграждане.",
   researchDemo: "Разгледай реален фирмен анализ — Oracle (ORCL)",
+  interactiveDemo: "Пробвай интерактивен Pro преглед с примерни данни",
   referralTitle: "Покани приятел",
   referralBody:
     "Ти и новият ти приятел получавате по един месец Pro след първото му успешно платено плащане. Наградният месец се добавя след активния платен период.",
@@ -211,7 +214,6 @@ const de: PlanCopy = {
     { title: "Community", free: "—", pro: "Profil, geteilte Aufteilung, private Chats" },
   ],
   watchlist: "Watchlist-Analyse: Top-Gewinner und -Verlierer, Kaufchancen & DCF-Fair-Values",
-  gateNote: "€4,99/Monat oder €49,99/Jahr inkl. MwSt.",
   taxIncluded:
     "Die angezeigten Preise enthalten die Mehrwertsteuer; der Betrag oben ist der Gesamtpreis.",
   trialFaqTitle: "Deine kostenlose Testphase, einfach erklärt",
@@ -231,11 +233,14 @@ const de: PlanCopy = {
   ],
   yearlySave: "17% sparen jährlich",
   yearlyDetails:
-    "5 Tage kostenlos, danach €49,99 pro Jahr inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
+    "5 Tage kostenlos (Karte erforderlich), danach €49,99 pro Jahr inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
   monthlyDetails:
-    "5 Tage kostenlos, danach €4,99 pro Monat inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
-  seeWhat: "Alles in Pro ansehen",
+    "5 Tage kostenlos (Karte erforderlich), danach €4,99 pro Monat inklusive Mehrwertsteuer; automatische Verlängerung. Wenn du vor Ende der Testphase kündigst, wird nichts abgebucht.",
+  comparePlans: "Tarife vergleichen",
+  freeRemains:
+    "Dein Free-Plan und dein bestehendes Portfolio bleiben verfügbar, wenn du nicht upgradest.",
   researchDemo: "Echte Unternehmensanalyse ansehen — Oracle (ORCL)",
+  interactiveDemo: "Interaktive Pro-Vorschau mit Beispieldaten testen",
   referralTitle: "Freund einladen",
   referralBody:
     "Du und ein neuer Freund erhalten je einen Pro-Monat nach der ersten erfolgreichen Zahlung des Freundes. Der Monat wird an einen aktiven bezahlten Zeitraum angehängt.",
@@ -286,7 +291,6 @@ const es: PlanCopy = {
   ],
   watchlist:
     "Análisis de watchlist: mayores subidas y bajadas, oportunidades de compra & valores razonables DCF",
-  gateNote: "€4,99/mes o €49,99/año, IVA incluido",
   taxIncluded:
     "Los precios mostrados incluyen el IVA; el importe indicado arriba es el total que pagarás.",
   trialFaqTitle: "Tu prueba gratuita, explicada claramente",
@@ -306,11 +310,13 @@ const es: PlanCopy = {
   ],
   yearlySave: "Ahorra 17% al año",
   yearlyDetails:
-    "5 días gratis, luego €49,99 al año con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
+    "5 días gratis (se requiere tarjeta), luego €49,99 al año con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
   monthlyDetails:
-    "5 días gratis, luego €4,99 al mes con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
-  seeWhat: "Ver todo en Pro",
+    "5 días gratis (se requiere tarjeta), luego €4,99 al mes con IVA incluido y renovación automática. Si cancelas antes de que termine la prueba, no se te cobrará.",
+  comparePlans: "Comparar planes",
+  freeRemains: "Tu plan Free y tu cartera actual seguirán disponibles si no actualizas.",
   researchDemo: "Explora un análisis real de empresa — Oracle (ORCL)",
+  interactiveDemo: "Prueba la vista Pro interactiva con datos de ejemplo",
   referralTitle: "Invita a un amigo",
   referralBody:
     "Tú y un nuevo amigo reciben un mes de Pro cada uno tras el primer pago válido del amigo. El mes se añade después de cualquier periodo pagado activo.",
@@ -361,7 +367,6 @@ const it: PlanCopy = {
   ],
   watchlist:
     "Analisi watchlist: maggiori rialzi e ribassi, opportunità di acquisto & fair value DCF",
-  gateNote: "€4,99/mese o €49,99/anno, IVA inclusa",
   taxIncluded: "I prezzi indicati includono l'IVA; l'importo sopra è il totale che pagherai.",
   trialFaqTitle: "La prova gratuita, spiegata chiaramente",
   trialFaq: [
@@ -380,11 +385,14 @@ const it: PlanCopy = {
   ],
   yearlySave: "Risparmi il 17% all'anno",
   yearlyDetails:
-    "5 giorni gratis, poi €49,99 all'anno IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
+    "5 giorni gratis (carta richiesta), poi €49,99 all'anno IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
   monthlyDetails:
-    "5 giorni gratis, poi €4,99 al mese IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
-  seeWhat: "Scopri tutto in Pro",
+    "5 giorni gratis (carta richiesta), poi €4,99 al mese IVA inclusa con rinnovo automatico. Se annulli prima della fine della prova, non verrà addebitato nulla.",
+  comparePlans: "Confronta i piani",
+  freeRemains:
+    "Il tuo piano Free e il portafoglio attuale restano disponibili se non effettui l'upgrade.",
   researchDemo: "Esplora un'analisi aziendale reale — Oracle (ORCL)",
+  interactiveDemo: "Prova l'anteprima Pro interattiva con dati di esempio",
   referralTitle: "Invita un amico",
   referralBody:
     "Tu e un nuovo amico ricevete un mese di Pro ciascuno dopo il primo pagamento riuscito dell'amico. Il mese si aggiunge al periodo già pagato.",

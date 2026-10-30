@@ -230,17 +230,28 @@ function Pricing() {
               </Link>
             )}
           </div>
+          {!p.isPro && (
+            <div className="mt-3 space-y-1 text-xs leading-relaxed text-muted-foreground">
+              <p>{yearly ? planCopy[p.lang].yearlyDetails : planCopy[p.lang].monthlyDetails}</p>
+              <p>{planCopy[p.lang].taxIncluded}</p>
+            </div>
+          )}
         </Card>
       </div>
-      <p className="mt-3 text-center text-xs font-semibold text-primary">
-        {planCopy[p.lang].yearlySave}
-      </p>
-      <p className="mt-1 text-center text-xs text-muted-foreground">
-        {yearly ? planCopy[p.lang].yearlyDetails : planCopy[p.lang].monthlyDetails}
-      </p>
-      <p className="mt-1 text-center text-xs text-muted-foreground">
-        {planCopy[p.lang].taxIncluded}
-      </p>
+      {yearly && (
+        <p className="mt-3 text-center text-xs font-semibold text-primary">
+          {planCopy[p.lang].yearlySave}
+        </p>
+      )}
+      <div className="mt-2 text-center">
+        <Link
+          to="/demo"
+          hash="pro-preview"
+          className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          {planCopy[p.lang].interactiveDemo}
+        </Link>
+      </div>
       <section className="mt-8" aria-labelledby="trial-faq-title">
         <h2 id="trial-faq-title" className="font-display text-center text-xl font-bold">
           {planCopy[p.lang].trialFaqTitle}
@@ -274,7 +285,7 @@ function Pricing() {
         </Card>
       )}
       <section className="mt-12">
-        <h2 className="font-display text-center text-2xl font-bold">
+        <h2 id="plan-comparison" className="font-display text-center text-2xl font-bold">
           {planCopy[p.lang].compareTitle}
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted-foreground">

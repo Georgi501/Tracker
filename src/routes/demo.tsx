@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
+import { useState } from "react";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
+import { ProBadge } from "@/components/ProFeatures";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
@@ -39,8 +41,11 @@ const COPY: Record<
     bonds: string;
     holdings: string;
     cols: [string, string, string, string, string];
+    heatmap: string;
+    heatmapNote: string;
     cta: string;
     explore: string;
+    samplePreview: string;
   }
 > = {
   en: {
@@ -54,8 +59,12 @@ const COPY: Record<
     bonds: "Bonds",
     holdings: "Holdings",
     cols: ["Asset", "Qty", "Avg cost", "Value", "P/L"],
+    heatmap: "Portfolio heatmap",
+    heatmapNote:
+      "Each tile shows portfolio weight and illustrative gain/loss versus sample average cost—not live or daily market performance.",
     cta: "Create your free portfolio",
     explore: "Explore markets",
+    samplePreview: "Explore the Pro preview",
   },
   bg: {
     badge: "Примерни данни",
@@ -68,8 +77,12 @@ const COPY: Record<
     bonds: "Облигации",
     holdings: "Позиции",
     cols: ["Актив", "Бр.", "Ср. цена", "Стойност", "П/З"],
+    heatmap: "Heatmap на портфолиото",
+    heatmapNote:
+      "Всяка плочка показва теглото и примерната печалба/загуба спрямо примерната средна цена — не реално или дневно пазарно представяне.",
     cta: "Създай безплатно портфолио",
     explore: "Разгледай пазарите",
+    samplePreview: "Разгледай Pro прегледа",
   },
   de: {
     badge: "Beispieldaten",
@@ -82,8 +95,12 @@ const COPY: Record<
     bonds: "Anleihen",
     holdings: "Positionen",
     cols: ["Wert", "Menge", "Ø Kosten", "Wert", "G/V"],
+    heatmap: "Portfolio-Heatmap",
+    heatmapNote:
+      "Jede Kachel zeigt das Portfolio-Gewicht und den illustrativen Gewinn/Verlust gegenüber den Beispiel-Einstandskosten – keine Live- oder Tagesentwicklung.",
     cta: "Kostenloses Portfolio erstellen",
     explore: "Märkte entdecken",
+    samplePreview: "Pro-Vorschau entdecken",
   },
   es: {
     badge: "Datos de ejemplo",
@@ -96,8 +113,12 @@ const COPY: Record<
     bonds: "Bonos",
     holdings: "Posiciones",
     cols: ["Activo", "Cant.", "Coste medio", "Valor", "P/G"],
+    heatmap: "Mapa de calor de la cartera",
+    heatmapNote:
+      "Cada bloque muestra el peso en la cartera y la ganancia/pérdida ilustrativa frente al coste medio de ejemplo; no es rendimiento diario ni en vivo.",
     cta: "Crea tu cartera gratis",
     explore: "Explorar mercados",
+    samplePreview: "Explora la vista previa Pro",
   },
   it: {
     badge: "Dati di esempio",
@@ -110,8 +131,12 @@ const COPY: Record<
     bonds: "Obbligazioni",
     holdings: "Posizioni",
     cols: ["Asset", "Qtà", "Costo medio", "Valore", "P/L"],
+    heatmap: "Mappa del portafoglio",
+    heatmapNote:
+      "Ogni riquadro mostra il peso in portafoglio e il guadagno/perdita illustrativo rispetto al costo medio di esempio, non l'andamento reale o giornaliero.",
     cta: "Crea il tuo portafoglio gratuito",
     explore: "Esplora i mercati",
+    samplePreview: "Scopri l'anteprima Pro",
   },
 };
 
@@ -125,6 +150,7 @@ const usd = (n: number, locale: string) =>
 function DemoPage() {
   const p = usePortfolio();
   const c = COPY[p.lang];
+  const [showHeatmap, setShowHeatmap] = useState(true);
   const locale = languageLocale(p.lang);
   const rows = SAMPLE.map((r) => ({
     ...r,
@@ -201,15 +227,6 @@ function DemoPage() {
         </div>
       </div>
 
-      <section className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <h2 className="font-display mb-3 text-lg font-semibold">{c.alloc}</h2>
-        <AllocationBreakdown
-          data={byClass}
-          totalLabel={c.totalValue}
-          formatValue={(value) => usd(value, locale)}
-        />
-      </section>
-
       <section className="card-interactive overflow-x-auto rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display mb-3 text-lg font-semibold">{c.holdings}</h2>
         <table className="w-full min-w-[480px] text-sm">
@@ -247,6 +264,65 @@ function DemoPage() {
             })}
           </tbody>
         </table>
+      </section>
+
+      <section
+        id="pro-preview"
+        className="card-interactive scroll-mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">{c.samplePreview}</h2>
+          <ProBadge />
+        </div>
+        <div className="my-4 flex flex-wrap gap-2" aria-label={c.samplePreview}>
+          <button
+            type="button"
+            aria-pressed={!showHeatmap}
+            onClick={() => setShowHeatmap(false)}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium ${!showHeatmap ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}
+          >
+            {c.alloc}
+          </button>
+          <button
+            type="button"
+            aria-pressed={showHeatmap}
+            onClick={() => setShowHeatmap(true)}
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium ${showHeatmap ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}
+          >
+            {c.heatmap}
+          </button>
+        </div>
+        {showHeatmap ? (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map((row) => {
+              const change = ((row.value - row.cost) / row.cost) * 100;
+              const weight = (row.totalValue / totalValue) * 100;
+              return (
+                <div
+                  key={row.symbol}
+                  className={`flex min-h-24 flex-col justify-between rounded-xl p-3 ${
+                    change >= 0
+                      ? "bg-success/15 text-success"
+                      : "bg-destructive/15 text-destructive"
+                  }`}
+                >
+                  <span className="font-display font-bold">{row.symbol}</span>
+                  <span className="text-xs text-foreground">
+                    {weight.toFixed(1)}% · {change >= 0 ? "+" : ""}
+                    {change.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <AllocationBreakdown
+            data={byClass}
+            totalLabel={c.totalValue}
+            formatValue={(value) => usd(value, locale)}
+          />
+        )}
+        {showHeatmap && <p className="mt-3 text-xs text-muted-foreground">{c.heatmapNote}</p>}
       </section>
     </div>
   );

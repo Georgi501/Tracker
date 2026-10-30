@@ -555,13 +555,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <h4 className="footer-h">{legalCopy(p.lang).footer.legal}</h4>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <a href="/policies/terms.html">{legalCopy(p.lang).terms.title}</a>
+                <a href="/terms">{legalCopy(p.lang).terms.title}</a>
               </li>
               <li>
-                <a href="/policies/privacy.html">{legalCopy(p.lang).privacy.title}</a>
+                <a href="/privacy">{legalCopy(p.lang).privacy.title}</a>
               </li>
               <li>
-                <a href="/policies/refund.html">{legalCopy(p.lang).refund.title}</a>
+                <a href="/refund">{legalCopy(p.lang).refund.title}</a>
               </li>
               <li>
                 <a href="/policies/ai-acceptable-use.html">

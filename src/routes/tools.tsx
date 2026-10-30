@@ -86,7 +86,7 @@ function Tools() {
       </ProGate>
       <ProGate
         title={dcfCopy[p.lang].intrinsic + " (DCF)"}
-        desc={dcfCopy[p.lang].disclaimer}
+        desc={dcfCopy[p.lang].gateDescription}
         preview={<CurveSilhouette />}
       >
         <DcfCalculator />

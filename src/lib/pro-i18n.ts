@@ -15,6 +15,9 @@ const en = {
   fireDesc: "When your portfolio can cover your living costs, using the 4% rule.",
   advisor: "AI portfolio advisor",
   advisorDesc: "Ask questions and get answers based on your real positions.",
+  communityTitle: "Investor community",
+  communityDesc:
+    "A profile with a photo, member connections, portfolio allocation sharing, and private chat are included with Pro.",
   brokers: "Up to 5 brokers",
   brokersDesc: "Combine CSV imports from Trading 212, Interactive Brokers and Revolut.",
   noHoldings: "Add positions to see your heatmap.",
@@ -49,6 +52,9 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Кога портфейлът ще покрива разходите ти за живот по правилото на 4%.",
     advisor: "AI съветник за портфейла",
     advisorDesc: "Задавай въпроси и получавай отговори според реалните ти позиции.",
+    communityTitle: "Общност на инвеститорите",
+    communityDesc:
+      "Профил със снимка, свързване с други абонати, споделено портфолио и личен чат са включени в Pro.",
     brokers: "До 5 брокера",
     brokersDesc: "Обедини CSV импорти от Trading 212, Interactive Brokers и Revolut.",
     noHoldings: "Добави позиции, за да видиш картата.",
@@ -80,6 +86,9 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Wann dein Portfolio deine Lebenskosten deckt (4%-Regel).",
     advisor: "KI-Portfolioberater",
     advisorDesc: "Stelle Fragen und erhalte Antworten zu deinen echten Positionen.",
+    communityTitle: "Anleger-Community",
+    communityDesc:
+      "Ein Profil mit Foto, Kontakte zu anderen Mitgliedern, geteilte Portfolioaufteilung und privater Chat sind in Pro enthalten.",
     brokers: "Bis zu 5 Broker",
     brokersDesc: "CSV-Importe von Trading 212, Interactive Brokers und Revolut kombinieren.",
     noHoldings: "Füge Positionen hinzu, um die Heatmap zu sehen.",
@@ -111,6 +120,9 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Cuándo tu cartera cubrirá tus gastos, con la regla del 4%.",
     advisor: "Asesor de IA",
     advisorDesc: "Haz preguntas y recibe respuestas basadas en tus posiciones reales.",
+    communityTitle: "Comunidad de inversores",
+    communityDesc:
+      "Un perfil con foto, conexiones con otros miembros, distribución compartida de la cartera y chat privado están incluidos en Pro.",
     brokers: "Hasta 5 brókers",
     brokersDesc: "Combina importaciones CSV de Trading 212, Interactive Brokers y Revolut.",
     noHoldings: "Añade posiciones para ver el mapa.",
@@ -142,6 +154,9 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Quando il portafoglio coprirà le tue spese, con la regola del 4%.",
     advisor: "Consulente IA",
     advisorDesc: "Fai domande e ricevi risposte basate sulle tue posizioni reali.",
+    communityTitle: "Community degli investitori",
+    communityDesc:
+      "Profilo con foto, contatti con altri membri, allocazione condivisa del portafoglio e chat privata sono inclusi in Pro.",
     brokers: "Fino a 5 broker",
     brokersDesc: "Combina importazioni CSV da Trading 212, Interactive Brokers e Revolut.",
     noHoldings: "Aggiungi posizioni per vedere la heatmap.",
