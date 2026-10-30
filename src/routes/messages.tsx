@@ -68,6 +68,7 @@ function Messages() {
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
+        <h1 className="font-display mb-4 text-2xl font-bold">{c.messages}</h1>
         <p className="mb-4">{c.signIn}</p>
         <Link
           to="/auth"

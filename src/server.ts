@@ -53,6 +53,20 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
   "Content-Security-Policy":
     "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
+  "Content-Security-Policy-Report-Only": [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "form-action 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://*.supabase.co https://financialmodelingprep.com https://*.yimg.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "frame-src 'self' https://*.supabase.co",
+    "manifest-src 'self'",
+  ].join("; "),
 };
 
 function withSecurityHeaders(response: Response): Response {

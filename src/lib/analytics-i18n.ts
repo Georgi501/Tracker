@@ -63,6 +63,8 @@ const en = {
     "Historical valuation includes recorded holdings and cash positions. Dividend transactions are excluded; record cash separately if you want it included.",
   historyScopeLabel: "Historical valuation scope",
   historyInsufficient: "Not enough historical points for this period.",
+  historyStarts:
+    "Your recorded portfolio history starts on {date}, so it does not cover the full selected period.",
   popupBlocked: "Allow pop-ups to print or save the report as PDF.",
   reportPeriod: "Selected period",
   selectedBenchmark: "Selected benchmark",
@@ -134,6 +136,8 @@ const bg: AnalyticsCopy = {
     "Историческата оценка включва записаните позиции и парични активи. Дивидентните сделки не се включват; наличностите трябва да се въведат отделно.",
   historyScopeLabel: "Обхват на историческата оценка",
   historyInsufficient: "Няма достатъчно исторически точки за този период.",
+  historyStarts:
+    "Записаната история на портфолиото започва на {date} и не покрива целия избран период.",
   popupBlocked: "Разреши изскачащите прозорци, за да отпечаташ или запазиш отчета като PDF.",
   reportPeriod: "Избран период",
   selectedBenchmark: "Избран бенчмарк",
@@ -203,6 +207,8 @@ const de: AnalyticsCopy = {
     "Die historische Bewertung umfasst erfasste Positionen und Bargeldbestände. Dividendentransaktionen sind ausgeschlossen; Bargeld muss separat erfasst werden.",
   historyScopeLabel: "Umfang der historischen Bewertung",
   historyInsufficient: "Nicht genügend historische Punkte für diesen Zeitraum.",
+  historyStarts:
+    "Dein aufgezeichneter Portfolioverlauf beginnt am {date} und deckt daher nicht den gesamten Zeitraum ab.",
   popupBlocked: "Erlaube Pop-ups, um den Bericht zu drucken oder als PDF zu speichern.",
   reportPeriod: "Gewählter Zeitraum",
   selectedBenchmark: "Gewählter Benchmark",
@@ -272,6 +278,8 @@ const es: AnalyticsCopy = {
     "La valoración histórica incluye posiciones y efectivo registrados. Se excluyen las transacciones de dividendos; registra el efectivo por separado para incluirlo.",
   historyScopeLabel: "Alcance de la valoración histórica",
   historyInsufficient: "No hay suficientes puntos históricos para este período.",
+  historyStarts:
+    "El historial registrado de la cartera empieza el {date}, por lo que no cubre todo el período seleccionado.",
   popupBlocked: "Permite las ventanas emergentes para imprimir o guardar el informe como PDF.",
   reportPeriod: "Período seleccionado",
   selectedBenchmark: "Referencia seleccionada",
@@ -341,6 +349,8 @@ const it: AnalyticsCopy = {
     "La valutazione storica include posizioni e liquidità registrate. Le operazioni sui dividendi sono escluse; registra la liquidità separatamente per includerla.",
   historyScopeLabel: "Ambito della valutazione storica",
   historyInsufficient: "Punti storici insufficienti per questo periodo.",
+  historyStarts:
+    "Lo storico registrato del portafoglio inizia il {date}, quindi non copre tutto il periodo selezionato.",
   popupBlocked: "Consenti i popup per stampare o salvare il report come PDF.",
   reportPeriod: "Periodo selezionato",
   selectedBenchmark: "Benchmark selezionato",

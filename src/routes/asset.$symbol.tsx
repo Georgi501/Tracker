@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   BarChart3,
@@ -19,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { pct, usePortfolio } from "@/lib/store";
 import { assetSummary, reviewDue } from "@/lib/journey";
 import { supabase } from "@/integrations/supabase/client";
+import { searchCatalog } from "@/lib/market-search";
+import { searchMarket } from "@/lib/market.functions";
 import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/asset/$symbol")({
@@ -61,6 +65,10 @@ const C = {
     saved: "Journal saved",
     due: "Review is due — is your thesis still valid?",
     none: "You don't hold this asset.",
+    add: "Add it to your portfolio",
+    loading: "Loading asset details…",
+    unavailable: "Asset details are currently unavailable.",
+    notFound: "We couldn't find this asset.",
     signIn: "Sign in to keep a journal.",
     buy: "Buy",
     sell: "Sell",
@@ -88,6 +96,10 @@ const C = {
     saved: "Дневникът е запазен",
     due: "Време е за преглед — още ли е валидна тезата ти?",
     none: "Не притежаваш този актив.",
+    add: "Добави го към портфолиото си",
+    loading: "Зареждане на информацията за актива…",
+    unavailable: "Информацията за актива временно не е налична.",
+    notFound: "Не намерихме този актив.",
     signIn: "Влез, за да водиш дневник.",
     buy: "Покупка",
     sell: "Продажба",
@@ -115,6 +127,10 @@ const C = {
     saved: "Journal gespeichert",
     due: "Prüfung fällig — ist deine These noch gültig?",
     none: "Du hältst diesen Wert nicht.",
+    add: "Zum Portfolio hinzufügen",
+    loading: "Wertpapierdaten werden geladen…",
+    unavailable: "Wertpapierdaten sind derzeit nicht verfügbar.",
+    notFound: "Dieses Wertpapier wurde nicht gefunden.",
     signIn: "Melde dich an, um ein Journal zu führen.",
     buy: "Kauf",
     sell: "Verkauf",
@@ -142,6 +158,10 @@ const C = {
     saved: "Diario guardado",
     due: "Toca revisar: ¿sigue vigente tu tesis?",
     none: "No tienes este activo.",
+    add: "Añadir a tu cartera",
+    loading: "Cargando los datos del activo…",
+    unavailable: "Los datos del activo no están disponibles ahora.",
+    notFound: "No encontramos este activo.",
     signIn: "Inicia sesión para llevar un diario.",
     buy: "Compra",
     sell: "Venta",
@@ -169,6 +189,10 @@ const C = {
     saved: "Diario salvato",
     due: "È il momento di rivedere: la tua tesi è ancora valida?",
     none: "Non possiedi questo asset.",
+    add: "Aggiungi al portafoglio",
+    loading: "Caricamento dei dati dell'asset…",
+    unavailable: "I dati dell'asset non sono disponibili al momento.",
+    notFound: "Asset non trovato.",
     signIn: "Accedi per tenere un diario.",
     buy: "Acquisto",
     sell: "Vendita",
@@ -230,13 +254,32 @@ function AssetPage() {
   const p = usePortfolio();
   const c = C[p.lang];
   const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
-  const asset = h?.asset ?? p.assets.find((a) => a.symbol.toUpperCase() === symbol.toUpperCase());
-  const txs = asset
+  const catalogAsset = searchCatalog(symbol).find(
+    (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
+  );
+  const portfolioAsset =
+    h?.asset ??
+    p.assets.find((a) => a.symbol.toUpperCase() === symbol.toUpperCase()) ??
+    catalogAsset;
+  const resolveAsset = useServerFn(searchMarket);
+  const assetQuery = useQuery({
+    queryKey: ["public-asset", symbol.toUpperCase()],
+    queryFn: () => resolveAsset({ data: { query: symbol } }),
+    enabled: !portfolioAsset,
+    staleTime: 300_000,
+  });
+  const asset =
+    portfolioAsset ??
+    assetQuery.data?.assets.find(
+      (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
+    );
+  const assetId = asset && "id" in asset ? asset.id : null;
+  const txs = assetId
     ? p.transactions
-        .filter((t) => t.assetId === asset.id)
+        .filter((t) => t.assetId === assetId)
         .sort((a, b) => b.date.localeCompare(a.date))
     : [];
-  const s = asset ? assetSummary(p.transactions, asset.id) : null;
+  const s = assetId ? assetSummary(p.transactions, assetId) : null;
   const type =
     asset?.type === "stock" || asset?.type === "etf" || asset?.type === "crypto"
       ? asset.type
@@ -265,11 +308,17 @@ function AssetPage() {
               {asset?.name ?? symbol.toUpperCase()}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {asset?.type === "cash"
-                ? c.cash
-                : asset?.type === "realEstate"
-                  ? c.realEstate
-                  : c.noMarketData}
+              {!asset && assetQuery.isLoading
+                ? c.loading
+                : !asset && assetQuery.isError
+                  ? c.unavailable
+                  : !asset
+                    ? c.notFound
+                    : asset.type === "cash"
+                      ? c.cash
+                      : asset.type === "realEstate"
+                        ? c.realEstate
+                        : c.noMarketData}
             </p>
           </Card>
         )}
@@ -311,11 +360,17 @@ function AssetPage() {
             </Card>
           ))}
         </div>
-      ) : (
+      ) : asset ? (
         <Card>
           <p className="text-sm text-muted-foreground">{c.none}</p>
+          <Link
+            to={p.user ? "/holdings" : "/auth"}
+            className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {p.user ? c.add : p.t("signIn")}
+          </Link>
         </Card>
-      )}
+      ) : null}
       {txs.length > 0 && (
         <Card>
           <h2 className="mb-3 font-display font-semibold">{c.history}</h2>
@@ -335,7 +390,7 @@ function AssetPage() {
           </ul>
         </Card>
       )}
-      <Journal symbol={symbol.toUpperCase()} c={c} />
+      {asset && <Journal symbol={symbol.toUpperCase()} c={c} />}
       {type === "stock" && (
         <div id="financials" className="scroll-mt-24">
           <ProFinancials symbol={symbol.toUpperCase()} lang={p.lang} />

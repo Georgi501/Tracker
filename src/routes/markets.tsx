@@ -31,6 +31,11 @@ const NEWS_LABEL = {
   es: "Noticias",
   it: "Notizie",
 } as const;
+const FEATURED_SYMBOLS = ["AAPL", "MSFT", "NVDA", "VWCE.DE", "BTC", "ETH"];
+const FEATURED_ASSETS = FEATURED_SYMBOLS.flatMap((symbol) => {
+  const asset = MARKET_ASSETS.find((candidate) => candidate.symbol === symbol);
+  return asset ? [asset] : [];
+});
 
 export const Route = createFileRoute("/markets")({
   head: () => ({
@@ -64,9 +69,9 @@ function Markets() {
   useEffect(() => {
     const next = q ?? "";
     setQuery(next);
-    setResults(searchCatalog(next));
+    setResults(next ? searchCatalog(next) : FEATURED_ASSETS);
   }, [q]);
-  const [results, setResults] = useState<MarketAsset[]>(MARKET_ASSETS);
+  const [results, setResults] = useState<MarketAsset[]>(FEATURED_ASSETS);
   const [selected, setSelected] = useState<MarketAsset | null>(null);
   const [quote, setQuote] = useState<Awaited<ReturnType<typeof marketQuote>> | null>(null);
   const [busy, setBusy] = useState(false);
@@ -103,7 +108,7 @@ function Markets() {
     async (raw: string) => {
       const id = ++searchId.current;
       if (!raw.trim()) {
-        setResults(MARKET_ASSETS);
+        setResults(FEATURED_ASSETS);
         setNews([]);
         setLimited(false);
         setBusy(false);
@@ -159,7 +164,7 @@ function Markets() {
               ++searchId.current;
               setBusy(false);
               setQuery(e.target.value);
-              setResults(searchCatalog(e.target.value));
+              setResults(e.target.value.trim() ? searchCatalog(e.target.value) : FEATURED_ASSETS);
               setLimited(false);
             }}
             className="h-10 pl-9"
@@ -172,7 +177,7 @@ function Markets() {
       </form>
       <section className="min-w-0">
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          {busy ? c.searching : c.results}
+          {busy ? c.searching : query.trim() ? c.results : c.popular}
         </h2>
         <ul className="divide-y divide-border">
           {results.map((a) => (

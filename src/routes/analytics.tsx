@@ -2,7 +2,7 @@ import { ChartDataTable } from "@/components/ChartDataTable";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { useQuery } from "@tanstack/react-query";
@@ -50,6 +50,48 @@ import {
   RETURN_PERIODS,
   type ReturnPeriod,
 } from "@/lib/return-periods";
+import type { Lang } from "@/lib/i18n";
+
+const EMPTY_COPY: Record<
+  Lang,
+  { title: string; body: string; signIn: string; sample: string; add: string }
+> = {
+  en: {
+    title: "Your portfolio analytics start here",
+    body: "Add your investments to see returns, allocation and risk based on your recorded history.",
+    signIn: "Create a free account",
+    sample: "Explore a sample portfolio",
+    add: "Add your first holding",
+  },
+  bg: {
+    title: "Анализите започват с твоето портфолио",
+    body: "Добави инвестициите си, за да видиш доходност, разпределение и риск според записаната история.",
+    signIn: "Създай безплатен профил",
+    sample: "Разгледай примерно портфолио",
+    add: "Добави първата си позиция",
+  },
+  de: {
+    title: "Deine Portfolioanalyse beginnt hier",
+    body: "Füge deine Anlagen hinzu, um Rendite, Aufteilung und Risiko anhand deiner erfassten Historie zu sehen.",
+    signIn: "Kostenloses Konto erstellen",
+    sample: "Beispielportfolio ansehen",
+    add: "Erste Position hinzufügen",
+  },
+  es: {
+    title: "El análisis de tu cartera empieza aquí",
+    body: "Añade tus inversiones para ver rentabilidad, distribución y riesgo según tu historial registrado.",
+    signIn: "Crear una cuenta gratis",
+    sample: "Explorar una cartera de ejemplo",
+    add: "Añadir tu primera posición",
+  },
+  it: {
+    title: "L'analisi del portafoglio inizia qui",
+    body: "Aggiungi i tuoi investimenti per vedere rendimento, allocazione e rischio in base alla cronologia registrata.",
+    signIn: "Crea un account gratuito",
+    sample: "Esplora un portafoglio di esempio",
+    add: "Aggiungi la prima posizione",
+  },
+};
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -110,6 +152,7 @@ function Analytics() {
     : Number.NaN;
   const locale = languageLocale(p.lang);
   const c = analyticsCopy[p.lang];
+  const empty = EMPTY_COPY[p.lang];
   const historyFn = useServerFn(getPortfolioHistory);
   const historyQuery = useQuery({
     queryKey: ["portfolio-history", p.user?.id, p.transactions, "ALL", p.currency],
@@ -378,6 +421,42 @@ function Analytics() {
     window.setTimeout(() => printWindow.print(), 400);
   };
 
+  if (!p.user || (!p.holdings.length && !p.transactions.length))
+    return (
+      <Card className="mx-auto max-w-2xl py-10 text-center">
+        <h1 className="font-display text-2xl font-bold">{p.t("analytics")}</h1>
+        <h2 className="mt-4 font-display text-xl font-semibold">{empty.title}</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+          {empty.body}
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {p.user ? (
+            <Link
+              to="/holdings"
+              className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              {empty.add}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                {empty.signIn}
+              </Link>
+              <Link
+                to="/demo"
+                className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold"
+              >
+                {empty.sample}
+              </Link>
+            </>
+          )}
+        </div>
+      </Card>
+    );
+
   return (
     <div className="grid gap-5 lg:grid-cols-3">
       <h1 className="font-display text-2xl font-bold lg:col-span-3">{p.t("analytics")}</h1>
@@ -470,7 +549,11 @@ function Analytics() {
         )}
         {range && currentReturn === null && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            {historyQuery.isFetching ? "…" : p.t("noPeriodData")}
+            {historyQuery.isFetching
+              ? "…"
+              : history[0] && range.start < history[0].t
+                ? c.historyStarts.replace("{date}", formatDate(history[0].t))
+                : p.t("noPeriodData")}
           </p>
         )}
         {range && currentReturn !== null && (

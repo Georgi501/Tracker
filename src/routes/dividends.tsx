@@ -1,5 +1,5 @@
 import { languageLocale } from "@/lib/i18n";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Card } from "@/components/AppShell";
 import { pct, usePortfolio } from "@/lib/store";
@@ -15,6 +15,48 @@ import { useEffect, useState } from "react";
 import { DividendTable } from "@/components/Insights";
 import { dividendRows } from "@/lib/insights";
 import { ChartDataTable } from "@/components/ChartDataTable";
+import type { Lang } from "@/lib/i18n";
+
+const EMPTY_COPY: Record<
+  Lang,
+  { title: string; body: string; signIn: string; sample: string; add: string }
+> = {
+  en: {
+    title: "Dividend insights need a portfolio",
+    body: "Add stocks or ETFs to see confirmed dividend history and upcoming events. Estimates are never substituted for missing event data.",
+    signIn: "Create a free account",
+    sample: "Explore a sample portfolio",
+    add: "Add your first holding",
+  },
+  bg: {
+    title: "За анализ на дивидентите е нужно портфолио",
+    body: "Добави акции или ETF-и, за да видиш потвърдената история и предстоящите събития. Липсващите данни не се заместват с прогнози.",
+    signIn: "Създай безплатен профил",
+    sample: "Разгледай примерно портфолио",
+    add: "Добави първата си позиция",
+  },
+  de: {
+    title: "Für Dividendenanalysen brauchst du ein Portfolio",
+    body: "Füge Aktien oder ETFs hinzu, um bestätigte Dividenden und kommende Termine zu sehen. Fehlende Ereignisdaten werden nicht geschätzt.",
+    signIn: "Kostenloses Konto erstellen",
+    sample: "Beispielportfolio ansehen",
+    add: "Erste Position hinzufügen",
+  },
+  es: {
+    title: "El análisis de dividendos necesita una cartera",
+    body: "Añade acciones o ETF para ver el historial confirmado y los próximos eventos. No estimamos los datos que faltan.",
+    signIn: "Crear una cuenta gratis",
+    sample: "Explorar una cartera de ejemplo",
+    add: "Añadir tu primera posición",
+  },
+  it: {
+    title: "Per analizzare i dividendi serve un portafoglio",
+    body: "Aggiungi azioni o ETF per vedere la cronologia confermata e i prossimi eventi. I dati mancanti non vengono stimati.",
+    signIn: "Crea un account gratuito",
+    sample: "Esplora un portafoglio di esempio",
+    add: "Aggiungi la prima posizione",
+  },
+};
 
 export const Route = createFileRoute("/dividends")({
   head: () => ({
@@ -41,6 +83,7 @@ function Dividends() {
   const locale = languageLocale(p.lang);
   const total = p.holdings.reduce((s, h) => s + h.value, 0);
   const c = toolsCopy[p.lang];
+  const empty = EMPTY_COPY[p.lang];
   const held = p.holdings.filter(
     (h) => h.quantity > 0 && (h.asset.type === "stock" || h.asset.type === "etf"),
   );
@@ -130,6 +173,42 @@ function Dividends() {
     Number(goal) > 0 && Number.isFinite(avg) ? Math.min(100, (avg / Number(goal)) * 100) : null;
   const fmtD = (d: Date) =>
     d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+
+  if (!p.user || (!p.holdings.length && !p.transactions.length))
+    return (
+      <Card className="mx-auto max-w-2xl py-10 text-center">
+        <h1 className="font-display text-2xl font-bold">{p.t("dividends")}</h1>
+        <h2 className="mt-4 font-display text-xl font-semibold">{empty.title}</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+          {empty.body}
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {p.user ? (
+            <Link
+              to="/holdings"
+              className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              {empty.add}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                {empty.signIn}
+              </Link>
+              <Link
+                to="/demo"
+                className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold"
+              >
+                {empty.sample}
+              </Link>
+            </>
+          )}
+        </div>
+      </Card>
+    );
 
   return (
     <div className="grid gap-5 lg:grid-cols-3">

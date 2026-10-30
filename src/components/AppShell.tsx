@@ -23,7 +23,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -66,6 +66,7 @@ const SHELL_COPY: Record<
     portfolioGroup: string;
     planningGroup: string;
     exploreGroup: string;
+    quickNavigation: string;
   }
 > = {
   en: {
@@ -80,6 +81,7 @@ const SHELL_COPY: Record<
     portfolioGroup: "Portfolio",
     planningGroup: "Planning",
     exploreGroup: "Explore",
+    quickNavigation: "Quick navigation",
   },
   bg: {
     watchlist: "Списък за наблюдение",
@@ -93,6 +95,7 @@ const SHELL_COPY: Record<
     portfolioGroup: "Портфолио",
     planningGroup: "Планиране",
     exploreGroup: "Разглеждане",
+    quickNavigation: "Бърза навигация",
   },
   de: {
     watchlist: "Beobachtungsliste",
@@ -106,6 +109,7 @@ const SHELL_COPY: Record<
     portfolioGroup: "Portfolio",
     planningGroup: "Planung",
     exploreGroup: "Entdecken",
+    quickNavigation: "Schnellnavigation",
   },
   es: {
     watchlist: "Lista de seguimiento",
@@ -119,6 +123,7 @@ const SHELL_COPY: Record<
     portfolioGroup: "Cartera",
     planningGroup: "Planificación",
     exploreGroup: "Explorar",
+    quickNavigation: "Navegación rápida",
   },
   it: {
     watchlist: "Lista di controllo",
@@ -132,6 +137,7 @@ const SHELL_COPY: Record<
     portfolioGroup: "Portafoglio",
     planningGroup: "Pianificazione",
     exploreGroup: "Esplora",
+    quickNavigation: "Navigazione rapida",
   },
 };
 
@@ -139,12 +145,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const p = usePortfolio();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const shellCopy = SHELL_COPY[p.lang];
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const ownAvatar = useOwnAvatar(p.user?.id);
+  useEffect(() => {
+    document.documentElement.lang = p.lang;
+  }, [p.lang]);
   useEffect(() => {
     let last = window.scrollY;
     const onScroll = () => {
@@ -190,6 +200,28 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       label: shellCopy.exploreGroup,
       links: nav.filter((item) => ["/community", "/demo", "/pricing"].includes(item.to)),
+    },
+  ];
+  const mobileMoreGroups = [
+    {
+      label: shellCopy.portfolioGroup,
+      links: nav.filter((item) =>
+        ["/watchlist", "/analytics", "/compare", "/timeline", "/dividends", "/brokers"].includes(
+          item.to,
+        ),
+      ),
+    },
+    {
+      label: shellCopy.planningGroup,
+      links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
+    },
+    {
+      label: shellCopy.exploreGroup,
+      links: [
+        ...nav.filter((item) => ["/community", "/demo", "/pricing"].includes(item.to)),
+        { to: "/profile", label: shellCopy.profile },
+        { to: "/account", label: shellCopy.account },
+      ],
     },
   ];
   const signOut = async () => {
@@ -481,44 +513,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
         </div>
-        <nav className="as-subnav flex items-center gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden">
-          {nav.slice(0, 5).map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: true }}
-              className="as-link shrink-0"
-              activeProps={{ className: "as-link-active" }}
-            >
-              {n.label}
-            </Link>
-          ))}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="as-link flex shrink-0 items-center gap-1">
-                {shellCopy.more}
-                <ChevronDown size={14} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {moreGroups.map((group, index) => (
-                <Fragment key={group.label}>
-                  {index > 0 && <DropdownMenuSeparator />}
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">
-                      {group.label}
-                    </DropdownMenuLabel>
-                    {group.links.map((n) => (
-                      <DropdownMenuItem key={n.to} asChild>
-                        <Link to={n.to}>{n.label}</Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </Fragment>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </nav>
       </header>
       <main className="page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6">
         {children}
@@ -618,9 +612,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </footer>
       <nav
-        aria-label="Quick navigation"
+        aria-label={shellCopy.quickNavigation}
         data-hidden={navHidden}
-        className="glass-bar fixed inset-x-3         bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
+        className="glass-bar fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
         {(
           [
@@ -649,33 +643,61 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <Plus size={24} />
         </button>
-        {(
-          [
-            { to: "/markets", label: marketCopy[p.lang].markets, Icon: Search },
-            {
-              to: p.user ? "/profile" : "/auth",
-              label: p.user ? shellCopy.profile : p.t("signIn"),
-              Icon: UserRound,
-            },
-          ] as const
-        ).map(({ to, label, Icon }) => (
-          <Link
-            key={label}
-            to={to}
-            onClick={(event) => {
-              if (!p.user) {
-                event.preventDefault();
-                setAuthOpen(true);
-              }
-            }}
-            activeOptions={{ exact: true }}
-            className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
-            activeProps={{ className: "text-primary bg-primary/10" }}
+        <Link
+          to="/markets"
+          activeOptions={{ exact: true }}
+          className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
+          activeProps={{ className: "text-primary bg-primary/10" }}
+        >
+          <Search size={20} />
+          <span className="max-w-16 truncate">{marketCopy[p.lang].markets}</span>
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label={shellCopy.more}
+              aria-current={["/", "/holdings", "/markets"].includes(pathname) ? undefined : "page"}
+              className={`flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium ${
+                ["/", "/holdings", "/markets"].includes(pathname)
+                  ? "text-muted-foreground"
+                  : "bg-primary/10 text-primary"
+              }`}
+            >
+              <ChevronDown size={20} />
+              <span className="max-w-16 truncate">{shellCopy.more}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            side="top"
+            className="mb-2 max-h-[60dvh] w-64 overflow-y-auto"
           >
-            <Icon size={20} />
-            <span className="max-w-16 truncate">{label}</span>
-          </Link>
-        ))}
+            {mobileMoreGroups.map((group, index) => (
+              <Fragment key={group.label}>
+                {index > 0 && <DropdownMenuSeparator />}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {group.label}
+                  </DropdownMenuLabel>
+                  {group.links.map((item) => (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link to={item.to}>{item.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+              </Fragment>
+            ))}
+            {!p.user && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setAuthOpen(true)}>
+                  <UserRound size={14} />
+                  {p.t("signIn")}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
       <AddTransactionDialog open={open} onClose={() => setOpen(false)} />
       <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />

@@ -45,15 +45,17 @@ import type { Lang } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Capispot Portfolio Tracker" },
+      { title: "Investment portfolio tracker — Capispot" },
       {
         name: "description",
-        content: "Net worth, performance, TTWROR & IRR and allocation of your investment portfolio",
+        content:
+          "Track stocks, ETFs and crypto with clear portfolio value, cash-flow-adjusted performance, allocation and dividend insights.",
       },
-      { property: "og:title", content: "Capispot — Portfolio Dashboard" },
+      { property: "og:title", content: "Capispot — Investment portfolio tracker" },
       {
         property: "og:description",
-        content: "Track stocks, ETFs, crypto, cash and real estate in one place.",
+        content:
+          "Track stocks, ETFs and crypto with portfolio value, performance, allocation and dividend insights in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

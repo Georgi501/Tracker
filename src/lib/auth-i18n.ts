@@ -14,6 +14,12 @@ type Copy = {
   haveAccount: string;
   show: string;
   hide: string;
+  resetDescription: string;
+  confirmNewPassword: string;
+  resetPassword: string;
+  savingPassword: string;
+  passwordMismatch: string;
+  resetSessionExpired: string;
 };
 
 export const authCopy: Record<Lang, Copy> = {
@@ -32,6 +38,12 @@ export const authCopy: Record<Lang, Copy> = {
     haveAccount: "Already have an account? Sign in",
     show: "Show",
     hide: "Hide",
+    resetDescription: "Choose a strong password of at least 8 characters.",
+    confirmNewPassword: "Confirm new password",
+    resetPassword: "Update password",
+    savingPassword: "Updating password…",
+    passwordMismatch: "The passwords do not match.",
+    resetSessionExpired: "This reset link is invalid or expired. Request a new one and try again.",
   },
   bg: {
     passwordHint: "Поне 8 символа. Избягвайте често срещани пароли като 12345678 или password.",
@@ -48,6 +60,12 @@ export const authCopy: Record<Lang, Copy> = {
     haveAccount: "Имате профил? Влезте",
     show: "Покажи",
     hide: "Скрий",
+    resetDescription: "Избери силна парола с поне 8 символа.",
+    confirmNewPassword: "Потвърди новата парола",
+    resetPassword: "Смени паролата",
+    savingPassword: "Паролата се обновява…",
+    passwordMismatch: "Паролите не съвпадат.",
+    resetSessionExpired: "Линкът за смяна е невалиден или изтекъл. Поискай нов и опитай отново.",
   },
   de: {
     passwordHint: "Mindestens 8 Zeichen. Vermeiden Sie gängige Passwörter wie 12345678.",
@@ -65,6 +83,13 @@ export const authCopy: Record<Lang, Copy> = {
     haveAccount: "Schon ein Konto? Anmelden",
     show: "Zeigen",
     hide: "Verbergen",
+    resetDescription: "Wähle ein sicheres Passwort mit mindestens 8 Zeichen.",
+    confirmNewPassword: "Neues Passwort bestätigen",
+    resetPassword: "Passwort aktualisieren",
+    savingPassword: "Passwort wird aktualisiert…",
+    passwordMismatch: "Die Passwörter stimmen nicht überein.",
+    resetSessionExpired:
+      "Dieser Link ist ungültig oder abgelaufen. Fordere einen neuen an und versuche es erneut.",
   },
   es: {
     passwordHint: "Al menos 8 caracteres. Evita contraseñas comunes como 12345678.",
@@ -81,6 +106,13 @@ export const authCopy: Record<Lang, Copy> = {
     haveAccount: "¿Ya tienes cuenta? Inicia sesión",
     show: "Mostrar",
     hide: "Ocultar",
+    resetDescription: "Elige una contraseña segura de al menos 8 caracteres.",
+    confirmNewPassword: "Confirmar nueva contraseña",
+    resetPassword: "Actualizar contraseña",
+    savingPassword: "Actualizando contraseña…",
+    passwordMismatch: "Las contraseñas no coinciden.",
+    resetSessionExpired:
+      "Este enlace no es válido o ha caducado. Solicita uno nuevo e inténtalo de nuevo.",
   },
   it: {
     passwordHint: "Almeno 8 caratteri. Evita password comuni come 12345678.",
@@ -98,6 +130,12 @@ export const authCopy: Record<Lang, Copy> = {
     haveAccount: "Hai già un account? Accedi",
     show: "Mostra",
     hide: "Nascondi",
+    resetDescription: "Scegli una password sicura di almeno 8 caratteri.",
+    confirmNewPassword: "Conferma la nuova password",
+    resetPassword: "Aggiorna password",
+    savingPassword: "Aggiornamento password…",
+    passwordMismatch: "Le password non coincidono.",
+    resetSessionExpired: "Questo link non è valido o è scaduto. Richiedine uno nuovo e riprova.",
   },
 };
 

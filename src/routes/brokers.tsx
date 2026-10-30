@@ -61,6 +61,7 @@ function Brokers() {
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
+        <h1 className="font-display text-2xl font-bold">{p.t("brokers")}</h1>
         <p className="mb-4">{p.t("signInToUse")}</p>
         <Link
           to="/auth"
