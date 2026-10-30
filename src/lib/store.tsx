@@ -54,6 +54,12 @@ interface State {
   t: (k: TKey) => string;
   label: (s: string) => string;
   money: (usd: number, opts?: { sign?: boolean; compact?: boolean }) => string;
+  /** Formats a USD amount in the asset's own quote currency; falls back to the base currency. */
+  moneyFor: (
+    usd: number,
+    asset: Asset | undefined,
+    opts?: { sign?: boolean; compact?: boolean },
+  ) => string;
   holdings: ReturnType<typeof computeHoldings>;
 }
 // Keep one context instance across hot reloads so provider and consumers never diverge.
@@ -250,6 +256,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<State>(() => {
     const locale = languageLocale(lang);
+    const moneyBase: State["money"] = (usd, o) => {
+      const rate = currency === "USD" ? 1 : eurPerUsd;
+      if (!Number.isFinite(usd) || !rate) return "—";
+      const v = usd * rate;
+      const s = new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        notation: o?.compact ? "compact" : "standard",
+        maximumFractionDigits: o?.compact ? 1 : 2,
+      }).format(v);
+      return o?.sign && v > 0 ? `+${s}` : s;
+    };
     return {
       lang,
       currency,
@@ -341,17 +359,36 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       t: (k) => dictionaries[lang][k],
       label: (s) => translateLabel(s, lang),
-      money: (usd, o) => {
-        const rate = currency === "USD" ? 1 : eurPerUsd;
-        if (!Number.isFinite(usd) || !rate) return "—";
-        const v = usd * rate;
-        const s = new Intl.NumberFormat(locale, {
-          style: "currency",
-          currency,
-          notation: o?.compact ? "compact" : "standard",
-          maximumFractionDigits: o?.compact ? 1 : 2,
-        }).format(v);
-        return o?.sign && v > 0 ? `+${s}` : s;
+      money: moneyBase,
+      moneyFor: (usd, asset, o) => {
+        const cur = asset?.quoteCurrency;
+        const native = asset?.quoteNativePrice;
+        const usdPrice = asset?.price;
+        if (
+          !asset ||
+          !cur ||
+          !Number.isFinite(usd) ||
+          !native ||
+          !usdPrice ||
+          !Number.isFinite(native) ||
+          !Number.isFinite(usdPrice)
+        ) {
+          return moneyBase(usd, o);
+        }
+        const pence = cur === "GBX" || cur === "GBp";
+        // The asset's own quote implies its USD→native rate, so no fixed rates are used.
+        const v = usd * (native / usdPrice) * (pence ? 0.01 : 1);
+        try {
+          const s = new Intl.NumberFormat(locale, {
+            style: "currency",
+            currency: pence ? "GBP" : cur,
+            notation: o?.compact ? "compact" : "standard",
+            maximumFractionDigits: o?.compact ? 1 : 2,
+          }).format(v);
+          return o?.sign && v > 0 ? `+${s}` : s;
+        } catch {
+          return moneyBase(usd, o);
+        }
       },
       holdings: computeHoldings(assets, transactions),
     };

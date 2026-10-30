@@ -342,6 +342,7 @@ function Holdings() {
   };
   const lotsPanel = (assetId: string) => {
     const bg = p.lang === "bg";
+    const lotAsset = p.assets.find((a) => a.id === assetId);
     const lots = p.transactions
       .filter((t) => t.assetId === assetId)
       .sort((a, b) => b.date.localeCompare(a.date));
@@ -362,8 +363,8 @@ function Holdings() {
               </span>
               <span className="flex-1">
                 {t.kind === "dividend"
-                  ? p.money(t.price)
-                  : `${num(t.quantity)} × ${p.money(t.price)}`}
+                  ? p.moneyFor(t.price, lotAsset)
+                  : `${num(t.quantity)} × ${p.moneyFor(t.price, lotAsset)}`}
               </span>
               <button
                 onClick={() => void removeLot(t.id)}
@@ -623,10 +624,12 @@ function Holdings() {
                       />
                     </div>
                     <div className="text-right">
-                      <p className="numeric-display font-semibold">{p.money(h.value)}</p>
+                      <p className="numeric-display font-semibold">
+                        {p.moneyFor(h.value, h.asset)}
+                      </p>
                       <p className="numeric-display text-xs">
                         <Delta value={h.pnl}>
-                          {p.money(h.pnl, { sign: true })} · {pct(h.pnlPct)}
+                          {p.moneyFor(h.pnl, h.asset, { sign: true })} · {pct(h.pnlPct)}
                         </Delta>
                       </p>
                     </div>
@@ -710,14 +713,16 @@ function Holdings() {
                         <td className="text-right">
                           <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                         </td>
-                        <td className="numeric-display text-right">{p.money(h.avgCost)}</td>
+                        <td className="numeric-display text-right">
+                          {p.moneyFor(h.avgCost, h.asset)}
+                        </td>
                         <td className="numeric-display text-right font-semibold">
-                          {p.money(h.value)}
+                          {p.moneyFor(h.value, h.asset)}
                         </td>
                         <td className="text-right">
                           <Delta value={h.pnl}>
                             <span className="numeric-display font-semibold">
-                              {p.money(h.pnl, { sign: true })}
+                              {p.moneyFor(h.pnl, h.asset, { sign: true })}
                             </span>
                           </Delta>
                         </td>

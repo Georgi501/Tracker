@@ -297,12 +297,12 @@ function AssetPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
             [c.qty, h.quantity.toLocaleString()],
-            [c.avg, p.money(h.avgCost)],
-            [c.value, p.money(h.value)],
-            [c.pnl, `${p.money(h.pnl, { sign: true })} (${pct(h.pnlPct)})`],
-            [c.bought, p.money(s.bought)],
-            [c.sold, p.money(s.sold)],
-            [c.div, p.money(s.dividends)],
+            [c.avg, p.moneyFor(h.avgCost, h.asset)],
+            [c.value, p.moneyFor(h.value, h.asset)],
+            [c.pnl, `${p.moneyFor(h.pnl, h.asset, { sign: true })} (${pct(h.pnlPct)})`],
+            [c.bought, p.moneyFor(s.bought, h.asset)],
+            [c.sold, p.moneyFor(s.sold, h.asset)],
+            [c.div, p.moneyFor(s.dividends, h.asset)],
             [c.since, s.firstDate ?? "—"],
           ].map(([k, v]) => (
             <Card key={k} className="p-4">
@@ -327,8 +327,8 @@ function AssetPage() {
                 </span>
                 <span>
                   {t.kind === "dividend"
-                    ? p.money(t.price * t.quantity)
-                    : `${t.quantity} × ${p.money(t.price)}`}
+                    ? p.moneyFor(t.price * t.quantity, h?.asset)
+                    : `${t.quantity} × ${p.moneyFor(t.price, h?.asset)}`}
                 </span>
               </li>
             ))}

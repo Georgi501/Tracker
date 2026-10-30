@@ -68,8 +68,8 @@ function Timeline() {
                   </div>
                   <span className="text-sm font-medium">
                     {t.kind === "dividend"
-                      ? p.money(t.price * t.quantity)
-                      : `${t.quantity} × ${p.money(t.price)}`}
+                      ? p.moneyFor(t.price * t.quantity, a)
+                      : `${t.quantity} × ${p.moneyFor(t.price, a)}`}
                   </span>
                 </li>
               );

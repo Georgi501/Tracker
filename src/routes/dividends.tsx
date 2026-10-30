@@ -234,7 +234,9 @@ function Dividends() {
                 <b>{bySymbol.get(t.assetId)?.symbol}</b>{" "}
                 <span className="text-muted-foreground">{fmtD(new Date(t.date))}</span>
               </span>
-              <span className="font-semibold">{p.money(t.price * t.quantity)}</span>
+              <span className="font-semibold">
+                {p.moneyFor(t.price * t.quantity, bySymbol.get(t.assetId))}
+              </span>
             </li>
           ))}
         </ul>

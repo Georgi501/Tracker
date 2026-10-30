@@ -229,6 +229,114 @@ type Subscription = {
   provider_subscription_id: string | null;
 };
 
+function SecurityCard({ email, lang }: { email: string; lang: Lang }) {
+  const bg = lang === "bg";
+  const t = {
+    title: bg ? "Вход и сигурност" : "Sign-in & security",
+    email: bg ? "Имейл" : "Email",
+    newEmail: bg ? "Нов имейл" : "New email",
+    changeEmail: bg ? "Смени имейла" : "Change email",
+    emailSent: bg
+      ? "Изпратихме линк за потвърждение. Имейлът се сменя след потвърждение."
+      : "We sent a confirmation link. The email changes once you confirm it.",
+    password: bg ? "Парола" : "Password",
+    newPassword: bg ? "Нова парола (мин. 6 символа)" : "New password (min. 6 characters)",
+    repeat: bg ? "Повтори паролата" : "Repeat password",
+    changePassword: bg ? "Смени паролата" : "Change password",
+    passwordDone: bg ? "Паролата е сменена." : "Password updated.",
+    mismatch: bg ? "Паролите не съвпадат." : "Passwords do not match.",
+  };
+  const [newEmail, setNewEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [busy, setBusy] = useState(false);
+  const input = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm";
+  const button =
+    "rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60";
+
+  const submitEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setNewEmail("");
+    toast.success(t.emailSent);
+  };
+  const submitPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pw !== pw2) {
+      toast.error(t.mismatch);
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setPw("");
+    setPw2("");
+    toast.success(t.passwordDone);
+  };
+
+  return (
+    <Card className="space-y-5">
+      <h2 className="font-display text-lg font-semibold">{t.title}</h2>
+      <p className="text-sm">
+        {t.email}: <strong>{email}</strong>
+      </p>
+      <form onSubmit={(e) => void submitEmail(e)} className="space-y-2">
+        <input
+          type="email"
+          required
+          autoComplete="email"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          placeholder={t.newEmail}
+          aria-label={t.newEmail}
+          className={input}
+        />
+        <button disabled={busy || !newEmail.trim()} className={button}>
+          {t.changeEmail}
+        </button>
+      </form>
+      <form onSubmit={(e) => void submitPassword(e)} className="space-y-2">
+        <h3 className="text-sm font-semibold">{t.password}</h3>
+        <input
+          type="password"
+          required
+          minLength={6}
+          autoComplete="new-password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          placeholder={t.newPassword}
+          aria-label={t.newPassword}
+          className={input}
+        />
+        <input
+          type="password"
+          required
+          minLength={6}
+          autoComplete="new-password"
+          value={pw2}
+          onChange={(e) => setPw2(e.target.value)}
+          placeholder={t.repeat}
+          aria-label={t.repeat}
+          className={input}
+        />
+        <button disabled={busy || !pw} className={button}>
+          {t.changePassword}
+        </button>
+      </form>
+    </Card>
+  );
+}
+
 function AccountPage() {
   const p = usePortfolio();
   const navigate = useNavigate();
@@ -425,6 +533,7 @@ function AccountPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="font-display text-3xl font-bold">{c.title}</h1>
+      {p.user.email && <SecurityCard email={p.user.email} lang={p.lang} />}
       <Card className="space-y-3">
         <h2 className="font-display text-lg font-semibold">{c.subscription}</h2>
         <p className="text-sm">

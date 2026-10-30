@@ -433,7 +433,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuItem asChild>
                     <Link to="/profile">
                       <UserRound size={14} />
-                      {shellCopy.profile}
+                      {p.lang === "bg"
+                        ? "Профил в общността"
+                        : p.lang === "en"
+                          ? "Community profile"
+                          : shellCopy.profile}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
