@@ -51,7 +51,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "SAMEORIGIN",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  "Content-Security-Policy":
+    "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
 };
 
 function withSecurityHeaders(response: Response): Response {
@@ -66,8 +67,39 @@ function withSecurityHeaders(response: Response): Response {
   });
 }
 
+const RATE_LIMITED_PATHS = ["/api/advisor", "/api/thesis", "/api/review"];
+
+type Limiter = { limit: (options: { key: string }) => Promise<{ success: boolean }> };
+
+// Cloudflare's rate limit binding; when it is not configured requests pass through unchanged.
+async function isRateLimited(request: Request, env: unknown, pathname: string): Promise<boolean> {
+  if (request.method !== "POST" || !RATE_LIMITED_PATHS.includes(pathname)) return false;
+  const limiter = (env as { AI_LIMITER?: Limiter } | undefined)?.AI_LIMITER;
+  if (!limiter) return false;
+  const key = request.headers.get("cf-connecting-ip") ?? "unknown";
+  try {
+    return !(await limiter.limit({ key: `${pathname}:${key}` })).success;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (url.hostname === "www.capispot.com") {
+      url.hostname = "capispot.com";
+      return Response.redirect(url.toString(), 301);
+    }
+    if (await isRateLimited(request, env, url.pathname)) {
+      return withSecurityHeaders(
+        new Response(JSON.stringify({ error: "Too many requests" }), {
+          status: 429,
+          headers: { "content-type": "application/json", "retry-after": "60" },
+        }),
+      );
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

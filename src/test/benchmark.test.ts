@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+﻿import { expect, it } from "vitest";
 import { benchmarkSeries, savedBenchmark } from "@/lib/benchmark";
 const dates = [Date.parse("2026-10-01"), Date.parse("2026-10-02")];
 const prices = [
@@ -13,7 +13,7 @@ it("restores a valid saved benchmark and rejects unknown values", () => {
   expect(savedBenchmark("^GSPC")).toBe("^GSPC");
   expect(savedBenchmark("^NDX")).toBe("^NDX");
   expect(savedBenchmark("URTH")).toBe("URTH");
-  expect(savedBenchmark("^DJI")).toBe("^DJI");
+  expect(savedBenchmark("^N225")).toBe("^N225");
   expect(savedBenchmark("^STOXX50E")).toBe("none");
   expect(savedBenchmark("^FTSE")).toBe("none");
   expect(savedBenchmark("^IXIC")).toBe("none");

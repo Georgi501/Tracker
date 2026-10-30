@@ -333,6 +333,7 @@ function Dashboard() {
         p.currency,
         indexHistory.data.eur,
         indexHistory.data.gbp,
+        indexHistory.data.jpy,
       )
     : [];
   const comparisonLast = comparison.at(-1);

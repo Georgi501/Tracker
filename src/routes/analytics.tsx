@@ -192,6 +192,7 @@ function Analytics() {
           p.currency,
           benchmarkQuery.data.eur,
           benchmarkQuery.data.gbp,
+          benchmarkQuery.data.jpy,
         )
           .map((point) => ({
             ...point,

@@ -4,7 +4,9 @@ export const BENCHMARKS = [
   { symbol: "^GSPC", name: "S&P 500" },
   { symbol: "^NDX", name: "NASDAQ 100" },
   { symbol: "URTH", name: "MSCI World (ETF)" },
-  { symbol: "^DJI", name: "Dow Jones 30" },
+  { symbol: "^STOXX", name: "STOXX Europe 600" },
+  { symbol: "^RUT", name: "Russell 2000" },
+  { symbol: "^N225", name: "Nikkei 225" },
 ] as const;
 export type BenchmarkSymbol = (typeof BENCHMARKS)[number]["symbol"];
 export function savedBenchmark(value: unknown): BenchmarkSymbol | "none" {
@@ -17,13 +19,14 @@ export function benchmarkSeries(
   base: Currency,
   eur: DailyPrice[],
   gbp: DailyPrice[],
+  jpy: DailyPrice[] = [],
 ) {
   const start = points[0];
   if (!start || start.v <= 0) return [];
   const values = points.map((p) => {
     const date = new Date(p.t).toISOString().slice(0, 10);
     const close = closeAt(prices, date);
-    const rate = currencyRate(indexCurrency, date, eur, gbp);
+    const rate = currencyRate(indexCurrency, date, eur, gbp, jpy);
     const baseRate = currencyRate(base, date, eur, gbp);
     return close === null || rate === null || baseRate === null ? null : (close * rate) / baseRate;
   });

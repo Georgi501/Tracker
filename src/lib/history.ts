@@ -46,8 +46,13 @@ export function currencyRate(
   date: string,
   eurUsd: DailyPrice[],
   gbpUsd: DailyPrice[],
+  jpyPerUsd: DailyPrice[] = [],
 ): number | null {
   if (currency === "USD") return 1;
+  if (currency === "JPY") {
+    const rate = closeAt(jpyPerUsd, date);
+    return rate === null ? null : 1 / rate;
+  }
   if (currency === "EUR" || currency === "BGN") {
     const rate = closeAt(eurUsd, date);
     // Historical Bulgarian lev's official fixed EUR parity; not a market estimate.
