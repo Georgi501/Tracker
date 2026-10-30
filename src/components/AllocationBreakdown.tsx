@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-import { allocationColor } from "@/lib/palette";
+import { allocationColorAt } from "@/lib/palette";
 
 type AllocationItem = { name: string; value: number };
 
@@ -8,11 +8,14 @@ export function AllocationBreakdown({
   data,
   totalLabel,
   formatValue,
+  colorOffset = 0,
 }: {
   data: AllocationItem[];
   totalLabel: string;
   formatValue: (value: number, compact?: boolean) => string;
+  colorOffset?: number;
 }) {
+  const colorFor = (index: number) => allocationColorAt(index, colorOffset);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const rows = data
@@ -62,7 +65,7 @@ export function AllocationBreakdown({
               {rows.map((item, index) => (
                 <Cell
                   key={item.name}
-                  fill={allocationColor(item.name)}
+                  fill={colorFor(index)}
                   opacity={activeIndex == null || activeIndex === index ? 1 : 0.32}
                   stroke={activeIndex === index ? "var(--background)" : "var(--card)"}
                   strokeWidth={activeIndex === index ? 3 : 2}
@@ -109,7 +112,7 @@ export function AllocationBreakdown({
                   <span
                     aria-hidden="true"
                     className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: allocationColor(item.name) }}
+                    style={{ backgroundColor: colorFor(index) }}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
                   <span className="numeric-display shrink-0 text-xs text-muted-foreground">
@@ -124,7 +127,7 @@ export function AllocationBreakdown({
                     className="block h-full rounded-full transition-[width,opacity] duration-200"
                     style={{
                       width: `${share}%`,
-                      backgroundColor: allocationColor(item.name),
+                      backgroundColor: colorFor(index),
                       opacity: activeIndex == null || active ? 1 : 0.4,
                     }}
                   />

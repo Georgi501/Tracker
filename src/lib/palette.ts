@@ -1,19 +1,23 @@
-// CapiSpot brand colors with distinct shades for additional allocation categories.
+// Muted CapiSpot brand hues (emerald, gold, blossom, violet) plus softer companions.
 export const ALLOC_COLORS = [
-  "oklch(0.82 0.15 85)", // sun
-  "oklch(0.76 0.15 355)", // blossom
-  "oklch(0.73 0.14 295)", // violet
-  "oklch(0.78 0.13 195)", // teal
-  "oklch(0.76 0.15 295)", // violet
-  "oklch(0.76 0.13 164)", // primary
-  "oklch(0.80 0.14 125)", // lime
-  "oklch(0.86 0.15 90)", // gold
+  "oklch(0.72 0.12 163)", // emerald
+  "oklch(0.80 0.12 82)", // gold
+  "oklch(0.70 0.13 5)", // blossom
+  "oklch(0.66 0.13 290)", // violet
+  "oklch(0.72 0.09 215)", // sky
+  "oklch(0.72 0.12 45)", // amber-coral
+  "oklch(0.76 0.10 125)", // sage
+  "oklch(0.64 0.12 325)", // orchid
+  "oklch(0.68 0.08 190)", // teal
+  "oklch(0.62 0.11 255)", // indigo
+  "oklch(0.80 0.06 70)", // sand
+  "oklch(0.60 0.10 20)", // clay
 ];
 
-export function allocationColor(key: string): string {
-  let hash = 0;
-  for (const character of key.trim().toLowerCase()) {
-    hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
-  }
-  return ALLOC_COLORS[hash % ALLOC_COLORS.length]!;
+// Colors are assigned by rank so every slice in one chart is unique;
+// past the base palette the same hues repeat in a darker shade.
+export function allocationColorAt(index: number, offset = 0): string {
+  const i = index + offset;
+  const base = ALLOC_COLORS[i % ALLOC_COLORS.length]!;
+  return i < ALLOC_COLORS.length ? base : base.replace(/^oklch\(0\.\d+/, "oklch(0.50");
 }

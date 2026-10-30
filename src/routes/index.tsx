@@ -354,7 +354,12 @@ function Dashboard() {
   const tw = historyReturn(series) ?? Number.NaN;
   const irrV =
     p.holdings.length && Number.isFinite(total) ? portfolioIrr(p.transactions, total) : Number.NaN;
-  const chg = series.length > 1 ? (series.at(-1)?.v ?? 0) - (series[0]?.v ?? 0) : Number.NaN;
+  const chg =
+    series.length > 1
+      ? (series.at(-1)?.v ?? 0) -
+        (series[0]?.v ?? 0) -
+        series.slice(1).reduce((sum, point) => sum + point.flow, 0)
+      : Number.NaN;
   const locale = languageLocale(p.lang);
   const dashboardCopy = DASHBOARD_COPY[p.lang];
   const largestHolding = p.holdings
@@ -372,10 +377,12 @@ function Dashboard() {
   const recentTransactions = [...p.transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4);
+  const spanDays =
+    series.length > 1 ? ((series.at(-1)?.t ?? 0) - (series[0]?.t ?? 0)) / 86_400_000 : 0;
   const fmtT = (t: number) =>
     new Date(t).toLocaleString(
       locale,
-      ["YTD", "1Y", "3Y", "5Y", "ALL"].includes(period)
+      ["YTD", "1Y", "3Y", "5Y", "ALL"].includes(period) && spanDays > 540
         ? { month: "short", year: "2-digit" }
         : { day: "numeric", month: "short" },
     );

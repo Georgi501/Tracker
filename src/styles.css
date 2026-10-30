@@ -160,6 +160,8 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-muted-foreground) 45%, transparent) transparent;
   }
 
   body {

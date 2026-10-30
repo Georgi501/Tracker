@@ -268,7 +268,7 @@ export function WelcomeHero() {
           </p>
         )}
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link to="/markets" className={chip}>
           <Search className="size-4" />
           {c.markets}

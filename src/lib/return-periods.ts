@@ -5,6 +5,7 @@ export interface DateRange {
 export interface ValuePoint {
   t: number;
   v: number;
+  flow?: number | undefined;
 }
 export const DAY = 86400000;
 
@@ -40,9 +41,25 @@ export function valueAt(series: ValuePoint[], t: number): number | null {
 }
 
 export function rangeReturn(series: ValuePoint[], range: DateRange): number | null {
-  const start = valueAt(series, range.start);
-  const end = valueAt(series, range.end);
-  return start === null || end === null || start <= 0 ? null : (end / start - 1) * 100;
+  const last = series.at(-1);
+  const endT = last && last.t >= range.end - DAY ? Math.min(range.end, last.t) : range.end;
+  const endV = valueAt(series, endT);
+  const startV = valueAt(series, range.start);
+  if (startV === null || endV === null || startV <= 0) return null;
+  // Chain daily growth after removing deposits/withdrawals so new purchases are not counted as returns.
+  const inner = series.filter((p) => p.t > range.start && p.t <= endT);
+  const points = [{ t: range.start, v: startV, flow: 0 }, ...inner];
+  if ((inner.at(-1)?.t ?? range.start) < endT) points.push({ t: endT, v: endV, flow: 0 });
+  let growth = 1;
+  for (let i = 1; i < points.length; i++) {
+    const prior = points[i - 1];
+    const current = points[i];
+    if (!prior || !current || prior.v <= 0) return null;
+    const adjusted = current.v - (current.flow ?? 0);
+    if (adjusted < 0) return null;
+    growth *= adjusted / prior.v;
+  }
+  return (growth - 1) * 100;
 }
 
 export function comparisonReturns(series: ValuePoint[], range: DateRange, buckets: number) {

@@ -1,10 +1,10 @@
-import { allocationColor } from "@/lib/palette";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPortfolioHistory } from "@/lib/history.functions";
@@ -27,8 +27,6 @@ import {
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -82,7 +80,7 @@ const tip = {
 
 function Analytics() {
   const p = usePortfolio();
-  const [period, setPeriod] = useState<ReturnPeriod | "CUSTOM">("1Y");
+  const [period, setPeriod] = useState<ReturnPeriod | "CUSTOM">("ALL");
   const [anchor] = useState(() => Date.parse(`${dateInput(Date.now())}T00:00:00Z`) + DAY);
   const today = dateInput(anchor - DAY);
   const [startDate, setStartDate] = useState(dateInput(anchor - 30 * DAY));
@@ -214,7 +212,7 @@ function Analytics() {
   );
   const contrib = p.holdings
     .filter((h) => Number.isFinite(h.pnl))
-    .map((h) => ({ name: h.asset.symbol, v: h.pnl }))
+    .map((h) => ({ name: h.asset.symbol, v: h.pnl, pct: h.pnlPct }))
     .sort((a, b) => b.v - a.v);
   const exposures = [
     {
@@ -561,6 +559,7 @@ function Analytics() {
       </Card>
       <Breakdown
         title={p.t("byAsset")}
+        colorOffset={4}
         data={groupBy(
           p.holdings.filter((h) => Number.isFinite(h.value)),
           (h) => h.asset.symbol,
@@ -568,6 +567,7 @@ function Analytics() {
       />
       <Breakdown
         title={p.t("byCurrency")}
+        colorOffset={3}
         data={groupBy(
           p.holdings.filter((h) => Number.isFinite(h.value)),
           (h) => assetCurrency(h.asset),
@@ -575,6 +575,7 @@ function Analytics() {
       />
       <Breakdown
         title={p.t("byClass")}
+        colorOffset={1}
         data={groupBy(
           p.holdings.filter((h) => Number.isFinite(h.value)),
           (h) => p.t(h.asset.type),
@@ -582,37 +583,62 @@ function Analytics() {
       />
       <Card className="lg:col-span-3">
         <h3 className="font-display mb-1 font-semibold">{c.attribution}</h3>
-        <p className="mb-3 text-xs text-muted-foreground">{c.attributionNote}</p>
+        <p className="mb-4 text-xs text-muted-foreground">{c.attributionNote}</p>
         <div
           role="img"
           aria-label={`${c.attribution}: ${contrib.map((item) => `${item.name}, ${p.money(item.v, { sign: true })}`).join("; ")}.`}
-          style={{ height: Math.max(160, contrib.length * 30) }}
         >
-          <ResponsiveContainer>
-            <BarChart data={contrib} layout="vertical">
-              <XAxis type="number" hide />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={60}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-              />
-              <Tooltip
-                cursor={{ fill: "var(--secondary)" }}
-                formatter={(v: number) => p.money(v, { sign: true })}
-                itemStyle={{ color: "var(--foreground)" }}
-                labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-                contentStyle={tip}
-              />
-              <Bar dataKey="v" radius={[4, 4, 4, 4]}>
-                {contrib.map((c, i) => (
-                  <Cell key={i} fill={c.v >= 0 ? "var(--success)" : "var(--destructive)"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {(() => {
+            const max = Math.max(...contrib.map((x) => Math.abs(x.v)), 1);
+            const net = contrib.reduce((s, x) => s + x.v, 0);
+            return (
+              <>
+                <div className="mb-4 flex items-baseline gap-2">
+                  <span
+                    className={`font-display text-2xl font-bold tabular-nums ${net >= 0 ? "text-success" : "text-destructive"}`}
+                  >
+                    {p.money(net, { sign: true })}
+                  </span>
+                </div>
+                <ul className="divide-y divide-border/60">
+                  {contrib.map((x) => {
+                    const up = x.v >= 0;
+                    const width = (Math.abs(x.v) / max) * 50;
+                    return (
+                      <li
+                        key={x.name}
+                        className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 py-2.5 sm:grid-cols-[5.5rem_1fr_auto_4.5rem]"
+                      >
+                        <span className="truncate text-sm font-semibold">{x.name}</span>
+                        <div className="relative h-2.5 rounded-full bg-muted/70">
+                          <span className="absolute inset-y-[-3px] left-1/2 w-px bg-border" />
+                          <span
+                            className={`absolute inset-y-0 rounded-full ${up ? "bg-success" : "bg-destructive"}`}
+                            style={
+                              up
+                                ? { left: "50%", width: `${width}%` }
+                                : { right: "50%", width: `${width}%` }
+                            }
+                          />
+                        </div>
+                        <span
+                          className={`numeric-display text-right text-sm font-semibold tabular-nums ${up ? "text-success" : "text-destructive"}`}
+                        >
+                          {p.money(x.v, { sign: true })}
+                        </span>
+                        <span
+                          className={`hidden rounded-full px-2 py-0.5 text-center text-xs font-medium tabular-nums sm:block ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
+                        >
+                          {up ? "+" : ""}
+                          {x.pct.toFixed(1)}%
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            );
+          })()}
         </div>
       </Card>
       <Card className="lg:col-span-3">
@@ -841,54 +867,25 @@ function Analytics() {
   );
 }
 
-function Breakdown({ title, data }: { title: string; data: { name: string; value: number }[] }) {
+function Breakdown({
+  title,
+  data,
+  colorOffset = 0,
+}: {
+  title: string;
+  data: { name: string; value: number }[];
+  colorOffset?: number;
+}) {
   const p = usePortfolio();
-  const total = data.reduce((s, d) => s + d.value, 0) || 1;
   return (
     <Card>
-      <h3 className="font-display mb-2 font-semibold">{title}</h3>
-      <div
-        role="img"
-        aria-label={`${title}: ${data.map((item) => `${item.name} ${((item.value / total) * 100).toFixed(1)}%`).join(", ")}.`}
-        className="h-40"
-      >
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius="60%"
-              outerRadius="95%"
-              paddingAngle={3}
-              cornerRadius={6}
-              stroke="none"
-            >
-              {data.map((item) => (
-                <Cell key={item.name} fill={allocationColor(item.name)} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(v: number) => p.money(v)}
-              itemStyle={{ color: "var(--foreground)" }}
-              labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-              contentStyle={tip}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <ul className="mt-3 space-y-1.5 text-sm">
-        {data.map((d) => (
-          <li key={d.name} className="flex items-center gap-2">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: allocationColor(d.name) }}
-            />
-            <span className="flex-1">{d.name}</span>
-            <span className="font-semibold">{((d.value / total) * 100).toFixed(1)}%</span>
-          </li>
-        ))}
-      </ul>
+      <h3 className="font-display mb-3 font-semibold">{title}</h3>
+      <AllocationBreakdown
+        data={data}
+        colorOffset={colorOffset}
+        totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}
+        formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
+      />
     </Card>
   );
 }

@@ -251,7 +251,7 @@ function Holdings() {
     className?: string;
   }) => (
     <th
-      className={`py-2 font-medium ${left ? "" : "text-right"} ${className}`}
+      className={`py-2 font-medium ${left ? "" : "px-2 text-right"} ${className}`}
       aria-sort={sort.key === k ? (sort.dir === 1 ? "ascending" : "descending") : "none"}
     >
       <button
@@ -757,7 +757,7 @@ function Holdings() {
                     <Th k="name" label={p.t("name")} left />
                     <Th k="qty" label={p.t("qty")} className="px-2" />
                     <Th k="price" label={p.t("price")} className="px-2" />
-                    <th className="w-24 px-2 text-right font-medium">30d</th>
+                    <th className="hidden w-24 px-2 text-right font-medium lg:table-cell">30d</th>
                     <Th k="change" label="24h %" />
                     <Th k="avgCost" label={p.t("avgCost")} />
                     <Th k="value" label={p.t("value")} />
@@ -800,7 +800,7 @@ function Holdings() {
                         </td>
                         <td className="px-2 text-right">{num(h.quantity)}</td>
                         <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
-                        <td className="px-2">
+                        <td className="hidden px-2 lg:table-cell">
                           <div className="flex justify-end">
                             {sparks.data?.[h.asset.symbol] ? (
                               <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
@@ -811,23 +811,23 @@ function Holdings() {
                             ) : null}
                           </div>
                         </td>
-                        <td className="text-right">
+                        <td className="px-2 text-right">
                           <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                         </td>
-                        <td className="numeric-display text-right">
+                        <td className="numeric-display px-2 text-right">
                           {p.moneyFor(h.avgCost, h.asset)}
                         </td>
-                        <td className="numeric-display text-right font-semibold">
+                        <td className="numeric-display px-2 text-right font-semibold">
                           {p.moneyFor(h.value, h.asset)}
                         </td>
-                        <td className="text-right">
+                        <td className="px-2 text-right">
                           <Delta value={h.pnl}>
                             <span className="numeric-display font-semibold">
                               {p.moneyFor(h.pnl, h.asset, { sign: true })}
                             </span>
                           </Delta>
                         </td>
-                        <td className="text-right">
+                        <td className="px-2 text-right">
                           <Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta>
                         </td>
                         <td className="pl-2 text-right">
