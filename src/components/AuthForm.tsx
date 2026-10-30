@@ -103,15 +103,16 @@ export function AuthForm({
     }
   };
   const forgot = async () => {
-    if (!email) {
-      toast.error(p.t("email"));
+    const target = email.trim();
+    if (!target) {
+      toast.error(c.resetNeedEmail);
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
-    else toast.success(p.t("resetSent"));
+    else toast.success(c.resetSentTo(target), { duration: 8000 });
   };
   if (sentTo)
     return (

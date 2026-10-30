@@ -8,6 +8,8 @@ type Copy = {
   exists: string;
   sent: (e: string) => string;
   back: string;
+  resetNeedEmail: string;
+  resetSentTo: (e: string) => string;
   noAccount: string;
   haveAccount: string;
   show: string;
@@ -23,6 +25,9 @@ export const authCopy: Record<Lang, Copy> = {
     exists: "This email is already registered. Sign in instead.",
     sent: (e) => `We sent a confirmation link to ${e}. Open it, then sign in here.`,
     back: "Back to sign in",
+    resetNeedEmail: "Enter your email address above, then click “Forgot password?” again.",
+    resetSentTo: (e) =>
+      `If an account exists for ${e}, we've sent a password reset link. Check your inbox (and spam).`,
     noAccount: "No account? Create one",
     haveAccount: "Already have an account? Sign in",
     show: "Show",
@@ -36,6 +41,9 @@ export const authCopy: Record<Lang, Copy> = {
     exists: "Този имейл вече е регистриран. Влезте в профила си.",
     sent: (e) => `Изпратихме линк за потвърждение на ${e}. Отворете го и после влезте тук.`,
     back: "Към вход",
+    resetNeedEmail: "Въведете имейл адреса си по-горе и натиснете отново „Забравена парола“.",
+    resetSentTo: (e) =>
+      `Ако съществува акаунт за ${e}, изпратихме линк за нова парола. Проверете пощата си (и спама).`,
     noAccount: "Нямате профил? Регистрирайте се",
     haveAccount: "Имате профил? Влезте",
     show: "Покажи",
@@ -49,6 +57,10 @@ export const authCopy: Record<Lang, Copy> = {
     exists: "Diese E-Mail ist bereits registriert. Bitte anmelden.",
     sent: (e) => `Bestätigungslink an ${e} gesendet. Öffnen und dann hier anmelden.`,
     back: "Zur Anmeldung",
+    resetNeedEmail:
+      "Geben Sie oben Ihre E-Mail-Adresse ein und klicken Sie erneut auf „Passwort vergessen?“.",
+    resetSentTo: (e) =>
+      `Falls ein Konto für ${e} existiert, haben wir einen Link zum Zurücksetzen gesendet. Prüfen Sie Ihr Postfach (und Spam).`,
     noAccount: "Kein Konto? Registrieren",
     haveAccount: "Schon ein Konto? Anmelden",
     show: "Zeigen",
@@ -62,6 +74,9 @@ export const authCopy: Record<Lang, Copy> = {
     exists: "Este correo ya está registrado. Inicia sesión.",
     sent: (e) => `Enviamos un enlace de confirmación a ${e}. Ábrelo y luego inicia sesión aquí.`,
     back: "Volver a iniciar sesión",
+    resetNeedEmail: "Introduce tu correo arriba y vuelve a pulsar «¿Olvidaste tu contraseña?».",
+    resetSentTo: (e) =>
+      `Si existe una cuenta para ${e}, hemos enviado un enlace para restablecer la contraseña. Revisa tu bandeja (y el spam).`,
     noAccount: "¿Sin cuenta? Regístrate",
     haveAccount: "¿Ya tienes cuenta? Inicia sesión",
     show: "Mostrar",
@@ -75,6 +90,10 @@ export const authCopy: Record<Lang, Copy> = {
     exists: "Questa email è già registrata. Accedi.",
     sent: (e) => `Abbiamo inviato un link di conferma a ${e}. Aprilo e poi accedi qui.`,
     back: "Torna all'accesso",
+    resetNeedEmail:
+      "Inserisci la tua email qui sopra e clicca di nuovo su «Password dimenticata?».",
+    resetSentTo: (e) =>
+      `Se esiste un account per ${e}, abbiamo inviato un link per reimpostare la password. Controlla la posta (e lo spam).`,
     noAccount: "Nessun account? Registrati",
     haveAccount: "Hai già un account? Accedi",
     show: "Mostra",
