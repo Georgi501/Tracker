@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Card } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
+import { Avatar } from "@/components/Avatar";
+import { removeOwnAvatar, uploadOwnAvatar, useOwnAvatar } from "@/lib/own-avatar";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account")({
@@ -229,8 +231,41 @@ type Subscription = {
   provider_subscription_id: string | null;
 };
 
-function SecurityCard({ email, lang }: { email: string; lang: Lang }) {
+function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; userId: string }) {
   const bg = lang === "bg";
+  const avatar = useOwnAvatar(userId);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const photo = {
+    change: bg ? "Смени снимката" : "Change photo",
+    add: bg ? "Добави снимка" : "Add photo",
+    remove: bg ? "Премахни" : "Remove",
+    invalid: bg ? "Изображение до 5 MB" : "Image up to 5 MB",
+    saved: bg ? "Снимката е обновена." : "Photo updated.",
+  };
+  const pickPhoto = async (file: File) => {
+    setPhotoBusy(true);
+    try {
+      await uploadOwnAvatar(userId, file);
+      toast.success(photo.saved);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message !== "size" ? error.message : photo.invalid,
+      );
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+  const dropPhoto = async () => {
+    setPhotoBusy(true);
+    try {
+      await removeOwnAvatar(userId);
+      toast.success(photo.saved);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : photo.invalid);
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
   const t = {
     title: bg ? "Вход и сигурност" : "Sign-in & security",
     email: bg ? "Имейл" : "Email",
@@ -245,25 +280,48 @@ function SecurityCard({ email, lang }: { email: string; lang: Lang }) {
     changePassword: bg ? "Смени паролата" : "Change password",
     passwordDone: bg ? "Паролата е сменена." : "Password updated.",
     mismatch: bg ? "Паролите не съвпадат." : "Passwords do not match.",
+    current: bg ? "Текуща парола" : "Current password",
+    wrongCurrent: bg ? "Текущата парола е грешна." : "The current password is incorrect.",
+    cancel: bg ? "Отказ" : "Cancel",
   };
+  const [open, setOpen] = useState<"email" | "password" | null>(null);
+  const [current, setCurrent] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
+  const close = () => {
+    setOpen(null);
+    setCurrent("");
+    setNewEmail("");
+    setPw("");
+    setPw2("");
+  };
+  // Re-authenticating proves the person at the keyboard knows the current password.
+  const verifyCurrent = async () => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password: current });
+    if (error) toast.error(t.wrongCurrent);
+    return !error;
+  };
   const input = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm";
+  const ghost = "rounded-full border border-border px-5 py-2.5 text-sm font-semibold";
   const button =
     "rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60";
 
   const submitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    if (!(await verifyCurrent())) {
+      setBusy(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    setNewEmail("");
+    close();
     toast.success(t.emailSent);
   };
   const submitPassword = async (e: React.FormEvent) => {
@@ -273,66 +331,142 @@ function SecurityCard({ email, lang }: { email: string; lang: Lang }) {
       return;
     }
     setBusy(true);
+    if (!(await verifyCurrent())) {
+      setBusy(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    setPw("");
-    setPw2("");
+    close();
     toast.success(t.passwordDone);
   };
 
   return (
     <Card className="space-y-5">
       <h2 className="font-display text-lg font-semibold">{t.title}</h2>
+      <div className="flex items-center gap-4">
+        <Avatar url={avatar} name={email} size={72} />
+        <div className="flex flex-wrap gap-2">
+          <label
+            className={`press cursor-pointer rounded-full bg-secondary px-4 py-2 text-sm font-semibold ${photoBusy ? "pointer-events-none opacity-60" : ""}`}
+          >
+            {avatar ? photo.change : photo.add}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const x = e.target.files?.[0];
+                if (x) void pickPhoto(x);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {avatar && (
+            <button
+              disabled={photoBusy}
+              onClick={() => void dropPhoto()}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold disabled:opacity-60"
+            >
+              {photo.remove}
+            </button>
+          )}
+        </div>
+      </div>
       <p className="text-sm">
         {t.email}: <strong>{email}</strong>
       </p>
-      <form onSubmit={(e) => void submitEmail(e)} className="space-y-2">
-        <input
-          type="email"
-          required
-          autoComplete="email"
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          placeholder={t.newEmail}
-          aria-label={t.newEmail}
-          className={input}
-        />
-        <button disabled={busy || !newEmail.trim()} className={button}>
-          {t.changeEmail}
-        </button>
-      </form>
-      <form onSubmit={(e) => void submitPassword(e)} className="space-y-2">
-        <h3 className="text-sm font-semibold">{t.password}</h3>
-        <input
-          type="password"
-          required
-          minLength={6}
-          autoComplete="new-password"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          placeholder={t.newPassword}
-          aria-label={t.newPassword}
-          className={input}
-        />
-        <input
-          type="password"
-          required
-          minLength={6}
-          autoComplete="new-password"
-          value={pw2}
-          onChange={(e) => setPw2(e.target.value)}
-          placeholder={t.repeat}
-          aria-label={t.repeat}
-          className={input}
-        />
-        <button disabled={busy || !pw} className={button}>
-          {t.changePassword}
-        </button>
-      </form>
+      {open === null && (
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setOpen("email")} className={ghost}>
+            {t.changeEmail}
+          </button>
+          <button onClick={() => setOpen("password")} className={ghost}>
+            {t.changePassword}
+          </button>
+        </div>
+      )}
+      {open === "email" && (
+        <form onSubmit={(e) => void submitEmail(e)} className="space-y-2">
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            placeholder={t.current}
+            aria-label={t.current}
+            className={input}
+          />
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder={t.newEmail}
+            aria-label={t.newEmail}
+            className={input}
+          />
+          <div className="flex gap-2">
+            <button disabled={busy || !newEmail.trim() || !current} className={button}>
+              {t.changeEmail}
+            </button>
+            <button type="button" onClick={close} className={ghost}>
+              {t.cancel}
+            </button>
+          </div>
+        </form>
+      )}
+      {open === "password" && (
+        <form onSubmit={(e) => void submitPassword(e)} className="space-y-2">
+          <h3 className="text-sm font-semibold">{t.password}</h3>
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            placeholder={t.current}
+            aria-label={t.current}
+            className={input}
+          />
+          <input
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder={t.newPassword}
+            aria-label={t.newPassword}
+            className={input}
+          />
+          <input
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            placeholder={t.repeat}
+            aria-label={t.repeat}
+            className={input}
+          />
+          <div className="flex gap-2">
+            <button disabled={busy || !pw || !current} className={button}>
+              {t.changePassword}
+            </button>
+            <button type="button" onClick={close} className={ghost}>
+              {t.cancel}
+            </button>
+          </div>
+        </form>
+      )}
     </Card>
   );
 }
@@ -533,7 +667,7 @@ function AccountPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="font-display text-3xl font-bold">{c.title}</h1>
-      {p.user.email && <SecurityCard email={p.user.email} lang={p.lang} />}
+      {p.user.email && <SecurityCard email={p.user.email} lang={p.lang} userId={p.user.id} />}
       <Card className="space-y-3">
         <h2 className="font-display text-lg font-semibold">{c.subscription}</h2>
         <p className="text-sm">

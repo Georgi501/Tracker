@@ -47,6 +47,7 @@ import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
+import { useOwnAvatar } from "@/lib/own-avatar";
 import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
@@ -143,6 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
+  const ownAvatar = useOwnAvatar(p.user?.id);
   useEffect(() => {
     let last = window.scrollY;
     const onScroll = () => {
@@ -393,9 +395,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuTrigger asChild>
                   <button
                     aria-label={p.displayName || p.user.email || "account"}
-                    className="press relative ml-1 grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
+                    className="press relative ml-1 grid size-9 place-items-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-foreground"
                   >
-                    {(p.displayName || p.user.email || "?").slice(0, 1).toUpperCase()}
+                    {ownAvatar ? (
+                      <img src={ownAvatar} alt="" className="size-9 object-cover" />
+                    ) : (
+                      (p.displayName || p.user.email || "?").slice(0, 1).toUpperCase()
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">
