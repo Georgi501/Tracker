@@ -1,9 +1,19 @@
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowDown, ArrowUp, ArrowUpDown, Plus, Search, Trash2, TrendingUp, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  Plus,
+  Search,
+  Trash2,
+  TrendingUp,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CompanyLogo } from "@/components/CompanyLogo";
@@ -295,6 +305,94 @@ function Holdings() {
     }
     setPreset(next ?? { symbol: "", name: "", type: "stock" });
   };
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleLots = (id: string) =>
+    setExpanded((s) => {
+      const next = new Set(s);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  const lotsLabel = p.lang === "bg" ? "Лотове" : "Lots";
+  const removeLot = async (id: string) => {
+    const bg = p.lang === "bg";
+    const row = await supabase.from("transactions").select("*").eq("id", id).single();
+    if (row.error) {
+      toast.error(row.error.message);
+      return;
+    }
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await p.reload();
+    toast(bg ? "Лотът е изтрит" : "Lot deleted", {
+      duration: 8000,
+      action: {
+        label: bg ? "Отмени" : "Undo",
+        onClick: () => {
+          void (async () => {
+            const res = await supabase.from("transactions").insert(row.data);
+            if (res.error) toast.error(res.error.message);
+            await p.reload();
+          })();
+        },
+      },
+    });
+  };
+  const lotsPanel = (assetId: string) => {
+    const bg = p.lang === "bg";
+    const lots = p.transactions
+      .filter((t) => t.assetId === assetId)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const kindLabel = { buy: bg ? "Покупка" : "Buy", sell: bg ? "Продажба" : "Sell" } as const;
+    return (
+      <div className="rounded-xl border border-border bg-background/60 p-3">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {lotsLabel}
+        </p>
+        <ul className="divide-y divide-border">
+          {lots.map((t) => (
+            <li key={t.id} className="flex items-center gap-3 py-2 text-sm">
+              <span className="w-24 text-muted-foreground">
+                {new Date(t.date).toLocaleDateString(languageLocale(p.lang))}
+              </span>
+              <span className="w-24 font-medium">
+                {t.kind === "dividend" ? (bg ? "Дивидент" : "Dividend") : kindLabel[t.kind]}
+              </span>
+              <span className="flex-1">
+                {t.kind === "dividend"
+                  ? p.money(t.price)
+                  : `${num(t.quantity)} × ${p.money(t.price)}`}
+              </span>
+              <button
+                onClick={() => void removeLot(t.id)}
+                aria-label={bg ? "Изтрий лота" : "Delete lot"}
+                title={bg ? "Изтрий лота" : "Delete lot"}
+                className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 size={16} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+  const lotsToggle = (assetId: string, symbol: string) => (
+    <button
+      onClick={() => toggleLots(assetId)}
+      aria-expanded={expanded.has(assetId)}
+      aria-label={`${lotsLabel} ${symbol}`}
+      title={lotsLabel}
+      className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+    >
+      <ChevronDown
+        size={16}
+        className={`transition-transform ${expanded.has(assetId) ? "rotate-180" : ""}`}
+      />
+    </button>
+  );
   const removeAsset = async (id: string, symbol: string) => {
     const bg = p.lang === "bg";
     const [assetRow, txRows] = await Promise.all([
@@ -500,44 +598,48 @@ function Holdings() {
                 <li
                   key={h.asset.id}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className="rise-in flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-3"
+                  className="rise-in rounded-2xl border border-border bg-background/60 p-3"
                 >
-                  <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      to="/asset/$symbol"
-                      params={{ symbol: h.asset.symbol }}
-                      className="block truncate font-semibold hover:text-primary"
+                  <div className="flex items-center gap-3">
+                    <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to="/asset/$symbol"
+                        params={{ symbol: h.asset.symbol }}
+                        className="block truncate font-semibold hover:text-primary"
+                      >
+                        {h.asset.name}
+                      </Link>
+                      <StaleBadge at={h.asset.quoteAt} price={h.asset.price} bg={p.lang === "bg"} />
+                      <p className="text-xs text-muted-foreground">
+                        {num(h.quantity)} · {h.asset.symbol} ·{" "}
+                        <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
+                      </p>
+                      <QuoteFreshness
+                        at={h.asset.quoteAt}
+                        lang={p.lang}
+                        crypto={h.asset.type === "crypto"}
+                        compact
+                      />
+                    </div>
+                    <div className="text-right">
+                      <p className="numeric-display font-semibold">{p.money(h.value)}</p>
+                      <p className="numeric-display text-xs">
+                        <Delta value={h.pnl}>
+                          {p.money(h.pnl, { sign: true })} · {pct(h.pnlPct)}
+                        </Delta>
+                      </p>
+                    </div>
+                    {lotsToggle(h.asset.id, h.asset.symbol)}
+                    <button
+                      onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                      aria-label={`${c.remove} ${h.asset.symbol}`}
+                      className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     >
-                      {h.asset.name}
-                    </Link>
-                    <StaleBadge at={h.asset.quoteAt} price={h.asset.price} bg={p.lang === "bg"} />
-                    <p className="text-xs text-muted-foreground">
-                      {num(h.quantity)} · {h.asset.symbol} ·{" "}
-                      <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
-                    </p>
-                    <QuoteFreshness
-                      at={h.asset.quoteAt}
-                      lang={p.lang}
-                      crypto={h.asset.type === "crypto"}
-                      compact
-                    />
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                  <div className="text-right">
-                    <p className="numeric-display font-semibold">{p.money(h.value)}</p>
-                    <p className="numeric-display text-xs">
-                      <Delta value={h.pnl}>
-                        {p.money(h.pnl, { sign: true })} · {pct(h.pnlPct)}
-                      </Delta>
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
-                    aria-label={`${c.remove} ${h.asset.symbol}`}
-                    className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {expanded.has(h.asset.id) && <div className="mt-3">{lotsPanel(h.asset.id)}</div>}
                 </li>
               ))}
               {!rows.length && (
@@ -562,79 +664,88 @@ function Holdings() {
                 </thead>
                 <tbody>
                   {rows.map((h) => (
-                    <tr
-                      key={h.asset.id}
-                      className="border-b border-border last:border-0 hover:bg-secondary/50"
-                    >
-                      <td className="py-3">
-                        <div className="flex items-center gap-3">
-                          <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
-                          <div>
-                            <Link
-                              to="/asset/$symbol"
-                              params={{ symbol: h.asset.symbol }}
-                              className="font-semibold hover:text-primary"
-                            >
-                              {h.asset.name}
-                            </Link>
-                            <StaleBadge
-                              at={h.asset.quoteAt}
-                              price={h.asset.price}
-                              bg={p.lang === "bg"}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              {h.asset.symbol} · {p.t(h.asset.type)}
-                            </p>
-                            <QuoteFreshness
-                              at={h.asset.quoteAt}
-                              lang={p.lang}
-                              crypto={h.asset.type === "crypto"}
-                              compact
-                            />
+                    <Fragment key={h.asset.id}>
+                      <tr className="border-b border-border last:border-0 hover:bg-secondary/50">
+                        <td className="py-3">
+                          <div className="flex items-center gap-3">
+                            <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
+                            <div>
+                              <Link
+                                to="/asset/$symbol"
+                                params={{ symbol: h.asset.symbol }}
+                                className="font-semibold hover:text-primary"
+                              >
+                                {h.asset.name}
+                              </Link>
+                              <StaleBadge
+                                at={h.asset.quoteAt}
+                                price={h.asset.price}
+                                bg={p.lang === "bg"}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                {h.asset.symbol} · {p.t(h.asset.type)}
+                              </p>
+                              <QuoteFreshness
+                                at={h.asset.quoteAt}
+                                lang={p.lang}
+                                crypto={h.asset.type === "crypto"}
+                                compact
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-2 text-right">{num(h.quantity)}</td>
-                      <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
-                      <td className="px-2">
-                        <div className="flex justify-end">
-                          {sparks.data?.[h.asset.symbol] ? (
-                            <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
-                          ) : sparks.isLoading &&
-                            h.asset.type !== "cash" &&
-                            h.asset.type !== "realEstate" ? (
-                            <Skeleton className="h-5 w-20" />
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="text-right">
-                        <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
-                      </td>
-                      <td className="numeric-display text-right">{p.money(h.avgCost)}</td>
-                      <td className="numeric-display text-right font-semibold">
-                        {p.money(h.value)}
-                      </td>
-                      <td className="text-right">
-                        <Delta value={h.pnl}>
-                          <span className="numeric-display font-semibold">
-                            {p.money(h.pnl, { sign: true })}
-                          </span>
-                        </Delta>
-                      </td>
-                      <td className="text-right">
-                        <Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta>
-                      </td>
-                      <td className="pl-2 text-right">
-                        <button
-                          onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
-                          aria-label={`${c.remove} ${h.asset.symbol}`}
-                          title={c.remove}
-                          className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-2 text-right">{num(h.quantity)}</td>
+                        <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
+                        <td className="px-2">
+                          <div className="flex justify-end">
+                            {sparks.data?.[h.asset.symbol] ? (
+                              <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
+                            ) : sparks.isLoading &&
+                              h.asset.type !== "cash" &&
+                              h.asset.type !== "realEstate" ? (
+                              <Skeleton className="h-5 w-20" />
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="text-right">
+                          <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
+                        </td>
+                        <td className="numeric-display text-right">{p.money(h.avgCost)}</td>
+                        <td className="numeric-display text-right font-semibold">
+                          {p.money(h.value)}
+                        </td>
+                        <td className="text-right">
+                          <Delta value={h.pnl}>
+                            <span className="numeric-display font-semibold">
+                              {p.money(h.pnl, { sign: true })}
+                            </span>
+                          </Delta>
+                        </td>
+                        <td className="text-right">
+                          <Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta>
+                        </td>
+                        <td className="pl-2 text-right">
+                          <div className="flex justify-end">
+                            {lotsToggle(h.asset.id, h.asset.symbol)}
+                            <button
+                              onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                              aria-label={`${c.remove} ${h.asset.symbol}`}
+                              title={c.remove}
+                              className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {expanded.has(h.asset.id) && (
+                        <tr className="border-b border-border">
+                          <td colSpan={10} className="pb-3">
+                            {lotsPanel(h.asset.id)}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
