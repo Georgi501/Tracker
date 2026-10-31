@@ -53,8 +53,8 @@ const en: PlanCopy = {
     },
     {
       title: "Research",
-      free: "Search, news, key stats",
-      pro: "Financial statements, forecasts & revisions, earnings surprises, holders, DCF and AI thesis check",
+      free: "Search, news, key stats & financial statements",
+      pro: "Earnings calendar, forecasts & revisions, earnings surprises, holders, DCF, deep research & AI thesis check",
     },
     {
       title: "Watchlist",
@@ -127,8 +127,8 @@ const bg: PlanCopy = {
     },
     {
       title: "Проучване",
-      free: "Търсене, новини, ключови показатели",
-      pro: "Финансови отчети, прогнози и промени, изненади в печалбата, акционери, DCF и AI проверка на теза",
+      free: "Търсене, новини, ключови показатели и финансови отчети",
+      pro: "Календар на отчетите, прогнози и промени, изненади в печалбата, акционери, DCF, задълбочено проучване и AI проверка на теза",
     },
     {
       title: "Watchlist",
@@ -202,8 +202,8 @@ const de: PlanCopy = {
     },
     {
       title: "Research",
-      free: "Suche, News, Kennzahlen",
-      pro: "Finanzberichte, Prognosen & Revisionen, Gewinnüberraschungen, Anteilseigner, DCF und KI-Theseprüfung",
+      free: "Suche, News, Kennzahlen & Finanzberichte",
+      pro: "Berichtskalender, Prognosen & Revisionen, Gewinnüberraschungen, Anteilseigner, DCF, Deep Research & KI-Theseprüfung",
     },
     {
       title: "Watchlist",
@@ -278,8 +278,8 @@ const es: PlanCopy = {
     },
     {
       title: "Investigación",
-      free: "Búsqueda, noticias, datos clave",
-      pro: "Estados financieros, previsiones y revisiones, sorpresas de resultados, accionistas, DCF y análisis de tesis con IA",
+      free: "Búsqueda, noticias, datos clave y estados financieros",
+      pro: "Calendario de resultados, previsiones y revisiones, sorpresas, accionistas, DCF, investigación profunda y análisis de tesis con IA",
     },
     {
       title: "Watchlist",
@@ -350,8 +350,8 @@ const it: PlanCopy = {
     },
     {
       title: "Ricerca",
-      free: "Ricerca, notizie, dati chiave",
-      pro: "Bilanci, stime e revisioni, sorprese sugli utili, azionisti, DCF e verifica della tesi con IA",
+      free: "Ricerca, notizie, dati chiave e bilanci",
+      pro: "Calendario degli utili, stime e revisioni, sorprese sugli utili, azionisti, DCF, ricerca approfondita e verifica della tesi con IA",
     },
     {
       title: "Watchlist",

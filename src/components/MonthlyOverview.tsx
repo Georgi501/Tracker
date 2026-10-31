@@ -1,5 +1,6 @@
-import { CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays, Download, Share2, TrendingDown, TrendingUp } from "lucide-react";
 import { Card } from "@/components/AppShell";
+import { toast } from "sonner";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { historyReturn, type PortfolioPoint } from "@/lib/history";
 import { languageLocale, type Lang } from "@/lib/i18n";
@@ -27,6 +28,9 @@ const COPY: Record<
     retry: string;
     noMovers: string;
     loading: string;
+    download: string;
+    share: string;
+    shareError: string;
   }
 > = {
   en: {
@@ -43,6 +47,9 @@ const COPY: Record<
     retry: "Retry",
     noMovers: "No held-asset price history is available for this month.",
     loading: "Loading monthly data…",
+    download: "Download report",
+    share: "Share report",
+    shareError: "The report could not be shared.",
   },
   bg: {
     title: "Месечен обзор",
@@ -58,6 +65,9 @@ const COPY: Record<
     retry: "Опитай отново",
     noMovers: "Няма налична месечна ценова история за държаните активи.",
     loading: "Зареждане на месечните данни…",
+    download: "Изтегли отчета",
+    share: "Сподели отчета",
+    shareError: "Отчетът не можа да бъде споделен.",
   },
   de: {
     title: "Monatsübersicht",
@@ -73,6 +83,9 @@ const COPY: Record<
     retry: "Erneut versuchen",
     noMovers: "Keine monatliche Kurshistorie für gehaltene Werte verfügbar.",
     loading: "Monatsdaten werden geladen…",
+    download: "Bericht herunterladen",
+    share: "Bericht teilen",
+    shareError: "Der Bericht konnte nicht geteilt werden.",
   },
   es: {
     title: "Resumen mensual",
@@ -89,6 +102,9 @@ const COPY: Record<
     retry: "Reintentar",
     noMovers: "No hay historial mensual disponible para los activos en cartera.",
     loading: "Cargando datos mensuales…",
+    download: "Descargar informe",
+    share: "Compartir informe",
+    shareError: "No se pudo compartir el informe.",
   },
   it: {
     title: "Riepilogo mensile",
@@ -104,6 +120,9 @@ const COPY: Record<
     retry: "Riprova",
     noMovers: "Storico mensile non disponibile per gli asset detenuti.",
     loading: "Caricamento dei dati mensili…",
+    download: "Scarica il report",
+    share: "Condividi il report",
+    shareError: "Impossibile condividere il report.",
   },
 };
 
@@ -156,6 +175,47 @@ export function MonthlyOverview({
   const weakest = returns.at(-1);
   const locale = languageLocale(p.lang);
   const monthName = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(now);
+  const historyUnavailable = !data || data.unavailable;
+  const reportText = [
+    `Capispot — ${monthName}`,
+    `${c.return}: ${monthlyReturn == null ? "—" : pct(monthlyReturn)}`,
+    `${c.valueChange}: ${
+      data && !data.unavailable && Number.isFinite(monthValueChange)
+        ? p.money(monthValueChange, { sign: true })
+        : "—"
+    }`,
+    `${c.netPurchases}: ${
+      data && !data.unavailable ? p.money(contributions, { sign: true }) : "—"
+    }`,
+    `${c.dividends}: ${p.money(dividends)}`,
+    `${c.best}: ${best ? `${best.asset?.symbol ?? ""} ${pct(best.returnPct)}` : "—"}`,
+    `${c.weakest}: ${weakest ? `${weakest.asset?.symbol ?? ""} ${pct(weakest.returnPct)}` : "—"}`,
+    historyUnavailable ? c.unavailable : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const downloadReport = () => {
+    const blob = new Blob([reportText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `capispot-monthly-${now.toISOString().slice(0, 7)}.txt`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+  const shareReport = async () => {
+    if (typeof navigator.share !== "function") {
+      downloadReport();
+      return;
+    }
+    try {
+      await navigator.share({ title: `Capispot — ${monthName}`, text: reportText });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error("Could not share monthly report", error);
+      toast.error(c.shareError);
+    }
+  };
 
   const mover = (item: (typeof returns)[number] | undefined, up: boolean, label: string) => {
     if (!item?.asset) return null;
@@ -183,6 +243,24 @@ export function MonthlyOverview({
         <CalendarDays size={18} className="text-primary" aria-hidden />
         <h2 className="font-display font-semibold">{c.title}</h2>
         <span className="ml-auto text-xs text-muted-foreground">{monthName}</span>
+      </div>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={downloadReport}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+        >
+          <Download size={14} aria-hidden />
+          {c.download}
+        </button>
+        <button
+          type="button"
+          onClick={() => void shareReport()}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+        >
+          <Share2 size={14} aria-hidden />
+          {c.share}
+        </button>
       </div>
       {isError ? (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 text-sm">

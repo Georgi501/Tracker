@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { CheckCircle2, Sparkles, Square, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import { qualityIssues, type IssueKind } from "@/lib/quality";
+import { readTargetReviews, readTargets } from "@/lib/watchlist";
 
 type L = "en" | "bg" | "de" | "es" | "it";
 const en = {
@@ -15,7 +16,7 @@ const en = {
   stop: "Stop",
   err: "Review failed",
   quality: "Data quality check",
-  qualityDesc: "Finds duplicates, oversells, missing prices and future dates in your transactions.",
+  qualityDesc: "Finds transaction issues, stale quotes and buy targets that may need review.",
   clean: "No issues found — your data looks clean.",
   k: {
     duplicate: "Duplicate transactions",
@@ -23,6 +24,8 @@ const en = {
     missingPrice: "Missing price",
     future: "Future date",
     noQuote: "No live quote",
+    staleQuote: "Quote is more than four days old",
+    targetReviewDue: "Buy target needs review",
     orphan: "Transaction without asset",
   } as Record<IssueKind, string>,
 };
@@ -34,7 +37,7 @@ const bg: typeof en = {
   stop: "Спри",
   err: "Прегледът не успя",
   quality: "Проверка на данните",
-  qualityDesc: "Открива дубликати, продажби над наличното, липсващи цени и бъдещи дати.",
+  qualityDesc: "Открива проблеми със сделките, остарели котировки и цени за покупка за преглед.",
   clean: "Няма открити проблеми — данните изглеждат чисти.",
   k: {
     duplicate: "Дублирани трансакции",
@@ -42,6 +45,8 @@ const bg: typeof en = {
     missingPrice: "Липсваща цена",
     future: "Бъдеща дата",
     noQuote: "Няма текуща цена",
+    staleQuote: "Котировката е на повече от четири дни",
+    targetReviewDue: "Цената за покупка трябва да се прегледа",
     orphan: "Трансакция без актив",
   },
 };
@@ -52,7 +57,14 @@ const de: typeof en = {
   go: "Portfolio prüfen",
   stop: "Stopp",
   quality: "Datenqualität",
+  qualityDesc:
+    "Findet Transaktionsfehler, veraltete Kurse und möglicherweise prüfbedürftige Kaufziele.",
   clean: "Keine Probleme gefunden.",
+  k: {
+    ...en.k,
+    staleQuote: "Kurs älter als vier Tage",
+    targetReviewDue: "Kaufziel sollte geprüft werden",
+  },
 };
 const es: typeof en = {
   ...en,
@@ -61,7 +73,14 @@ const es: typeof en = {
   go: "Revisar mi cartera",
   stop: "Detener",
   quality: "Calidad de datos",
+  qualityDesc:
+    "Detecta problemas de transacciones, cotizaciones antiguas y objetivos de compra que revisar.",
   clean: "Sin problemas.",
+  k: {
+    ...en.k,
+    staleQuote: "Cotización de hace más de cuatro días",
+    targetReviewDue: "Revisar objetivo de compra",
+  },
 };
 const it: typeof en = {
   ...en,
@@ -71,7 +90,14 @@ const it: typeof en = {
   go: "Rivedi il portafoglio",
   stop: "Ferma",
   quality: "Qualità dei dati",
+  qualityDesc:
+    "Rileva problemi nelle operazioni, quotazioni obsolete e obiettivi d'acquisto da rivedere.",
   clean: "Nessun problema.",
+  k: {
+    ...en.k,
+    staleQuote: "Quotazione più vecchia di quattro giorni",
+    targetReviewDue: "Obiettivo di acquisto da rivedere",
+  },
 };
 export const proToolsCopy: Record<L, typeof en> = { en, bg, de, es, it };
 
@@ -149,7 +175,27 @@ export function PortfolioReview() {
 export function DataQuality() {
   const p = usePortfolio();
   const c = proToolsCopy[p.lang];
-  const issues = qualityIssues(p.assets, p.transactions);
+  const [targetReviews, setTargetReviews] = useState<Record<string, string>>({});
+  const [targets, setTargets] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const sync = () => {
+      setTargetReviews(readTargetReviews());
+      setTargets(readTargets());
+    };
+    sync();
+    window.addEventListener("folio-watch", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("folio-watch", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+  const activeReviews = Object.fromEntries(
+    Object.keys(targets)
+      .filter((symbol) => targetReviews[symbol])
+      .map((symbol) => [symbol, targetReviews[symbol]!]),
+  );
+  const issues = qualityIssues(p.assets, p.transactions, undefined, activeReviews);
   if (!issues.length)
     return (
       <p className="flex items-center gap-2 text-sm text-success">

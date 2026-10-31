@@ -1,6 +1,14 @@
-import type { Asset, Transaction } from "./portfolio";
+import { isQuoteStale, type Asset, type Transaction } from "./portfolio";
 
-export type IssueKind = "duplicate" | "oversell" | "missingPrice" | "future" | "noQuote" | "orphan";
+export type IssueKind =
+  | "duplicate"
+  | "oversell"
+  | "missingPrice"
+  | "future"
+  | "noQuote"
+  | "staleQuote"
+  | "targetReviewDue"
+  | "orphan";
 export interface Issue {
   kind: IssueKind;
   symbol: string;
@@ -13,6 +21,8 @@ export function qualityIssues(
   assets: Asset[],
   txs: Transaction[],
   today = new Date().toISOString().slice(0, 10),
+  targetReviews: Record<string, string> = {},
+  now = Date.now(),
 ): Issue[] {
   const out: Issue[] = [];
   const byId = new Map(assets.map((a) => [a.id, a]));
@@ -39,8 +49,20 @@ export function qualityIssues(
     if (q < -1e-9) out.push({ kind: "oversell", symbol: sym(t.assetId), date: t.date });
   }
   for (const a of assets)
-    if (a.type !== "cash" && (qty.get(a.id) ?? 0) > 0 && !Number.isFinite(a.price))
-      out.push({ kind: "noQuote", symbol: a.symbol });
+    if (a.type !== "cash" && (qty.get(a.id) ?? 0) > 0) {
+      if (!Number.isFinite(a.price)) out.push({ kind: "noQuote", symbol: a.symbol });
+      else if (isQuoteStale(a.quoteAt, now)) out.push({ kind: "staleQuote", symbol: a.symbol });
+    }
+  for (const [symbol, reviewedAt] of Object.entries(targetReviews)) {
+    const reviewedTime = Date.parse(`${reviewedAt}T00:00:00Z`);
+    const todayTime = Date.parse(`${today}T00:00:00Z`);
+    if (
+      Number.isFinite(reviewedTime) &&
+      Number.isFinite(todayTime) &&
+      todayTime - reviewedTime > 90 * 86400000
+    )
+      out.push({ kind: "targetReviewDue", symbol, date: reviewedAt });
+  }
   return out;
 }
 

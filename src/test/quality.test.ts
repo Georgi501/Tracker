@@ -48,6 +48,23 @@ describe("qualityIssues", () => {
     );
     expect(r.map((i) => i.kind).sort()).toEqual(["future", "noQuote"]);
   });
+  it("flags stale held quotes and buy targets not reviewed for 90 days", () => {
+    const staleAsset = { ...a("x"), quoteAt: "2024-01-01T00:00:00.000Z" };
+    const result = qualityIssues(
+      [staleAsset],
+      [t("1", "x", "buy", 1, "2024-01-01")],
+      "2025-01-01",
+      { X: "2024-09-01" },
+      Date.parse("2025-01-01T00:00:00.000Z"),
+    );
+    expect(result.map((issue) => issue.kind)).toContain("staleQuote");
+    expect(result.map((issue) => issue.kind)).toContain("targetReviewDue");
+  });
+  it("does not treat unreviewed targets as stale without a recorded review date", () => {
+    expect(
+      qualityIssues([a("x")], [t("1", "x", "buy", 1, "2024-01-01")], "2025-01-01", {}),
+    ).toEqual([]);
+  });
   it("returns nothing for clean data", () => {
     expect(qualityIssues([a("x")], [t("1", "x", "buy", 1, "2024-01-01")], "2025-01-01")).toEqual(
       [],

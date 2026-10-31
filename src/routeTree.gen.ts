@@ -21,6 +21,7 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendsRouteImport } from './routes/dividends'
+import { Route as EarningsRouteImport } from './routes/earnings'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as MarketsRouteImport } from './routes/markets'
@@ -107,6 +108,11 @@ const DisclaimerRoute = DisclaimerRouteImport.update({
 const DividendsRoute = DividendsRouteImport.update({
   id: '/dividends',
   path: '/dividends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EarningsRoute = EarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividends': typeof DividendsRoute
+  '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/disclaimer'
     | '/dividends'
+    | '/earnings'
     | '/features'
     | '/holdings'
     | '/markets'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/disclaimer'
     | '/dividends'
+    | '/earnings'
     | '/features'
     | '/holdings'
     | '/markets'
@@ -467,6 +478,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/disclaimer'
     | '/dividends'
+    | '/earnings'
     | '/features'
     | '/holdings'
     | '/markets'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   DisclaimerRoute: typeof DisclaimerRoute
   DividendsRoute: typeof DividendsRoute
+  EarningsRoute: typeof EarningsRoute
   FeaturesRoute: typeof FeaturesRoute
   HoldingsRoute: typeof HoldingsRoute
   MarketsRoute: typeof MarketsRoute
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/dividends'
       fullPath: '/dividends'
       preLoaderRoute: typeof DividendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earnings': {
+      id: '/earnings'
+      path: '/earnings'
+      fullPath: '/earnings'
+      preLoaderRoute: typeof EarningsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -840,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   DisclaimerRoute: DisclaimerRoute,
   DividendsRoute: DividendsRoute,
+  EarningsRoute: EarningsRoute,
   FeaturesRoute: FeaturesRoute,
   HoldingsRoute: HoldingsRoute,
   MarketsRoute: MarketsRoute,

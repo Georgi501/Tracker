@@ -25,6 +25,7 @@ import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
 import { projectedBondCoupon } from "@/lib/portfolio";
 import type { Lang } from "@/lib/i18n";
+import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
 
 export const Route = createFileRoute("/asset/$symbol")({
   head: ({ params }) => ({
@@ -250,12 +251,41 @@ const RESEARCH_NAV: Record<
   ],
 };
 
+const BOND_REMINDER_COPY: Record<Lang, { nextCoupon: string; saveDate: string; note: string }> = {
+  en: {
+    nextCoupon: "Next confirmed coupon date",
+    saveDate: "Save reminder date",
+    note: "Enter the next confirmed date yourself. Reminders run only while Capispot is open.",
+  },
+  bg: {
+    nextCoupon: "Следваща потвърдена купонна дата",
+    saveDate: "Запази датата за напомняне",
+    note: "Въведи следващата потвърдена дата. Напомнянията работят само докато Capispot е отворен.",
+  },
+  de: {
+    nextCoupon: "Nächster bestätigter Kupontermin",
+    saveDate: "Erinnerungstermin speichern",
+    note: "Gib den nächsten bestätigten Termin selbst ein. Erinnerungen laufen nur bei geöffnetem Capispot.",
+  },
+  es: {
+    nextCoupon: "Próxima fecha de cupón confirmada",
+    saveDate: "Guardar fecha del aviso",
+    note: "Introduce tú la próxima fecha confirmada. Los avisos solo funcionan con Capispot abierto.",
+  },
+  it: {
+    nextCoupon: "Prossima data cedola confermata",
+    saveDate: "Salva data promemoria",
+    note: "Inserisci tu la prossima data confermata. I promemoria funzionano solo con Capispot aperto.",
+  },
+};
+
 function AssetPage() {
   const { symbol } = Route.useParams();
   const p = usePortfolio();
   const c = C[p.lang];
   const [bondPrice, setBondPrice] = useState("");
   const [savingBondPrice, setSavingBondPrice] = useState(false);
+  const [bondCouponDate, setBondCouponDate] = useState("");
   const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
   const catalogAsset = searchCatalog(symbol).find(
     (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
@@ -284,6 +314,9 @@ function AssetPage() {
       bondPriceValue !== undefined && Number.isFinite(bondPriceValue) ? String(bondPriceValue) : "",
     );
   }, [bondAssetId, bondPriceValue]);
+  useEffect(() => {
+    setBondCouponDate(bondAssetId ? (readBondCouponDates()[bondAssetId] ?? "") : "");
+  }, [bondAssetId]);
   const assetId = asset && "id" in asset ? asset.id : null;
   const txs = assetId
     ? p.transactions
@@ -421,6 +454,35 @@ function AssetPage() {
             </Button>
           </form>
           <p className="mt-2 text-xs text-muted-foreground">{p.t("manualBondPrice")}</p>
+          {bondAssetId && (
+            <form
+              className="mt-4 flex flex-wrap items-end gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                writeBondCouponDate(bondAssetId, bondCouponDate || null);
+                if (
+                  bondCouponDate &&
+                  typeof Notification !== "undefined" &&
+                  Notification.permission === "default"
+                )
+                  void Notification.requestPermission();
+              }}
+            >
+              <label className="grid gap-1 text-sm">
+                {BOND_REMINDER_COPY[p.lang].nextCoupon}
+                <input
+                  type="date"
+                  value={bondCouponDate}
+                  onChange={(event) => setBondCouponDate(event.target.value)}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                />
+              </label>
+              <Button type="submit">{BOND_REMINDER_COPY[p.lang].saveDate}</Button>
+              <p className="basis-full text-xs text-muted-foreground">
+                {BOND_REMINDER_COPY[p.lang].note}
+              </p>
+            </form>
+          )}
           <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-muted-foreground">{p.t("couponRate")}</dt>

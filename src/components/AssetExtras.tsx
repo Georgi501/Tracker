@@ -15,6 +15,8 @@ import {
 } from "@/lib/market.functions";
 import {
   readAlerts,
+  readBondCouponDates,
+  readEarningsReminders,
   readWatchlist,
   writeAlerts,
   writeWatchlist,
@@ -25,10 +27,14 @@ import type { MarketAsset } from "@/lib/market-search";
 export function useWatchState() {
   const [list, setList] = useState<string[]>([]);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [earningsReminders, setEarningsReminders] = useState<string[]>([]);
+  const [bondCouponDates, setBondCouponDates] = useState<Record<string, string>>({});
   useEffect(() => {
     const sync = () => {
       setList(readWatchlist());
       setAlerts(readAlerts());
+      setEarningsReminders(readEarningsReminders());
+      setBondCouponDates(readBondCouponDates());
     };
     sync();
     window.addEventListener("folio-watch", sync);
@@ -38,7 +44,7 @@ export function useWatchState() {
       window.removeEventListener("storage", sync);
     };
   }, []);
-  return { list, alerts };
+  return { list, alerts, earningsReminders, bondCouponDates };
 }
 
 function Sparkline({

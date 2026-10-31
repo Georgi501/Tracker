@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Check, Pencil, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
+import { Check, Pencil, Plus, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
@@ -13,7 +13,15 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDcf, marketDetails, marketQuote, type ChartRange } from "@/lib/market.functions";
 import { dcfValue, scenario, valuationGap } from "@/lib/dcf";
-import { inBuyZone, readTargets, writeTargets, writeWatchlist } from "@/lib/watchlist";
+import {
+  clearTargetReview,
+  inBuyZone,
+  readTargets,
+  readTargetReviews,
+  writeTargetReview,
+  writeTargets,
+  writeWatchlist,
+} from "@/lib/watchlist";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/watchlist")({
@@ -62,6 +70,7 @@ type K =
   | "noData"
   | "remove"
   | "browse"
+  | "addMore"
   | "analysis"
   | "analysisDesc"
   | "fairValue"
@@ -93,6 +102,7 @@ const COPY: Record<Lang, Record<K, string>> = {
     noData: "No data for this period.",
     remove: "Remove",
     browse: "Search markets",
+    addMore: "Add more",
     analysis: "Watchlist analysis",
     analysisDesc: "Top movers and buy-zone analysis are part of Pro.",
     fairValue: "Fair value estimates",
@@ -124,6 +134,7 @@ const COPY: Record<Lang, Record<K, string>> = {
     noData: "Няма данни за периода.",
     remove: "Премахни",
     browse: "Търси на пазара",
+    addMore: "Добави още",
     analysis: "Анализ на Watchlist-а",
     analysisDesc: "Класациите и анализът на зоните за покупка са част от Pro.",
     fairValue: "Оценка на справедливата стойност",
@@ -155,6 +166,7 @@ const COPY: Record<Lang, Record<K, string>> = {
     noData: "Keine Daten für den Zeitraum.",
     remove: "Entfernen",
     browse: "Märkte durchsuchen",
+    addMore: "Weitere hinzufügen",
     analysis: "Watchlist-Analyse",
     analysisDesc: "Top-Bewegungen und Kaufzonen-Analysen sind Teil von Pro.",
     fairValue: "Fair-Value-Schätzungen",
@@ -186,6 +198,7 @@ const COPY: Record<Lang, Record<K, string>> = {
     noData: "Sin datos para el periodo.",
     remove: "Quitar",
     browse: "Buscar mercados",
+    addMore: "Añadir más",
     analysis: "Análisis de watchlist",
     analysisDesc: "Los principales movimientos y el análisis de zonas de compra son parte de Pro.",
     fairValue: "Estimaciones de valor razonable",
@@ -217,6 +230,7 @@ const COPY: Record<Lang, Record<K, string>> = {
     noData: "Nessun dato per il periodo.",
     remove: "Rimuovi",
     browse: "Cerca mercati",
+    addMore: "Aggiungi altri",
     analysis: "Analisi watchlist",
     analysisDesc: "I migliori movimenti e l'analisi delle zone d'acquisto fanno parte di Pro.",
     fairValue: "Stime del fair value",
@@ -225,6 +239,13 @@ const COPY: Record<Lang, Record<K, string>> = {
     retry: "Riprova",
     unavailable: "Non disponibile",
   },
+};
+const TARGET_REVIEW_COPY: Record<Lang, { review: string; reviewed: string }> = {
+  en: { review: "Mark target reviewed", reviewed: "Reviewed" },
+  bg: { review: "Отбележи целта като прегледана", reviewed: "Прегледана" },
+  de: { review: "Ziel als geprüft markieren", reviewed: "Geprüft" },
+  es: { review: "Marcar objetivo revisado", reviewed: "Revisado" },
+  it: { review: "Segna obiettivo come rivisto", reviewed: "Rivisto" },
 };
 
 const assetOf = (s: string) =>
@@ -275,8 +296,12 @@ function Watchlist() {
   const { list } = useWatchState();
   const [period, setPeriod] = useState<ChartRange>("1D");
   const [targets, setTargets] = useState<Record<string, number>>({});
+  const [targetReviews, setTargetReviews] = useState<Record<string, string>>({});
   useEffect(() => {
-    const s = () => setTargets(readTargets());
+    const s = () => {
+      setTargets(readTargets());
+      setTargetReviews(readTargetReviews());
+    };
     s();
     window.addEventListener("folio-watch", s);
     return () => window.removeEventListener("folio-watch", s);
@@ -404,8 +429,13 @@ function Watchlist() {
   const saveTarget = (s: string) => {
     const n = Number(draft.replace(",", "."));
     const next = { ...targets };
-    if (n > 0) next[s] = n;
-    else delete next[s];
+    if (n > 0) {
+      next[s] = n;
+      writeTargetReview(s);
+    } else {
+      delete next[s];
+      clearTargetReview(s);
+    }
     writeTargets(next);
     setEditing(null);
   };
@@ -442,9 +472,20 @@ function Watchlist() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold">{c.title}</h1>
-        <p className="text-sm text-muted-foreground">{c.sub}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold">{c.title}</h1>
+          <p className="text-sm text-muted-foreground">{c.sub}</p>
+        </div>
+        {list.length > 0 && (
+          <Link
+            to="/markets"
+            className="press inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus size={16} aria-hidden />
+            {c.addMore}
+          </Link>
+        )}
       </div>
 
       {!list.length ? (
@@ -473,94 +514,6 @@ function Watchlist() {
         </Card>
       ) : (
         <>
-          <ProGate
-            title={c.analysis}
-            desc={c.analysisDesc}
-            preview={
-              <div className="grid h-48 grid-cols-3 items-end gap-3 p-3">
-                {[
-                  [35, 70, 48],
-                  [65, 40, 82],
-                  [50, 75, 30],
-                ].map((bars, i) => (
-                  <div
-                    key={i}
-                    className="flex h-full items-end justify-around gap-1 rounded-lg bg-secondary/70 p-2"
-                  >
-                    {bars.map((height, j) => (
-                      <span
-                        key={j}
-                        className={`w-1/5 rounded-t ${i === 2 ? "bg-destructive/40" : "bg-success/40"}`}
-                        style={{ height: `${height}%` }}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            }
-            className="p-3"
-          >
-            <div role="group" className="mb-3 flex gap-1 overflow-x-auto">
-              {PERIODS.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setPeriod(r)}
-                  aria-pressed={period === r}
-                  className={`press rounded-full px-4 py-1.5 text-sm font-semibold ${period === r ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground"}`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-            <div className="grid gap-4 lg:grid-cols-3">
-              <Card>
-                <h2 className="mb-1 flex items-center gap-2 font-semibold">
-                  <Target size={16} className="text-primary" />
-                  {c.opps}
-                </h2>
-                <div className="my-3 grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-xl bg-secondary p-3">
-                    <p className="font-display text-2xl font-bold text-success">{zone.length}</p>
-                    <p className="text-xs text-muted-foreground">{c.zone}</p>
-                  </div>
-                  <div className="rounded-xl bg-secondary p-3">
-                    <p className="font-display text-2xl font-bold">
-                      {Object.keys(targets).filter((s) => list.includes(s)).length}/{list.length}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{c.withTarget}</p>
-                  </div>
-                </div>
-                {zone.length ? (
-                  <ul className="space-y-2">
-                    {zone.map((r) => (
-                      <li key={r.a.symbol} className="flex items-center gap-2 text-sm">
-                        <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} />
-                        <span className="flex-1 font-semibold">{r.a.symbol}</span>
-                        <span>{fmt(r.q!.price, r.q!.currency)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{c.noneZone}</p>
-                )}
-              </Card>
-              <Card>
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <TrendingUp size={16} className="text-success" />
-                  {c.gainers} · {period}
-                </h2>
-                <Bars items={gainers} up />
-              </Card>
-              <Card>
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <TrendingDown size={16} className="text-destructive" />
-                  {c.losers} · {period}
-                </h2>
-                <Bars items={losers} up={false} />
-              </Card>
-            </div>
-          </ProGate>
-
           <Card className="p-0">
             <div
               className={`hidden gap-3 border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid ${p.isPro ? "grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_1.3fr_2rem]" : "grid-cols-[minmax(0,2fr)_8rem_1fr_1fr_2rem]"}`}
@@ -668,17 +621,30 @@ function Watchlist() {
                           </button>
                         </span>
                       ) : (
-                        <button
-                          onClick={() => {
-                            setEditing(r.a.symbol);
-                            setDraft(t ? String(t) : "");
-                          }}
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${t ? (inBuyZone(r.q?.price, t) ? "bg-success/15 text-success" : "bg-secondary") : "border border-dashed border-border text-muted-foreground"}`}
-                        >
-                          <span className="md:hidden">{c.buy}: </span>
-                          {t ? fmt(t, r.q?.currency) : c.set}
-                          <Pencil size={11} />
-                        </button>
+                        <div>
+                          <button
+                            onClick={() => {
+                              setEditing(r.a.symbol);
+                              setDraft(t ? String(t) : "");
+                            }}
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${t ? (inBuyZone(r.q?.price, t) ? "bg-success/15 text-success" : "bg-secondary") : "border border-dashed border-border text-muted-foreground"}`}
+                          >
+                            <span className="md:hidden">{c.buy}: </span>
+                            {t ? fmt(t, r.q?.currency) : c.set}
+                            <Pencil size={11} />
+                          </button>
+                          {t && (
+                            <button
+                              type="button"
+                              onClick={() => writeTargetReview(r.a.symbol)}
+                              className="mt-1 block w-full text-[10px] text-muted-foreground hover:text-foreground"
+                            >
+                              {targetReviews[r.a.symbol]
+                                ? `${TARGET_REVIEW_COPY[p.lang].reviewed}: ${new Date(`${targetReviews[r.a.symbol]}T12:00:00`).toLocaleDateString(locale, { dateStyle: "medium" })}`
+                                : TARGET_REVIEW_COPY[p.lang].review}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                     {p.isPro && (
@@ -714,6 +680,93 @@ function Watchlist() {
               })}
             </ul>
           </Card>
+          <ProGate
+            title={c.analysis}
+            desc={c.analysisDesc}
+            preview={
+              <div className="grid h-48 grid-cols-3 items-end gap-3 p-3">
+                {[
+                  [35, 70, 48],
+                  [65, 40, 82],
+                  [50, 75, 30],
+                ].map((bars, i) => (
+                  <div
+                    key={i}
+                    className="flex h-full items-end justify-around gap-1 rounded-lg bg-secondary/70 p-2"
+                  >
+                    {bars.map((height, j) => (
+                      <span
+                        key={j}
+                        className={`w-1/5 rounded-t ${i === 2 ? "bg-destructive/40" : "bg-success/40"}`}
+                        style={{ height: `${height}%` }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            }
+            className="p-3"
+          >
+            <div role="group" className="mb-3 flex gap-1 overflow-x-auto">
+              {PERIODS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setPeriod(r)}
+                  aria-pressed={period === r}
+                  className={`press rounded-full px-4 py-1.5 text-sm font-semibold ${period === r ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground"}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card>
+                <h2 className="mb-1 flex items-center gap-2 font-semibold">
+                  <Target size={16} className="text-primary" />
+                  {c.opps}
+                </h2>
+                <div className="my-3 grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-xl bg-secondary p-3">
+                    <p className="font-display text-2xl font-bold text-success">{zone.length}</p>
+                    <p className="text-xs text-muted-foreground">{c.zone}</p>
+                  </div>
+                  <div className="rounded-xl bg-secondary p-3">
+                    <p className="font-display text-2xl font-bold">
+                      {Object.keys(targets).filter((s) => list.includes(s)).length}/{list.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{c.withTarget}</p>
+                  </div>
+                </div>
+                {zone.length ? (
+                  <ul className="space-y-2">
+                    {zone.map((r) => (
+                      <li key={r.a.symbol} className="flex items-center gap-2 text-sm">
+                        <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={28} />
+                        <span className="flex-1 font-semibold">{r.a.symbol}</span>
+                        <span>{fmt(r.q!.price, r.q!.currency)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{c.noneZone}</p>
+                )}
+              </Card>
+              <Card>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <TrendingUp size={16} className="text-success" />
+                  {c.gainers} · {period}
+                </h2>
+                <Bars items={gainers} up />
+              </Card>
+              <Card>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <TrendingDown size={16} className="text-destructive" />
+                  {c.losers} · {period}
+                </h2>
+                <Bars items={losers} up={false} />
+              </Card>
+            </div>
+          </ProGate>
           {!p.isPro && (
             <ProGate
               title={c.fairValue}

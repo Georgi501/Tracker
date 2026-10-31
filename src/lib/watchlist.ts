@@ -2,6 +2,9 @@
 export const WATCH_KEY = "folio-watchlist";
 export const ALERTS_KEY = "folio-price-alerts";
 export const RECURRING_KEY = "folio-recurring-reminders";
+export const EARNINGS_REMINDERS_KEY = "folio-earnings-reminders";
+export const BOND_COUPON_DATES_KEY = "folio-bond-coupon-dates";
+export const TARGET_REVIEWS_KEY = "folio-target-reviews";
 export const SYMBOL_RE = /^[A-Z0-9.^=_-]{1,20}$/;
 
 export interface PriceAlert {
@@ -17,6 +20,42 @@ export interface RecurringReminder {
   currency: "USD" | "EUR";
   dayOfMonth: number;
   lastReminderMonth?: string;
+}
+
+export function parseEarningsReminders(raw: string | null): string[] {
+  try {
+    const value: unknown = JSON.parse(raw ?? "[]");
+    return Array.isArray(value)
+      ? [
+          ...new Set(
+            value.filter(
+              (symbol): symbol is string => typeof symbol === "string" && SYMBOL_RE.test(symbol),
+            ),
+          ),
+        ].slice(0, 100)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function parseDateMap(raw: string | null): Record<string, string> {
+  try {
+    const value: unknown = JSON.parse(raw ?? "{}");
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).filter(
+        ([key, date]) =>
+          key.length > 0 &&
+          typeof date === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+          Number.isFinite(Date.parse(`${date}T00:00:00Z`)) &&
+          new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date,
+      ),
+    ) as Record<string, string>;
+  } catch {
+    return {};
+  }
 }
 
 export function parseRecurringReminders(raw: string | null): RecurringReminder[] {
@@ -125,6 +164,39 @@ export const readRecurringReminders = () =>
 
 export function writeRecurringReminders(reminders: RecurringReminder[]) {
   localStorage.setItem(RECURRING_KEY, JSON.stringify(reminders));
+  window.dispatchEvent(new Event("folio-watch"));
+}
+
+export const readEarningsReminders = () =>
+  parseEarningsReminders(localStorage.getItem(EARNINGS_REMINDERS_KEY));
+export function writeEarningsReminders(symbols: string[]) {
+  localStorage.setItem(
+    EARNINGS_REMINDERS_KEY,
+    JSON.stringify(parseEarningsReminders(JSON.stringify(symbols))),
+  );
+  window.dispatchEvent(new Event("folio-watch"));
+}
+
+export const readBondCouponDates = () => parseDateMap(localStorage.getItem(BOND_COUPON_DATES_KEY));
+export function writeBondCouponDate(assetId: string, date: string | null) {
+  const dates = readBondCouponDates();
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) dates[assetId] = date;
+  else delete dates[assetId];
+  localStorage.setItem(BOND_COUPON_DATES_KEY, JSON.stringify(dates));
+  window.dispatchEvent(new Event("folio-watch"));
+}
+
+export const readTargetReviews = () => parseDateMap(localStorage.getItem(TARGET_REVIEWS_KEY));
+export function writeTargetReview(symbol: string, date = new Date().toISOString().slice(0, 10)) {
+  const reviews = readTargetReviews();
+  reviews[symbol] = date;
+  localStorage.setItem(TARGET_REVIEWS_KEY, JSON.stringify(reviews));
+  window.dispatchEvent(new Event("folio-watch"));
+}
+export function clearTargetReview(symbol: string) {
+  const reviews = readTargetReviews();
+  delete reviews[symbol];
+  localStorage.setItem(TARGET_REVIEWS_KEY, JSON.stringify(reviews));
   window.dispatchEvent(new Event("folio-watch"));
 }
 

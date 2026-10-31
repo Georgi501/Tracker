@@ -53,12 +53,14 @@ import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
 import { PriceAlertMonitor } from "./PriceAlertMonitor";
+import { PortfolioReminderMonitor } from "./PortfolioReminderMonitor";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const SHELL_COPY: Record<
   Lang,
   {
     watchlist: string;
+    earnings: string;
     timeline: string;
     community: string;
     demo: string;
@@ -74,6 +76,7 @@ const SHELL_COPY: Record<
 > = {
   en: {
     watchlist: "Watchlist",
+    earnings: "Earnings calendar",
     timeline: "Timeline",
     community: "Community",
     demo: "Sample portfolio",
@@ -88,6 +91,7 @@ const SHELL_COPY: Record<
   },
   bg: {
     watchlist: "Списък за наблюдение",
+    earnings: "Календар на отчетите",
     timeline: "Хронология",
     community: "Общност",
     demo: "Примерно портфолио",
@@ -102,6 +106,7 @@ const SHELL_COPY: Record<
   },
   de: {
     watchlist: "Beobachtungsliste",
+    earnings: "Berichtskalender",
     timeline: "Zeitleiste",
     community: "Community",
     demo: "Beispielportfolio",
@@ -116,6 +121,7 @@ const SHELL_COPY: Record<
   },
   es: {
     watchlist: "Lista de seguimiento",
+    earnings: "Calendario de resultados",
     timeline: "Cronología",
     community: "Comunidad",
     demo: "Cartera de ejemplo",
@@ -130,6 +136,7 @@ const SHELL_COPY: Record<
   },
   it: {
     watchlist: "Lista di controllo",
+    earnings: "Calendario degli utili",
     timeline: "Cronologia",
     community: "Community",
     demo: "Portafoglio di esempio",
@@ -220,6 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ? "Avvisi di prezzo"
                 : "Price alerts",
     },
+    { to: "/earnings", label: shellCopy.earnings },
     { to: "/analytics", label: p.t("analytics") },
     { to: "/compare", label: legalCopy(p.lang).footer.compare },
     { to: "/timeline", label: shellCopy.timeline },
@@ -235,7 +243,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       label: shellCopy.portfolioGroup,
       links: nav.filter((item) =>
-        ["/compare", "/timeline", "/dividends", "/brokers", "/alerts"].includes(item.to),
+        ["/compare", "/timeline", "/dividends", "/brokers", "/alerts", "/earnings"].includes(
+          item.to,
+        ),
       ),
     },
     {
@@ -253,6 +263,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       links: nav.filter((item) =>
         [
           "/watchlist",
+          "/earnings",
           "/alerts",
           "/analytics",
           "/compare",
@@ -776,6 +787,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Dialog>
       <AnalyticsConsent />
       <PriceAlertMonitor />
+      <PortfolioReminderMonitor />
     </div>
   );
 }

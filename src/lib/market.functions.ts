@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "./market-search";
 import { dedupeMarketNews } from "./market-news";
+import {
+  earningsSurprisePercent,
+  sortEarningsCalendar,
+  type EarningsCalendarData,
+} from "./earnings";
 
 export interface MarketNews {
   id: string;
@@ -508,6 +513,7 @@ export const marketCompanyResearch = createServerFn({ method: "POST" })
         "insiderHolders",
       ],
     });
+
     if (!summary) return empty;
     const numberOrNull = (value: unknown) =>
       typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -569,6 +575,88 @@ export const marketCompanyResearch = createServerFn({ method: "POST" })
         })),
       },
     };
+  });
+
+export const marketEarningsCalendar = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        symbols: z
+          .array(z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/))
+          .max(100)
+          .transform((symbols) => [...new Set(symbols.map((symbol) => symbol.toUpperCase()))]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<EarningsCalendarData> => {
+    const result: EarningsCalendarData = {
+      upcoming: [],
+      reported: [],
+      unavailableSymbols: [],
+      retrievedAt: new Date().toISOString(),
+    };
+    const { yahooClient } = await import("./prices.server");
+    const yf = yahooClient();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const asDate = (value: unknown) =>
+      value instanceof Date && Number.isFinite(value.getTime()) ? value : null;
+    const numberOrNull = (value: unknown) =>
+      typeof value === "number" && Number.isFinite(value) ? value : null;
+
+    for (let start = 0; start < data.symbols.length; start += 5) {
+      const batch = data.symbols.slice(start, start + 5);
+      const responses = await Promise.all(
+        batch.map(async (symbol) => {
+          try {
+            const summary = await yf.quoteSummary(symbol, {
+              modules: ["calendarEvents", "earningsHistory"],
+            });
+            return { symbol, summary, failed: false };
+          } catch {
+            return { symbol, summary: null, failed: true };
+          }
+        }),
+      );
+      for (const { symbol, summary, failed } of responses) {
+        if (failed || !summary) {
+          result.unavailableSymbols.push(symbol);
+          continue;
+        }
+        const calendar = summary.calendarEvents?.earnings;
+        const nextDate = (calendar?.earningsDate ?? [])
+          .filter((date) => date instanceof Date && date >= today)
+          .sort((a, b) => a.getTime() - b.getTime())[0];
+        if (nextDate) {
+          result.upcoming.push({
+            symbol,
+            date: nextDate.toISOString(),
+            dateEstimated: calendar?.isEarningsDateEstimate !== false,
+            epsEstimate: numberOrNull(calendar?.earningsAverage),
+            revenueEstimate: numberOrNull(calendar?.revenueAverage),
+          });
+        }
+
+        for (const item of summary.earningsHistory?.history ?? []) {
+          const quarter = asDate(item.quarter);
+          if (!quarter || quarter >= today) continue;
+          const actualEps = numberOrNull(item.epsActual);
+          const estimatedEps = numberOrNull(item.epsEstimate);
+          if (actualEps === null && estimatedEps === null) continue;
+          result.reported.push({
+            symbol,
+            period: quarter.toISOString().slice(0, 10),
+            actualEps,
+            estimatedEps,
+            surprisePercent:
+              numberOrNull(item.surprisePercent) ??
+              earningsSurprisePercent(actualEps, estimatedEps),
+          });
+        }
+      }
+    }
+
+    return sortEarningsCalendar(result);
   });
 
 export interface DcfData {

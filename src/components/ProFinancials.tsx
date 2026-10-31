@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { Bar, BarChart, ResponsiveContainer, Sankey, Tooltip } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/AppShell";
-import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
 import { marketFinancialSeries, type FinancialSeriesRow } from "@/lib/market.functions";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
@@ -207,9 +206,13 @@ type FlowNodeProps = {
 export function ProFinancials({ symbol, lang }: { symbol: string; lang: Lang }) {
   const c = COPY[lang];
   return (
-    <ProGate title={c.title} desc={c.desc} preview={<BarsSilhouette />}>
+    <Card>
+      <div className="mb-4">
+        <h2 className="font-display font-semibold">{c.title}</h2>
+        <p className="text-sm text-muted-foreground">{c.desc}</p>
+      </div>
       <Financials symbol={symbol} lang={lang} />
-    </ProGate>
+    </Card>
   );
 }
 
