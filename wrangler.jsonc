@@ -5,6 +5,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
   "workers_dev": true,
+  "preview_urls": true,
   "routes": [
     { "pattern": "capispot.com", "custom_domain": true },
     { "pattern": "www.capispot.com", "custom_domain": true }
