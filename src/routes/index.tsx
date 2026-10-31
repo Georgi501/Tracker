@@ -13,6 +13,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   Area,
   AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip as ChartTooltip,
   XAxis,
@@ -22,6 +26,7 @@ import { Card, Delta } from "@/components/AppShell";
 import { AllocationCard } from "@/components/AllocationCard";
 import { DashboardMovers } from "@/components/DashboardMovers";
 import { ChartDataTable } from "@/components/ChartDataTable";
+import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
@@ -49,7 +54,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Line, LineChart } from "recharts";
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { benchmarkCopy } from "@/lib/benchmark-i18n";
@@ -657,6 +661,12 @@ function Dashboard() {
                 ) : (
                   <ResponsiveContainer>
                     <LineChart data={performanceChart} margin={{ top: comparison.length ? 34 : 0 }}>
+                      <CartesianGrid
+                        stroke="var(--border)"
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        strokeOpacity={0.55}
+                      />
                       <XAxis
                         dataKey="t"
                         tickFormatter={fmtT}
@@ -672,14 +682,15 @@ function Dashboard() {
                         axisLine={false}
                         tickLine={false}
                       />
+                      <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
                       <ChartTooltip
-                        labelFormatter={(t) => fmtT(t as number)}
-                        formatter={(v: number) => pct(v)}
-                        contentStyle={{
-                          background: "var(--popover)",
-                          border: "1px solid var(--border)",
-                          color: "var(--foreground)",
-                        }}
+                        content={(props) => (
+                          <ChartTooltipContent
+                            {...props}
+                            formatLabel={(t) => fmtT(Number(t))}
+                            formatValue={(value) => pct(Number(value))}
+                          />
+                        )}
                       />
                       <Line
                         type="linear"
@@ -730,6 +741,12 @@ function Dashboard() {
                         <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
+                    <CartesianGrid
+                      stroke="var(--border)"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      strokeOpacity={0.55}
+                    />
                     <XAxis
                       dataKey="t"
                       tickFormatter={fmtT}
@@ -740,20 +757,18 @@ function Dashboard() {
                     />
                     <YAxis hide domain={["dataMin", "dataMax"]} />
                     <ChartTooltip
-                      labelFormatter={(t) => fmtT(t as number)}
-                      formatter={(v: number) => [
-                        new Intl.NumberFormat(locale, {
-                          style: "currency",
-                          currency: p.currency,
-                        }).format(v),
-                        p.t("value"),
-                      ]}
-                      contentStyle={{
-                        background: "var(--popover)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 12,
-                        color: "var(--foreground)",
-                      }}
+                      content={(props) => (
+                        <ChartTooltipContent
+                          {...props}
+                          formatLabel={(t) => fmtT(Number(t))}
+                          formatValue={(value) =>
+                            new Intl.NumberFormat(locale, {
+                              style: "currency",
+                              currency: p.currency,
+                            }).format(Number(value))
+                          }
+                        />
+                      )}
                     />
                     <Area
                       type="monotone"

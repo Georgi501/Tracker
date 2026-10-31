@@ -406,10 +406,7 @@ export function QuoteHero({
                       [c.low, point.l],
                     ];
                     return (
-                      <div
-                        className="rounded-lg border border-border bg-popover p-3 text-xs shadow-md"
-                        style={{ fontSize: 12 }}
-                      >
+                      <div className="rounded-lg border border-border/80 bg-popover/90 p-3 text-xs shadow-xl backdrop-blur-md">
                         <p className="mb-2 font-semibold">
                           {c.date}:{" "}
                           {new Date(point.t).toLocaleString(loc, {

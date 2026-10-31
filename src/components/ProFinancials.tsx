@@ -1,7 +1,16 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bar, BarChart, ResponsiveContainer, Sankey, Tooltip } from "recharts";
+import { ChartTooltipContent } from "@/components/ChartTooltipContent";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Sankey,
+  Tooltip,
+  YAxis,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/AppShell";
 import { marketFinancialSeries, type FinancialSeriesRow } from "@/lib/market.functions";
@@ -412,6 +421,7 @@ function MetricCard({
   period: Period;
   rangeLabel: string;
 }) {
+  const gradientId = useId().replaceAll(":", "");
   const values = rows.flatMap((row) => {
     const value = row[metric.key];
     return value == null ? [] : [{ date: row.date, value }];
@@ -442,23 +452,36 @@ function MetricCard({
         {values.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={values}>
+              <defs>
+                <linearGradient id={`${gradientId}-financial`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                stroke="var(--border)"
+                strokeDasharray="3 3"
+                vertical={false}
+                strokeOpacity={0.45}
+              />
+              <YAxis hide domain={["auto", "auto"]} />
               <Tooltip
-                labelFormatter={(date) =>
-                  new Date(String(date)).toLocaleDateString(locale, { dateStyle: periodLabel })
-                }
-                formatter={(value) => [format(Number(value)), title]}
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
+                content={(props) => (
+                  <ChartTooltipContent
+                    {...props}
+                    formatLabel={(date) =>
+                      new Date(String(date)).toLocaleDateString(locale, { dateStyle: periodLabel })
+                    }
+                    formatValue={(value) => format(Number(value))}
+                  />
+                )}
               />
               <Bar
                 dataKey="value"
-                fill="var(--primary)"
-                fillOpacity={0.65}
-                radius={[2, 2, 0, 0]}
+                fill={`url(#${gradientId}-financial)`}
+                maxBarSize={36}
+                radius={[4, 4, 4, 4]}
+                activeBar={{ filter: "brightness(1.15)" }}
                 isAnimationActive={false}
               />
             </BarChart>

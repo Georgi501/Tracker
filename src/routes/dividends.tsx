@@ -1,6 +1,6 @@
 import { languageLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card } from "@/components/AppShell";
 import { pct, usePortfolio } from "@/lib/store";
 import { totalDividends } from "@/lib/portfolio";
@@ -15,7 +15,9 @@ import { useEffect, useState } from "react";
 import { DividendTable } from "@/components/Insights";
 import { dividendRows } from "@/lib/insights";
 import { ChartDataTable } from "@/components/ChartDataTable";
+import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import type { Lang } from "@/lib/i18n";
+import { useId } from "react";
 
 const EMPTY_COPY: Record<
   Lang,
@@ -80,6 +82,7 @@ export const Route = createFileRoute("/dividends")({
 
 function Dividends() {
   const p = usePortfolio();
+  const gradientId = useId().replaceAll(":", "");
   const locale = languageLocale(p.lang);
   const total = p.holdings.reduce((s, h) => s + h.value, 0);
   const c = toolsCopy[p.lang];
@@ -256,23 +259,51 @@ function Dividends() {
         >
           <ResponsiveContainer>
             <BarChart data={monthly}>
+              <defs>
+                <linearGradient id={`${gradientId}-income`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.55} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                stroke="var(--border)"
+                strokeDasharray="3 3"
+                vertical={false}
+                strokeOpacity={0.55}
+              />
               <XAxis
                 dataKey="m"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
               />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                tickFormatter={(value: number) =>
+                  new Intl.NumberFormat(languageLocale(p.lang), {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                    style: "currency",
+                    currency: p.currency,
+                  }).format(value)
+                }
+                width={52}
+              />
               <Tooltip
                 cursor={{ fill: "var(--secondary)" }}
-                formatter={(v: number) => p.money(v)}
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  color: "var(--foreground)",
-                }}
+                content={(props) => (
+                  <ChartTooltipContent {...props} formatValue={(value) => p.money(Number(value))} />
+                )}
               />
-              <Bar dataKey="v" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+              <Bar
+                dataKey="v"
+                fill={`url(#${gradientId}-income)`}
+                maxBarSize={36}
+                radius={[4, 4, 4, 4]}
+                activeBar={{ filter: "brightness(1.15)" }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

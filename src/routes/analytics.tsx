@@ -1,10 +1,11 @@
 import { ChartDataTable } from "@/components/ChartDataTable";
+import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { EtfOverlapCard } from "@/components/EtfOverlapCard";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -24,11 +25,13 @@ import { toast } from "sonner";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Legend,
   Line,
   LineChart,
   ResponsiveContainer,
+  ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
@@ -114,15 +117,9 @@ export const Route = createFileRoute("/analytics")({
   component: Analytics,
 });
 
-const tip = {
-  background: "var(--popover)",
-  border: "1px solid var(--border)",
-  borderRadius: 12,
-  color: "var(--foreground)",
-};
-
 function Analytics() {
   const p = usePortfolio();
+  const gradientId = useId().replaceAll(":", "");
   const [period, setPeriod] = useState<ReturnPeriod | "CUSTOM">("ALL");
   const [anchor] = useState(() => Date.parse(`${dateInput(Date.now())}T00:00:00Z`) + DAY);
   const today = dateInput(anchor - DAY);
@@ -565,6 +562,26 @@ function Analytics() {
           >
             <ResponsiveContainer>
               <BarChart data={returns}>
+                <defs>
+                  <linearGradient id={`${gradientId}-positive`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--success)" />
+                    <stop offset="100%" stopColor="var(--success)" stopOpacity={0.65} />
+                  </linearGradient>
+                  <linearGradient id={`${gradientId}-negative`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--destructive)" />
+                    <stop offset="100%" stopColor="var(--destructive)" stopOpacity={0.65} />
+                  </linearGradient>
+                  <linearGradient id={`${gradientId}-previous`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-2)" />
+                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.65} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  stroke="var(--border)"
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  strokeOpacity={0.55}
+                />
                 <XAxis
                   dataKey="label"
                   axisLine={false}
@@ -578,24 +595,37 @@ function Analytics() {
                   tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                   width={40}
                 />
+                <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
                 <Tooltip
                   cursor={{ fill: "var(--secondary)" }}
-                  formatter={(v: number) => pct(v)}
-                  itemStyle={{ color: "var(--foreground)" }}
-                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-                  labelFormatter={(_, payload) => {
-                    const row = payload[0]?.payload;
-                    return row
-                      ? `${formatDate(row.t)}${compare ? ` / ${formatDate(row.previousT)}` : ""}`
-                      : "";
-                  }}
-                  contentStyle={tip}
+                  content={(props) => (
+                    <ChartTooltipContent
+                      {...props}
+                      formatValue={(value) => pct(Number(value))}
+                      formatLabel={(_, payload) => {
+                        const row = payload[0]?.payload;
+                        return row
+                          ? `${formatDate(row["t"] as number)}${compare ? ` / ${formatDate(row["previousT"] as number)}` : ""}`
+                          : "";
+                      }}
+                    />
+                  )}
                 />
-                <Bar dataKey="current" name={p.t("selectedPeriod")} radius={[6, 6, 6, 6]}>
+                <Bar
+                  dataKey="current"
+                  name={p.t("selectedPeriod")}
+                  maxBarSize={36}
+                  radius={[4, 4, 4, 4]}
+                  activeBar={{ filter: "brightness(1.15)" }}
+                >
                   {returns.map((r, i) => (
                     <Cell
                       key={i}
-                      fill={(r.current ?? 0) >= 0 ? "var(--success)" : "var(--destructive)"}
+                      fill={
+                        (r.current ?? 0) >= 0
+                          ? `url(#${gradientId}-positive)`
+                          : `url(#${gradientId}-negative)`
+                      }
                     />
                   ))}
                 </Bar>
@@ -603,8 +633,10 @@ function Analytics() {
                   <Bar
                     dataKey="previous"
                     name={p.t("previousPeriod")}
-                    fill="var(--chart-2)"
-                    radius={[6, 6, 6, 6]}
+                    fill={`url(#${gradientId}-previous)`}
+                    maxBarSize={36}
+                    radius={[4, 4, 4, 4]}
+                    activeBar={{ filter: "brightness(1.15)" }}
                   />
                 )}
               </BarChart>
@@ -817,6 +849,12 @@ function Analytics() {
               >
                 <ResponsiveContainer>
                   <LineChart data={benchmarkData}>
+                    <CartesianGrid
+                      stroke="var(--border)"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      strokeOpacity={0.55}
+                    />
                     <XAxis
                       dataKey="label"
                       axisLine={false}
@@ -831,11 +869,14 @@ function Analytics() {
                       width={44}
                     />
                     <Tooltip
-                      formatter={(value: number) => pct(value)}
-                      itemStyle={{ color: "var(--foreground)" }}
-                      labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-                      contentStyle={tip}
+                      content={(props) => (
+                        <ChartTooltipContent
+                          {...props}
+                          formatValue={(value) => pct(Number(value))}
+                        />
+                      )}
                     />
+                    <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
                     <Legend />
                     <Line
                       type="monotone"
