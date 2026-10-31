@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Sankey,
   Tooltip,
+  XAxis,
   YAxis,
 } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -347,6 +348,14 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
 }
 
 type StatementKey = Exclude<keyof FinancialSeriesRow, "date">;
+const METRIC_CHART_COLORS: Record<MetricKey, string> = {
+  revenue: "var(--chart-1)",
+  operatingIncome: "var(--chart-2)",
+  netIncome: "var(--chart-3)",
+  dilutedEps: "var(--chart-4)",
+  operatingCashFlow: "var(--chart-5)",
+  freeCashFlow: "var(--success)",
+};
 
 function FinancialHistoryTable({
   rows,
@@ -422,20 +431,28 @@ function MetricCard({
   rangeLabel: string;
 }) {
   const gradientId = useId().replaceAll(":", "");
+  const color = METRIC_CHART_COLORS[metric.key];
   const values = rows.flatMap((row) => {
     const value = row[metric.key];
     return value == null ? [] : [{ date: row.date, value }];
   });
   const first = values[0]?.value;
   const last = values.at(-1)?.value;
+  const lastDate = values.at(-1)?.date;
   const change = first != null && first > 0 && last != null ? (last / first - 1) * 100 : null;
   const periodLabel = period === "quarterly" ? "short" : "medium";
+  const formatDate = (date: string) => {
+    const parsed = new Date(`${date}T12:00:00`);
+    return Number.isNaN(parsed.getTime())
+      ? date
+      : parsed.toLocaleDateString(locale, { dateStyle: periodLabel });
+  };
   return (
-    <Card className="overflow-hidden p-4">
+    <Card className="group relative overflow-hidden border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
       <div className="flex min-h-12 items-start justify-between gap-2">
         <div>
-          <h4 className="text-sm font-semibold">{title}</h4>
-          <p className="mt-1 font-display text-2xl font-bold tabular-nums">
+          <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+          <p className="mt-1 font-display text-2xl font-bold tabular-nums tracking-tight">
             {last == null ? "—" : format(last)}
           </p>
         </div>
@@ -448,14 +465,14 @@ function MetricCard({
           </span>
         )}
       </div>
-      <div className="mt-3 h-16" aria-label={`${title} historical chart`}>
+      <div className="mt-4 h-20" aria-label={`${title} historical chart`}>
         {values.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={values}>
               <defs>
                 <linearGradient id={`${gradientId}-financial`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.45} />
+                  <stop offset="0%" stopColor={color} stopOpacity={0.95} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.35} />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -464,20 +481,30 @@ function MetricCard({
                 vertical={false}
                 strokeOpacity={0.45}
               />
+              <XAxis dataKey="date" type="category" hide />
               <YAxis hide domain={["auto", "auto"]} />
               <Tooltip
                 content={(props) => (
                   <ChartTooltipContent
                     {...props}
-                    formatLabel={(date) =>
-                      new Date(String(date)).toLocaleDateString(locale, { dateStyle: periodLabel })
-                    }
+                    formatLabel={(_, payload) => {
+                      const row = payload[0]?.payload;
+                      const date =
+                        row &&
+                        typeof row === "object" &&
+                        "date" in row &&
+                        typeof row.date === "string"
+                          ? row.date
+                          : null;
+                      return date ? formatDate(date) : null;
+                    }}
                     formatValue={(value) => format(Number(value))}
                   />
                 )}
               />
               <Bar
                 dataKey="value"
+                name={title}
                 fill={`url(#${gradientId}-financial)`}
                 maxBarSize={36}
                 radius={[4, 4, 4, 4]}
@@ -491,7 +518,7 @@ function MetricCard({
         )}
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        {values.at(-1)?.date ?? ""}
+        {lastDate ? formatDate(lastDate) : ""}
         {change != null && ` · ${rangeLabel} ${change > 0 ? "+" : ""}${change.toFixed(1)}%`}
       </p>
     </Card>

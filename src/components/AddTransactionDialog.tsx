@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { usePortfolio } from "@/lib/store";
 import type { Lang } from "@/lib/i18n";
+import { localDateString } from "@/lib/local-date";
 import { type AssetType, type Currency } from "@/lib/portfolio";
 import { searchCatalog, MARKET_ASSETS, type MarketAsset } from "@/lib/market-search";
 import { searchMarket, marketQuote } from "@/lib/market.functions";
@@ -93,7 +94,7 @@ export function AddTransactionDialog({
   const [bondMaturityDate, setBondMaturityDate] = useState("");
   const [bondFaceValue, setBondFaceValue] = useState("100");
   const [cur, setCur] = useState<Currency>("USD");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => localDateString());
   const reqId = useRef(0);
   const searchFn = useServerFn(searchMarket);
   const quoteFn = useServerFn(marketQuote);
@@ -130,6 +131,7 @@ export function AddTransactionDialog({
     setBondCouponRate("");
     setBondMaturityDate("");
     setBondFaceValue("100");
+    setDate(localDateString());
     setQuery("");
     setResults([]);
     setSellId(owned[0]?.asset.id ?? "");
@@ -189,7 +191,7 @@ export function AddTransactionDialog({
     const feeAmount = fee === "" ? 0 : Number(fee);
     const feeUsd = feeAmount / fx;
     if (!(q > 0) || !(pr > 0) || !Number.isFinite(feeUsd) || feeUsd < 0) return;
-    if (date > new Date().toISOString().slice(0, 10)) {
+    if (date > localDateString()) {
       toast.error(bg ? "Датата не може да е в бъдещето" : "Date cannot be in the future");
       return;
     }

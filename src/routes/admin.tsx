@@ -19,6 +19,14 @@ type AdminAccount = {
   current_period_end: string | null;
   has_admin_grant: boolean;
 };
+type AdminUserRow = Pick<AdminAccount, "user_id" | "email" | "created_at" | "pro">;
+type AdminUserPage = { page: number; lastPage: number; total: number };
+type AdminResponse = {
+  stats: AdminStats | null;
+  account: AdminAccount | null;
+  users: AdminUserRow[];
+  pagination: AdminUserPage;
+};
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Owner console — Capispot" }] }),
@@ -30,6 +38,12 @@ function AdminPage() {
   const bg = p.lang === "bg";
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [account, setAccount] = useState<AdminAccount | null>(null);
+  const [accounts, setAccounts] = useState<AdminUserRow[]>([]);
+  const [accountPage, setAccountPage] = useState<AdminUserPage>({
+    page: 1,
+    lastPage: 1,
+    total: 0,
+  });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -67,6 +81,22 @@ function AdminPage() {
       ? "Потвърди промяната на Pro достъпа за този профил."
       : "Confirm changing this account's Pro access.",
     loadError: bg ? "Неуспешно зареждане на панела." : "Unable to load the console.",
+    registeredAccounts: bg ? "Регистрирани профили" : "Registered accounts",
+    email: bg ? "Имейл" : "Email",
+    joined: bg ? "Регистриран на" : "Joined",
+    plan: bg ? "План" : "Plan",
+    free: bg ? "Безплатен" : "Free",
+    selectAccount: bg ? "Покажи данните на профила" : "View account details",
+    noEmail: bg ? "Няма имейл" : "No email",
+    noAccounts: bg ? "Няма регистрирани профили." : "No registered accounts.",
+    previous: bg ? "Предишна" : "Previous",
+    next: bg ? "Следваща" : "Next",
+    page: bg
+      ? (current: number, total: number) => `Страница ${current} от ${total}`
+      : (current: number, total: number) => `Page ${current} of ${total}`,
+    accountCount: bg
+      ? (count: number) => `${count} профила`
+      : (count: number) => `${count} accounts`,
   };
 
   const api = useCallback(
@@ -98,9 +128,13 @@ function AdminPage() {
 
   useEffect(() => {
     let active = true;
-    void api<{ stats: AdminStats | null; account: AdminAccount | null }>("/api/admin")
+    void api<AdminResponse>("/api/admin?page=1")
       .then((result) => {
-        if (active) setStats(result.stats);
+        if (active) {
+          setStats(result.stats);
+          setAccounts(result.users);
+          setAccountPage(result.pagination);
+        }
       })
       .catch((error: unknown) => {
         if (!active) return;
@@ -115,17 +149,34 @@ function AdminPage() {
     };
   }, [api, copy.denied, copy.loadError, copy.signIn]);
 
-  const lookup = async (event: FormEvent) => {
-    event.preventDefault();
+  const lookupAccount = async (address: string) => {
+    setEmail(address);
     setBusy(true);
     setSearched(false);
     try {
-      const result = await api<{ stats: AdminStats | null; account: AdminAccount | null }>(
-        `/api/admin?email=${encodeURIComponent(email.trim())}`,
+      const result = await api<AdminResponse>(
+        `/api/admin?email=${encodeURIComponent(address.trim())}&page=${accountPage.page}`,
       );
       setStats(result.stats);
       setAccount(result.account);
       setSearched(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : copy.loadError);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const lookup = (event: FormEvent) => {
+    event.preventDefault();
+    void lookupAccount(email);
+  };
+  const loadAccountPage = async (page: number) => {
+    setBusy(true);
+    try {
+      const result = await api<AdminResponse>(`/api/admin?page=${page}`);
+      setStats(result.stats);
+      setAccounts(result.users);
+      setAccountPage(result.pagination);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : copy.loadError);
     } finally {
@@ -144,10 +195,10 @@ function AdminPage() {
       });
       setAccount(result.account);
       toast.success(action === "grant" ? copy.granted : copy.revoked);
-      const summary = await api<{ stats: AdminStats | null; account: AdminAccount | null }>(
-        "/api/admin",
-      );
+      const summary = await api<AdminResponse>(`/api/admin?page=${accountPage.page}`);
       setStats(summary.stats);
+      setAccounts(summary.users);
+      setAccountPage(summary.pagination);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : copy.loadError);
     } finally {
@@ -189,6 +240,79 @@ function AdminPage() {
           ))}
         </div>
       )}
+      <Card className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold">{copy.registeredAccounts}</h2>
+          <span className="text-sm text-muted-foreground">
+            {copy.accountCount(accountPage.total)}
+          </span>
+        </div>
+        {accounts.length ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="border-b border-border text-xs text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">{copy.email}</th>
+                    <th className="px-3 py-2 font-medium">{copy.joined}</th>
+                    <th className="px-3 py-2 text-right font-medium">{copy.plan}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/70">
+                  {accounts.map((user) => (
+                    <tr key={user.user_id} className="transition-colors hover:bg-secondary/40">
+                      <td className="max-w-[260px] px-3 py-2.5">
+                        <button
+                          type="button"
+                          disabled={!user.email || busy}
+                          onClick={() => user.email && void lookupAccount(user.email)}
+                          aria-label={`${copy.selectAccount}: ${user.email ?? copy.noEmail}`}
+                          className="block max-w-full truncate text-left font-medium text-primary underline-offset-4 hover:underline disabled:cursor-default disabled:text-foreground disabled:no-underline"
+                        >
+                          {user.email ?? copy.noEmail}
+                        </button>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${user.pro ? "bg-success/10 text-success" : "bg-secondary text-muted-foreground"}`}
+                        >
+                          {user.pro ? "Pro" : copy.free}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+              <button
+                type="button"
+                disabled={busy || accountPage.page <= 1}
+                onClick={() => void loadAccountPage(accountPage.page - 1)}
+                className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {copy.previous}
+              </button>
+              <span className="text-sm text-muted-foreground">
+                {copy.page(accountPage.page, Math.max(accountPage.lastPage, 1))}
+              </span>
+              <button
+                type="button"
+                disabled={busy || accountPage.page >= accountPage.lastPage}
+                onClick={() => void loadAccountPage(accountPage.page + 1)}
+                className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {copy.next}
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="py-4 text-sm text-muted-foreground">{copy.noAccounts}</p>
+        )}
+      </Card>
       <Card className="space-y-4">
         <h2 className="font-display text-lg font-semibold">{copy.lookup}</h2>
         <form onSubmit={(event) => void lookup(event)} className="flex flex-wrap gap-2">

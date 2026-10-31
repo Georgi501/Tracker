@@ -252,7 +252,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: string;
     connectBroker: string;
     importCsv: string;
-    chooseIndex: string;
     snapshot: string;
     unavailableSnapshot: string;
     largestPosition: (name: string, share: string) => string;
@@ -267,7 +266,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: "Add investment",
     connectBroker: "Connect broker",
     importCsv: "Import CSV",
-    chooseIndex: "Choose an index",
     snapshot: "Portfolio snapshot",
     unavailableSnapshot: "Portfolio values are not currently available.",
     largestPosition: (name, share) =>
@@ -282,7 +280,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: "Добави инвестиция",
     connectBroker: "Свържи брокер",
     importCsv: "Импортирай CSV",
-    chooseIndex: "Избери индекс",
     snapshot: "Портфолиото накратко",
     unavailableSnapshot: "Стойностите на портфолиото не са налични в момента.",
     largestPosition: (name, share) =>
@@ -297,7 +294,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: "Investment hinzufügen",
     connectBroker: "Broker verbinden",
     importCsv: "CSV importieren",
-    chooseIndex: "Index auswählen",
     snapshot: "Portfolio im Überblick",
     unavailableSnapshot: "Portfoliowerte sind derzeit nicht verfügbar.",
     largestPosition: (name, share) =>
@@ -312,7 +308,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: "Añadir inversión",
     connectBroker: "Conectar bróker",
     importCsv: "Importar CSV",
-    chooseIndex: "Elegir un índice",
     snapshot: "Resumen de cartera",
     unavailableSnapshot: "El valor de la cartera no está disponible en este momento.",
     largestPosition: (name, share) => `${name} es tu mayor posición con un ${share} de la cartera.`,
@@ -326,7 +321,6 @@ const DASHBOARD_COPY: Record<
     addInvestment: "Aggiungi investimento",
     connectBroker: "Collega broker",
     importCsv: "Importa CSV",
-    chooseIndex: "Scegli un indice",
     snapshot: "Riepilogo del portafoglio",
     unavailableSnapshot: "I valori del portafoglio non sono al momento disponibili.",
     largestPosition: (name, share) =>
@@ -583,19 +577,6 @@ function Dashboard() {
               <Upload size={15} aria-hidden />
               {dashboardCopy.importCsv}
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setChartMode("performance");
-                document
-                  .getElementById("dashboard-benchmark")
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
-              }}
-              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              {dashboardCopy.chooseIndex}
-              <ArrowRight size={15} aria-hidden />
-            </button>
           </div>
         </Card>
       )}

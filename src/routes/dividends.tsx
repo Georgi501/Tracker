@@ -148,9 +148,10 @@ function Dividends() {
     }),
   );
   const hasIncome = months.some((v) => v > 0);
+  const chartYear = new Date().getFullYear();
   const monthly = hasIncome
     ? months.map((v, i) => ({
-        m: new Date(2026, i, 1).toLocaleDateString(locale, { month: "short" }),
+        m: new Date(chartYear, i, 1).toLocaleDateString(locale, { month: "short" }),
         v,
       }))
     : [];

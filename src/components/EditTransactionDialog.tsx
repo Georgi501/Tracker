@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { usePortfolio } from "@/lib/store";
+import { localDateString } from "@/lib/local-date";
 import type { Transaction } from "@/lib/portfolio";
 import { Button } from "@/components/ui/button";
 import {
@@ -139,7 +140,7 @@ export function EditTransactionDialog({
       toast.error(copy.invalid);
       return;
     }
-    if (date > new Date().toISOString().slice(0, 10)) {
+    if (date > localDateString()) {
       toast.error(copy.future);
       return;
     }
@@ -232,7 +233,7 @@ export function EditTransactionDialog({
             <input
               type="date"
               required
-              max={new Date().toISOString().slice(0, 10)}
+              max={localDateString()}
               value={date}
               onChange={(event) => setDate(event.target.value)}
               className={field}

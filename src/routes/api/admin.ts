@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const emailSchema = z.string().trim().email().max(254);
+const pageSchema = z.coerce.number().int().min(1).max(100_000).default(1);
+const ADMIN_PAGE_SIZE = 25;
 const mutationSchema = z
   .object({
     action: z.enum(["grant", "revoke"]),
@@ -46,23 +48,55 @@ export const Route = createFileRoute("/api/admin")({
         const auth = await authenticateAdmin(request);
         if ("response" in auth) return auth.response;
 
-        const emailValue = new URL(request.url).searchParams.get("email");
+        const searchParams = new URL(request.url).searchParams;
+        const emailValue = searchParams.get("email");
         const email = emailValue ? emailSchema.safeParse(emailValue) : null;
         if (emailValue && !email?.success)
           return json({ error: "Enter a valid email address" }, 400);
+        const pageResult = pageSchema.safeParse(searchParams.get("page") ?? 1);
+        if (!pageResult.success) return json({ error: "Invalid account page" }, 400);
+        const page = pageResult.data;
 
-        const [statsResult, accountResult] = await Promise.all([
+        const [statsResult, accountResult, usersResult] = await Promise.all([
           auth.supabaseAdmin.rpc("admin_dashboard_stats"),
           email?.success
             ? auth.supabaseAdmin.rpc("admin_user_summary", { _email: email.data })
             : Promise.resolve({ data: [], error: null }),
+          auth.supabaseAdmin.auth.admin.listUsers({ page, perPage: ADMIN_PAGE_SIZE }),
         ]);
         if (statsResult.error) return failure(statsResult.error, "Unable to load admin summary");
         if (accountResult.error)
           return failure(accountResult.error, "Unable to look up this account");
+        if (usersResult.error)
+          return failure(usersResult.error, "Unable to load registered accounts");
+        const proResults = await Promise.all(
+          usersResult.data.users.map(async (user) => {
+            const result = await auth.supabaseAdmin.rpc("is_pro", {
+              _user_id: user.id,
+            });
+            return { user, result };
+          }),
+        );
+        const proError = proResults.find(({ result }) => result.error)?.result.error;
+        if (proError) return failure(proError, "Unable to load account access status");
+        const missingProStatus = proResults.some(({ result }) => result.data === null);
+        if (missingProStatus)
+          return failure(new Error("Missing Pro status"), "Unable to load account access status");
+        const users = proResults.map(({ user, result }) => ({
+          user_id: user.id,
+          email: user.email ?? null,
+          created_at: user.created_at,
+          pro: result.data,
+        }));
         return json({
           stats: statsResult.data?.[0] ?? null,
           account: accountResult.data?.[0] ?? null,
+          users,
+          pagination: {
+            page,
+            lastPage: usersResult.data.lastPage,
+            total: usersResult.data.total,
+          },
         });
       },
       POST: async ({ request }) => {
