@@ -1,5 +1,10 @@
 import { expect, it } from "vitest";
-import { marketSearchSchema, searchCatalog } from "@/lib/market-search";
+import {
+  filterAndSortMarketAssets,
+  marketSearchSchema,
+  searchCatalog,
+  type MarketAsset,
+} from "@/lib/market-search";
 it("finds META by ticker without owning it", () => {
   expect(searchCatalog(" meta ")[0]?.symbol).toBe("META");
 });
@@ -35,4 +40,26 @@ it("finds supported cryptocurrencies by ticker and name", () => {
     name: "Chainlink",
     type: "crypto",
   });
+});
+it("filters search results by asset type without changing source order", () => {
+  const assets: MarketAsset[] = [
+    { symbol: "TSLA", name: "Tesla", type: "stock" },
+    { symbol: "BTC", name: "Bitcoin", type: "crypto" },
+    { symbol: "VOO", name: "Vanguard ETF", type: "etf" },
+  ];
+  expect(filterAndSortMarketAssets(assets, "etf", "relevance", "en-US")).toEqual([assets[2]]);
+});
+it("sorts market results by localized name or ticker", () => {
+  const assets: MarketAsset[] = [
+    { symbol: "TSLA", name: "Tesla", type: "stock" },
+    { symbol: "BTC", name: "Bitcoin", type: "crypto" },
+  ];
+  expect(filterAndSortMarketAssets(assets, "all", "name", "en-US").map((a) => a.symbol)).toEqual([
+    "BTC",
+    "TSLA",
+  ]);
+  expect(filterAndSortMarketAssets(assets, "all", "symbol", "en-US").map((a) => a.symbol)).toEqual([
+    "BTC",
+    "TSLA",
+  ]);
 });

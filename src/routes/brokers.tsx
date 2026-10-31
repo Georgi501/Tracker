@@ -17,6 +17,7 @@ import {
   detectBrokerFormat,
   reconciliationTotals,
   rejectedCsvRows,
+  rowsForImport,
   splitDuplicates,
   type BrokerFormat,
   type CsvRejection,
@@ -58,6 +59,7 @@ type StagedImport = {
   format: BrokerFormat;
   fresh: ImportedTx[];
   duplicates: ImportedTx[];
+  includeDuplicates: number[];
   ignoredRows: number;
   rejectedRows: CsvRejection[];
   feeColumns: string[];
@@ -262,6 +264,7 @@ function Brokers() {
         ignoredRows: rejectedRows.length,
         rejectedRows,
         feeColumns: detectFeeColumns(detected, text),
+        includeDuplicates: [],
         ...splitDuplicates(rows, existing, normalized),
       });
     } catch (err) {
@@ -285,20 +288,32 @@ function Brokers() {
       }));
       const normalized = await p.normalizeImportRows(preview.fresh);
       const split = splitDuplicates(preview.fresh, currentExisting, normalized);
-      if (!split.fresh.length) {
-        setPreview(null);
-        toast.info(
-          p.lang === "bg" ? "Всички сделки вече са налични." : "All trades already exist.",
+      if (split.duplicates.length) {
+        setPreview((current) =>
+          current
+            ? {
+                ...current,
+                fresh: split.fresh,
+                duplicates: [...current.duplicates, ...split.duplicates],
+              }
+            : current,
         );
+        toast.info(IMPORT_COPY[p.lang].newDuplicates(split.duplicates.length));
         return;
       }
-      const imported = await p.importTransactions(preview.brokerId, split.fresh);
+      const selectedRows = rowsForImport([], preview.duplicates, preview.includeDuplicates);
+      const rowsToImport = [...split.fresh, ...selectedRows];
+      if (!rowsToImport.length) {
+        toast.info(IMPORT_COPY[p.lang].nothingSelected);
+        return;
+      }
+      const imported = await p.importTransactions(preview.brokerId, rowsToImport);
       trackAnalyticsEvent("csv_import_completed");
       setImportResult({
         imported: imported.count,
-        duplicates: preview.duplicates.length + split.duplicates.length,
+        duplicates: preview.duplicates.length - selectedRows.length,
         ignoredRows: preview.ignoredRows,
-        totals: reconciliationTotals(split.fresh),
+        totals: reconciliationTotals(rowsToImport),
       });
       notifyImportWithUndo(
         `${imported.count} ${p.t("imported")}`,
@@ -340,6 +355,7 @@ function Brokers() {
     setPreview({
       brokerId,
       format,
+      includeDuplicates: [],
       ...split,
       ignoredRows: 0,
       rejectedRows: [],
@@ -420,6 +436,18 @@ function Brokers() {
                     fresh: current.fresh.map((row, rowIndex) =>
                       rowIndex === index ? { ...row, [field]: value } : row,
                     ),
+                  }
+                : current,
+            )
+          }
+          onIncludeDuplicate={(index, include) =>
+            setPreview((current) =>
+              current
+                ? {
+                    ...current,
+                    includeDuplicates: include
+                      ? [...current.includeDuplicates, index]
+                      : current.includeDuplicates.filter((item) => item !== index),
                   }
                 : current,
             )
@@ -705,6 +733,7 @@ function ImportPreview({
   preview,
   busy,
   onEdit,
+  onIncludeDuplicate,
   onCancel,
   onConfirm,
 }: {
@@ -716,16 +745,18 @@ function ImportPreview({
     field: "symbol" | "date" | "quantity" | "price" | "fee" | "currency",
     value: string | number,
   ) => void;
+  onIncludeDuplicate: (index: number, include: boolean) => void;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
   const c = IMPORT_COPY[lang];
-  const count = (k: string) => preview.fresh.filter((r) => r.kind === k).length;
+  const rowsToImport = rowsForImport(preview.fresh, preview.duplicates, preview.includeDuplicates);
+  const count = (k: string) => rowsToImport.filter((r) => r.kind === k).length;
   const currencies = [
     ...new Set([...preview.fresh, ...preview.duplicates].map((r) => r.currency ?? "USD")),
   ].join(", ");
-  const totals = reconciliationTotals(preview.fresh);
-  const valid = preview.fresh.every(
+  const totals = reconciliationTotals(rowsToImport);
+  const valid = rowsToImport.every(
     (row) =>
       /^[A-Z0-9.^:=_-]{1,20}$/i.test(row.symbol) &&
       /^\d{4}-\d{2}-\d{2}$/.test(row.date) &&
@@ -760,9 +791,37 @@ function ImportPreview({
         {c.fees(preview.feeColumns)}
       </p>
       {preview.duplicates.length > 0 && (
-        <p className="rounded-xl bg-accent text-accent-foreground p-2 text-sm">
-          {c.duplicates(preview.duplicates.length)}
-        </p>
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+          <p className="text-sm font-semibold">{c.duplicates(preview.duplicates.length)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{c.duplicateHelp}</p>
+          <ul className="mt-2 max-h-48 divide-y divide-border overflow-auto rounded-lg border border-border">
+            {preview.duplicates.map((row, index) => (
+              <li key={`${row.symbol}-${row.date}-${index}`} className="p-2">
+                <label className="flex cursor-pointer items-start gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 size-4 accent-primary"
+                    checked={preview.includeDuplicates.includes(index)}
+                    onChange={(event) => onIncludeDuplicate(index, event.target.checked)}
+                    aria-label={`${c.includeDuplicate} ${row.symbol} ${row.date}`}
+                  />
+                  <span>
+                    <span className="font-semibold">
+                      {row.symbol} · {c.kinds[row.kind]} · {row.date}
+                    </span>
+                    <span className="block text-muted-foreground">
+                      {row.quantity} × {row.price} {row.currency ?? "USD"}
+                      {(row.fee ?? 0) > 0
+                        ? ` · ${c.fee}: ${row.fee} ${row.feeCurrency ?? row.currency ?? "USD"}`
+                        : ""}
+                    </span>
+                    <span className="mt-1 block">{c.includeDuplicate}</span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {preview.ignoredRows > 0 && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
@@ -893,11 +952,11 @@ function ImportPreview({
           {c.cancel}
         </button>
         <button
-          disabled={busy || !preview.fresh.length || !valid}
+          disabled={busy || !rowsToImport.length || !valid}
           onClick={onConfirm}
           className="press rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          {c.confirm(preview.fresh.length)}
+          {c.confirm(rowsToImport.length)}
         </button>
       </div>
     </Card>
@@ -1096,7 +1155,7 @@ const IMPORT_RESULT_COPY: Record<
   en: {
     title: "Import complete",
     imported: "Transactions imported",
-    duplicates: "Duplicates skipped",
+    duplicates: "Possible duplicates not imported",
     ignored: "CSV rows not imported",
     reviewIgnored:
       "Some CSV rows were not recognized as transactions. Check the original file if you expected additional trades or dividends.",
@@ -1106,7 +1165,7 @@ const IMPORT_RESULT_COPY: Record<
   bg: {
     title: "Импортът приключи",
     imported: "Импортирани трансакции",
-    duplicates: "Пропуснати дубликати",
+    duplicates: "Възможни дубликати, които не са импортирани",
     ignored: "Неимпортирани CSV редове",
     reviewIgnored:
       "Някои CSV редове не са разпознати като трансакции. Провери оригиналния файл, ако очакваш още сделки или дивиденти.",
@@ -1116,7 +1175,7 @@ const IMPORT_RESULT_COPY: Record<
   de: {
     title: "Import abgeschlossen",
     imported: "Importierte Transaktionen",
-    duplicates: "Übersprungene Duplikate",
+    duplicates: "Mögliche, nicht importierte Duplikate",
     ignored: "Nicht importierte CSV-Zeilen",
     reviewIgnored:
       "Einige CSV-Zeilen wurden nicht als Transaktionen erkannt. Prüfe die Originaldatei, wenn du weitere Trades oder Dividenden erwartet hast.",
@@ -1126,7 +1185,7 @@ const IMPORT_RESULT_COPY: Record<
   es: {
     title: "Importación completada",
     imported: "Operaciones importadas",
-    duplicates: "Duplicados omitidos",
+    duplicates: "Posibles duplicados no importados",
     ignored: "Filas CSV no importadas",
     reviewIgnored:
       "Algunas filas CSV no se reconocieron como operaciones. Revisa el archivo original si esperabas más operaciones o dividendos.",
@@ -1136,7 +1195,7 @@ const IMPORT_RESULT_COPY: Record<
   it: {
     title: "Importazione completata",
     imported: "Operazioni importate",
-    duplicates: "Duplicati ignorati",
+    duplicates: "Possibili duplicati non importati",
     ignored: "Righe CSV non importate",
     reviewIgnored:
       "Alcune righe CSV non sono state riconosciute come operazioni. Controlla il file originale se ti aspettavi altre operazioni o dividendi.",
@@ -1154,6 +1213,10 @@ const IMPORT_COPY: Record<
     fx: string;
     fees: (columns: string[]) => string;
     duplicates: (count: number) => string;
+    duplicateHelp: string;
+    includeDuplicate: string;
+    newDuplicates: (count: number) => string;
+    nothingSelected: string;
     rejectedTitle: (count: number) => string;
     rejectedHelp: string;
     row: string;
@@ -1180,7 +1243,13 @@ const IMPORT_COPY: Record<
     fees: (columns) =>
       `${columns.length ? "Fee columns detected: " + columns.join(", ") + ". " : "No fee columns detected; this does not confirm the broker charged none. "}` +
       "Detected fees are imported separately in the listed currency. Check the preview: if fee currency is not provided, the transaction currency is used.",
-    duplicates: (n) => `${n} duplicate rows will be skipped.`,
+    duplicates: (n) => `${n} possible duplicate rows found.`,
+    duplicateHelp:
+      "Review each match. These rows will not be imported unless you check them; matching is based on transaction details or broker transaction ID.",
+    includeDuplicate: "Import this row anyway",
+    newDuplicates: (n) =>
+      `${n} more possible duplicate${n === 1 ? "" : "s"} appeared during review. Check them before importing.`,
+    nothingSelected: "No new transactions selected. Check any duplicate rows you intend to import.",
     rejectedTitle: (n) => `${n} transaction rows will not be imported`,
     rejectedHelp:
       "Review these rows. To correct them, cancel this preview, fix the source CSV and upload it again.",
@@ -1211,7 +1280,14 @@ const IMPORT_COPY: Record<
     fees: (columns) =>
       `${columns.length ? "Открити колони за такси: " + columns.join(", ") + ". " : "Не са открити колони за такси; това не означава, че брокерът не е начислил такива. "}` +
       "Откритите такси се импортират отделно във валутата от файла. Провери прегледа; ако липсва валута на таксата, се използва валутата на сделката.",
-    duplicates: (n) => `${n} дублирани реда ще бъдат пропуснати.`,
+    duplicates: (n) => `Открити са ${n} възможни дублирани реда.`,
+    duplicateHelp:
+      "Прегледай всяко съвпадение. Редовете няма да се импортират, освен ако не ги отметнеш; сравнението е по данните за сделката или ID от брокера.",
+    includeDuplicate: "Импортирай този ред въпреки това",
+    newDuplicates: (n) =>
+      `По време на прегледа се откриха още ${n} възможни дубликата. Провери ги преди импортиране.`,
+    nothingSelected:
+      "Няма избрани нови сделки. Отметни дублираните редове, които искаш да импортираш.",
     rejectedTitle: (n) => `${n} реда със сделки няма да бъдат импортирани`,
     rejectedHelp:
       "Прегледай редовете. За корекция откажи този преглед, редактирай оригиналния CSV и го качи отново.",
@@ -1242,7 +1318,14 @@ const IMPORT_COPY: Record<
     fees: (columns) =>
       `${columns.length ? "Erkannte Gebührenfelder: " + columns.join(", ") + ". " : "Keine Gebührenfelder erkannt; das bedeutet nicht, dass der Broker keine Gebühren berechnet hat. "}` +
       "Erkannte Gebühren werden separat in der angegebenen Währung importiert. Prüfe die Vorschau; fehlt eine Gebührenwährung, wird die Transaktionswährung verwendet.",
-    duplicates: (n) => `${n} doppelte Zeilen werden übersprungen.`,
+    duplicates: (n) => `${n} mögliche doppelte Zeilen gefunden.`,
+    duplicateHelp:
+      "Prüfe jeden Treffer. Diese Zeilen werden nur importiert, wenn du sie auswählst; verglichen werden Transaktionsdaten oder die Broker-ID.",
+    includeDuplicate: "Diese Zeile trotzdem importieren",
+    newDuplicates: (n) =>
+      `${n} weitere mögliche Duplikate wurden während der Prüfung erkannt. Bitte vor dem Import prüfen.`,
+    nothingSelected:
+      "Keine neuen Transaktionen ausgewählt. Wähle Duplikate aus, die du importieren möchtest.",
     rejectedTitle: (n) => `${n} Transaktionszeilen werden nicht importiert`,
     rejectedHelp:
       "Prüfe diese Zeilen. Zum Korrigieren Vorschau abbrechen, CSV bearbeiten und erneut hochladen.",
@@ -1273,7 +1356,14 @@ const IMPORT_COPY: Record<
     fees: (columns) =>
       `${columns.length ? "Columnas de comisiones detectadas: " + columns.join(", ") + ". " : "No se detectaron columnas de comisiones; esto no confirma que el bróker no las haya cobrado. "}` +
       "Las comisiones detectadas se importan por separado en la moneda indicada. Revisa la vista previa; si falta la moneda, se usa la de la operación.",
-    duplicates: (n) => `Se omitirán ${n} filas duplicadas.`,
+    duplicates: (n) => `Se encontraron ${n} posibles filas duplicadas.`,
+    duplicateHelp:
+      "Revisa cada coincidencia. Estas filas no se importarán a menos que las marques; se comparan los datos de la operación o el ID del bróker.",
+    includeDuplicate: "Importar esta fila de todos modos",
+    newDuplicates: (n) =>
+      `Se detectaron ${n} posibles duplicados más durante la revisión. Compruébalos antes de importar.`,
+    nothingSelected:
+      "No hay operaciones nuevas seleccionadas. Marca los duplicados que quieras importar.",
     rejectedTitle: (n) => `${n} filas de operaciones no se importarán`,
     rejectedHelp:
       "Revisa estas filas. Para corregirlas, cancela la vista previa, edita el CSV original y vuelve a subirlo.",
@@ -1304,7 +1394,14 @@ const IMPORT_COPY: Record<
     fees: (columns) =>
       `${columns.length ? "Colonne dei costi rilevate: " + columns.join(", ") + ". " : "Nessuna colonna dei costi rilevata; ciò non conferma che il broker non abbia applicato commissioni. "}` +
       "Le commissioni rilevate vengono importate separatamente nella valuta indicata. Controlla l'anteprima; se manca la valuta, viene usata quella dell'operazione.",
-    duplicates: (n) => `${n} righe duplicate verranno ignorate.`,
+    duplicates: (n) => `Trovate ${n} possibili righe duplicate.`,
+    duplicateHelp:
+      "Controlla ogni corrispondenza. Le righe non verranno importate a meno che non le selezioni; il confronto usa i dettagli della transazione o l'ID del broker.",
+    includeDuplicate: "Importa comunque questa riga",
+    newDuplicates: (n) =>
+      `Durante il controllo sono stati rilevati altri ${n} possibili duplicati. Verificali prima di importare.`,
+    nothingSelected:
+      "Nessuna nuova transazione selezionata. Seleziona i duplicati che desideri importare.",
     rejectedTitle: (n) => `${n} righe di operazioni non verranno importate`,
     rejectedHelp:
       "Controlla queste righe. Per correggerle, annulla l'anteprima, modifica il CSV originale e caricalo di nuovo.",

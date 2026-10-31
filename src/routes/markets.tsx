@@ -1,27 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, Newspaper, RefreshCw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BookmarkCheck, ChevronDown, Newspaper, RefreshCw, Search, Star } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, Delta } from "@/components/AppShell";
 import { usePortfolio, pct } from "@/lib/store";
 import { languageLocale } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
 import {
   MARKET_ASSETS,
+  filterAndSortMarketAssets,
   marketSearchSchema,
   searchCatalog,
   ucitsInfo,
+  type MarketAssetSort,
+  type MarketAssetTypeFilter,
   type MarketAsset,
 } from "@/lib/market-search";
+import { CRYPTO_ASSETS } from "@/lib/crypto-assets";
 import { marketQuote, searchMarket, type MarketNews } from "@/lib/market.functions";
-import { AssetExtras } from "@/components/AssetExtras";
+import { AssetExtras, useWatchState } from "@/components/AssetExtras";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { KeyStats } from "@/components/KeyStats";
 import { CompanyOverview } from "@/components/CompanyOverview";
 import { ProCompanyResearch } from "@/components/ProCompanyResearch";
 import { ProFinancials } from "@/components/ProFinancials";
+import { writeWatchlist } from "@/lib/watchlist";
 import { z } from "zod";
 
 const NEWS_LABEL = {
@@ -36,6 +49,20 @@ const FEATURED_ASSETS = FEATURED_SYMBOLS.flatMap((symbol) => {
   const asset = MARKET_ASSETS.find((candidate) => candidate.symbol === symbol);
   return asset ? [asset] : [];
 });
+type BrowseCategory = "featured" | "stocks" | "etfs" | "crypto";
+const STOCK_ASSETS = MARKET_ASSETS.filter((asset) => asset.type === "stock").slice(0, 12);
+const ETF_ASSETS = MARKET_ASSETS.filter((asset) => asset.type === "etf").slice(0, 12);
+const CRYPTO_MARKET_ASSETS: MarketAsset[] = CRYPTO_ASSETS.slice(0, 12).map((asset) => ({
+  ...asset,
+  type: "crypto",
+}));
+const BROWSE_ASSETS: Record<BrowseCategory, MarketAsset[]> = {
+  featured: FEATURED_ASSETS,
+  stocks: STOCK_ASSETS,
+  etfs: ETF_ASSETS,
+  crypto: CRYPTO_MARKET_ASSETS,
+};
+const BROWSE_CATEGORIES: BrowseCategory[] = ["featured", "stocks", "etfs", "crypto"];
 
 export const Route = createFileRoute("/markets")({
   head: () => ({
@@ -66,12 +93,27 @@ function Markets() {
   const fetchQuote = useServerFn(marketQuote);
   const { q } = Route.useSearch();
   const [query, setQuery] = useState(q ?? "");
+  const [browseCategory, setBrowseCategory] = useState<BrowseCategory | null>("featured");
+  const [typeFilter, setTypeFilter] = useState<MarketAssetTypeFilter>("all");
+  const [sortBy, setSortBy] = useState<MarketAssetSort>("relevance");
+  const [results, setResults] = useState<MarketAsset[]>(BROWSE_ASSETS.featured);
+  const watchState = useWatchState();
+  const visibleResults = useMemo(
+    () =>
+      filterAndSortMarketAssets(
+        results,
+        query.trim() ? typeFilter : "all",
+        sortBy,
+        languageLocale(p.lang),
+      ),
+    [p.lang, query, results, sortBy, typeFilter],
+  );
   useEffect(() => {
     const next = q ?? "";
     setQuery(next);
-    setResults(next ? searchCatalog(next) : FEATURED_ASSETS);
+    setBrowseCategory(next ? null : "featured");
+    setResults(next ? searchCatalog(next) : BROWSE_ASSETS.featured);
   }, [q]);
-  const [results, setResults] = useState<MarketAsset[]>(FEATURED_ASSETS);
   const [selected, setSelected] = useState<MarketAsset | null>(null);
   const [quote, setQuote] = useState<Awaited<ReturnType<typeof marketQuote>> | null>(null);
   const [busy, setBusy] = useState(false);
@@ -108,7 +150,7 @@ function Markets() {
     async (raw: string) => {
       const id = ++searchId.current;
       if (!raw.trim()) {
-        setResults(FEATURED_ASSETS);
+        setResults(BROWSE_ASSETS[browseCategory ?? "featured"]);
         setNews([]);
         setLimited(false);
         setBusy(false);
@@ -131,7 +173,7 @@ function Markets() {
         if (id === searchId.current) setBusy(false);
       }
     },
-    [search],
+    [browseCategory, search],
   );
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -146,6 +188,21 @@ function Markets() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     void runSearch(query);
+  };
+  const toggleWatchlist = (asset: MarketAsset) => {
+    const symbol = asset.symbol.toUpperCase();
+    const list = watchState.list;
+    if (!list.includes(symbol) && list.length >= 30) {
+      toast.info(c.watchLimit);
+      return;
+    }
+    try {
+      writeWatchlist(
+        list.includes(symbol) ? list.filter((item) => item !== symbol) : [...list, symbol],
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update watchlist");
+    }
   };
   return (
     <div className="space-y-5">
@@ -164,7 +221,10 @@ function Markets() {
               ++searchId.current;
               setBusy(false);
               setQuery(e.target.value);
-              setResults(e.target.value.trim() ? searchCatalog(e.target.value) : FEATURED_ASSETS);
+              const next = e.target.value;
+              setBrowseCategory(next.trim() ? null : "featured");
+              if (!next.trim()) setTypeFilter("all");
+              setResults(next.trim() ? searchCatalog(next) : BROWSE_ASSETS.featured);
               setLimited(false);
             }}
             className="h-10 pl-9"
@@ -175,33 +235,139 @@ function Markets() {
           {c.search}
         </Button>
       </form>
+      {!query.trim() && (
+        <div>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {c.browse}
+          </h2>
+          <div role="group" aria-label={c.browse} className="flex gap-2 overflow-x-auto pb-1">
+            {BROWSE_CATEGORIES.map((category) => {
+              const active = browseCategory === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    ++searchId.current;
+                    setBusy(false);
+                    setSelected(null);
+                    setBrowseCategory(category);
+                    setTypeFilter("all");
+                    setQuery("");
+                    setResults(BROWSE_ASSETS[category]);
+                    setNews([]);
+                    setLimited(false);
+                  }}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    active
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  {c.categories[category]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <section className="min-w-0">
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          {busy ? c.searching : query.trim() ? c.results : c.popular}
-        </h2>
-        <ul className="divide-y divide-border">
-          {results.map((a) => (
-            <li key={a.symbol}>
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  selected && selected.symbol === a.symbol ? setSelected(null) : void loadQuote(a)
-                }
-                className="h-auto min-h-16 w-full justify-start whitespace-normal px-3 py-3 text-left"
-                aria-pressed={selected?.symbol === a.symbol}
-                aria-expanded={selected?.symbol === a.symbol}
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {busy
+              ? c.searching
+              : query.trim()
+                ? c.results
+                : c.categories[browseCategory ?? "featured"]}
+          </h2>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {query.trim() && (
+              <Select
+                value={typeFilter}
+                onValueChange={(value) => {
+                  if (value === "all" || value === "stock" || value === "etf" || value === "crypto")
+                    setTypeFilter(value);
+                }}
               >
-                <CompanyLogo symbol={a.symbol} type={a.type} />
-                <span className="min-w-0 flex-1">
-                  <span className="block break-words font-semibold">{a.name}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {a.symbol} · {p.t(a.type)}
+                <SelectTrigger aria-label={c.filterType} className="w-full sm:w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{c.allTypes}</SelectItem>
+                  <SelectItem value="stock">{p.t("stock")}</SelectItem>
+                  <SelectItem value="etf">{p.t("etf")}</SelectItem>
+                  <SelectItem value="crypto">{p.t("crypto")}</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            <Select
+              value={sortBy}
+              onValueChange={(value) => {
+                if (value === "relevance" || value === "name" || value === "symbol")
+                  setSortBy(value);
+              }}
+            >
+              <SelectTrigger aria-label={c.sortBy} className="w-full sm:w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="relevance">{c.relevance}</SelectItem>
+                <SelectItem value="name">{c.nameAscending}</SelectItem>
+                <SelectItem value="symbol">{c.symbolAscending}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {visibleResults.map((a) => (
+            <li
+              key={a.symbol}
+              className="overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-secondary/20 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+            >
+              <div className="flex items-center gap-2 p-2">
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    selected && selected.symbol === a.symbol ? setSelected(null) : void loadQuote(a)
+                  }
+                  className="h-auto min-h-16 min-w-0 flex-1 justify-start whitespace-normal px-2 py-2 text-left"
+                  aria-pressed={selected?.symbol === a.symbol}
+                  aria-expanded={selected?.symbol === a.symbol}
+                >
+                  <CompanyLogo symbol={a.symbol} type={a.type} size={44} />
+                  <span className="min-w-0 flex-1">
+                    <span className="mb-1 block truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {a.symbol}
+                    </span>
+                    <span className="block truncate text-sm font-semibold">{a.name}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {p.t(a.type)}
+                    </span>
                   </span>
-                </span>
-                <ChevronDown
-                  className={`shrink-0 text-muted-foreground transition-transform ${selected?.symbol === a.symbol ? "rotate-180" : ""}`}
-                />
-              </Button>
+                  <ChevronDown
+                    className={`size-4 shrink-0 text-muted-foreground transition-transform ${selected?.symbol === a.symbol ? "rotate-180" : ""}`}
+                  />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={
+                    watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch
+                  }
+                  aria-pressed={watchState.list.includes(a.symbol.toUpperCase())}
+                  title={watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch}
+                  onClick={() => toggleWatchlist(a)}
+                  className="size-9 shrink-0"
+                >
+                  {watchState.list.includes(a.symbol.toUpperCase()) ? (
+                    <BookmarkCheck className="size-4 text-primary" />
+                  ) : (
+                    <Star className="size-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
               {selected && selected.symbol === a.symbol && (
                 <Card className="mb-2 ml-3 mr-1">
                   <div className="flex items-start justify-between gap-3">
@@ -318,7 +484,7 @@ function Markets() {
             </li>
           ))}
         </ul>
-        {!results.length && <p className="py-8 text-sm text-muted-foreground">{c.empty}</p>}
+        {!visibleResults.length && <p className="py-8 text-sm text-muted-foreground">{c.empty}</p>}
         {limited && (
           <p role="status" className="mt-3 text-sm text-muted-foreground">
             {c.limited}

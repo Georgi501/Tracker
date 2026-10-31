@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assetSummary,
+  filterTimelineTransactions,
   reviewDue,
   snapshotCsv,
   snapshotWeights,
@@ -45,6 +46,47 @@ describe("journey", () => {
     ]);
     expect(g.map((x) => x.month)).toEqual(["2024-03", "2024-01"]);
     expect(g[1]!.items.map((x) => x.id)).toEqual(["3", "1"]);
+  });
+  it("filters transactions by asset, broker, kind, and inclusive date range", () => {
+    const transactions = [
+      { ...tx("1", "buy", 1, 100, "2024-01-05"), brokerId: "broker-a" },
+      { ...tx("2", "sell", 1, 110, "2024-02-01"), brokerId: "broker-a" },
+      { ...tx("3", "buy", 2, 20, "2024-02-01", "b"), brokerId: "broker-b" },
+    ];
+    expect(
+      filterTimelineTransactions(
+        transactions,
+        [
+          { id: "a", symbol: "AAPL", name: "Apple Inc." },
+          { id: "b", symbol: "MSFT", name: "Microsoft Corp." },
+        ],
+        {
+          query: "apple",
+          kind: "sell",
+          brokerId: "broker-a",
+          from: "2024-02-01",
+          to: "2024-02-01",
+        },
+      ),
+    ).toEqual([transactions[1]]);
+    expect(
+      filterTimelineTransactions(transactions, [], {
+        query: "",
+        kind: "all",
+        brokerId: "manual",
+        from: "",
+        to: "",
+      }),
+    ).toEqual([]);
+    expect(
+      filterTimelineTransactions([tx("4", "buy", 1, 2, "2024-01-01")], [], {
+        query: "",
+        kind: "all",
+        brokerId: "manual",
+        from: "",
+        to: "",
+      }),
+    ).toHaveLength(1);
   });
   it("snapshot shares only class percentages and skips unpriced holdings", () => {
     const h = (type: string, value: number) => ({ asset: { type }, value }) as unknown as Holding;

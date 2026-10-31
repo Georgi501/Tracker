@@ -1,4 +1,4 @@
-import type { Holding, Transaction } from "./portfolio";
+import type { Asset, Holding, Transaction, TxKind } from "./portfolio";
 
 export interface AssetSummary {
   bought: number;
@@ -34,6 +34,39 @@ export function timelineByMonth(txs: Transaction[]): { month: string; items: Tra
     (map.get(m) ?? map.set(m, []).get(m)!).push(t);
   }
   return [...map].map(([month, items]) => ({ month, items }));
+}
+
+export interface TimelineFilters {
+  query: string;
+  kind: TxKind | "all";
+  brokerId: string;
+  from: string;
+  to: string;
+}
+
+export function filterTimelineTransactions(
+  transactions: Transaction[],
+  assets: Pick<Asset, "id" | "symbol" | "name">[],
+  filters: TimelineFilters,
+): Transaction[] {
+  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
+  const query = filters.query.trim().toLocaleLowerCase();
+  return transactions.filter((transaction) => {
+    const asset = assetById.get(transaction.assetId);
+    if (filters.kind !== "all" && transaction.kind !== filters.kind) return false;
+    if (
+      filters.brokerId &&
+      (filters.brokerId === "manual"
+        ? !!transaction.brokerId
+        : transaction.brokerId !== filters.brokerId)
+    )
+      return false;
+    if (filters.from && transaction.date < filters.from) return false;
+    if (filters.to && transaction.date > filters.to) return false;
+    if (query && !`${asset?.symbol ?? ""} ${asset?.name ?? ""}`.toLocaleLowerCase().includes(query))
+      return false;
+    return true;
+  });
 }
 
 /** Shareable snapshot: only percentage weights by asset class, no amounts. */

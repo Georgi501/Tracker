@@ -7,6 +7,8 @@ export interface MarketAsset {
   name: string;
   type: "stock" | "etf" | "crypto";
 }
+export type MarketAssetTypeFilter = MarketAsset["type"] | "all";
+export type MarketAssetSort = "relevance" | "name" | "symbol";
 export const MARKET_ASSETS: MarketAsset[] = [
   { symbol: "META", name: "Meta Platforms Inc. (Facebook)", type: "stock" },
   { symbol: "UBER", name: "Uber Technologies Inc.", type: "stock" },
@@ -232,4 +234,22 @@ export function searchCatalog(query: string): MarketAsset[] {
   return [...new Map(matches.map((asset) => [asset.symbol, asset])).values()].sort(
     (a, b) => Number(b.symbol.toLowerCase() === q) - Number(a.symbol.toLowerCase() === q),
   );
+}
+
+export function filterAndSortMarketAssets(
+  assets: MarketAsset[],
+  typeFilter: MarketAssetTypeFilter,
+  sortBy: MarketAssetSort,
+  locale: string,
+): MarketAsset[] {
+  const filtered =
+    typeFilter === "all" ? [...assets] : assets.filter((asset) => asset.type === typeFilter);
+  if (sortBy === "relevance") return filtered;
+
+  const collator = new Intl.Collator(locale, { sensitivity: "base" });
+  return filtered.sort((a, b) => {
+    const primary =
+      sortBy === "name" ? collator.compare(a.name, b.name) : collator.compare(a.symbol, b.symbol);
+    return primary || collator.compare(a.symbol, b.symbol);
+  });
 }

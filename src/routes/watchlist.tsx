@@ -23,6 +23,7 @@ import {
   writeWatchlist,
 } from "@/lib/watchlist";
 import { useEffect } from "react";
+import { z } from "zod";
 
 export const Route = createFileRoute("/watchlist")({
   head: () => ({
@@ -42,6 +43,16 @@ export const Route = createFileRoute("/watchlist")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (search) =>
+    z
+      .object({
+        symbol: z
+          .string()
+          .regex(/^[A-Za-z0-9.^:=_-]{1,20}$/)
+          .optional()
+          .catch(undefined),
+      })
+      .parse(search),
   component: Watchlist,
 });
 
@@ -77,7 +88,9 @@ type K =
   | "fairValueDesc"
   | "loadError"
   | "retry"
-  | "unavailable";
+  | "unavailable"
+  | "noMatch"
+  | "clearSearch";
 const COPY: Record<Lang, Record<K, string>> = {
   en: {
     title: "Watchlist",
@@ -110,6 +123,8 @@ const COPY: Record<Lang, Record<K, string>> = {
     loadError: "Could not load market data.",
     retry: "Retry",
     unavailable: "Unavailable",
+    noMatch: "This asset is not currently on your watchlist.",
+    clearSearch: "Show full watchlist",
   },
   bg: {
     title: "Watchlist",
@@ -142,6 +157,8 @@ const COPY: Record<Lang, Record<K, string>> = {
     loadError: "Пазарните данни не можаха да се заредят.",
     retry: "Опитай отново",
     unavailable: "Недостъпно",
+    noMatch: "Този актив в момента не е в списъка ти за наблюдение.",
+    clearSearch: "Покажи целия списък",
   },
   de: {
     title: "Watchlist",
@@ -174,6 +191,8 @@ const COPY: Record<Lang, Record<K, string>> = {
     loadError: "Marktdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     unavailable: "Nicht verfügbar",
+    noMatch: "Dieser Wert ist derzeit nicht auf deiner Watchlist.",
+    clearSearch: "Gesamte Watchlist anzeigen",
   },
   es: {
     title: "Watchlist",
@@ -206,6 +225,8 @@ const COPY: Record<Lang, Record<K, string>> = {
     loadError: "No se pudieron cargar los datos de mercado.",
     retry: "Reintentar",
     unavailable: "No disponible",
+    noMatch: "Este activo no está actualmente en tu lista.",
+    clearSearch: "Mostrar toda la lista",
   },
   it: {
     title: "Watchlist",
@@ -238,6 +259,8 @@ const COPY: Record<Lang, Record<K, string>> = {
     loadError: "Impossibile caricare i dati di mercato.",
     retry: "Riprova",
     unavailable: "Non disponibile",
+    noMatch: "Questo asset non è attualmente nella tua lista.",
+    clearSearch: "Mostra tutta la lista",
   },
 };
 const TARGET_REVIEW_COPY: Record<Lang, { review: string; reviewed: string }> = {
@@ -292,6 +315,7 @@ function Spark({
 function Watchlist() {
   const p = usePortfolio();
   const c = COPY[p.lang];
+  const { symbol: requestedSymbol } = Route.useSearch();
   const locale = languageLocale(p.lang);
   const { list } = useWatchState();
   const [period, setPeriod] = useState<ChartRange>("1D");
@@ -312,10 +336,15 @@ function Watchlist() {
   const detailsFn = useServerFn(marketDetails);
   const quoteFn = useServerFn(marketQuote);
   const dcfFn = useServerFn(marketDcf);
-  const assets = list.map(assetOf);
+  const assets = list
+    .map(assetOf)
+    .filter(
+      (asset) => !requestedSymbol || asset.symbol.toUpperCase() === requestedSymbol.toUpperCase(),
+    );
+  const assetKey = assets.map((asset) => asset.symbol).join(",");
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") {
-      setVisibleSymbols(new Set(list));
+      setVisibleSymbols(new Set(assetKey ? assetKey.split(",") : []));
       return;
     }
     const observer = new IntersectionObserver(
@@ -343,7 +372,7 @@ function Watchlist() {
       observer.observe(row);
     });
     return () => observer.disconnect();
-  }, [list]);
+  }, [assetKey]);
   const charts = useQueries({
     queries: assets.map((a) => ({
       queryKey: ["market-details", a.symbol, a.type, period],
@@ -510,6 +539,17 @@ function Watchlist() {
           </div>
           <Link to="/markets" className="mt-4 inline-block text-sm font-semibold text-primary">
             {c.browse} →
+          </Link>
+        </Card>
+      ) : requestedSymbol && !assets.length ? (
+        <Card className="text-center">
+          <p className="text-sm text-muted-foreground">{c.noMatch}</p>
+          <Link
+            to="/watchlist"
+            search={{}}
+            className="mt-2 inline-block text-sm font-semibold text-primary hover:underline"
+          >
+            {c.clearSearch} →
           </Link>
         </Card>
       ) : (

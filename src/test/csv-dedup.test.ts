@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitDuplicates, type ImportedTx } from "@/lib/csv-import";
+import { rowsForImport, splitDuplicates, type ImportedTx } from "@/lib/csv-import";
 const tx = (o: Partial<ImportedTx>): ImportedTx => ({
   symbol: "AAPL",
   name: "Apple",
@@ -56,5 +56,14 @@ describe("splitDuplicates", () => {
       ],
     );
     expect(result.duplicates).toEqual([imported]);
+  });
+});
+
+describe("rowsForImport", () => {
+  it("keeps possible duplicates out until a user explicitly selects them", () => {
+    const fresh = tx({ symbol: "MSFT" });
+    const possibleDuplicate = tx({});
+    expect(rowsForImport([fresh], [possibleDuplicate], [])).toEqual([fresh]);
+    expect(rowsForImport([fresh], [possibleDuplicate], [0])).toEqual([fresh, possibleDuplicate]);
   });
 });

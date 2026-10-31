@@ -552,3 +552,12 @@ export function splitDuplicates(
   }
   return { fresh, duplicates };
 }
+
+export function rowsForImport(
+  fresh: ImportedTx[],
+  duplicates: ImportedTx[],
+  includeDuplicateIndexes: number[],
+): ImportedTx[] {
+  const included = new Set(includeDuplicateIndexes);
+  return [...fresh, ...duplicates.filter((_, index) => included.has(index))];
+}

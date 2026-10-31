@@ -41,6 +41,7 @@ import { CompanyLogo } from "@/components/CompanyLogo";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { PortfolioHealth } from "@/components/PortfolioHealth";
+import { PortfolioDataCheck } from "@/components/PortfolioDataCheck";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
 import { MonthlyOverview } from "@/components/MonthlyOverview";
 import { pct, usePortfolio } from "@/lib/store";
@@ -965,6 +966,9 @@ function Dashboard() {
       </div>
       <div className="order-3 lg:contents">
         <DashboardMovers />
+      </div>
+      <div className="order-3 lg:contents">
+        <PortfolioDataCheck />
       </div>
       {p.holdings.length > 0 && (
         <div className="order-3 lg:contents">
