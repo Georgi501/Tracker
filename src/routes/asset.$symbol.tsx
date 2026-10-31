@@ -23,6 +23,7 @@ import { assetSummary, reviewDue } from "@/lib/journey";
 import { supabase } from "@/integrations/supabase/client";
 import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
+import { projectedBondCoupon } from "@/lib/portfolio";
 import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/asset/$symbol")({
@@ -253,6 +254,8 @@ function AssetPage() {
   const { symbol } = Route.useParams();
   const p = usePortfolio();
   const c = C[p.lang];
+  const [bondPrice, setBondPrice] = useState("");
+  const [savingBondPrice, setSavingBondPrice] = useState(false);
   const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
   const catalogAsset = searchCatalog(symbol).find(
     (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
@@ -273,6 +276,14 @@ function AssetPage() {
     assetQuery.data?.assets.find(
       (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
     );
+  const bondAsset = asset?.type === "bond" ? asset : null;
+  const bondAssetId = bondAsset?.id;
+  const bondPriceValue = bondAsset?.price;
+  useEffect(() => {
+    setBondPrice(
+      bondPriceValue !== undefined && Number.isFinite(bondPriceValue) ? String(bondPriceValue) : "",
+    );
+  }, [bondAssetId, bondPriceValue]);
   const assetId = asset && "id" in asset ? asset.id : null;
   const txs = assetId
     ? p.transactions
@@ -284,6 +295,7 @@ function AssetPage() {
     asset?.type === "stock" || asset?.type === "etf" || asset?.type === "crypto"
       ? asset.type
       : null;
+  const projectedCoupon = h && bondAsset ? projectedBondCoupon(bondAsset, h.quantity) : undefined;
 
   return (
     <div className="page-enter space-y-5">
@@ -318,7 +330,9 @@ function AssetPage() {
                       ? c.cash
                       : asset.type === "realEstate"
                         ? c.realEstate
-                        : c.noMarketData}
+                        : asset.type === "bond"
+                          ? p.t("manualBondPrice")
+                          : c.noMarketData}
             </p>
           </Card>
         )}
@@ -371,6 +385,66 @@ function AssetPage() {
           </Link>
         </Card>
       ) : null}
+      {asset?.type === "bond" && (
+        <Card>
+          <h2 className="font-display font-semibold">{p.t("bond")}</h2>
+          <form
+            className="mt-3 flex flex-wrap items-end gap-2"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (!assetId) return;
+              setSavingBondPrice(true);
+              try {
+                await p.updateBondPrice(assetId, Number(bondPrice));
+                toast.success(p.t("saved"));
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Error");
+              } finally {
+                setSavingBondPrice(false);
+              }
+            }}
+          >
+            <label className="grid gap-1 text-sm">
+              {p.t("price")} (USD)
+              <input
+                type="number"
+                min="0.000001"
+                step="any"
+                required
+                value={bondPrice}
+                onChange={(event) => setBondPrice(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </label>
+            <Button type="submit" disabled={savingBondPrice || !assetId}>
+              {p.t("save")}
+            </Button>
+          </form>
+          <p className="mt-2 text-xs text-muted-foreground">{p.t("manualBondPrice")}</p>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-muted-foreground">{p.t("couponRate")}</dt>
+              <dd className="font-semibold">{asset.bondCouponRate ?? "—"}%</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{p.t("maturity")}</dt>
+              <dd className="font-semibold">{asset.bondMaturityDate ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{p.t("faceValue")}</dt>
+              <dd className="font-semibold">
+                {asset.bondFaceValue ? p.money(asset.bondFaceValue) : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{p.t("projectedBondCoupon")}</dt>
+              <dd className="font-semibold">
+                {projectedCoupon !== undefined ? p.money(projectedCoupon) : "—"}
+              </dd>
+            </div>
+          </dl>
+        </Card>
+      )}
       {txs.length > 0 && (
         <Card>
           <h2 className="mb-3 font-display font-semibold">{c.history}</h2>
@@ -382,8 +456,13 @@ function AssetPage() {
                 </span>
                 <span>
                   {t.kind === "dividend"
-                    ? p.moneyFor(t.price * t.quantity, h?.asset)
+                    ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), h?.asset)
                     : `${t.quantity} × ${p.moneyFor(t.price, h?.asset)}`}
+                  {(t.fee ?? 0) > 0 && (
+                    <span className="ml-1 block text-xs text-muted-foreground">
+                      {p.t("fee")}: {p.money(t.fee ?? 0)}
+                    </span>
+                  )}
                 </span>
               </li>
             ))}

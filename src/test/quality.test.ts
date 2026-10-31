@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { qualityIssues } from "@/lib/quality";
+import { increasesOversellAmount, qualityIssues } from "@/lib/quality";
 import type { Asset, Transaction } from "@/lib/portfolio";
 
 const a = (id: string, price = 10): Asset => ({
@@ -52,5 +52,16 @@ describe("qualityIssues", () => {
     expect(qualityIssues([a("x")], [t("1", "x", "buy", 1, "2024-01-01")], "2025-01-01")).toEqual(
       [],
     );
+  });
+  it("prevents increasing oversold quantities without blocking existing issues", () => {
+    const before = [t("1", "x", "buy", 1, "2024-01-01"), t("2", "x", "sell", 2, "2024-02-01")];
+    const unchangedIssue = [before[0]!, t("2", "x", "sell", 2, "2024-02-01", 11)];
+    expect(increasesOversellAmount(before, unchangedIssue)).toBe(false);
+    expect(increasesOversellAmount(before, [...before, t("3", "x", "buy", 1, "2024-03-01")])).toBe(
+      false,
+    );
+    expect(
+      increasesOversellAmount(before, [t("1", "x", "buy", 0.5, "2024-01-01"), before[1]!]),
+    ).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Clock3, Info, Lightbulb, Plus, Upload } from "lucide-react";
+import { ArrowRight, Clock3, Info, Lightbulb, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { CountUp } from "@/components/Motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,12 +23,25 @@ import { AllocationCard } from "@/components/AllocationCard";
 import { DashboardMovers } from "@/components/DashboardMovers";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { PortfolioHealth } from "@/components/PortfolioHealth";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
+import { MonthlyOverview } from "@/components/MonthlyOverview";
 import { pct, usePortfolio } from "@/lib/store";
-import { portfolioIrr } from "@/lib/portfolio";
+import { portfolioIrr, type Transaction } from "@/lib/portfolio";
 import { fifoTaxReport } from "@/lib/tools";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -176,12 +189,46 @@ const METRIC_HELP: Record<
   },
 };
 
-const HISTORY_STATUS: Record<Lang, { error: string; retry: string }> = {
-  en: { error: "History could not be loaded.", retry: "Try again" },
-  bg: { error: "Историята не можа да се зареди.", retry: "Опитай отново" },
-  de: { error: "Der Verlauf konnte nicht geladen werden.", retry: "Erneut versuchen" },
-  es: { error: "No se pudo cargar el historial.", retry: "Reintentar" },
-  it: { error: "Impossibile caricare lo storico.", retry: "Riprova" },
+const HISTORY_STATUS: Record<
+  Lang,
+  { error: string; unavailable: string; noTransactions: string; retry: string }
+> = {
+  en: {
+    error: "History could not be loaded. Check your connection and try again.",
+    unavailable:
+      "A reliable chart is unavailable because provider closes, dated exchange rates, or split reconciliation are missing. No values are estimated.",
+    noTransactions: "There are no recorded transactions to chart yet.",
+    retry: "Try again",
+  },
+  bg: {
+    error: "Историята не се зареди. Провери връзката си и опитай отново.",
+    unavailable:
+      "Надеждна графика не е налична заради липсващи цени на затваряне, датирани валутни курсове или несъгласувано разделяне на акции. Не се използват оценки.",
+    noTransactions: "Все още няма записани сделки за графиката.",
+    retry: "Опитай отново",
+  },
+  de: {
+    error:
+      "Der Verlauf konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+    unavailable:
+      "Ein zuverlässiges Diagramm ist nicht verfügbar, weil Schlusskurse, datierte Wechselkurse oder eine Split-Abstimmung fehlen. Es werden keine Werte geschätzt.",
+    noTransactions: "Es gibt noch keine erfassten Transaktionen für das Diagramm.",
+    retry: "Erneut versuchen",
+  },
+  es: {
+    error: "No se pudo cargar el historial. Comprueba la conexión e inténtalo de nuevo.",
+    unavailable:
+      "No hay un gráfico fiable porque faltan cierres del proveedor, tipos de cambio fechados o conciliación de splits. No se estiman valores.",
+    noTransactions: "Todavía no hay operaciones registradas para mostrar.",
+    retry: "Reintentar",
+  },
+  it: {
+    error: "Impossibile caricare lo storico. Controlla la connessione e riprova.",
+    unavailable:
+      "Il grafico affidabile non è disponibile perché mancano chiusure del fornitore, cambi datati o la riconciliazione degli split. Non vengono stimati valori.",
+    noTransactions: "Non ci sono ancora operazioni registrate da mostrare.",
+    retry: "Riprova",
+  },
 };
 
 const DASHBOARD_COPY: Record<
@@ -271,8 +318,87 @@ const DASHBOARD_COPY: Record<
   },
 };
 
+const TRANSACTION_ACTION_COPY: Record<
+  Lang,
+  {
+    edit: string;
+    delete: string;
+    deleteTitle: string;
+    deleteDescription: string;
+    deleteConfirm: string;
+    cancel: string;
+    deleted: string;
+    undo: string;
+    restored: string;
+  }
+> = {
+  en: {
+    edit: "Edit transaction",
+    delete: "Delete transaction",
+    deleteTitle: "Delete this transaction?",
+    deleteDescription:
+      "This will change your holdings, performance and historical charts. You can undo it briefly after deleting.",
+    deleteConfirm: "Delete transaction",
+    cancel: "Cancel",
+    deleted: "Transaction deleted.",
+    undo: "Undo",
+    restored: "Transaction restored.",
+  },
+  bg: {
+    edit: "Редактирай сделката",
+    delete: "Изтрий сделката",
+    deleteTitle: "Да изтрия ли тази сделка?",
+    deleteDescription:
+      "Това ще промени позициите, доходността и историческите графики. След изтриването ще можеш да го отмениш за кратко.",
+    deleteConfirm: "Изтрий сделката",
+    cancel: "Отказ",
+    deleted: "Сделката е изтрита.",
+    undo: "Отмени",
+    restored: "Сделката е възстановена.",
+  },
+  de: {
+    edit: "Transaktion bearbeiten",
+    delete: "Transaktion löschen",
+    deleteTitle: "Diese Transaktion löschen?",
+    deleteDescription:
+      "Dadurch ändern sich Positionen, Rendite und historische Diagramme. Das Löschen kann kurz danach rückgängig gemacht werden.",
+    deleteConfirm: "Transaktion löschen",
+    cancel: "Abbrechen",
+    deleted: "Transaktion gelöscht.",
+    undo: "Rückgängig",
+    restored: "Transaktion wiederhergestellt.",
+  },
+  es: {
+    edit: "Editar operación",
+    delete: "Eliminar operación",
+    deleteTitle: "¿Eliminar esta operación?",
+    deleteDescription:
+      "Esto cambiará las posiciones, la rentabilidad y los gráficos históricos. Podrás deshacerlo durante un breve periodo tras eliminarla.",
+    deleteConfirm: "Eliminar operación",
+    cancel: "Cancelar",
+    deleted: "Operación eliminada.",
+    undo: "Deshacer",
+    restored: "Operación restaurada.",
+  },
+  it: {
+    edit: "Modifica operazione",
+    delete: "Elimina operazione",
+    deleteTitle: "Eliminare questa operazione?",
+    deleteDescription:
+      "Questo modificherà posizioni, rendimento e grafici storici. Potrai annullare l'eliminazione per un breve periodo.",
+    deleteConfirm: "Elimina operazione",
+    cancel: "Annulla",
+    deleted: "Operazione eliminata.",
+    undo: "Annulla",
+    restored: "Operazione ripristinata.",
+  },
+};
+
 function Dashboard() {
   const p = usePortfolio();
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
+  const [deletingBusy, setDeletingBusy] = useState(false);
   const [period, setPeriod] = useState<HistoryPeriod>("1Y");
   const swipeX = useRef<number | null>(null);
   const [chartMode, setChartMode] = useState<"value" | "performance">("value");
@@ -448,7 +574,7 @@ function Dashboard() {
       )}
       {p.user && p.holdings.length > 0 && (
         <>
-          <Card className="dashboard-primary-card min-w-0 p-4 sm:p-5 lg:col-span-2">
+          <Card className="dashboard-primary-card order-2 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {p.t("netWorth")}
@@ -516,7 +642,13 @@ function Dashboard() {
                     <HistoryChartStatus
                       fetching={history.isFetching}
                       error={history.isError}
-                      noData={p.t("noPeriodData")}
+                      noData={
+                        history.data?.unavailable
+                          ? HISTORY_STATUS[p.lang].unavailable
+                          : history.data
+                            ? HISTORY_STATUS[p.lang].noTransactions
+                            : p.t("noPeriodData")
+                      }
                       errorText={HISTORY_STATUS[p.lang].error}
                       retryText={HISTORY_STATUS[p.lang].retry}
                       onRetry={() => void history.refetch()}
@@ -577,7 +709,13 @@ function Dashboard() {
                   <HistoryChartStatus
                     fetching={history.isFetching}
                     error={history.isError}
-                    noData={p.t("noPeriodData")}
+                    noData={
+                      history.data?.unavailable
+                        ? HISTORY_STATUS[p.lang].unavailable
+                        : history.data
+                          ? HISTORY_STATUS[p.lang].noTransactions
+                          : p.t("noPeriodData")
+                    }
                     errorText={HISTORY_STATUS[p.lang].error}
                     retryText={HISTORY_STATUS[p.lang].retry}
                     onRetry={() => void history.refetch()}
@@ -736,7 +874,7 @@ function Dashboard() {
             </p>
           </Card>
           <TooltipProvider>
-            <div className="dashboard-metrics grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5">
+            <div className="dashboard-metrics order-1 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5 lg:order-none">
               <Metric
                 label={p.t("totalPnl")}
                 help={METRIC_HELP[p.lang].totalPnl}
@@ -792,110 +930,222 @@ function Dashboard() {
           </TooltipProvider>
         </>
       )}
-      <PortfolioHealth />
-      <WeeklyDigest />
-      <DashboardMovers />
-      {p.holdings.length > 0 && <AllocationCard />}
+      <div className="order-3 lg:contents">
+        <MonthlyOverview
+          data={history.data}
+          isLoading={history.isFetching}
+          isError={history.isError}
+          onRetry={() => void history.refetch()}
+        />
+      </div>
+      <div className="order-3 lg:contents">
+        <PortfolioHealth />
+      </div>
+      <div className="order-3 lg:contents">
+        <WeeklyDigest />
+      </div>
+      <div className="order-3 lg:contents">
+        <DashboardMovers />
+      </div>
       {p.holdings.length > 0 && (
-        <Card className="lg:col-span-2">
-          <div className="mb-3 flex justify-between">
-            <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
-            <Link to="/holdings" className="text-sm font-semibold text-primary">
-              {p.t("holdings")} →
-            </Link>
-          </div>
-          <ul className="divide-y divide-border">
-            {p.holdings.slice(0, 6).map((h) => (
-              <li key={h.asset.id}>
-                <Link
-                  to="/asset/$symbol"
-                  params={{ symbol: h.asset.symbol }}
-                  className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold">{h.asset.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
-                  </div>
-                  <div className="text-right text-sm">
-                    <p className="font-semibold">{p.money(h.value)}</p>
-                    <div className="flex items-center justify-end gap-2 text-xs">
-                      <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                      <span className="text-muted-foreground">
-                        {portfolioValue > 0 && Number.isFinite(h.value)
-                          ? ((h.value / portfolioValue) * 100).toFixed(1)
-                          : "0.0"}
-                        % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
-                      </span>
+        <div className="order-3 lg:contents">
+          <AllocationCard />
+        </div>
+      )}
+      {p.holdings.length > 0 && (
+        <div className="order-3 lg:contents">
+          <Card className="lg:col-span-2">
+            <div className="mb-3 flex justify-between">
+              <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
+              <Link to="/holdings" className="text-sm font-semibold text-primary">
+                {p.t("holdings")} →
+              </Link>
+            </div>
+            <ul className="divide-y divide-border">
+              {p.holdings.slice(0, 6).map((h) => (
+                <li key={h.asset.id}>
+                  <Link
+                    to="/asset/$symbol"
+                    params={{ symbol: h.asset.symbol }}
+                    className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">{h.asset.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
                     </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
+                    <div className="text-right text-sm">
+                      <p className="font-semibold">{p.money(h.value)}</p>
+                      <div className="flex items-center justify-end gap-2 text-xs">
+                        <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
+                        <span className="text-muted-foreground">
+                          {portfolioValue > 0 && Number.isFinite(h.value)
+                            ? ((h.value / portfolioValue) * 100).toFixed(1)
+                            : "0.0"}
+                          % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
       )}
       {p.user && p.holdings.length > 0 && (
-        <Card className="min-w-0">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="flex items-center gap-2 font-display font-semibold">
-              <Clock3 size={16} className="text-muted-foreground" aria-hidden />
-              {dashboardCopy.recentActivity}
-            </h3>
-            <Link
-              to="/timeline"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
-            >
-              {dashboardCopy.viewAll}
-              <ArrowRight size={14} aria-hidden />
-            </Link>
-          </div>
-          {recentTransactions.length ? (
-            <ul className="divide-y divide-border">
-              {recentTransactions.map((transaction) => {
-                const asset = p.assets.find((item) => item.id === transaction.assetId);
-                const amount =
-                  transaction.kind === "dividend"
-                    ? transaction.price
-                    : transaction.quantity * transaction.price;
-                const date = new Date(`${transaction.date}T12:00:00`);
-                return (
-                  <li key={transaction.id} className="flex items-center justify-between gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">
-                        {asset?.name ?? p.t("asset")}
-                        {asset?.symbol ? (
-                          <span className="ml-1.5 font-normal text-muted-foreground">
-                            {asset.symbol}
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {p.t(transaction.kind)}
-                        {transaction.kind !== "dividend" &&
-                          ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
-                        {" · "}
-                        {Number.isNaN(date.getTime())
-                          ? transaction.date
-                          : date.toLocaleDateString(locale, {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
-                      {p.money(amount, { sign: transaction.kind === "dividend" })}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="py-6 text-sm text-muted-foreground">{dashboardCopy.noRecentActivity}</p>
-          )}
-        </Card>
+        <div className="order-3 lg:contents">
+          <Card className="min-w-0">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-2 font-display font-semibold">
+                <Clock3 size={16} className="text-muted-foreground" aria-hidden />
+                {dashboardCopy.recentActivity}
+              </h3>
+              <Link
+                to="/timeline"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+              >
+                {dashboardCopy.viewAll}
+                <ArrowRight size={14} aria-hidden />
+              </Link>
+            </div>
+            {recentTransactions.length ? (
+              <ul className="divide-y divide-border">
+                {recentTransactions.map((transaction) => {
+                  const asset = p.assets.find((item) => item.id === transaction.assetId);
+                  const amount =
+                    transaction.kind === "dividend"
+                      ? transaction.price - (transaction.fee ?? 0)
+                      : transaction.kind === "buy"
+                        ? transaction.quantity * transaction.price + (transaction.fee ?? 0)
+                        : transaction.quantity * transaction.price - (transaction.fee ?? 0);
+                  const date = new Date(`${transaction.date}T12:00:00`);
+                  return (
+                    <li
+                      key={transaction.id}
+                      className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          {asset?.name ?? p.t("asset")}
+                          {asset?.symbol ? (
+                            <span className="ml-1.5 font-normal text-muted-foreground">
+                              {asset.symbol}
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {p.t(transaction.kind)}
+                          {transaction.kind !== "dividend" &&
+                            ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
+                          {" · "}
+                          {Number.isNaN(date.getTime())
+                            ? transaction.date
+                            : date.toLocaleDateString(locale, {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 sm:justify-end">
+                        <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
+                          {p.money(amount, { sign: transaction.kind === "dividend" })}
+                        </p>
+                        <div className="flex shrink-0 items-center">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={TRANSACTION_ACTION_COPY[p.lang].edit}
+                            title={TRANSACTION_ACTION_COPY[p.lang].edit}
+                            onClick={() => setEditingTransaction(transaction)}
+                          >
+                            <Pencil aria-hidden />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={TRANSACTION_ACTION_COPY[p.lang].delete}
+                            title={TRANSACTION_ACTION_COPY[p.lang].delete}
+                            onClick={() => setDeletingTransaction(transaction)}
+                          >
+                            <Trash2 aria-hidden />
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="py-6 text-sm text-muted-foreground">{dashboardCopy.noRecentActivity}</p>
+            )}
+          </Card>
+        </div>
       )}
+      <EditTransactionDialog
+        transaction={editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+      />
+      <AlertDialog
+        open={!!deletingTransaction}
+        onOpenChange={(open) => {
+          if (!open && !deletingBusy) setDeletingTransaction(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{TRANSACTION_ACTION_COPY[p.lang].deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {TRANSACTION_ACTION_COPY[p.lang].deleteDescription}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingBusy}>
+              {TRANSACTION_ACTION_COPY[p.lang].cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingBusy}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                if (!deletingTransaction) return;
+                setDeletingBusy(true);
+                void p
+                  .deleteTransactions([deletingTransaction.id])
+                  .then((count) => {
+                    if (!count) throw new Error("Transaction not found.");
+                    toast.success(TRANSACTION_ACTION_COPY[p.lang].deleted, {
+                      duration: 10_000,
+                      action: {
+                        label: TRANSACTION_ACTION_COPY[p.lang].undo,
+                        onClick: () => {
+                          void p
+                            .restoreTransaction(deletingTransaction)
+                            .then(() => toast.success(TRANSACTION_ACTION_COPY[p.lang].restored))
+                            .catch((restoreError: unknown) =>
+                              toast.error(
+                                restoreError instanceof Error ? restoreError.message : "Error",
+                              ),
+                            );
+                        },
+                      },
+                    });
+                    setDeletingTransaction(null);
+                  })
+                  .catch((error: unknown) =>
+                    toast.error(error instanceof Error ? error.message : "Error"),
+                  )
+                  .finally(() => setDeletingBusy(false));
+              }}
+            >
+              {TRANSACTION_ACTION_COPY[p.lang].deleteConfirm}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

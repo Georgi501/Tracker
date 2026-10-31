@@ -40,10 +40,11 @@ import {
   ShieldCheck,
   Settings2,
   Sun,
+  TriangleAlert,
   UserRound,
   Wallet,
 } from "lucide-react";
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -51,6 +52,8 @@ import { useOwnAvatar } from "@/lib/own-avatar";
 import type { Currency } from "@/lib/portfolio";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
+import { PriceAlertMonitor } from "./PriceAlertMonitor";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const SHELL_COPY: Record<
   Lang,
@@ -141,6 +144,32 @@ const SHELL_COPY: Record<
   },
 };
 
+const DATA_ERROR_COPY: Record<Lang, { message: string; retry: string }> = {
+  en: {
+    message: "Portfolio data could not be refreshed. Your saved transactions were not changed.",
+    retry: "Retry",
+  },
+  bg: {
+    message: "Данните за портфолиото не се обновиха. Записаните сделки не са променени.",
+    retry: "Опитай отново",
+  },
+  de: {
+    message:
+      "Portfoliodaten konnten nicht aktualisiert werden. Gespeicherte Transaktionen blieben unverändert.",
+    retry: "Erneut versuchen",
+  },
+  es: {
+    message:
+      "No se pudieron actualizar los datos de la cartera. Las operaciones guardadas no cambiaron.",
+    retry: "Reintentar",
+  },
+  it: {
+    message:
+      "Impossibile aggiornare i dati del portafoglio. Le operazioni salvate non sono state modificate.",
+    retry: "Riprova",
+  },
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   const p = usePortfolio();
   const qc = useQueryClient();
@@ -165,16 +194,32 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  const openTransactionDialog = useCallback(() => {
+    if (!open) trackAnalyticsEvent("manual_entry_started");
+    setOpen(true);
+  }, [open]);
   useEffect(() => {
-    const openTransactionDialog = () => setOpen(true);
     window.addEventListener("folio-open-add-transaction", openTransactionDialog);
     return () => window.removeEventListener("folio-open-add-transaction", openTransactionDialog);
-  }, []);
+  }, [openTransactionDialog]);
   const nav = [
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
     { to: "/markets", label: marketCopy[p.lang].markets },
     { to: "/watchlist", label: shellCopy.watchlist },
+    {
+      to: "/alerts",
+      label:
+        p.lang === "bg"
+          ? "Ценови известия"
+          : p.lang === "de"
+            ? "Preisalarme"
+            : p.lang === "es"
+              ? "Alertas de precio"
+              : p.lang === "it"
+                ? "Avvisi di prezzo"
+                : "Price alerts",
+    },
     { to: "/analytics", label: p.t("analytics") },
     { to: "/compare", label: legalCopy(p.lang).footer.compare },
     { to: "/timeline", label: shellCopy.timeline },
@@ -190,7 +235,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       label: shellCopy.portfolioGroup,
       links: nav.filter((item) =>
-        ["/compare", "/timeline", "/dividends", "/brokers"].includes(item.to),
+        ["/compare", "/timeline", "/dividends", "/brokers", "/alerts"].includes(item.to),
       ),
     },
     {
@@ -206,9 +251,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       label: shellCopy.portfolioGroup,
       links: nav.filter((item) =>
-        ["/watchlist", "/analytics", "/compare", "/timeline", "/dividends", "/brokers"].includes(
-          item.to,
-        ),
+        [
+          "/watchlist",
+          "/alerts",
+          "/analytics",
+          "/compare",
+          "/timeline",
+          "/dividends",
+          "/brokers",
+        ].includes(item.to),
       ),
     },
     {
@@ -331,7 +382,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <HeaderSearch />
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <CommandMenu onAddTx={() => setOpen(true)} />
+            <CommandMenu onAddTx={openTransactionDialog} />
             {p.isPro ? (
               <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">
                 PRO
@@ -346,7 +397,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
             <button
               onClick={() => {
-                if (p.user) setOpen(true);
+                if (p.user) openTransactionDialog();
                 else navigate({ to: "/auth" });
               }}
               aria-label={p.t("addTx")}
@@ -515,6 +566,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6">
+        {p.user && p.dataError && (
+          <div
+            role="alert"
+            className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm"
+          >
+            <TriangleAlert size={16} className="shrink-0 text-destructive" aria-hidden />
+            <span className="min-w-0 flex-1">{DATA_ERROR_COPY[p.lang].message}</span>
+            <button
+              type="button"
+              onClick={() => void p.reload()}
+              className="font-semibold text-primary hover:underline"
+            >
+              {DATA_ERROR_COPY[p.lang].retry}
+            </button>
+          </div>
+        )}
         {children}
       </main>
       <footer className="site-footer mt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
@@ -635,7 +702,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
         <button
           onClick={() => {
-            if (p.user) setOpen(true);
+            if (p.user) openTransactionDialog();
             else navigate({ to: "/auth" });
           }}
           aria-label={p.t("addTx")}
@@ -708,6 +775,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </DialogContent>
       </Dialog>
       <AnalyticsConsent />
+      <PriceAlertMonitor />
     </div>
   );
 }

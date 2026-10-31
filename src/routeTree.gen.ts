@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrokersRouteImport } from './routes/brokers'
@@ -61,6 +62,11 @@ const AccountRoute = AccountRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/brokers': typeof BrokersRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/analytics'
     | '/auth'
     | '/brokers'
@@ -488,6 +500,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
+  AlertsRoute: typeof AlertsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   BrokersRoute: typeof BrokersRoute
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -811,6 +831,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
+  AlertsRoute: AlertsRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   BrokersRoute: BrokersRoute,

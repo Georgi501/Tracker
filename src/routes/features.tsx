@@ -57,15 +57,15 @@ const COPY: Record<Lang, FeatureCopy> = {
     features: [
       {
         title: "One portfolio, multiple assets",
-        body: "Track stocks, ETFs, crypto, cash and real estate. Add trades manually or import broker statements with currency-aware transaction costs.",
+        body: "Track stocks, ETFs, crypto, bonds, cash and real estate. Import flexible broker CSVs with separate, currency-aware fees. Bond values are user-maintained.",
       },
       {
         title: "Performance with real history",
-        body: "Review dated portfolio values and cash-flow-adjusted returns alongside selected market benchmarks. Missing market history stays unavailable rather than being estimated.",
+        body: "Review dated portfolio values and cash-flow-adjusted returns with transaction fees included. Missing market history stays unavailable rather than being estimated.",
       },
       {
         title: "Plan and understand",
-        body: "Set investment goals, review allocation and risk, follow confirmed dividend events and use investor tools to explore scenarios.",
+        body: "Set goals, review allocation and risk, compare disclosed ETF top holdings, follow price alerts while the app is open and explore scenarios.",
       },
       {
         title: "Useful free plan, deeper Pro tools",
@@ -114,15 +114,15 @@ const COPY: Record<Lang, FeatureCopy> = {
     features: [
       {
         title: "Едно портфолио за различни активи",
-        body: "Следи акции, ETF-и, крипто, кеш и имоти. Добавяй сделки ръчно или импортирай брокерски извлечения с отчитане на валутата.",
+        body: "Следи акции, ETF-и, крипто, облигации, кеш и имоти. Импортирай гъвкави брокерски CSV файлове с отделни такси и конвертиране по валута. Оценката на облигациите се въвежда ръчно.",
       },
       {
         title: "Доходност с реална история",
-        body: "Разглеждай историческа стойност на портфолиото и доходност, коригирана за парични потоци, спрямо избрани индекси. Липсващите пазарни данни не се заместват с оценки.",
+        body: "Разглеждай историческа стойност и доходност с включени такси по сделките. Липсващите исторически пазарни данни не се заместват с оценки.",
       },
       {
         title: "Планирай и разбирай",
-        body: "Задавай инвестиционни цели, преглеждай разпределение и риск, следи потвърдени дивиденти и използвай инструменти за сценарии.",
+        body: "Задавай цели, преглеждай разпределение и риск, сравнявай отчетените водещи позиции на ETF-и и следи ценови известия, докато приложението е отворено.",
       },
       {
         title: "Полезен безплатен план и повече в Pro",
@@ -171,15 +171,15 @@ const COPY: Record<Lang, FeatureCopy> = {
     features: [
       {
         title: "Ein Portfolio für verschiedene Anlageklassen",
-        body: "Aktien, ETFs, Krypto, Bargeld und Immobilien verfolgen. Trades manuell erfassen oder Brokerdateien mit Währungsumrechnung importieren.",
+        body: "Aktien, ETFs, Krypto, Anleihen, Bargeld und Immobilien verfolgen. Flexible Broker-CSV-Dateien mit separat erfassten, währungsumgerechneten Gebühren importieren. Anleihewerte werden manuell gepflegt.",
       },
       {
         title: "Performance mit echter Historie",
-        body: "Historische Portfoliowerte und cashflowbereinigte Renditen mit Marktbenchmarks vergleichen. Fehlende Daten werden nicht geschätzt.",
+        body: "Historische Portfoliowerte und Renditen einschließlich Transaktionsgebühren vergleichen. Fehlende historische Daten werden nicht geschätzt.",
       },
       {
         title: "Planen und verstehen",
-        body: "Anlageziele setzen, Allokation und Risiko prüfen, bestätigte Dividenden verfolgen und Szenarien untersuchen.",
+        body: "Ziele, Allokation und Risiko prüfen, gemeldete ETF-Top-Positionen vergleichen und Kursalarme nutzen, solange die App geöffnet ist.",
       },
       {
         title: "Kostenlos starten, mehr mit Pro",
@@ -228,15 +228,15 @@ const COPY: Record<Lang, FeatureCopy> = {
     features: [
       {
         title: "Una cartera, distintos activos",
-        body: "Sigue acciones, ETF, criptomonedas, efectivo e inmuebles. Añade operaciones o importa extractos con conversión de divisas.",
+        body: "Sigue acciones, ETF, criptomonedas, bonos, efectivo e inmuebles. Importa CSV flexibles con comisiones separadas y conversión por fecha. La valoración de los bonos se mantiene manualmente.",
       },
       {
         title: "Rentabilidad con historia real",
-        body: "Consulta valores históricos y rentabilidad ajustada por flujos de efectivo frente a índices. Los datos faltantes no se estiman.",
+        body: "Consulta valores históricos y rentabilidad con las comisiones de operación incluidas. Los datos históricos faltantes no se estiman.",
       },
       {
         title: "Planifica y comprende",
-        body: "Define objetivos, revisa asignación y riesgo, sigue dividendos confirmados y explora escenarios.",
+        body: "Define objetivos, revisa asignación y riesgo, compara las principales posiciones publicadas de ETF y gestiona alertas mientras la aplicación está abierta.",
       },
       {
         title: "Empieza gratis y amplía con Pro",
@@ -285,15 +285,15 @@ const COPY: Record<Lang, FeatureCopy> = {
     features: [
       {
         title: "Un portafoglio, più asset",
-        body: "Monitora azioni, ETF, criptovalute, liquidità e immobili. Aggiungi operazioni o importa estratti con conversione valutaria.",
+        body: "Monitora azioni, ETF, criptovalute, obbligazioni, liquidità e immobili. Importa CSV flessibili con commissioni separate e conversione valutaria. La valutazione delle obbligazioni è manuale.",
       },
       {
         title: "Rendimento basato sulla storia reale",
-        body: "Esamina valori storici e rendimenti corretti per i flussi di cassa rispetto agli indici. I dati mancanti non vengono stimati.",
+        body: "Esamina valori storici e rendimenti con le commissioni incluse. I dati storici mancanti non vengono stimati.",
       },
       {
         title: "Pianifica e comprendi",
-        body: "Imposta obiettivi, controlla allocazione e rischio, segui dividendi confermati ed esplora scenari.",
+        body: "Imposta obiettivi, controlla allocazione e rischio, confronta le principali partecipazioni ETF pubblicate e gestisci avvisi mentre l'app è aperta.",
       },
       {
         title: "Inizia gratis, passa a Pro",

@@ -72,6 +72,9 @@ export type Database = {
       };
       assets: {
         Row: {
+          bond_coupon_rate: number | null;
+          bond_face_value: number | null;
+          bond_maturity_date: string | null;
           created_at: string;
           dividend_per_share: number;
           id: string;
@@ -85,6 +88,9 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          bond_coupon_rate?: number | null;
+          bond_face_value?: number | null;
+          bond_maturity_date?: string | null;
           created_at?: string;
           dividend_per_share?: number;
           id?: string;
@@ -98,6 +104,9 @@ export type Database = {
           user_id?: string;
         };
         Update: {
+          bond_coupon_rate?: number | null;
+          bond_face_value?: number | null;
+          bond_maturity_date?: string | null;
           created_at?: string;
           dividend_per_share?: number;
           id?: string;
@@ -448,6 +457,7 @@ export type Database = {
           broker_id: string | null;
           created_at: string;
           date: string;
+          fee: number;
           id: string;
           kind: string;
           price: number;
@@ -459,6 +469,7 @@ export type Database = {
           broker_id?: string | null;
           created_at?: string;
           date?: string;
+          fee?: number;
           id?: string;
           kind: string;
           price: number;
@@ -470,6 +481,7 @@ export type Database = {
           broker_id?: string | null;
           created_at?: string;
           date?: string;
+          fee?: number;
           id?: string;
           kind?: string;
           price?: number;

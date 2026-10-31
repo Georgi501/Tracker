@@ -676,3 +676,44 @@ export const marketOverview = createServerFn({ method: "POST" })
       news,
     };
   });
+
+export const marketEtfHoldings = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        symbols: z
+          .array(z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/))
+          .min(1)
+          .max(10),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { yahooClient } = await import("./prices.server");
+    const yf = yahooClient();
+    const results = await Promise.all(
+      [...new Set(data.symbols.map((symbol) => symbol.toUpperCase()))].map(async (symbol) => {
+        const summary = await yf
+          .quoteSummary(symbol, { modules: ["topHoldings"] })
+          .catch(() => null);
+        const holdings = summary?.topHoldings?.holdings
+          ?.filter(
+            (holding) =>
+              /^[A-Z0-9.^=_-]{1,20}$/i.test(holding.symbol) &&
+              Number.isFinite(holding.holdingPercent) &&
+              holding.holdingPercent > 0,
+          )
+          .map((holding) => ({
+            symbol: holding.symbol.toUpperCase(),
+            name: holding.holdingName,
+            weight:
+              holding.holdingPercent <= 1 ? holding.holdingPercent : holding.holdingPercent / 100,
+          }));
+        return holdings?.length ? { symbol, holdings } : null;
+      }),
+    );
+    return {
+      funds: results.filter((result): result is NonNullable<typeof result> => result !== null),
+      fetchedAt: new Date().toISOString(),
+    };
+  });

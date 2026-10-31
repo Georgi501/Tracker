@@ -33,6 +33,19 @@ it("records only the allowed event and temporary session identifier after consen
   expect(sessionStorage.getItem("folio-analytics-session")).toBe(sessionId);
 });
 
+it("records onboarding funnel events after consent", () => {
+  setAnalyticsConsent(true);
+  trackAnalyticsEvent("csv_import_started");
+
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/public/analytics",
+    expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ sessionId, event: "csv_import_started" }),
+    }),
+  );
+});
+
 it("stops recording events after consent is rejected", () => {
   setAnalyticsConsent(true);
   setAnalyticsConsent(false);

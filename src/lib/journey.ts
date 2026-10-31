@@ -15,12 +15,12 @@ export function assetSummary(txs: Transaction[], assetId: string): AssetSummary 
   const s: AssetSummary = { bought: 0, sold: 0, dividends: 0, buys: 0, sells: 0, firstDate: null };
   for (const t of own) {
     if (t.kind === "buy") {
-      s.bought += t.quantity * t.price;
+      s.bought += t.quantity * t.price + (t.fee ?? 0);
       s.buys++;
     } else if (t.kind === "sell") {
-      s.sold += t.quantity * t.price;
+      s.sold += t.quantity * t.price - (t.fee ?? 0);
       s.sells++;
-    } else s.dividends += t.price * t.quantity;
+    } else s.dividends += t.price * t.quantity - (t.fee ?? 0);
     if (!s.firstDate || t.date < s.firstDate) s.firstDate = t.date;
   }
   return s;
@@ -46,6 +46,14 @@ export function snapshotWeights(holdings: Holding[]): { cls: string; pct: number
   return [...by]
     .map(([cls, v]) => ({ cls, pct: Math.round((v / total) * 1000) / 10 }))
     .sort((a, b) => b.pct - a.pct);
+}
+
+/** Shareable allocation CSV: deliberately excludes symbols, account data and monetary values. */
+export function snapshotCsv(weights: { cls: string; pct: number }[], date: string): string {
+  return [
+    "as_of,asset_class,allocation_percent",
+    ...weights.map(({ cls, pct }) => [date, cls, pct].join(",")),
+  ].join("\n");
 }
 
 /** True when a journal review date is today or past. */

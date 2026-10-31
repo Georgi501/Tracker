@@ -11,7 +11,7 @@ const COPY: Record<
   en: {
     title: "Privacy-friendly analytics",
     description:
-      "If you agree, we record only event names and a temporary session ID to measure sign-ups and Pro usage. We do not send portfolio or email data to analytics providers.",
+      "If you agree, we record only event names and a temporary session ID to measure sign-ups, first entries and Pro usage. We do not send portfolio or email data to analytics providers.",
     reject: "Reject",
     allow: "Allow analytics",
     saveError: "Could not save your choice.",
@@ -19,7 +19,7 @@ const COPY: Record<
   bg: {
     title: "Поверителни измервания",
     description:
-      "По избор записваме само име на събитие и временен идентификатор на сесията, за да измерваме регистрации и използване на Pro. Не изпращаме портфейл, имейл или данни към външна аналитична услуга.",
+      "По избор записваме само име на събитие и временен идентификатор на сесията, за да измерваме регистрацията, първото въвеждане и използването на Pro. Не изпращаме портфейл, имейл или данни към външна аналитична услуга.",
     reject: "Отказвам",
     allow: "Съгласен съм",
     saveError: "Не успяхме да запазим избора ти.",
@@ -27,7 +27,7 @@ const COPY: Record<
   de: {
     title: "Datenschutzfreundliche Analyse",
     description:
-      "Mit deiner Zustimmung speichern wir nur Ereignisnamen und eine temporäre Sitzungs-ID, um Registrierungen und die Pro-Nutzung zu messen. Portfolio- und E-Mail-Daten werden nicht an Analysedienste gesendet.",
+      "Mit deiner Zustimmung speichern wir nur Ereignisnamen und eine temporäre Sitzungs-ID, um Registrierungen, erste Einträge und die Pro-Nutzung zu messen. Portfolio- und E-Mail-Daten werden nicht an Analysedienste gesendet.",
     reject: "Ablehnen",
     allow: "Analyse erlauben",
     saveError: "Deine Auswahl konnte nicht gespeichert werden.",
@@ -35,7 +35,7 @@ const COPY: Record<
   es: {
     title: "Analítica respetuosa con la privacidad",
     description:
-      "Si aceptas, guardamos solo nombres de eventos y un identificador temporal de sesión para medir registros y uso de Pro. No enviamos datos de cartera ni correo a servicios de analítica.",
+      "Si aceptas, guardamos solo nombres de eventos y un identificador temporal de sesión para medir registros, primeras operaciones y uso de Pro. No enviamos datos de cartera ni correo a servicios de analítica.",
     reject: "Rechazar",
     allow: "Permitir analítica",
     saveError: "No se pudo guardar tu elección.",
@@ -43,7 +43,7 @@ const COPY: Record<
   it: {
     title: "Analisi rispettosa della privacy",
     description:
-      "Se accetti, registriamo solo i nomi degli eventi e un ID temporaneo di sessione per misurare le registrazioni e l'uso di Pro. Non inviamo dati del portafoglio o email ai servizi di analisi.",
+      "Se accetti, registriamo solo i nomi degli eventi e un ID temporaneo di sessione per misurare registrazioni, prime operazioni e uso di Pro. Non inviamo dati del portafoglio o email ai servizi di analisi.",
     reject: "Rifiuta",
     allow: "Consenti analisi",
     saveError: "Impossibile salvare la scelta.",

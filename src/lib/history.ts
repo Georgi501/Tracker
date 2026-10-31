@@ -91,7 +91,11 @@ export function buildPortfolioHistory(
             (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity),
           ),
         );
-      if (tx.date === date) flow += tx.quantity * tx.price * (tx.kind === "buy" ? 1 : -1);
+      if (tx.date === date && tx.kind !== "dividend")
+        flow +=
+          tx.kind === "buy"
+            ? tx.quantity * tx.price + (tx.fee ?? 0)
+            : -(tx.quantity * tx.price - (tx.fee ?? 0));
       index++;
     }
     let value = 0;

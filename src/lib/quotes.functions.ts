@@ -34,7 +34,7 @@ export const getQuotes = createServerFn({ method: "POST" })
     for (let i = 0; i < data.items.length; i += 4) {
       await Promise.all(
         data.items.slice(i, i + 4).map(async (item) => {
-          if (item.type === "cash") return;
+          if (item.type === "cash" || item.type === "bond") return;
           const q =
             item.type === "crypto"
               ? cryptoQuotes[item.symbol.toUpperCase()]

@@ -45,6 +45,8 @@ Use Creem Test Mode and test API credentials before switching Cloudflare to the 
 
 Apply `drizzle/migrations/0009_referrals_and_analytics.sql`, `drizzle/migrations/0010_account_management.sql`, `drizzle/migrations/0012_creem_billing.sql`, and `drizzle/migrations/0013_owner_admin_access.sql` to the connected Supabase database before enabling referrals, account deletion, Creem billing, or the owner console. Referral rewards are issued only after a live, signature-verified Creem checkout is matched to its subscription record. Test-mode payments never grant rewards.
 
+Apply `drizzle/migrations/0014_onboarding_analytics_funnel.sql` before enabling the expanded onboarding analytics events, and `drizzle/migrations/0015_transaction_fees_and_bonds.sql` before using transaction fees or bonds. Apply migrations to the intended Supabase project before deploying code that depends on them.
+
 ### Owner console setup
 
 After applying `0013_owner_admin_access.sql`, provision the existing owner account once in the Supabase SQL Editor. Replace the placeholder with the email of the owner account that already exists in `auth.users`; this inserts only that account as a site admin and grants permanent Pro access. The console exposes aggregate account/subscription counts and Pro status by email, but never other users' portfolios or messages.

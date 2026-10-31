@@ -128,3 +128,43 @@ const it: Copy = {
   taxNote: "Importi in USD, FIFO. Verifica con il commercialista prima della dichiarazione.",
 };
 export const extrasCopy: Record<Lang, Copy> = { en, bg, de, es, it };
+
+export const priceAlertCopy: Record<
+  Lang,
+  {
+    title: string;
+    crossed: (symbol: string, target: string) => string;
+    monitorNote: string;
+  }
+> = {
+  en: {
+    title: "Price alert",
+    crossed: (symbol, target) => `${symbol} crossed your target of ${target}.`,
+    monitorNote:
+      "Alerts are checked with live quotes while the app is open; they do not run in the background.",
+  },
+  bg: {
+    title: "Ценово известие",
+    crossed: (symbol, target) => `${symbol} достигна зададената цел ${target}.`,
+    monitorNote:
+      "Известията се проверяват с реални котировки, докато приложението е отворено; не във фонов режим.",
+  },
+  de: {
+    title: "Kursalarm",
+    crossed: (symbol, target) => `${symbol} hat deinen Zielkurs ${target} erreicht.`,
+    monitorNote:
+      "Alarme werden mit Live-Kursen geprüft, solange die App geöffnet ist; nicht im Hintergrund.",
+  },
+  es: {
+    title: "Alerta de precio",
+    crossed: (symbol, target) => `${symbol} alcanzó tu objetivo de ${target}.`,
+    monitorNote:
+      "Las alertas se comprueban con cotizaciones en directo mientras la aplicación está abierta.",
+  },
+  it: {
+    title: "Avviso prezzo",
+    crossed: (symbol, target) => `${symbol} ha raggiunto il tuo obiettivo di ${target}.`,
+    monitorNote:
+      "Gli avvisi vengono controllati con quotazioni live mentre l'app è aperta; non in background.",
+  },
+};

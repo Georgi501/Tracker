@@ -2,6 +2,9 @@ export type AnalyticsEvent =
   | "pricing_view"
   | "signup_completed"
   | "first_holding_added"
+  | "manual_entry_started"
+  | "csv_import_started"
+  | "csv_import_completed"
   | "checkout_started"
   | "checkout_completed"
   | "referral_link_copied";

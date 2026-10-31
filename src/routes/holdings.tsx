@@ -23,7 +23,7 @@ import { Card, Delta } from "@/components/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
 import { pct, usePortfolio } from "@/lib/store";
-import type { Asset, AssetType } from "@/lib/portfolio";
+import { isQuoteStale, type Asset, type AssetType } from "@/lib/portfolio";
 import { marketQuote, searchMarket } from "@/lib/market.functions";
 import { getSparklines } from "@/lib/sparklines.functions";
 import { EmptyIllustration, Sparkline } from "@/components/Motion";
@@ -50,7 +50,15 @@ export const Route = createFileRoute("/holdings")({
   component: Holdings,
 });
 
-const TYPES: (AssetType | "all")[] = ["all", "stock", "etf", "crypto", "cash", "realEstate"];
+const TYPES: (AssetType | "all")[] = [
+  "all",
+  "stock",
+  "etf",
+  "crypto",
+  "bond",
+  "cash",
+  "realEstate",
+];
 
 type SortKey = "name" | "qty" | "price" | "change" | "avgCost" | "value" | "pnl" | "pnlPct";
 type HoldingRow = ReturnType<typeof usePortfolio>["holdings"][number];
@@ -362,19 +370,38 @@ function Holdings() {
       toast.error(bg ? "Невалидни стойности" : "Invalid values");
       return;
     }
-    const patch = {
-      quantity,
-      date: editing.date,
-      ...(editing.editPrice ? { price } : {}),
-    };
-    const { error } = await supabase.from("transactions").update(patch).eq("id", editing.id);
-    if (error) {
-      toast.error(error.message);
+    const transaction = p.transactions.find((item) => item.id === editing.id);
+    if (!transaction) {
+      toast.error(bg ? "Сделката не е намерена" : "Transaction not found");
       return;
     }
-    setEditing(null);
-    await p.reload();
-    toast.success(bg ? "Лотът е обновен" : "Lot updated");
+    try {
+      await p.updateTransaction({
+        ...transaction,
+        quantity,
+        date: editing.date,
+        ...(editing.editPrice ? { price } : {}),
+      });
+      setEditing(null);
+      toast.success(bg ? "Лотът е обновен" : "Lot updated", {
+        duration: 10_000,
+        action: {
+          label: bg ? "Отмени" : "Undo",
+          onClick: () => {
+            void p
+              .updateTransaction(transaction)
+              .then(() =>
+                toast.success(bg ? "Предишният лот е възстановен" : "Previous lot restored"),
+              )
+              .catch((error: unknown) =>
+                toast.error(error instanceof Error ? error.message : "Error"),
+              );
+          },
+        },
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error");
+    }
   };
   const lotsPanel = (assetId: string) => {
     const bg = p.lang === "bg";
@@ -806,6 +833,7 @@ function Holdings() {
                               <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
                             ) : sparks.isLoading &&
                               h.asset.type !== "cash" &&
+                              h.asset.type !== "bond" &&
                               h.asset.type !== "realEstate" ? (
                               <Skeleton className="h-5 w-20" />
                             ) : null}
@@ -966,7 +994,7 @@ function MarketRow({
 function StaleBadge({ at, price, bg }: { at?: string | undefined; price: number; bg: boolean }) {
   const timestamp = at ? Date.parse(at) : Number.NaN;
   const missing = !(price > 0) || !Number.isFinite(timestamp);
-  const old = !missing && Date.now() - timestamp > 4 * 86400000;
+  const old = !missing && isQuoteStale(at);
   if (!missing && !old) return null;
   return (
     <span

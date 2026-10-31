@@ -21,7 +21,7 @@ export interface TaxYear {
 /** FIFO realized gains per sale, plus dividends received, grouped by calendar year (USD). */
 export function fifoTaxReport(txs: Transaction[]): TaxYear[] {
   const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
-  const lots = new Map<string, { qty: number; price: number }[]>();
+  const lots = new Map<string, { qty: number; costPerUnit: number }[]>();
   const years = new Map<number, TaxYear>();
   const yearOf = (d: string) => {
     const y = Number(d.slice(0, 4));
@@ -34,13 +34,13 @@ export function fifoTaxReport(txs: Transaction[]): TaxYear[] {
   };
   for (const t of sorted) {
     if (t.kind === "dividend") {
-      yearOf(t.date).dividends += t.quantity * t.price;
+      yearOf(t.date).dividends += t.quantity * t.price - (t.fee ?? 0);
       continue;
     }
     const queue = lots.get(t.assetId) ?? [];
     lots.set(t.assetId, queue);
     if (t.kind === "buy") {
-      queue.push({ qty: t.quantity, price: t.price });
+      queue.push({ qty: t.quantity, costPerUnit: t.price + (t.fee ?? 0) / t.quantity });
       continue;
     }
     let left = t.quantity;
@@ -49,14 +49,14 @@ export function fifoTaxReport(txs: Transaction[]): TaxYear[] {
     while (left > 1e-12 && queue.length) {
       const lot = queue[0]!;
       const take = Math.min(lot.qty, left);
-      cost += take * lot.price;
+      cost += take * lot.costPerUnit;
       matched += take;
       lot.qty -= take;
       left -= take;
       if (lot.qty <= 1e-12) queue.shift();
     }
     if (matched <= 0) continue;
-    const proceeds = matched * t.price;
+    const proceeds = matched * t.price - (t.fee ?? 0) * (matched / t.quantity);
     const y = yearOf(t.date);
     y.sales.push({
       assetId: t.assetId,
@@ -139,11 +139,23 @@ export function exportCsv(assets: Asset[], txs: Transaction[]): string {
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((t) => {
       const a = by.get(t.assetId);
-      return [t.date, t.kind, a?.symbol ?? "", a?.name ?? "", a?.type ?? "", t.quantity, t.price]
+      return [
+        t.date,
+        t.kind,
+        a?.symbol ?? "",
+        a?.name ?? "",
+        a?.type ?? "",
+        t.quantity,
+        t.price,
+        t.fee ?? 0,
+      ]
         .map((v) => esc(String(v)))
         .join(",");
     });
-  return ["date,type,symbol,name,asset_type,quantity,price_usd", ...rows].join("\n");
+  return [
+    "date,type,symbol,name,asset_type,quantity,price,fee,currency",
+    ...rows.map((row) => `${row},USD`),
+  ].join("\n");
 }
 
 export function classValues(holdings: Holding[]): Record<string, number> {

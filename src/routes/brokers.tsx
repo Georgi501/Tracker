@@ -12,12 +12,16 @@ import {
   detectFeeColumns,
   parseBrokerCsv,
   detectBrokerFormat,
-  parseCsvRows,
+  reconciliationTotals,
+  rejectedCsvRows,
   splitDuplicates,
   type BrokerFormat,
+  type CsvRejection,
   type ImportedTx,
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
+import { trackAnalyticsEvent } from "@/lib/analytics";
+import { notifyImportWithUndo } from "@/lib/import-undo";
 
 export const Route = createFileRoute("/brokers")({
   head: () => ({
@@ -45,10 +49,16 @@ type StagedImport = {
   fresh: ImportedTx[];
   duplicates: ImportedTx[];
   ignoredRows: number;
+  rejectedRows: CsvRejection[];
   feeColumns: string[];
 };
 
-type ImportResult = { imported: number; duplicates: number; ignoredRows: number };
+type ImportResult = {
+  imported: number;
+  duplicates: number;
+  ignoredRows: number;
+  totals: ReturnType<typeof reconciliationTotals>;
+};
 
 function Brokers() {
   const p = usePortfolio();
@@ -90,24 +100,30 @@ function Brokers() {
   };
   const upload = async (brokerId: string, fmt: string, file: File) => {
     setImportResult(null);
+    trackAnalyticsEvent("csv_import_started");
     try {
       const text = await file.text();
       const detected = detectBrokerFormat(text);
       if (!detected) throw new Error("CSV format not recognized");
       const rows = parseBrokerCsv(detected, text);
+      const rejectedRows = rejectedCsvRows(detected, text);
       const sym = new Map(p.assets.map((a) => [a.id, a.symbol]));
       const existing = p.transactions.map((t) => ({
         symbol: sym.get(t.assetId) ?? "",
         kind: t.kind,
         date: t.date,
         quantity: t.quantity,
+        price: t.price,
+        fee: t.fee ?? 0,
       }));
+      const normalized = await p.normalizeImportRows(rows);
       setPreview({
         brokerId,
         format: detected,
-        ignoredRows: Math.max(0, parseCsvRows(text).length - rows.length),
+        ignoredRows: rejectedRows.length,
+        rejectedRows,
         feeColumns: detectFeeColumns(detected, text),
-        ...splitDuplicates(rows, existing),
+        ...splitDuplicates(rows, existing, normalized),
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error");
@@ -117,13 +133,38 @@ function Brokers() {
     if (!preview) return;
     setBusy(true);
     try {
-      const imported = await p.importTransactions(preview.brokerId, preview.fresh);
+      const currentExisting = p.transactions.map((transaction) => ({
+        symbol: p.assets.find((asset) => asset.id === transaction.assetId)?.symbol ?? "",
+        kind: transaction.kind,
+        date: transaction.date,
+        quantity: transaction.quantity,
+        price: transaction.price,
+        fee: transaction.fee ?? 0,
+      }));
+      const normalized = await p.normalizeImportRows(preview.fresh);
+      const split = splitDuplicates(preview.fresh, currentExisting, normalized);
+      if (!split.fresh.length) {
+        setPreview(null);
+        toast.info(
+          p.lang === "bg" ? "Всички сделки вече са налични." : "All trades already exist.",
+        );
+        return;
+      }
+      const imported = await p.importTransactions(preview.brokerId, split.fresh);
+      trackAnalyticsEvent("csv_import_completed");
       setImportResult({
-        imported,
-        duplicates: preview.duplicates.length,
+        imported: imported.count,
+        duplicates: preview.duplicates.length + split.duplicates.length,
         ignoredRows: preview.ignoredRows,
+        totals: reconciliationTotals(split.fresh),
       });
-      toast.success(`${imported} ${p.t("imported")}`);
+      notifyImportWithUndo(
+        `${imported.count} ${p.t("imported")}`,
+        imported.transactionIds,
+        imported.createdAssetIds,
+        p.lang,
+        p.undoImport,
+      );
       setPreview(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error");
@@ -252,7 +293,7 @@ function ImportPreview({
   preview: StagedImport;
   onEdit: (
     index: number,
-    field: "symbol" | "date" | "quantity" | "price" | "currency",
+    field: "symbol" | "date" | "quantity" | "price" | "fee" | "currency",
     value: string | number,
   ) => void;
   onCancel: () => void;
@@ -263,6 +304,7 @@ function ImportPreview({
   const currencies = [
     ...new Set([...preview.fresh, ...preview.duplicates].map((r) => r.currency ?? "USD")),
   ].join(", ");
+  const totals = reconciliationTotals(preview.fresh);
   const valid = preview.fresh.every(
     (row) =>
       /^[A-Z0-9.^:=_-]{1,20}$/i.test(row.symbol) &&
@@ -271,6 +313,8 @@ function ImportPreview({
       row.quantity > 0 &&
       Number.isFinite(row.price) &&
       row.price > 0 &&
+      Number.isFinite(row.fee ?? 0) &&
+      (row.fee ?? 0) >= 0 &&
       ["USD", "EUR", "BGN", "GBP", "GBX"].includes(row.currency ?? "USD"),
   );
   return (
@@ -291,6 +335,7 @@ function ImportPreview({
           {c.currencies}: {currencies} · {c.fx}
         </p>
       )}
+      <ReconciliationTable lang={lang} totals={totals} />
       <p className="rounded-xl border border-border bg-background/70 p-3 text-xs leading-relaxed text-muted-foreground">
         {c.fees(preview.feeColumns)}
       </p>
@@ -299,12 +344,44 @@ function ImportPreview({
           {c.duplicates(preview.duplicates.length)}
         </p>
       )}
-      <p className="text-xs text-muted-foreground">{c.excluded(preview.ignoredRows)}</p>
+      {preview.ignoredRows > 0 && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+          <p className="text-sm font-semibold">{c.rejectedTitle(preview.rejectedRows.length)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{c.rejectedHelp}</p>
+          <div className="mt-2 max-h-40 overflow-auto rounded-lg border border-border">
+            <table className="w-full min-w-[540px] text-left text-xs">
+              <thead className="sticky top-0 bg-secondary text-muted-foreground">
+                <tr>
+                  <th className="px-2 py-1.5">{c.row}</th>
+                  <th className="px-2 py-1.5">{c.rawRow}</th>
+                  <th className="px-2 py-1.5">{c.reason}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {preview.rejectedRows.slice(0, 50).map((rejected) => (
+                  <tr key={rejected.row}>
+                    <td className="px-2 py-1.5 tabular-nums">{rejected.row}</td>
+                    <td className="max-w-72 truncate px-2 py-1.5 font-mono" title={rejected.raw}>
+                      {rejected.raw}
+                    </td>
+                    <td className="px-2 py-1.5">{c.rejectionReasons[rejected.reason]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {preview.rejectedRows.length > 50 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {c.moreRejected(preview.rejectedRows.length - 50)}
+            </p>
+          )}
+        </div>
+      )}
       <div className="max-h-80 overflow-auto rounded-xl border border-border">
-        <table className="w-full min-w-[680px] text-left text-xs">
+        <table className="w-full min-w-[760px] text-left text-xs">
           <thead className="sticky top-0 bg-secondary text-muted-foreground">
             <tr>
-              {[c.date, c.kind, c.symbol, c.quantity, c.price, c.currency].map((label) => (
+              {[c.date, c.kind, c.symbol, c.quantity, c.price, c.fee, c.currency].map((label) => (
                 <th key={label} className="px-2 py-2 font-semibold">
                   {label}
                 </th>
@@ -357,6 +434,22 @@ function ImportPreview({
                     className={`${input} w-28`}
                     onChange={(event) => onEdit(index, "price", Number(event.target.value))}
                   />
+                </td>
+                <td className="px-2 py-1.5">
+                  <div className="flex items-center gap-1">
+                    <input
+                      aria-label={c.fee}
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={row.fee ?? 0}
+                      className={`${input} w-24`}
+                      onChange={(event) => onEdit(index, "fee", Number(event.target.value))}
+                    />
+                    <span className="text-muted-foreground">
+                      {row.feeCurrency ?? row.currency ?? "USD"}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-2 py-1.5">
                   <select
@@ -422,6 +515,7 @@ function ImportResultCard({
                 <dd className="mt-0.5 font-semibold tabular-nums">{result.ignoredRows}</dd>
               </div>
             </dl>
+            <ReconciliationTable lang={lang} totals={result.totals} />
             {result.ignoredRows > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 {c.reviewIgnored}
@@ -444,6 +538,125 @@ function ImportResultCard({
           </button>
         </div>
       </Card>
+    </div>
+  );
+}
+
+const RECONCILIATION_COPY: Record<
+  Lang,
+  {
+    title: string;
+    currency: string;
+    buys: string;
+    sells: string;
+    dividends: string;
+    fees: string;
+    note: string;
+  }
+> = {
+  en: {
+    title: "Import reconciliation",
+    currency: "Currency",
+    buys: "Purchases",
+    sells: "Sales",
+    dividends: "Dividends",
+    fees: "Fees",
+    note: "Gross transaction totals and imported fees are shown separately in their original currencies; ignored rows are excluded.",
+  },
+  bg: {
+    title: "Сверка на импорта",
+    currency: "Валута",
+    buys: "Покупки",
+    sells: "Продажби",
+    dividends: "Дивиденти",
+    fees: "Такси",
+    note: "Брутните суми по сделки и импортираните такси се показват отделно в оригиналните им валути; пропуснатите редове са изключени.",
+  },
+  de: {
+    title: "Importabgleich",
+    currency: "Währung",
+    buys: "Käufe",
+    sells: "Verkäufe",
+    dividends: "Dividenden",
+    fees: "Gebühren",
+    note: "Bruttosummen und importierte Gebühren werden getrennt in ihren Originalwährungen angezeigt; ignorierte Zeilen sind ausgeschlossen.",
+  },
+  es: {
+    title: "Conciliación de importación",
+    currency: "Moneda",
+    buys: "Compras",
+    sells: "Ventas",
+    dividends: "Dividendos",
+    fees: "Comisiones",
+    note: "Los totales brutos y las comisiones importadas se muestran por separado en sus monedas originales; se excluyen las filas omitidas.",
+  },
+  it: {
+    title: "Riconciliazione importazione",
+    currency: "Valuta",
+    buys: "Acquisti",
+    sells: "Vendite",
+    dividends: "Dividendi",
+    fees: "Commissioni",
+    note: "I totali lordi e le commissioni importate sono mostrati separatamente nelle valute originali; le righe ignorate sono escluse.",
+  },
+};
+
+function ReconciliationTable({
+  lang,
+  totals,
+}: {
+  lang: Lang;
+  totals: ReturnType<typeof reconciliationTotals>;
+}) {
+  const copy = RECONCILIATION_COPY[lang];
+  if (!totals.length) return null;
+  const amount = (value: number, currency: string) =>
+    `${new Intl.NumberFormat(lang, { maximumFractionDigits: 2 }).format(value)} ${currency}`;
+  return (
+    <div className="mt-3">
+      <h3 className="text-sm font-semibold">{copy.title}</h3>
+      <div className="mt-2 overflow-x-auto rounded-xl border border-border">
+        <table className="w-full min-w-[560px] text-right text-xs">
+          <thead className="bg-secondary text-muted-foreground">
+            <tr>
+              {[copy.currency, copy.buys, copy.sells, copy.dividends, copy.fees].map(
+                (label, index) => (
+                  <th
+                    key={label}
+                    className={`px-3 py-2 font-semibold ${index === 0 ? "text-left" : ""}`}
+                  >
+                    {label}
+                  </th>
+                ),
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {totals.map((row) => (
+              <tr key={row.currency} className="border-t border-border">
+                <th className="px-3 py-2 text-left font-semibold">{row.currency}</th>
+                <td className="px-3 py-2 tabular-nums">
+                  {amount(row.buys, row.currency)}{" "}
+                  <span className="text-muted-foreground">({row.buyCount})</span>
+                </td>
+                <td className="px-3 py-2 tabular-nums">
+                  {amount(row.sells, row.currency)}{" "}
+                  <span className="text-muted-foreground">({row.sellCount})</span>
+                </td>
+                <td className="px-3 py-2 tabular-nums">
+                  {amount(row.dividends, row.currency)}{" "}
+                  <span className="text-muted-foreground">({row.dividendCount})</span>
+                </td>
+                <td className="px-3 py-2 tabular-nums">
+                  {amount(row.fees, row.currency)}{" "}
+                  <span className="text-muted-foreground">({row.feeCount})</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{copy.note}</p>
     </div>
   );
 }
@@ -521,12 +734,19 @@ const IMPORT_COPY: Record<
     fx: string;
     fees: (columns: string[]) => string;
     duplicates: (count: number) => string;
-    excluded: (count: number) => string;
+    rejectedTitle: (count: number) => string;
+    rejectedHelp: string;
+    row: string;
+    rawRow: string;
+    reason: string;
+    rejectionReasons: Record<CsvRejection["reason"], string>;
+    moreRejected: (count: number) => string;
     date: string;
     kind: string;
     symbol: string;
     quantity: string;
     price: string;
+    fee: string;
     currency: string;
     cancel: string;
     confirm: (count: number) => string;
@@ -539,15 +759,26 @@ const IMPORT_COPY: Record<
     fx: "converted using the dated provider rate",
     fees: (columns) =>
       `${columns.length ? "Fee columns detected: " + columns.join(", ") + ". " : "No fee columns detected; this does not confirm the broker charged none. "}` +
-      "Fees are not imported separately. If they are not already reflected in the trade price, adjust the unit price before import; separate fee reporting is not supported.",
+      "Detected fees are imported separately in the listed currency. Check the preview: if fee currency is not provided, the transaction currency is used.",
     duplicates: (n) => `${n} duplicate rows will be skipped.`,
-    excluded: (n) =>
-      `${n} CSV lines were not recognized as transactions (headers, metadata or unsupported actions); only the listed rows will be imported.`,
+    rejectedTitle: (n) => `${n} transaction rows will not be imported`,
+    rejectedHelp:
+      "Review these rows. To correct them, cancel this preview, fix the source CSV and upload it again.",
+    row: "CSV row",
+    rawRow: "Original row",
+    reason: "Reason",
+    rejectionReasons: {
+      unsupported_action: "Unsupported transaction type or action",
+      missing_ticker: "Ticker or asset symbol is missing",
+      invalid_transaction: "Missing or invalid date, quantity, price or currency",
+    },
+    moreRejected: (n) => `And ${n} more rows.`,
     date: "Date",
     kind: "Type",
     symbol: "Ticker",
     quantity: "Quantity",
     price: "Unit price",
+    fee: "Fee",
     currency: "Currency",
     cancel: "Cancel",
     confirm: (n) => `Import ${n}`,
@@ -559,15 +790,26 @@ const IMPORT_COPY: Record<
     fx: "конвертират се по курса за датата от доставчика",
     fees: (columns) =>
       `${columns.length ? "Открити колони за такси: " + columns.join(", ") + ". " : "Не са открити колони за такси; това не означава, че брокерът не е начислил такива. "}` +
-      "Таксите не се импортират отделно. Ако не са включени в цената на сделката, коригирай единичната цена преди импорт; отделно отчитане на такси не се поддържа.",
+      "Откритите такси се импортират отделно във валутата от файла. Провери прегледа; ако липсва валута на таксата, се използва валутата на сделката.",
     duplicates: (n) => `${n} дублирани реда ще бъдат пропуснати.`,
-    excluded: (n) =>
-      `${n} CSV реда не са разпознати като сделки (заглавия, метаданни или неподдържани операции); ще се импортират само показаните редове.`,
+    rejectedTitle: (n) => `${n} реда със сделки няма да бъдат импортирани`,
+    rejectedHelp:
+      "Прегледай редовете. За корекция откажи този преглед, редактирай оригиналния CSV и го качи отново.",
+    row: "CSV ред",
+    rawRow: "Оригинален ред",
+    reason: "Причина",
+    rejectionReasons: {
+      unsupported_action: "Неподдържан вид или действие",
+      missing_ticker: "Липсва тикер или символ на актива",
+      invalid_transaction: "Липсваща или невалидна дата, количество, цена или валута",
+    },
+    moreRejected: (n) => `И още ${n} реда.`,
     date: "Дата",
     kind: "Вид",
     symbol: "Тикер",
     quantity: "Количество",
     price: "Единична цена",
+    fee: "Такса",
     currency: "Валута",
     cancel: "Отказ",
     confirm: (n) => `Импортирай ${n}`,
@@ -579,15 +821,26 @@ const IMPORT_COPY: Record<
     fx: "Umrechnung mit dem datierten Anbieter-Kurs",
     fees: (columns) =>
       `${columns.length ? "Erkannte Gebührenfelder: " + columns.join(", ") + ". " : "Keine Gebührenfelder erkannt; das bedeutet nicht, dass der Broker keine Gebühren berechnet hat. "}` +
-      "Gebühren werden nicht separat importiert. Falls sie nicht bereits im Handelspreis enthalten sind, passe den Stückpreis vor dem Import an; eine separate Gebührenausweisung wird nicht unterstützt.",
+      "Erkannte Gebühren werden separat in der angegebenen Währung importiert. Prüfe die Vorschau; fehlt eine Gebührenwährung, wird die Transaktionswährung verwendet.",
     duplicates: (n) => `${n} doppelte Zeilen werden übersprungen.`,
-    excluded: (n) =>
-      `${n} CSV-Zeilen wurden nicht als Transaktionen erkannt (Kopfzeilen, Metadaten oder nicht unterstützte Aktionen); importiert werden nur die angezeigten Zeilen.`,
+    rejectedTitle: (n) => `${n} Transaktionszeilen werden nicht importiert`,
+    rejectedHelp:
+      "Prüfe diese Zeilen. Zum Korrigieren Vorschau abbrechen, CSV bearbeiten und erneut hochladen.",
+    row: "CSV-Zeile",
+    rawRow: "Originalzeile",
+    reason: "Grund",
+    rejectionReasons: {
+      unsupported_action: "Nicht unterstützter Typ oder Vorgang",
+      missing_ticker: "Ticker oder Asset-Symbol fehlt",
+      invalid_transaction: "Datum, Menge, Preis oder Währung fehlt oder ist ungültig",
+    },
+    moreRejected: (n) => `Und ${n} weitere Zeilen.`,
     date: "Datum",
     kind: "Typ",
     symbol: "Ticker",
     quantity: "Menge",
     price: "Stückpreis",
+    fee: "Gebühr",
     currency: "Währung",
     cancel: "Abbrechen",
     confirm: (n) => `${n} importieren`,
@@ -599,15 +852,26 @@ const IMPORT_COPY: Record<
     fx: "convertidas con el tipo del proveedor para cada fecha",
     fees: (columns) =>
       `${columns.length ? "Columnas de comisiones detectadas: " + columns.join(", ") + ". " : "No se detectaron columnas de comisiones; esto no confirma que el bróker no las haya cobrado. "}` +
-      "Las comisiones no se importan por separado. Si aún no están reflejadas en el precio de la operación, ajusta el precio unitario antes de importar; no se muestran como cargo separado.",
+      "Las comisiones detectadas se importan por separado en la moneda indicada. Revisa la vista previa; si falta la moneda, se usa la de la operación.",
     duplicates: (n) => `Se omitirán ${n} filas duplicadas.`,
-    excluded: (n) =>
-      `${n} filas CSV no se reconocieron como operaciones (encabezados, metadatos o acciones no compatibles); solo se importarán las filas mostradas.`,
+    rejectedTitle: (n) => `${n} filas de operaciones no se importarán`,
+    rejectedHelp:
+      "Revisa estas filas. Para corregirlas, cancela la vista previa, edita el CSV original y vuelve a subirlo.",
+    row: "Fila CSV",
+    rawRow: "Fila original",
+    reason: "Motivo",
+    rejectionReasons: {
+      unsupported_action: "Tipo o acción no compatible",
+      missing_ticker: "Falta el ticker o símbolo del activo",
+      invalid_transaction: "Fecha, cantidad, precio o moneda ausente o no válido",
+    },
+    moreRejected: (n) => `Y ${n} filas más.`,
     date: "Fecha",
     kind: "Tipo",
     symbol: "Símbolo",
     quantity: "Cantidad",
     price: "Precio unitario",
+    fee: "Comisión",
     currency: "Moneda",
     cancel: "Cancelar",
     confirm: (n) => `Importar ${n}`,
@@ -619,15 +883,26 @@ const IMPORT_COPY: Record<
     fx: "convertite usando il cambio del fornitore alla data",
     fees: (columns) =>
       `${columns.length ? "Colonne dei costi rilevate: " + columns.join(", ") + ". " : "Nessuna colonna dei costi rilevata; ciò non conferma che il broker non abbia applicato commissioni. "}` +
-      "Commissioni e costi non vengono importati separatamente. Se non sono già inclusi nel prezzo dell'operazione, modifica il prezzo unitario prima dell'importazione; non vengono rendicontati a parte.",
+      "Le commissioni rilevate vengono importate separatamente nella valuta indicata. Controlla l'anteprima; se manca la valuta, viene usata quella dell'operazione.",
     duplicates: (n) => `${n} righe duplicate verranno ignorate.`,
-    excluded: (n) =>
-      `${n} righe CSV non sono state riconosciute come operazioni (intestazioni, metadati o azioni non supportate); verranno importate solo le righe mostrate.`,
+    rejectedTitle: (n) => `${n} righe di operazioni non verranno importate`,
+    rejectedHelp:
+      "Controlla queste righe. Per correggerle, annulla l'anteprima, modifica il CSV originale e caricalo di nuovo.",
+    row: "Riga CSV",
+    rawRow: "Riga originale",
+    reason: "Motivo",
+    rejectionReasons: {
+      unsupported_action: "Tipo o azione non supportati",
+      missing_ticker: "Ticker o simbolo dell'asset mancante",
+      invalid_transaction: "Data, quantità, prezzo o valuta mancante o non valido",
+    },
+    moreRejected: (n) => `E altre ${n} righe.`,
     date: "Data",
     kind: "Tipo",
     symbol: "Ticker",
     quantity: "Quantità",
     price: "Prezzo unitario",
+    fee: "Commissione",
     currency: "Valuta",
     cancel: "Annulla",
     confirm: (n) => `Importa ${n}`,

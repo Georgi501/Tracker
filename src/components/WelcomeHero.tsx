@@ -2,7 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePortfolio } from "@/lib/store";
-import { languageLocale, type Lang } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
+import { isQuoteStale } from "@/lib/portfolio";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 
 type Copy = {
   morning: string;
@@ -26,6 +28,15 @@ type Copy = {
   watchlist: string;
   analytics: string;
   import: string;
+  quoteCoverage: (available: number, total: number) => string;
+  staleQuoteCount: (count: number) => string;
+  quoteIssueSummary: string;
+  quoteUnavailableFor: string;
+  quoteStaleFor: string;
+  quoteGap: string;
+  quoteError: string;
+  quoteUnavailable: string;
+  refreshQuotes: string;
 };
 const COPY: Record<Lang, Copy> = {
   en: {
@@ -52,6 +63,17 @@ const COPY: Record<Lang, Copy> = {
     watchlist: "Watchlist",
     analytics: "Analytics",
     import: "Import",
+    quoteCoverage: (available, total) =>
+      `Quotes available for ${available} of ${total} market holdings.`,
+    staleQuoteCount: (count) =>
+      `${count} quote${count === 1 ? "" : "s"} older than 96 hours; review before acting.`,
+    quoteIssueSummary: "Review affected assets",
+    quoteUnavailableFor: "Quote unavailable",
+    quoteStaleFor: "Quote older than 72 hours",
+    quoteGap: "Missing quotes are marked unavailable; prices are never estimated.",
+    quoteError: "Quotes could not be refreshed. Your last saved transactions are unchanged.",
+    quoteUnavailable: "Some provider quotes are currently unavailable.",
+    refreshQuotes: "Refresh quotes",
   },
   bg: {
     morning: "Добро утро",
@@ -77,6 +99,17 @@ const COPY: Record<Lang, Copy> = {
     watchlist: "Watchlist",
     analytics: "Анализи",
     import: "Импорт",
+    quoteCoverage: (available, total) =>
+      `Има котировки за ${available} от ${total} пазарни позиции.`,
+    staleQuoteCount: (count) =>
+      `${count} ${count === 1 ? "котировка е" : "котировки са"} по-стара${count === 1 ? "" : "и"} от 96 часа; провери ги преди действие.`,
+    quoteIssueSummary: "Провери засегнатите активи",
+    quoteUnavailableFor: "Няма котировка",
+    quoteStaleFor: "Котировка над 72 часа",
+    quoteGap: "Липсващите котировки са отбелязани като недостъпни; цени не се оценяват.",
+    quoteError: "Котировките не се обновиха. Записаните сделки не са променени.",
+    quoteUnavailable: "В момента няма котировки от доставчика за някои позиции.",
+    refreshQuotes: "Обнови котировките",
   },
   de: {
     morning: "Guten Morgen",
@@ -102,6 +135,18 @@ const COPY: Record<Lang, Copy> = {
     watchlist: "Watchlist",
     analytics: "Analysen",
     import: "Import",
+    quoteCoverage: (available, total) =>
+      `Kurse für ${available} von ${total} Marktpositionen verfügbar.`,
+    staleQuoteCount: (count) =>
+      `${count} ${count === 1 ? "Kurs ist" : "Kurse sind"} älter als 96 Stunden; bitte vor einer Aktion prüfen.`,
+    quoteIssueSummary: "Betroffene Werte prüfen",
+    quoteUnavailableFor: "Kurs nicht verfügbar",
+    quoteStaleFor: "Kurs älter als 72 Stunden",
+    quoteGap: "Fehlende Kurse werden als nicht verfügbar angezeigt; Preise werden nicht geschätzt.",
+    quoteError:
+      "Kurse konnten nicht aktualisiert werden. Gespeicherte Transaktionen bleiben unverändert.",
+    quoteUnavailable: "Einige Anbieter-Kurse sind derzeit nicht verfügbar.",
+    refreshQuotes: "Kurse aktualisieren",
   },
   es: {
     morning: "Buenos días",
@@ -128,6 +173,18 @@ const COPY: Record<Lang, Copy> = {
     watchlist: "Watchlist",
     analytics: "Análisis",
     import: "Importar",
+    quoteCoverage: (available, total) =>
+      `Hay cotizaciones para ${available} de ${total} posiciones de mercado.`,
+    staleQuoteCount: (count) =>
+      `${count} cotización${count === 1 ? " tiene" : "es tienen"} más de 96 horas; revísala${count === 1 ? "" : "s"} antes de actuar.`,
+    quoteIssueSummary: "Revisar activos afectados",
+    quoteUnavailableFor: "Cotización no disponible",
+    quoteStaleFor: "Cotización de más de 72 horas",
+    quoteGap: "Las cotizaciones ausentes aparecen como no disponibles; no se estiman precios.",
+    quoteError:
+      "No se pudieron actualizar las cotizaciones. Las operaciones guardadas no cambiaron.",
+    quoteUnavailable: "Algunas cotizaciones del proveedor no están disponibles ahora.",
+    refreshQuotes: "Actualizar cotizaciones",
   },
   it: {
     morning: "Buongiorno",
@@ -154,6 +211,18 @@ const COPY: Record<Lang, Copy> = {
     watchlist: "Watchlist",
     analytics: "Analisi",
     import: "Importa",
+    quoteCoverage: (available, total) =>
+      `Quotazioni disponibili per ${available} di ${total} posizioni di mercato.`,
+    staleQuoteCount: (count) =>
+      `${count} quotazione${count === 1 ? " è" : " sono"} più vecchia${count === 1 ? "" : "e"} di 96 ore; controlla prima di agire.`,
+    quoteIssueSummary: "Controlla gli asset interessati",
+    quoteUnavailableFor: "Quotazione non disponibile",
+    quoteStaleFor: "Quotazione oltre 72 ore",
+    quoteGap: "Le quotazioni mancanti risultano non disponibili; i prezzi non vengono stimati.",
+    quoteError:
+      "Impossibile aggiornare le quotazioni. Le operazioni salvate non sono state modificate.",
+    quoteUnavailable: "Alcune quotazioni del fornitore non sono disponibili.",
+    refreshQuotes: "Aggiorna quotazioni",
   },
 };
 
@@ -232,21 +301,25 @@ export function WelcomeHero() {
         </h1>
         <p className="mt-2 leading-relaxed text-muted-foreground">{c.emptySub}</p>
         <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-          {[
-            { to: "/brokers", icon: Upload, t: c.s1 },
-            { to: "/holdings", icon: PlusCircle, t: c.s2 },
-          ].map((s) => (
-            <Link
-              key={s.to}
-              to={s.to}
-              className="card-interactive press flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-4"
-            >
-              <span className="grid size-9 place-items-center rounded-full bg-foreground/10 text-foreground">
-                <s.icon className="size-4" />
-              </span>
-              <span className="font-medium">{s.t}</span>
-            </Link>
-          ))}
+          <Link
+            to="/brokers"
+            className="card-interactive press flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-background/60 p-4"
+          >
+            <span className="grid size-9 place-items-center rounded-full bg-foreground/10 text-foreground">
+              <Upload className="size-4" />
+            </span>
+            <span className="font-medium">{c.s1}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("folio-open-add-transaction"))}
+            className="card-interactive press flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-background/60 p-4 text-left"
+          >
+            <span className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">
+              <PlusCircle className="size-4" />
+            </span>
+            <span className="font-medium">{c.s2}</span>
+          </button>
         </div>
         <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-border bg-background/60 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -266,19 +339,34 @@ export function WelcomeHero() {
       </section>
     );
 
-  const quotedHoldings = p.holdings.filter((holding) => !!holding.asset.quoteAt);
+  const marketHoldings = p.holdings.filter(
+    (holding) =>
+      holding.asset.type === "stock" ||
+      holding.asset.type === "etf" ||
+      holding.asset.type === "crypto",
+  );
+  const quotedHoldings = marketHoldings.filter(
+    (holding) =>
+      !!holding.asset.quoteAt &&
+      Number.isFinite(Date.parse(holding.asset.quoteAt)) &&
+      Number.isFinite(holding.asset.price),
+  );
   const latestQuote = quotedHoldings
     .map((holding) => holding.asset.quoteAt)
     .filter((at): at is string => !!at)
     .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
-  const quoteDate = latestQuote
-    ? new Intl.DateTimeFormat(languageLocale(p.lang), {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(latestQuote))
-    : null;
-  const quoteSources = [...new Set(quotedHoldings.map(() => "Yahoo Finance"))].join(" & ");
-
+  const staleQuotes = quotedHoldings.filter((holding) =>
+    isQuoteStale(holding.asset.quoteAt),
+  ).length;
+  const quoteIssues = marketHoldings.filter((holding) => {
+    const at = holding.asset.quoteAt;
+    return (
+      !Number.isFinite(holding.asset.price) ||
+      !at ||
+      !Number.isFinite(Date.parse(at)) ||
+      isQuoteStale(at)
+    );
+  });
   return (
     <section className="rise flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
@@ -287,12 +375,55 @@ export function WelcomeHero() {
           {name ? `, ${name}` : ""}
         </h1>
         <p className="text-sm text-muted-foreground">{c.activeSub}</p>
-        {quoteDate && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {p.lang === "bg"
-              ? `Пазарни данни от ${quoteSources} · последна налична котировка: ${quoteDate}. Данните може да са забавени.`
-              : `Market data from ${quoteSources} · latest available quote: ${quoteDate}. Data may be delayed.`}
-          </p>
+        {marketHoldings.length > 0 && (
+          <div className="mt-1 space-y-0.5">
+            {latestQuote && <QuoteFreshness at={latestQuote} lang={p.lang} compact />}
+            <p className="text-[10px] text-muted-foreground">
+              {c.quoteCoverage(quotedHoldings.length, marketHoldings.length)}
+              {quotedHoldings.length < marketHoldings.length && ` ${c.quoteGap}`}
+            </p>
+            {staleQuotes > 0 && (
+              <p
+                role="status"
+                className="text-[10px] font-medium text-amber-700 dark:text-amber-300"
+              >
+                {c.staleQuoteCount(staleQuotes)}
+              </p>
+            )}
+            {quoteIssues.length > 0 && (
+              <details className="text-[10px] text-muted-foreground">
+                <summary className="w-fit cursor-pointer font-semibold text-primary">
+                  {c.quoteIssueSummary}
+                </summary>
+                <ul className="mt-1 space-y-0.5">
+                  {quoteIssues.map((holding) => {
+                    const at = holding.asset.quoteAt;
+                    const stale = isQuoteStale(at);
+                    return (
+                      <li key={holding.asset.id} className="flex flex-wrap gap-x-1">
+                        <span className="font-semibold">{holding.asset.symbol}:</span>
+                        <span>{stale ? c.quoteStaleFor : c.quoteUnavailableFor}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            )}
+            {p.priceNote && (
+              <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
+                <span role={p.priceNote === "error" ? "alert" : "status"}>
+                  {p.priceNote === "error" ? c.quoteError : c.quoteUnavailable}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void p.reload()}
+                  className="font-semibold text-primary hover:underline"
+                >
+                  {c.refreshQuotes}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

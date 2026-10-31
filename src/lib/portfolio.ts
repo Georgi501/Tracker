@@ -1,6 +1,12 @@
-export type AssetType = "stock" | "etf" | "crypto" | "cash" | "realEstate";
+export type AssetType = "stock" | "etf" | "crypto" | "bond" | "cash" | "realEstate";
 export type TxKind = "buy" | "sell" | "dividend";
 export type Currency = "USD" | "EUR";
+export const QUOTE_STALE_AFTER_MS = 4 * 86400000;
+
+export function isQuoteStale(at: string | undefined, now = Date.now()): boolean {
+  const timestamp = at ? Date.parse(at) : Number.NaN;
+  return Number.isFinite(timestamp) && now - timestamp > QUOTE_STALE_AFTER_MS;
+}
 
 export interface Asset {
   id: string;
@@ -16,14 +22,32 @@ export interface Asset {
   quoteCurrency?: string;
   quoteNativePrice?: number; // price in quoteCurrency, as quoted by the provider
   quoteAt?: string;
+  bondCouponRate?: number;
+  bondMaturityDate?: string;
+  bondFaceValue?: number;
+}
+
+export function projectedBondCoupon(
+  asset: Pick<Asset, "bondCouponRate" | "bondMaturityDate" | "bondFaceValue">,
+  quantity: number,
+  asOfDate = new Date(),
+): number | undefined {
+  if (asset.bondCouponRate === undefined || asset.bondFaceValue === undefined) return undefined;
+  const today = `${asOfDate.getFullYear()}-${String(asOfDate.getMonth() + 1).padStart(2, "0")}-${String(
+    asOfDate.getDate(),
+  ).padStart(2, "0")}`;
+  if (asset.bondMaturityDate && asset.bondMaturityDate < today) return undefined;
+  return quantity * asset.bondFaceValue * (asset.bondCouponRate / 100);
 }
 
 export interface Transaction {
   id: string;
   assetId: string;
+  brokerId?: string | null;
   kind: TxKind;
   quantity: number;
   price: number; // USD; NaN means unavailable per unit (for dividend: total amount in USD, quantity=1)
+  fee?: number; // USD
   date: string; // ISO date
 }
 
@@ -67,7 +91,7 @@ export function computeHoldings(assets: Asset[], txs: Transaction[]): Holding[] 
     const h = map.get(t.assetId) ?? { qty: 0, cost: 0 };
     if (t.kind === "buy") {
       h.qty += t.quantity;
-      h.cost += t.quantity * t.price;
+      h.cost += t.quantity * t.price + (t.fee ?? 0);
     } else {
       const sellQty = Math.min(t.quantity, h.qty);
       const avg = h.qty > 0 ? h.cost / h.qty : 0;
@@ -97,7 +121,9 @@ export function computeHoldings(assets: Asset[], txs: Transaction[]): Holding[] 
 }
 
 export function totalDividends(txs: Transaction[]) {
-  return txs.filter((t) => t.kind === "dividend").reduce((s, t) => s + t.quantity * t.price, 0);
+  return txs
+    .filter((t) => t.kind === "dividend")
+    .reduce((s, t) => s + t.quantity * t.price - (t.fee ?? 0), 0);
 }
 
 /** Money-weighted return (annualised IRR) via bisection. Flows: negative = invested. */
@@ -125,7 +151,12 @@ export function portfolioIrr(txs: Transaction[], currentValue: number, now = new
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((t) => ({
       date: new Date(t.date),
-      amount: t.kind === "buy" ? -t.quantity * t.price : t.quantity * t.price,
+      amount:
+        t.kind === "buy"
+          ? -(t.quantity * t.price + (t.fee ?? 0))
+          : t.kind === "sell"
+            ? t.quantity * t.price - (t.fee ?? 0)
+            : t.quantity * t.price - (t.fee ?? 0),
     }));
   flows.push({ date: now, amount: currentValue });
   return irr(flows);

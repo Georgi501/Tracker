@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Star } from "lucide-react";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale } from "@/lib/i18n";
-import { extrasCopy } from "@/lib/extras-i18n";
+import { extrasCopy, priceAlertCopy } from "@/lib/extras-i18n";
 import {
   CHART_RANGES,
   marketDetails,
@@ -187,6 +187,8 @@ export function AssetExtras({ asset, price }: { asset: MarketAsset; price: numbe
     writeAlerts([...alerts, { symbol, direction: dir, target: t }]);
     if (!watching) writeWatchlist([...list, symbol].slice(0, 30));
     setTarget("");
+    if (typeof Notification !== "undefined" && Notification.permission === "default")
+      void Notification.requestPermission();
   };
   const data = d.data;
   const pos =
@@ -325,6 +327,7 @@ export function AssetExtras({ asset, price }: { asset: MarketAsset; price: numbe
               {a.direction === "above" ? c.alertAbove : c.alertBelow} {fmt(a.target)}
             </p>
           ))}
+        <p className="text-xs text-muted-foreground">{priceAlertCopy[p.lang].monitorNote}</p>
       </form>
     </div>
   );

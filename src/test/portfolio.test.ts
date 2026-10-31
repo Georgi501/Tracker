@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeHoldings, FX, type Asset } from "@/lib/portfolio";
+import {
+  computeHoldings,
+  FX,
+  isQuoteStale,
+  projectedBondCoupon,
+  type Asset,
+} from "@/lib/portfolio";
 
 const a: Asset = {
   id: "x",
@@ -29,8 +35,47 @@ describe("portfolio math", () => {
     expect(h.value).toBe(300);
     expect(h.pnl).toBeCloseTo(120);
   });
+  it("adds buy fees to cost basis while selling does not change remaining acquisition cost", () => {
+    const h = computeHoldings(
+      [a],
+      [
+        {
+          id: "buy",
+          assetId: "x",
+          kind: "buy",
+          quantity: 2,
+          price: 10,
+          fee: 4,
+          date: "2024-01-01",
+        },
+        {
+          id: "sell",
+          assetId: "x",
+          kind: "sell",
+          quantity: 1,
+          price: 15,
+          fee: 2,
+          date: "2024-02-01",
+        },
+      ],
+    )[0]!;
+    expect(h.quantity).toBe(1);
+    expect(h.costBasis).toBe(12);
+    expect(h.avgCost).toBe(12);
+  });
   it("supports only EUR and USD (no BGN)", () => {
     expect(Object.keys(FX).sort()).toEqual(["EUR", "USD"]);
+  });
+  it("marks quotes stale only after the weekend-safe freshness window", () => {
+    const now = Date.parse("2026-10-31T12:00:00Z");
+    expect(isQuoteStale("2026-10-27T12:00:00Z", now)).toBe(false);
+    expect(isQuoteStale("2026-10-27T11:59:59Z", now)).toBe(true);
+    expect(isQuoteStale(undefined, now)).toBe(false);
+  });
+  it("does not project annual bond coupons after maturity", () => {
+    const bond = { bondCouponRate: 4, bondFaceValue: 1000, bondMaturityDate: "2025-01-01" };
+    expect(projectedBondCoupon(bond, 2, new Date(2025, 0, 2))).toBeUndefined();
+    expect(projectedBondCoupon(bond, 2, new Date(2025, 0, 1))).toBe(80);
   });
 });
 

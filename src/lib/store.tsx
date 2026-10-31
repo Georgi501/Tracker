@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -24,6 +25,7 @@ import { getQuotes } from "./quotes.functions";
 import { convertImport } from "./history.functions";
 import type { ImportedTx } from "./csv-import";
 import { trackAnalyticsEvent } from "./analytics";
+import { increasesOversellAmount } from "./quality";
 
 export interface Broker {
   id: string;
@@ -45,11 +47,21 @@ interface State {
   assets: Asset[];
   transactions: Transaction[];
   brokers: Broker[];
+  dataError: boolean;
   pricesLive: boolean;
   priceNote: string | null;
   eurPerUsd: number | null;
   addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
-  importTransactions: (brokerId: string, rows: ImportedTx[]) => Promise<number>;
+  updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;
+  updateTransaction: (transaction: Transaction) => Promise<void>;
+  restoreTransaction: (transaction: Transaction) => Promise<void>;
+  deleteTransactions: (ids: string[]) => Promise<number>;
+  importTransactions: (
+    brokerId: string | null,
+    rows: ImportedTx[],
+  ) => Promise<{ count: number; transactionIds: string[]; createdAssetIds: string[] }>;
+  normalizeImportRows: (rows: ImportedTx[]) => Promise<ImportedTx[]>;
+  undoImport: (transactionIds: string[], createdAssetIds: string[]) => Promise<number>;
   reload: () => Promise<void>;
   t: (k: TKey) => string;
   label: (s: string) => string;
@@ -77,6 +89,9 @@ type AssetRow = {
   manual_price: number | null;
   dividend_per_share: number;
   pay_months: number[];
+  bond_coupon_rate: number | null;
+  bond_maturity_date: string | null;
+  bond_face_value: number | null;
 };
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
@@ -88,8 +103,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [assets, setAssets] = useState<Asset[]>([]);
+  const assetsRef = useRef(assets);
+  assetsRef.current = assets;
   const [transactions, setTx] = useState<Transaction[]>([]);
+  const transactionsRef = useRef(transactions);
+  transactionsRef.current = transactions;
   const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [dataError, setDataError] = useState(false);
   const [pricesLive, setPricesLive] = useState(false);
   const [priceNote, setPriceNote] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -152,6 +172,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setBrokers([]);
       setIsPro(false);
       setIsAdmin(false);
+      setDataError(false);
       setPricesLive(false);
       return;
     }
@@ -163,6 +184,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       supabase.rpc("is_pro", { _user_id: user.id }),
       supabase.rpc("is_site_admin"),
     ]);
+    if (a.error || t.error || b.error || p.error || pro.error || admin.error) {
+      console.error(
+        "Unable to reload portfolio data",
+        a.error ?? t.error ?? b.error ?? p.error ?? pro.error ?? admin.error,
+      );
+      setDataError(true);
+      return;
+    }
+    setDataError(false);
     setIsPro(!!pro.data);
     setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
@@ -174,30 +204,51 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
       id: r.id,
       assetId: r.asset_id,
+      brokerId: r.broker_id,
       kind: r.kind as Transaction["kind"],
       quantity: Number(r.quantity),
       price: Number(r.price),
+      fee: Number(r.fee ?? 0),
       date: r.date,
     }));
     const rows = (a.data ?? []) as AssetRow[];
-    const base: Asset[] = rows.map((r) => ({
-      id: r.id,
-      symbol: r.symbol,
-      name: r.name,
-      type: r.type as AssetType,
-      sector: r.sector,
-      region: r.region,
-      price: r.type === "cash" ? 1 : Number.NaN,
-      change24h: r.type === "cash" ? 0 : Number.NaN,
-      dividendPerShare: Number(r.dividend_per_share),
-      payMonths: r.pay_months ?? [],
-    }));
+    const currentById = new Map(assetsRef.current.map((asset) => [asset.id, asset]));
+    const base: Asset[] = rows.map((r) => {
+      const current = currentById.get(r.id);
+      return {
+        id: r.id,
+        symbol: r.symbol,
+        name: r.name,
+        type: r.type as AssetType,
+        sector: r.sector,
+        region: r.region,
+        price:
+          r.type === "cash"
+            ? 1
+            : r.type === "bond"
+              ? Number(r.manual_price ?? Number.NaN)
+              : (current?.price ?? Number.NaN),
+        change24h: r.type === "cash" || r.type === "bond" ? 0 : (current?.change24h ?? Number.NaN),
+        dividendPerShare: Number(r.dividend_per_share),
+        payMonths: r.pay_months ?? [],
+        ...(r.bond_coupon_rate !== null ? { bondCouponRate: Number(r.bond_coupon_rate) } : {}),
+        ...(r.bond_maturity_date ? { bondMaturityDate: r.bond_maturity_date } : {}),
+        ...(r.bond_face_value !== null ? { bondFaceValue: Number(r.bond_face_value) } : {}),
+        ...(current?.quoteCurrency !== undefined ? { quoteCurrency: current.quoteCurrency } : {}),
+        ...(current?.quoteNativePrice !== undefined
+          ? { quoteNativePrice: current.quoteNativePrice }
+          : {}),
+        ...(current?.quoteAt !== undefined ? { quoteAt: current.quoteAt } : {}),
+      };
+    });
     setTx(txs);
     setAssets(base);
     if (!base.length) return;
     try {
+      const quoteAssets = base.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type));
+      if (!quoteAssets.length) return;
       const res = await quoteFn({
-        data: { items: base.map((x) => ({ symbol: x.symbol, type: x.type })) },
+        data: { items: quoteAssets.map((x) => ({ symbol: x.symbol, type: x.type })) },
       });
       setAssets(
         base.map((x) => {
@@ -247,6 +298,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         sector: a.sector,
         region: a.region,
         manual_price: a.type === "crypto" || a.type === "cash" ? null : a.price,
+        bond_coupon_rate: a.bondCouponRate ?? null,
+        bond_maturity_date: a.bondMaturityDate ?? null,
+        bond_face_value: a.bondFaceValue ?? null,
       })
       .select("id")
       .single();
@@ -279,6 +333,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       assets,
       transactions,
       brokers,
+      dataError,
       pricesLive,
       priceNote,
       eurPerUsd,
@@ -300,12 +355,110 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           kind: t.kind,
           quantity: t.quantity,
           price: t.price,
+          fee: t.fee ?? 0,
           date: t.date,
         });
         if (error) throw error;
         if (t.kind === "buy" && transactions.length === 0)
           trackAnalyticsEvent("first_holding_added");
         await reload();
+      },
+      updateBondPrice: async (assetId, priceUsd) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        if (!Number.isFinite(priceUsd) || priceUsd <= 0)
+          throw new Error(lang === "bg" ? "Въведи валидна цена." : "Enter a valid price.");
+        const asset = assetsRef.current.find((item) => item.id === assetId);
+        if (!asset || asset.type !== "bond")
+          throw new Error(lang === "bg" ? "Облигацията не е намерена." : "Bond not found.");
+        const { data, error } = await supabase
+          .from("assets")
+          .update({ manual_price: priceUsd })
+          .eq("id", assetId)
+          .select("id")
+          .maybeSingle();
+        if (error) throw error;
+        if (!data)
+          throw new Error(lang === "bg" ? "Облигацията не е намерена." : "Bond not found.");
+        await reload();
+      },
+      updateTransaction: async (transaction) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        const currentTransactions = transactionsRef.current;
+        const nextTransactions = currentTransactions.map((item) =>
+          item.id === transaction.id ? transaction : item,
+        );
+        if (nextTransactions.every((item) => item.id !== transaction.id))
+          throw new Error(lang === "bg" ? "Сделката не е намерена." : "Transaction not found.");
+        if (increasesOversellAmount(currentTransactions, nextTransactions))
+          throw new Error(
+            lang === "bg"
+              ? "Промяната би довела до продажба на повече налични акции."
+              : "This change would result in selling more shares than are available.",
+          );
+        const { data, error } = await supabase
+          .from("transactions")
+          .update({
+            kind: transaction.kind,
+            quantity: transaction.quantity,
+            price: transaction.price,
+            fee: transaction.fee ?? 0,
+            date: transaction.date,
+          })
+          .eq("id", transaction.id)
+          .select("id")
+          .maybeSingle();
+        if (error) throw error;
+        if (!data)
+          throw new Error(lang === "bg" ? "Сделката не е намерена." : "Transaction not found.");
+        await reload();
+      },
+      restoreTransaction: async (transaction) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        if (
+          increasesOversellAmount(transactionsRef.current, [
+            ...transactionsRef.current,
+            transaction,
+          ])
+        )
+          throw new Error(
+            lang === "bg"
+              ? "Сделката не може да бъде възстановена, защото наличността вече е променена."
+              : "This transaction can no longer be restored because holdings have changed.",
+          );
+        const { error } = await supabase.from("transactions").insert({
+          asset_id: transaction.assetId,
+          ...(transaction.brokerId ? { broker_id: transaction.brokerId } : {}),
+          kind: transaction.kind,
+          quantity: transaction.quantity,
+          price: transaction.price,
+          fee: transaction.fee ?? 0,
+          date: transaction.date,
+        });
+        if (error) throw error;
+        await reload();
+      },
+      deleteTransactions: async (ids) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        if (!ids.length) return 0;
+        const { data, error } = await supabase
+          .from("transactions")
+          .delete()
+          .in("id", ids)
+          .select("id");
+        if (error) throw error;
+        await reload();
+        return data?.length ?? 0;
+      },
+      normalizeImportRows: async (rows) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        return convertFn({
+          data: {
+            rows: rows.map((row) => ({
+              ...row,
+              currency: (row.currency ?? "USD") as "USD" | "EUR" | "BGN" | "GBX" | "GBP",
+            })),
+          },
+        });
       },
       importTransactions: async (brokerId, rows) => {
         if (!user) throw new Error("auth");
@@ -318,6 +471,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           },
         });
         const ids = new Map(assets.map((x) => [x.symbol.toUpperCase(), x.id]));
+        const createdAssetIds: string[] = [];
         for (const r of converted) {
           if (ids.has(r.symbol)) continue;
           const { data, error } = await supabase
@@ -328,34 +482,80 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               type: r.assetType,
               region: r.assetType === "crypto" ? "Global" : "North America",
               sector: r.assetType === "crypto" ? "Crypto" : "Other",
+              ...(r.assetType === "bond"
+                ? {
+                    manual_price: r.bondManualPrice ?? r.price,
+                    bond_coupon_rate: r.bondCouponRate ?? null,
+                    bond_maturity_date: r.bondMaturityDate ?? null,
+                    bond_face_value: r.bondFaceValue ?? null,
+                  }
+                : {}),
             })
             .select("id")
             .single();
           if (error) throw error;
           ids.set(r.symbol, data.id);
+          createdAssetIds.push(data.id);
         }
-        const { error } = await supabase.from("transactions").insert(
-          converted.map((r) => {
-            const assetId = ids.get(r.symbol);
-            if (!assetId) throw new Error("Asset unavailable");
-            return {
-              asset_id: assetId,
-              broker_id: brokerId,
-              kind: r.kind,
-              quantity: r.quantity,
-              price: r.price,
-              date: r.date,
-            };
-          }),
-        );
+        const { data, error } = await supabase
+          .from("transactions")
+          .insert(
+            converted.map((r) => {
+              const assetId = ids.get(r.symbol);
+              if (!assetId) throw new Error("Asset unavailable");
+              return {
+                asset_id: assetId,
+                ...(brokerId ? { broker_id: brokerId } : {}),
+                kind: r.kind,
+                quantity: r.quantity,
+                price: r.price,
+                fee: r.fee ?? 0,
+                date: r.date,
+              };
+            }),
+          )
+          .select("id");
         if (error) throw error;
+        if (!data || data.length !== converted.length)
+          throw new Error("Not all imported transactions could be confirmed.");
         if (
           transactions.length === 0 &&
           converted.some((transaction) => transaction.kind === "buy")
         )
           trackAnalyticsEvent("first_holding_added");
         await reload();
-        return rows.length;
+        return {
+          count: data?.length ?? 0,
+          transactionIds: (data ?? []).map((row) => row.id),
+          createdAssetIds,
+        };
+      },
+      undoImport: async (transactionIds, createdAssetIds) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        const { data: removed, error: removeError } = await supabase
+          .from("transactions")
+          .delete()
+          .in("id", transactionIds)
+          .select("id");
+        if (removeError) throw removeError;
+        if (createdAssetIds.length) {
+          const { data: referenced, error: referenceError } = await supabase
+            .from("transactions")
+            .select("asset_id")
+            .in("asset_id", createdAssetIds);
+          if (referenceError) throw referenceError;
+          const used = new Set((referenced ?? []).map((row) => row.asset_id));
+          const unusedIds = createdAssetIds.filter((id) => !used.has(id));
+          if (unusedIds.length) {
+            const { error: assetError } = await supabase
+              .from("assets")
+              .delete()
+              .in("id", unusedIds);
+            if (assetError) throw assetError;
+          }
+        }
+        await reload();
+        return removed?.length ?? 0;
       },
       t: (k) => dictionaries[lang][k],
       label: (s) => translateLabel(s, lang),
@@ -404,6 +604,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     assets,
     transactions,
     brokers,
+    dataError,
     pricesLive,
     priceNote,
     reload,

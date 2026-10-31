@@ -43,3 +43,22 @@ export function qualityIssues(
       out.push({ kind: "noQuote", symbol: a.symbol });
   return out;
 }
+
+export function increasesOversellAmount(before: Transaction[], after: Transaction[]): boolean {
+  const totalShortfall = (transactions: Transaction[]) => {
+    const quantities = new Map<string, number>();
+    let shortfall = 0;
+    for (const transaction of [...transactions].sort((a, b) => a.date.localeCompare(b.date))) {
+      if (transaction.kind === "dividend") continue;
+      const current = quantities.get(transaction.assetId) ?? 0;
+      if (transaction.kind === "sell") {
+        shortfall += Math.max(0, transaction.quantity - Math.max(0, current));
+        quantities.set(transaction.assetId, current - transaction.quantity);
+      } else {
+        quantities.set(transaction.assetId, current + transaction.quantity);
+      }
+    }
+    return shortfall;
+  };
+  return totalShortfall(after) > totalShortfall(before) + 1e-9;
+}

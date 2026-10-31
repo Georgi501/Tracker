@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { alertTriggered, parseAlerts, parseWatchlist } from "@/lib/watchlist";
+import {
+  alertTriggered,
+  alertCrossed,
+  parseAlerts,
+  parseRecurringReminders,
+  parseWatchlist,
+} from "@/lib/watchlist";
 import { fifoTaxReport, taxReportCsv } from "@/lib/tools";
 
 describe("price alerts", () => {
@@ -17,6 +23,12 @@ describe("price alerts", () => {
   it("never triggers without a real price", () => {
     expect(alertTriggered({ symbol: "A", direction: "below", target: 125 }, null)).toBe(false);
   });
+  it("detects an actual crossing and not just an already-triggered quote", () => {
+    const alert = { symbol: "A", direction: "above" as const, target: 125 };
+    expect(alertCrossed(alert, 124, 125)).toBe(true);
+    expect(alertCrossed(alert, 125, 126)).toBe(false);
+    expect(alertCrossed(alert, null, 126)).toBe(false);
+  });
   it("drops invalid stored alerts", () => {
     expect(
       parseAlerts(
@@ -29,6 +41,36 @@ describe("price alerts", () => {
   });
   it("dedupes watchlist symbols", () => {
     expect(parseWatchlist('["META","META","bad sym"]')).toEqual(["META"]);
+  });
+  it("validates recurring reminder preferences without portfolio data", () => {
+    expect(
+      parseRecurringReminders(
+        JSON.stringify([
+          {
+            id: "monthly-1",
+            symbol: "VWCE.DE",
+            amount: 300,
+            currency: "EUR",
+            dayOfMonth: 15,
+          },
+          {
+            id: "invalid",
+            symbol: "bad symbol",
+            amount: 300,
+            currency: "EUR",
+            dayOfMonth: 31,
+          },
+        ]),
+      ),
+    ).toEqual([
+      {
+        id: "monthly-1",
+        symbol: "VWCE.DE",
+        amount: 300,
+        currency: "EUR",
+        dayOfMonth: 15,
+      },
+    ]);
   });
 });
 

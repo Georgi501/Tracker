@@ -4,6 +4,8 @@ import {
   parseBrokerCsv,
   detectBrokerFormat,
   detectFeeColumns,
+  reconciliationTotals,
+  rejectedCsvRows,
 } from "@/lib/csv-import";
 
 describe("CSV import", () => {
@@ -27,10 +29,99 @@ describe("CSV import", () => {
       "2024-02-01,sell,AAPL,1,110,USD\n";
     expect(parseBrokerCsv("generic", csv).map((row) => row.symbol)).toEqual(["AAPL", "AAPL"]);
   });
-  it("reports fee columns without implying that fee values were imported", () => {
+  it("reports rejected transaction rows with a row number and actionable reason", () => {
+    const csv =
+      "date,type,symbol,quantity,price,currency\n" +
+      "2024-01-15,buy,AAPL,2,100,USD\n" +
+      "not-a-date,buy,MSFT,1,200,USD\n" +
+      "2024-02-01,interest,AAPL,1,1,USD\n" +
+      "2024-02-02,buy,,1,100,USD\n";
+
+    expect(rejectedCsvRows("generic", csv)).toEqual([
+      {
+        row: 3,
+        raw: '"not-a-date","buy","MSFT","1","200","USD"',
+        reason: "invalid_transaction",
+      },
+      {
+        row: 4,
+        raw: '"2024-02-01","interest","AAPL","1","1","USD"',
+        reason: "unsupported_action",
+      },
+      {
+        row: 5,
+        raw: '"2024-02-02","buy","","1","100","USD"',
+        reason: "missing_ticker",
+      },
+    ]);
+  });
+  it("does not report IBKR headers or metadata as rejected transactions", () => {
+    const csv =
+      "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price\n" +
+      'Trades,Data,Order,Stocks,USD,MSFT,"2024-04-02, 10:00:00",-4,420\n' +
+      "Trades,Data,Other,Stocks,USD,MSFT,2024-04-03,1,420\n";
+
+    expect(rejectedCsvRows("ibkr", csv)).toMatchObject([{ row: 3, reason: "unsupported_action" }]);
+  });
+  it("detects available fee columns", () => {
     const csv = "date,type,symbol,quantity,price,currency,commission\n";
     expect(detectFeeColumns("generic", csv)).toEqual(["commission"]);
     expect(detectFeeColumns("generic", "date,type,symbol,price\n")).toEqual([]);
+  });
+  it("maps common broker column names and preserves a separate fee currency", () => {
+    const csv =
+      "Transaction Date,Action,Ticker,Quantity,Unit Price,Price Currency,Commission,Commission Currency\n" +
+      "2024-03-01,BUY,MSFT,2,100,USD,3,EUR\n";
+    expect(detectBrokerFormat(csv)).toBe("generic");
+    expect(parseBrokerCsv("generic", csv)[0]).toMatchObject({
+      symbol: "MSFT",
+      kind: "buy",
+      quantity: 2,
+      price: 100,
+      fee: 3,
+      currency: "USD",
+      feeCurrency: "EUR",
+    });
+  });
+  it("reports gross transaction totals and fees separately by their own currencies", () => {
+    const totals = reconciliationTotals([
+      {
+        symbol: "AAPL",
+        name: "Apple",
+        assetType: "stock",
+        kind: "buy",
+        quantity: 2,
+        price: 100,
+        fee: 3,
+        currency: "USD",
+        feeCurrency: "EUR",
+        date: "2024-01-01",
+      },
+    ]);
+    expect(totals).toEqual([
+      {
+        currency: "EUR",
+        buys: 0,
+        sells: 0,
+        dividends: 0,
+        fees: 3,
+        buyCount: 0,
+        sellCount: 0,
+        dividendCount: 0,
+        feeCount: 1,
+      },
+      {
+        currency: "USD",
+        buys: 200,
+        sells: 0,
+        dividends: 0,
+        fees: 0,
+        buyCount: 1,
+        sellCount: 0,
+        dividendCount: 0,
+        feeCount: 0,
+      },
+    ]);
   });
   it("parses Trading 212 buys and dividends", () => {
     const csv =

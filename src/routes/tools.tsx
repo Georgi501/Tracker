@@ -1,4 +1,5 @@
 import { SnapshotCard } from "@/components/SnapshotCard";
+import { RecurringReminders } from "@/components/RecurringReminders";
 import { PortfolioReview, DataQuality, proToolsCopy } from "@/components/ProTools";
 import { CurveSilhouette, FireCalculator, ProGate } from "@/components/ProFeatures";
 import { DcfCalculator, dcfCopy } from "@/components/DcfCalculator";
@@ -7,7 +8,7 @@ import { proCopy } from "@/lib/pro-i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Card, Delta } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,17 @@ import { marketQuote } from "@/lib/market.functions";
 import { ConcentrationCard, GoalsCard } from "@/components/Insights";
 import { insightsCopy } from "@/lib/insights-i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
+import { parsePortfolioBackup } from "@/lib/backup";
+import {
+  detectBrokerFormat,
+  parseBrokerCsv,
+  rejectedCsvRows,
+  splitDuplicates,
+  type ImportedTx,
+} from "@/lib/csv-import";
+import { type Lang } from "@/lib/i18n";
+import { toast } from "sonner";
+import { notifyImportWithUndo } from "@/lib/import-undo";
 const CRYPTO_SYMBOLS = MARKET_ASSETS.filter((a) => a.type === "crypto").map((a) => a.symbol);
 
 export const Route = createFileRoute("/tools")({
@@ -60,7 +72,7 @@ export const Route = createFileRoute("/tools")({
   component: Tools,
 });
 
-const CLASSES = ["stock", "etf", "crypto", "cash", "realEstate"] as const;
+const CLASSES = ["stock", "etf", "crypto", "bond", "cash", "realEstate"] as const;
 
 function download(name: string, body: string, type: string) {
   const url = URL.createObjectURL(new Blob([body], { type }));
@@ -68,12 +80,190 @@ function download(name: string, body: string, type: string) {
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
+
+const BACKUP_COPY: Record<
+  Lang,
+  {
+    description: string;
+    restore: string;
+    restoreNote: string;
+    csvFormat: string;
+    csvRejected: (count: number) => string;
+    empty: string;
+    invalid: string;
+    allDuplicates: string;
+    preview: (fresh: number, duplicates: number) => string;
+    confirm: string;
+    cancel: string;
+    restoring: string;
+    restored: (count: number) => string;
+    failed: string;
+    signIn: string;
+  }
+> = {
+  en: {
+    description: "Exports contain transaction details. Store backup files securely.",
+    restore: "Restore from backup",
+    restoreNote:
+      "Choose a Capispot JSON backup or generic transaction CSV. Existing data is not overwritten.",
+    csvFormat: "Choose a generic transaction CSV or a Capispot JSON backup.",
+    csvRejected: (count) =>
+      `${count} CSV rows could not be read. Review the file before restoring.`,
+    empty: "The backup contains no transactions to restore.",
+    invalid: "The backup file could not be read.",
+    allDuplicates: "All backup transactions already exist in this portfolio.",
+    preview: (fresh, duplicates) =>
+      `${fresh} transactions will be added; ${duplicates} duplicates will be skipped. Existing data will not be overwritten.`,
+    confirm: "Add transactions",
+    cancel: "Cancel",
+    restoring: "Restoring…",
+    restored: (count) => `${count} transactions restored.`,
+    failed: "Backup restore failed.",
+    signIn: "Sign in to restore a backup.",
+  },
+  bg: {
+    description: "Експортът съдържа подробности за сделките. Съхранявай архивите сигурно.",
+    restore: "Възстанови от архив",
+    restoreNote:
+      "Избери JSON архив от Capispot или общ CSV със сделки. Съществуващите данни няма да бъдат презаписани.",
+    csvFormat: "Избери общ CSV със сделки или JSON архив от Capispot.",
+    csvRejected: (count) =>
+      `${count} CSV реда не могат да бъдат прочетени. Провери файла преди възстановяване.`,
+    empty: "Архивът няма сделки за възстановяване.",
+    invalid: "Архивът не може да бъде прочетен.",
+    allDuplicates: "Всички сделки от архива вече съществуват в това портфолио.",
+    preview: (fresh, duplicates) =>
+      `Ще се добавят ${fresh} сделки; ${duplicates} дубликата ще бъдат пропуснати. Съществуващите данни няма да бъдат презаписани.`,
+    confirm: "Добави сделките",
+    cancel: "Отказ",
+    restoring: "Възстановяване…",
+    restored: (count) => `Възстановени са ${count} сделки.`,
+    failed: "Възстановяването от архива не успя.",
+    signIn: "Влез в профила си, за да възстановиш архив.",
+  },
+  de: {
+    description: "Exporte enthalten Transaktionsdetails. Bewahre Sicherungsdateien sicher auf.",
+    restore: "Aus Sicherung wiederherstellen",
+    restoreNote:
+      "Capispot-JSON-Sicherung oder generische Transaktions-CSV wählen. Bestehende Daten werden nicht überschrieben.",
+    csvFormat: "Generische Transaktions-CSV oder Capispot-JSON-Sicherung wählen.",
+    csvRejected: (count) =>
+      `${count} CSV-Zeilen konnten nicht gelesen werden. Prüfe die Datei vor der Wiederherstellung.`,
+    empty: "Die Sicherung enthält keine wiederherzustellenden Transaktionen.",
+    invalid: "Die Sicherungsdatei konnte nicht gelesen werden.",
+    allDuplicates: "Alle Transaktionen aus der Sicherung sind bereits vorhanden.",
+    preview: (fresh, duplicates) =>
+      `${fresh} Transaktionen werden hinzugefügt; ${duplicates} Duplikate übersprungen. Bestehende Daten bleiben unverändert.`,
+    confirm: "Transaktionen hinzufügen",
+    cancel: "Abbrechen",
+    restoring: "Wiederherstellung…",
+    restored: (count) => `${count} Transaktionen wiederhergestellt.`,
+    failed: "Wiederherstellung fehlgeschlagen.",
+    signIn: "Melde dich an, um eine Sicherung wiederherzustellen.",
+  },
+  es: {
+    description:
+      "Las exportaciones contienen detalles de las operaciones. Guarda las copias de forma segura.",
+    restore: "Restaurar desde copia",
+    restoreNote:
+      "Elige una copia JSON de Capispot o un CSV genérico de operaciones. No se sobrescribirán datos.",
+    csvFormat: "Elige un CSV genérico de operaciones o una copia JSON de Capispot.",
+    csvRejected: (count) =>
+      `No se pudieron leer ${count} filas CSV. Revisa el archivo antes de restaurar.`,
+    empty: "La copia no contiene operaciones para restaurar.",
+    invalid: "No se pudo leer el archivo de copia.",
+    allDuplicates: "Todas las operaciones de la copia ya existen en esta cartera.",
+    preview: (fresh, duplicates) =>
+      `Se añadirán ${fresh} operaciones y se omitirán ${duplicates} duplicados. Los datos existentes no cambiarán.`,
+    confirm: "Añadir operaciones",
+    cancel: "Cancelar",
+    restoring: "Restaurando…",
+    restored: (count) => `Se restauraron ${count} operaciones.`,
+    failed: "No se pudo restaurar la copia.",
+    signIn: "Inicia sesión para restaurar una copia.",
+  },
+  it: {
+    description:
+      "Le esportazioni contengono i dettagli delle operazioni. Conserva i backup in modo sicuro.",
+    restore: "Ripristina da backup",
+    restoreNote:
+      "Scegli un backup JSON Capispot o un CSV generico. I dati esistenti non verranno sovrascritti.",
+    csvFormat: "Scegli un CSV generico o un backup JSON Capispot.",
+    csvRejected: (count) =>
+      `${count} righe CSV non sono state lette. Controlla il file prima di ripristinare.`,
+    empty: "Il backup non contiene operazioni da ripristinare.",
+    invalid: "Impossibile leggere il file di backup.",
+    allDuplicates: "Tutte le operazioni del backup sono già presenti in questo portafoglio.",
+    preview: (fresh, duplicates) =>
+      `Verranno aggiunte ${fresh} operazioni e ignorati ${duplicates} duplicati. I dati esistenti non verranno modificati.`,
+    confirm: "Aggiungi operazioni",
+    cancel: "Annulla",
+    restoring: "Ripristino…",
+    restored: (count) => `Ripristinate ${count} operazioni.`,
+    failed: "Ripristino del backup non riuscito.",
+    signIn: "Accedi per ripristinare un backup.",
+  },
+};
 
 function Tools() {
   const p = usePortfolio();
   const c = toolsCopy[p.lang];
+  const [restore, setRestore] = useState<{ rows: ImportedTx[]; duplicates: number } | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const backupCopy = BACKUP_COPY[p.lang];
+  const selectBackup = async (file: File) => {
+    try {
+      const contents = await file.text();
+      let rows: ImportedTx[];
+      if (file.name.toLowerCase().endsWith(".json")) {
+        rows = parsePortfolioBackup(JSON.parse(contents));
+      } else {
+        const format = detectBrokerFormat(contents);
+        if (format !== "generic") throw new Error(backupCopy.csvFormat);
+        const rejected = rejectedCsvRows(format, contents);
+        rows = parseBrokerCsv(format, contents);
+        if (rejected.length) throw new Error(backupCopy.csvRejected(rejected.length));
+      }
+      if (!rows.length) throw new Error(backupCopy.empty);
+      const assetsById = new Map(p.assets.map((asset) => [asset.id, asset.symbol]));
+      const existing = p.transactions.map((transaction) => ({
+        symbol: assetsById.get(transaction.assetId) ?? "",
+        kind: transaction.kind,
+        date: transaction.date,
+        quantity: transaction.quantity,
+        price: transaction.price,
+        fee: transaction.fee ?? 0,
+      }));
+      const normalized = await p.normalizeImportRows(rows);
+      const split = splitDuplicates(rows, existing, normalized);
+      if (!split.fresh.length) throw new Error(backupCopy.allDuplicates);
+      setRestore({ rows: split.fresh, duplicates: split.duplicates.length });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : backupCopy.invalid);
+      setRestore(null);
+    }
+  };
+  const restoreBackup = async () => {
+    if (!restore) return;
+    setRestoring(true);
+    try {
+      const result = await p.importTransactions(null, restore.rows);
+      notifyImportWithUndo(
+        backupCopy.restored(result.count),
+        result.transactionIds,
+        result.createdAssetIds,
+        p.lang,
+        p.undoImport,
+      );
+      setRestore(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : backupCopy.failed);
+    } finally {
+      setRestoring(false);
+    }
+  };
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <h1 className="font-display text-2xl font-bold lg:col-span-2">{c.tools}</h1>
@@ -116,19 +306,19 @@ function Tools() {
       >
         <SnapshotCard />
       </ProGate>
-      <ProGate
-        title={proToolsCopy[p.lang].quality}
-        desc={proToolsCopy[p.lang].qualityDesc}
-        preview={<CurveSilhouette />}
-      >
-        <DataQuality />
-      </ProGate>
+      {p.user && (
+        <Card className="lg:col-span-2">
+          <h2 className="font-display mb-3 font-semibold">{proToolsCopy[p.lang].quality}</h2>
+          <DataQuality />
+        </Card>
+      )}
       <GoalsCard />
       <ProGate title={c.rebalance} desc={c.rebalanceHint} preview={<CurveSilhouette />}>
         <Rebalance />
       </ProGate>
       <Risk />
       <ConcentrationCard />
+      <RecurringReminders />
       <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}>
         <Tax />
       </ProGate>
@@ -136,6 +326,9 @@ function Tools() {
         <Watchlist />
         <Card>
           <h3 className="font-display mb-3 font-semibold">{c.exportTitle}</h3>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+            {backupCopy.description}
+          </p>
           <div className="flex flex-wrap gap-2">
             <Button
               variant="secondary"
@@ -174,6 +367,41 @@ function Tools() {
             >
               PDF
             </Button>
+          </div>
+          <div className="mt-4 border-t border-border pt-4">
+            {p.user ? (
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary">
+                {backupCopy.restore}
+                <input
+                  type="file"
+                  accept=".json,.csv,application/json,text/csv"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void selectBackup(file);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            ) : (
+              <p className="text-sm text-muted-foreground">{backupCopy.signIn}</p>
+            )}
+            <p className="mt-2 text-xs text-muted-foreground">{backupCopy.restoreNote}</p>
+            {restore && (
+              <div className="mt-3 rounded-xl border border-border bg-background/70 p-3">
+                <p className="text-sm">
+                  {backupCopy.preview(restore.rows.length, restore.duplicates)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button disabled={restoring} onClick={() => void restoreBackup()}>
+                    {restoring ? backupCopy.restoring : backupCopy.confirm}
+                  </Button>
+                  <Button variant="secondary" disabled={restoring} onClick={() => setRestore(null)}>
+                    {backupCopy.cancel}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       </div>
@@ -393,6 +621,19 @@ function Watchlist() {
       )}
       {!alerts.length && (
         <p className="mt-2 text-xs text-muted-foreground">{extrasCopy[p.lang].alertNone}</p>
+      )}
+      {alerts.length > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {
+            {
+              en: "Alerts are checked while the app is open; they do not run in the background.",
+              bg: "Известията се проверяват, докато приложението е отворено; не работят във фонов режим.",
+              de: "Alarme werden geprüft, solange die App geöffnet ist; nicht im Hintergrund.",
+              es: "Las alertas se comprueban mientras la aplicación está abierta; no funcionan en segundo plano.",
+              it: "Gli avvisi vengono controllati mentre l'app è aperta; non funzionano in background.",
+            }[p.lang]
+          }
+        </p>
       )}
     </Card>
   );

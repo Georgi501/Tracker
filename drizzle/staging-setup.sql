@@ -83,6 +83,9 @@ CREATE TABLE public.assets (
   manual_price numeric,
   dividend_per_share numeric NOT NULL DEFAULT 0,
   pay_months int[] NOT NULL DEFAULT '{}',
+  bond_coupon_rate numeric,
+  bond_maturity_date date,
+  bond_face_value numeric,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, symbol)
 );
@@ -99,6 +102,7 @@ CREATE TABLE public.transactions (
   kind text NOT NULL CHECK (kind IN ('buy','sell','dividend')),
   quantity numeric NOT NULL,
   price numeric NOT NULL,
+  fee numeric NOT NULL DEFAULT 0 CHECK (fee >= 0),
   date date NOT NULL DEFAULT current_date,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -491,6 +495,7 @@ CREATE TABLE public.analytics_events (
   session_id uuid NOT NULL,
   event_name text NOT NULL CHECK (event_name IN (
     'pricing_view', 'signup_completed', 'first_holding_added',
+    'manual_entry_started', 'csv_import_started', 'csv_import_completed',
     'checkout_started', 'checkout_completed', 'referral_link_copied'
   )),
   created_at timestamptz NOT NULL DEFAULT now()
@@ -510,6 +515,7 @@ DECLARE
 BEGIN
   IF _event_name NOT IN (
     'pricing_view', 'signup_completed', 'first_holding_added',
+    'manual_entry_started', 'csv_import_started', 'csv_import_completed',
     'checkout_started', 'checkout_completed', 'referral_link_copied'
   ) THEN
     RAISE EXCEPTION 'Unsupported analytics event';

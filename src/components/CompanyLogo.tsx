@@ -23,7 +23,7 @@ export function CompanyLogo({
   const file = type === "crypto" ? `${sym.replace(/-USD$/, "")}USD` : sym;
   const tone = TONES[[...sym].reduce((s, ch) => s + ch.charCodeAt(0), 0) % TONES.length];
   const style = { width: size, height: size };
-  if (failed || type === "cash" || type === "realEstate") {
+  if (failed || type === "bond" || type === "cash" || type === "realEstate") {
     return (
       <span
         aria-hidden

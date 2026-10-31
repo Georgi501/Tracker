@@ -1,12 +1,52 @@
 /** Watchlist + price alerts: local preferences (tickers and target prices only, no portfolio data). */
 export const WATCH_KEY = "folio-watchlist";
 export const ALERTS_KEY = "folio-price-alerts";
+export const RECURRING_KEY = "folio-recurring-reminders";
 export const SYMBOL_RE = /^[A-Z0-9.^=_-]{1,20}$/;
 
 export interface PriceAlert {
   symbol: string;
   direction: "above" | "below";
   target: number;
+}
+
+export interface RecurringReminder {
+  id: string;
+  symbol: string;
+  amount: number;
+  currency: "USD" | "EUR";
+  dayOfMonth: number;
+  lastReminderMonth?: string;
+}
+
+export function parseRecurringReminders(raw: string | null): RecurringReminder[] {
+  try {
+    const value: unknown = JSON.parse(raw ?? "[]");
+    if (!Array.isArray(value)) return [];
+    return value
+      .filter(
+        (item): item is RecurringReminder =>
+          !!item &&
+          typeof item === "object" &&
+          typeof item.id === "string" &&
+          item.id.length > 0 &&
+          typeof item.symbol === "string" &&
+          SYMBOL_RE.test(item.symbol) &&
+          typeof item.amount === "number" &&
+          Number.isFinite(item.amount) &&
+          item.amount > 0 &&
+          (item.currency === "USD" || item.currency === "EUR") &&
+          Number.isInteger(item.dayOfMonth) &&
+          item.dayOfMonth >= 1 &&
+          item.dayOfMonth <= 28 &&
+          (item.lastReminderMonth === undefined ||
+            (typeof item.lastReminderMonth === "string" &&
+              /^\d{4}-\d{2}$/.test(item.lastReminderMonth))),
+      )
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
 }
 
 export function parseWatchlist(raw: string | null): string[] {
@@ -50,6 +90,21 @@ export function alertTriggered(alert: PriceAlert, price: number | null | undefin
   return alert.direction === "above" ? price >= alert.target : price <= alert.target;
 }
 
+export function alertCrossed(
+  alert: PriceAlert,
+  previousPrice: number | null | undefined,
+  currentPrice: number | null | undefined,
+): boolean {
+  return (
+    !alertTriggered(alert, previousPrice) &&
+    alertTriggered(alert, currentPrice) &&
+    previousPrice !== null &&
+    previousPrice !== undefined &&
+    Number.isFinite(previousPrice) &&
+    previousPrice > 0
+  );
+}
+
 export const readWatchlist = () => parseWatchlist(localStorage.getItem(WATCH_KEY));
 export const readAlerts = () => parseAlerts(localStorage.getItem(ALERTS_KEY));
 export function writeWatchlist(list: string[]) {
@@ -58,6 +113,18 @@ export function writeWatchlist(list: string[]) {
 }
 export function writeAlerts(list: PriceAlert[]) {
   localStorage.setItem(ALERTS_KEY, JSON.stringify(list));
+  window.dispatchEvent(new Event("folio-watch"));
+}
+
+export function alertKey(alert: PriceAlert): string {
+  return `${alert.symbol}|${alert.direction}|${alert.target}`;
+}
+
+export const readRecurringReminders = () =>
+  parseRecurringReminders(localStorage.getItem(RECURRING_KEY));
+
+export function writeRecurringReminders(reminders: RecurringReminder[]) {
+  localStorage.setItem(RECURRING_KEY, JSON.stringify(reminders));
   window.dispatchEvent(new Event("folio-watch"));
 }
 

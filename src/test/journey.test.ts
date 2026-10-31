@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { assetSummary, reviewDue, snapshotWeights, timelineByMonth } from "@/lib/journey";
+import {
+  assetSummary,
+  reviewDue,
+  snapshotCsv,
+  snapshotWeights,
+  timelineByMonth,
+} from "@/lib/journey";
 import type { Holding, Transaction } from "@/lib/portfolio";
 
 const tx = (
@@ -46,6 +52,19 @@ describe("journey", () => {
       { cls: "stock", pct: 75 },
       { cls: "etf", pct: 25 },
     ]);
+  });
+  it("exports only class percentages in the shareable CSV", () => {
+    const csv = snapshotCsv(
+      [
+        { cls: "stock", pct: 75 },
+        { cls: "etf", pct: 25 },
+      ],
+      "2025-01-02",
+    );
+    expect(csv).toBe(
+      "as_of,asset_class,allocation_percent\n2025-01-02,stock,75\n2025-01-02,etf,25",
+    );
+    expect(csv).not.toMatch(/AAPL|1000|account/i);
   });
   it("review is due on or after the review date", () => {
     expect(reviewDue("2026-10-20", "2026-10-20")).toBe(true);

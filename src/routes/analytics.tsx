@@ -1,4 +1,5 @@
 import { ChartDataTable } from "@/components/ChartDataTable";
+import { EtfOverlapCard } from "@/components/EtfOverlapCard";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { proCopy } from "@/lib/pro-i18n";
 import { languageLocale } from "@/lib/i18n";
@@ -760,6 +761,18 @@ function Analytics() {
           <p className="mt-1 text-xs text-muted-foreground">{c.quoteTimestampMissing}</p>
         )}
       </Card>
+      <ProGate
+        className="lg:col-span-3"
+        title={p.lang === "bg" ? "Припокриване на ETF-и" : "ETF overlap"}
+        desc={
+          p.lang === "bg"
+            ? "Виж скритата експозиция към общи компании във фондовете и директните позиции."
+            : "See shared underlying company exposure across ETFs and direct holdings."
+        }
+        preview={<div className="h-36 rounded-lg bg-primary/20" />}
+      >
+        <EtfOverlapCard />
+      </ProGate>
       <ProGate
         className="lg:col-span-3"
         title={c.benchmark}
