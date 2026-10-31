@@ -10,6 +10,7 @@ export const BROKER_FORMATS: { id: BrokerFormat; label: string }[] = [
 ];
 
 export interface ImportedTx {
+  sourceTransactionId?: string | undefined;
   symbol: string;
   name: string;
   assetType: AssetType;
@@ -522,6 +523,7 @@ export function splitDuplicates(
     quantity: number;
     price: number;
     fee?: number;
+    sourceTransactionId?: string;
   }[],
   normalizedRows: ImportedTx[] = rows,
 ) {
@@ -532,13 +534,21 @@ export function splitDuplicates(
   const seen = new Set(
     existing.map((e) => key(e.symbol, e.kind, e.date, e.quantity, e.price, e.fee ?? 0)),
   );
+  const seenSourceIds = new Set(
+    existing.flatMap((transaction) =>
+      transaction.sourceTransactionId ? [transaction.sourceTransactionId] : [],
+    ),
+  );
   const fresh: ImportedTx[] = [];
   const duplicates: ImportedTx[] = [];
   for (const [index, r] of rows.entries()) {
     const normalized = normalizedRows[index]!;
     const k = key(r.symbol, r.kind, r.date, r.quantity, normalized.price, normalized.fee);
-    (seen.has(k) ? duplicates : fresh).push(r);
+    const duplicate =
+      seen.has(k) || (!!r.sourceTransactionId && seenSourceIds.has(r.sourceTransactionId));
+    (duplicate ? duplicates : fresh).push(r);
     seen.add(k);
+    if (r.sourceTransactionId) seenSourceIds.add(r.sourceTransactionId);
   }
   return { fresh, duplicates };
 }

@@ -210,6 +210,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       price: Number(r.price),
       fee: Number(r.fee ?? 0),
       date: r.date,
+      ...(r.source_transaction_id ? { sourceTransactionId: r.source_transaction_id } : {}),
     }));
     const rows = (a.data ?? []) as AssetRow[];
     const currentById = new Map(assetsRef.current.map((asset) => [asset.id, asset]));
@@ -462,7 +463,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       importTransactions: async (brokerId, rows) => {
         if (!user) throw new Error("auth");
-        const converted = await convertFn({
+        const normalized = await convertFn({
           data: {
             rows: rows.map((r) => ({
               ...r,
@@ -470,6 +471,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             })),
           },
         });
+        const converted = normalized.map((row, index) => ({
+          ...row,
+          ...(rows[index]?.sourceTransactionId
+            ? { sourceTransactionId: rows[index]!.sourceTransactionId }
+            : {}),
+        }));
         const ids = new Map(assets.map((x) => [x.symbol.toUpperCase(), x.id]));
         const createdAssetIds: string[] = [];
         for (const r of converted) {
@@ -511,6 +518,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                 price: r.price,
                 fee: r.fee ?? 0,
                 date: r.date,
+                ...(r.sourceTransactionId ? { source_transaction_id: r.sourceTransactionId } : {}),
               };
             }),
           )

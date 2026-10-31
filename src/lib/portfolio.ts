@@ -49,6 +49,7 @@ export interface Transaction {
   price: number; // USD; NaN means unavailable per unit (for dividend: total amount in USD, quantity=1)
   fee?: number; // USD
   date: string; // ISO date
+  sourceTransactionId?: string;
 }
 
 export interface Holding {

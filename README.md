@@ -30,6 +30,7 @@ Configure Supabase OAuth providers and redirect URLs in the Supabase dashboard. 
 Copy `.env.example` to `.env` for public build-time values, and `.dev.vars.example` to `.dev.vars` for local server secrets. Never commit populated env files. Set the same values as Worker secrets or variables in Cloudflare:
 
 - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`
+- `BROKER_CREDENTIALS_ENCRYPTION_KEY` (32 random bytes, base64-encoded; required for direct broker connections)
 - `OPENAI_API_KEY`; optionally `OPENAI_MODEL` (defaults to `gpt-5.4`)
 - `CREEM_MODE` (`test` locally or `prod` in production), `CREEM_API_KEY`, `CREEM_WEBHOOK_SECRET`, `CREEM_PRODUCT_ID_MONTHLY`, and `CREEM_PRODUCT_ID_YEARLY`
 - `PUBLIC_APP_URL` (for example `http://localhost:8080` locally and `https://capispot.com` in production)
@@ -46,6 +47,8 @@ Use Creem Test Mode and test API credentials before switching Cloudflare to the 
 Apply `drizzle/migrations/0009_referrals_and_analytics.sql`, `drizzle/migrations/0010_account_management.sql`, `drizzle/migrations/0012_creem_billing.sql`, and `drizzle/migrations/0013_owner_admin_access.sql` to the connected Supabase database before enabling referrals, account deletion, Creem billing, or the owner console. Referral rewards are issued only after a live, signature-verified Creem checkout is matched to its subscription record. Test-mode payments never grant rewards.
 
 Apply `drizzle/migrations/0014_onboarding_analytics_funnel.sql` before enabling the expanded onboarding analytics events, and `drizzle/migrations/0015_transaction_fees_and_bonds.sql` before using transaction fees or bonds. Apply migrations to the intended Supabase project before deploying code that depends on them.
+
+Apply `drizzle/migrations/0016_direct_broker_connections.sql` before enabling direct IBKR or Trading 212 connections. Set a unique `BROKER_CREDENTIALS_ENCRYPTION_KEY` as a local `.dev.vars` value and Cloudflare Worker secret; generate it from 32 random bytes and base64-encode it. The app stores only AES-GCM-encrypted broker credentials in a service-role-only table. Trading 212 connections use the official API and require a read-only key with portfolio, order-history, and dividend-history permissions. IBKR connections use Flex Web Service; users need a Flex Query with Trades and dividend cash transactions. IBKR report tokens expire and must be renewed by the user. Broker sync is read-only and imports executions/dividends, never orders or deposits/withdrawals.
 
 ### Owner console setup
 

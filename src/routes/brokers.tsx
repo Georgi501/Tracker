@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Plus, Upload, X } from "lucide-react";
+import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
@@ -22,6 +24,12 @@ import {
 import type { Lang } from "@/lib/i18n";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { notifyImportWithUndo } from "@/lib/import-undo";
+import {
+  brokerConnectionStates,
+  connectDirectBroker,
+  disconnectDirectBroker,
+  syncDirectBroker,
+} from "@/lib/brokers.functions";
 
 export const Route = createFileRoute("/brokers")({
   head: () => ({
@@ -60,8 +68,137 @@ type ImportResult = {
   totals: ReturnType<typeof reconciliationTotals>;
 };
 
+const DIRECT_BROKER_COPY = {
+  en: {
+    connected: "Direct read-only API connected",
+    lastSync: "Last sync",
+    connect: "Connect and fetch history",
+    sync: "Fetch latest history",
+    disconnect: "Disconnect",
+    replace: "Replace API credentials",
+    apiKey: "Trading 212 API key",
+    apiSecret: "Trading 212 API secret",
+    token: "IBKR Flex Web Service token",
+    queryId: "IBKR Flex Query ID",
+    t212Help:
+      "Use a Trading 212 API key with portfolio, order-history and dividend-history read permissions only. Available for Invest and Stocks ISA accounts; the API is beta.",
+    ibkrHelp:
+      "Enable Flex Web Service and create a Flex Query with Trades and dividend cash transactions. Choose a token expiry longer than the default 6 hours; renew it when IBKR expires it.",
+    privacy:
+      "Credentials are encrypted on our server. Capispot uses read requests only and never places orders.",
+    symbolHelp:
+      "Review tickers in the import preview and correct them if the broker's symbol differs from the market symbol.",
+    fetchError: "Could not connect or sync this broker.",
+    noRows: "No importable trades or dividends were found.",
+    cancel: "Cancel",
+  },
+  bg: {
+    connected: "Директната read-only връзка е активна",
+    lastSync: "Последна синхронизация",
+    connect: "Свържи и зареди историята",
+    sync: "Зареди новите сделки",
+    disconnect: "Прекъсни връзката",
+    replace: "Смени API данните",
+    apiKey: "Trading 212 API ключ",
+    apiSecret: "Trading 212 API secret",
+    token: "IBKR Flex Web Service token",
+    queryId: "IBKR Flex Query ID",
+    t212Help:
+      "Използвай Trading 212 ключ само с read права за портфолио, история на поръчките и дивиденти. Достъпен е за Invest и Stocks ISA; API-то е бета.",
+    ibkrHelp:
+      "Активирай Flex Web Service и създай Flex Query с Trades и dividend cash transactions. Избери срок на token-а над стандартните 6 часа; поднови го при изтичане.",
+    privacy:
+      "Данните за достъп се криптират на сървъра. Capispot използва само заявки за четене и никога не подава поръчки.",
+    symbolHelp:
+      "Провери тикерите в прегледа на импорта и ги коригирай, ако символът на брокера се различава от пазарния.",
+    fetchError: "Брокерът не можа да се свърже или синхронизира.",
+    noRows: "Не бяха открити сделки или дивиденти за импорт.",
+    cancel: "Отказ",
+  },
+  de: {
+    connected: "Direkte Read-only-API verbunden",
+    lastSync: "Letzte Synchronisierung",
+    connect: "Verbinden und Historie laden",
+    sync: "Neueste Historie laden",
+    disconnect: "Verbindung trennen",
+    replace: "API-Zugangsdaten ersetzen",
+    apiKey: "Trading 212 API-Schlüssel",
+    apiSecret: "Trading 212 API-Secret",
+    token: "IBKR Flex-Web-Service-Token",
+    queryId: "IBKR Flex-Query-ID",
+    t212Help:
+      "Nutze einen Trading-212-Schlüssel nur mit Lesezugriff für Portfolio, Orderhistorie und Dividenden. Verfügbar für Invest und Stocks ISA; API ist Beta.",
+    ibkrHelp:
+      "Aktiviere Flex Web Service und erstelle eine Flex Query mit Trades und Dividend Cash Transactions. Wähle eine längere Token-Laufzeit als die voreingestellten 6 Stunden.",
+    privacy:
+      "Zugangsdaten werden serverseitig verschlüsselt. Capispot verwendet nur Leseanfragen und platziert keine Orders.",
+    symbolHelp:
+      "Prüfe die Ticker in der Importvorschau und korrigiere sie, falls das Brokersymbol vom Marktsymbol abweicht.",
+    fetchError: "Broker konnte nicht verbunden oder synchronisiert werden.",
+    noRows: "Keine importierbaren Trades oder Dividenden gefunden.",
+    cancel: "Abbrechen",
+  },
+  es: {
+    connected: "API directa de solo lectura conectada",
+    lastSync: "Última sincronización",
+    connect: "Conectar y cargar historial",
+    sync: "Cargar historial reciente",
+    disconnect: "Desconectar",
+    replace: "Cambiar credenciales API",
+    apiKey: "Clave API de Trading 212",
+    apiSecret: "Secreto API de Trading 212",
+    token: "Token de IBKR Flex Web Service",
+    queryId: "ID de consulta Flex de IBKR",
+    t212Help:
+      "Usa una clave de Trading 212 solo con permisos de lectura para cartera, historial de órdenes y dividendos. Disponible para Invest y Stocks ISA; API beta.",
+    ibkrHelp:
+      "Activa Flex Web Service y crea una consulta Flex con Trades y dividend cash transactions. Elige una duración superior a las 6 horas predeterminadas.",
+    privacy:
+      "Las credenciales se cifran en el servidor. Capispot solo usa solicitudes de lectura y nunca envía órdenes.",
+    symbolHelp:
+      "Revisa los símbolos en la vista previa y corrígelos si el símbolo del bróker difiere del símbolo de mercado.",
+    fetchError: "No se pudo conectar o sincronizar el bróker.",
+    noRows: "No se encontraron operaciones o dividendos para importar.",
+    cancel: "Cancelar",
+  },
+  it: {
+    connected: "API diretta di sola lettura collegata",
+    lastSync: "Ultima sincronizzazione",
+    connect: "Collega e carica lo storico",
+    sync: "Carica lo storico recente",
+    disconnect: "Disconnetti",
+    replace: "Sostituisci credenziali API",
+    apiKey: "Chiave API Trading 212",
+    apiSecret: "Secret API Trading 212",
+    token: "Token IBKR Flex Web Service",
+    queryId: "ID query Flex IBKR",
+    t212Help:
+      "Usa una chiave Trading 212 con soli permessi di lettura per portafoglio, storico ordini e dividendi. Disponibile per Invest e Stocks ISA; API beta.",
+    ibkrHelp:
+      "Attiva Flex Web Service e crea una Flex Query con Trades e dividend cash transactions. Scegli una scadenza superiore alle 6 ore predefinite.",
+    privacy:
+      "Le credenziali sono cifrate sul server. Capispot usa solo richieste di lettura e non invia mai ordini.",
+    symbolHelp:
+      "Controlla i ticker nell'anteprima e correggili se il simbolo del broker è diverso da quello di mercato.",
+    fetchError: "Impossibile collegare o sincronizzare il broker.",
+    noRows: "Nessuna operazione o dividendo da importare.",
+    cancel: "Annulla",
+  },
+} as const;
+
 function Brokers() {
   const p = usePortfolio();
+  const queryClient = useQueryClient();
+  const getConnections = useServerFn(brokerConnectionStates);
+  const brokerIds = p.brokers
+    .filter((broker) => broker.format === "ibkr" || broker.format === "trading212")
+    .map((broker) => broker.id);
+  const connectionsQuery = useQuery({
+    queryKey: ["direct-broker-connections", p.user?.id, brokerIds],
+    queryFn: () => getConnections({ data: { brokerIds } }),
+    enabled: !!p.user && brokerIds.length > 0,
+    staleTime: 30_000,
+  });
   const [preview, setPreview] = useState<StagedImport | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -140,6 +277,9 @@ function Brokers() {
         quantity: transaction.quantity,
         price: transaction.price,
         fee: transaction.fee ?? 0,
+        ...(transaction.sourceTransactionId
+          ? { sourceTransactionId: transaction.sourceTransactionId }
+          : {}),
       }));
       const normalized = await p.normalizeImportRows(preview.fresh);
       const split = splitDuplicates(preview.fresh, currentExisting, normalized);
@@ -172,6 +312,38 @@ function Brokers() {
       setBusy(false);
     }
   };
+  const stageDirectRows = async (brokerId: string, format: BrokerFormat, rows: ImportedTx[]) => {
+    if (!rows.length) {
+      toast.info(
+        p.lang === "bg"
+          ? "Няма налични сделки или дивиденти за импорт."
+          : "No importable trades or dividends were found.",
+      );
+      return;
+    }
+    const sym = new Map(p.assets.map((asset) => [asset.id, asset.symbol]));
+    const existing = p.transactions.map((transaction) => ({
+      symbol: sym.get(transaction.assetId) ?? "",
+      kind: transaction.kind,
+      date: transaction.date,
+      quantity: transaction.quantity,
+      price: transaction.price,
+      fee: transaction.fee ?? 0,
+      ...(transaction.sourceTransactionId
+        ? { sourceTransactionId: transaction.sourceTransactionId }
+        : {}),
+    }));
+    const normalized = await p.normalizeImportRows(rows);
+    const split = splitDuplicates(rows, existing, normalized);
+    setPreview({
+      brokerId,
+      format,
+      ...split,
+      ignoredRows: 0,
+      rejectedRows: [],
+      feeColumns: [],
+    });
+  };
   const templateHref = `data:text/csv;charset=utf-8,${encodeURIComponent(GENERIC_TEMPLATE)}`;
 
   return (
@@ -190,30 +362,47 @@ function Brokers() {
         />
       )}
       {p.brokers.map((b) => (
-        <Card key={b.id} className="flex flex-wrap items-center gap-3">
-          <div className="flex-1">
-            <p className="font-semibold">{b.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {BROKER_FORMATS.find((f) => f.id === b.format)?.label}
-            </p>
-          </div>
-          <label className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-            <Upload size={15} /> {p.t("importCsv")}
-            <input
-              type="file"
-              accept=".csv,text/csv"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void upload(b.id, b.format, f);
-                e.target.value = "";
-              }}
+        <div key={b.id} className="space-y-3">
+          <Card className="flex flex-wrap items-center gap-3">
+            <div className="flex-1">
+              <p className="font-semibold">{b.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {BROKER_FORMATS.find((f) => f.id === b.format)?.label}
+              </p>
+            </div>
+            <label className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              <Upload size={15} /> {p.t("importCsv")}
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void upload(b.id, b.format, f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            <button onClick={() => remove(b.id)} className="text-sm text-destructive">
+              ✕
+            </button>
+          </Card>
+          {(b.format === "ibkr" || b.format === "trading212") && (
+            <DirectBrokerConnection
+              brokerId={b.id}
+              provider={b.format}
+              connected={connectionsQuery.data?.some((item) => item.brokerId === b.id) ?? false}
+              lastSyncedAt={
+                connectionsQuery.data?.find((item) => item.brokerId === b.id)?.lastSyncedAt ?? null
+              }
+              onRows={(rows) => stageDirectRows(b.id, b.format as "ibkr" | "trading212", rows)}
+              onChanged={() =>
+                void queryClient.invalidateQueries({ queryKey: ["direct-broker-connections"] })
+              }
+              lang={p.lang}
             />
-          </label>
-          <button onClick={() => remove(b.id)} className="text-sm text-destructive">
-            ✕
-          </button>
-        </Card>
+          )}
+        </div>
       ))}
       {preview && (
         <ImportPreview
@@ -277,6 +466,202 @@ function Brokers() {
         </a>
       </div>
     </div>
+  );
+}
+
+function DirectBrokerConnection({
+  brokerId,
+  provider,
+  connected,
+  lastSyncedAt,
+  onRows,
+  onChanged,
+  lang,
+}: {
+  brokerId: string;
+  provider: "ibkr" | "trading212";
+  connected: boolean;
+  lastSyncedAt: string | null;
+  onRows: (rows: ImportedTx[]) => Promise<void>;
+  onChanged: () => void;
+  lang: Lang;
+}) {
+  const copy = DIRECT_BROKER_COPY[lang];
+  const connectFn = useServerFn(connectDirectBroker);
+  const syncFn = useServerFn(syncDirectBroker);
+  const disconnectFn = useServerFn(disconnectDirectBroker);
+  const [editing, setEditing] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [apiSecret, setApiSecret] = useState("");
+  const [token, setToken] = useState("");
+  const [queryId, setQueryId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const isTrading212 = provider === "trading212";
+  const lastSyncText = lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : null;
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const credentials = isTrading212 ? { apiKey, apiSecret } : { token, queryId };
+      const result = await connectFn({ data: { brokerId, provider, credentials } });
+      setApiKey("");
+      setApiSecret("");
+      setToken("");
+      setQueryId("");
+      setEditing(false);
+      onChanged();
+      await onRows(result.rows);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : copy.fetchError);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const sync = async () => {
+    setBusy(true);
+    try {
+      const result = await syncFn({ data: { brokerId } });
+      await onRows(result.rows);
+      onChanged();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : copy.fetchError);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const disconnect = async () => {
+    setBusy(true);
+    try {
+      await disconnectFn({ data: { brokerId } });
+      onChanged();
+      setEditing(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : copy.fetchError);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card className="space-y-3 border-primary/20 bg-primary/[0.03]">
+      <p className="text-xs text-muted-foreground">{copy.symbolHelp}</p>
+      {connected && !editing ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-success">{copy.connected}</p>
+            {lastSyncText && (
+              <p className="text-xs text-muted-foreground">
+                {copy.lastSync}: {lastSyncText}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void sync()}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            <RefreshCw size={14} aria-hidden />
+            {busy ? "…" : copy.sync}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setEditing(true)}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {copy.replace}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void disconnect()}
+            className="text-sm text-destructive"
+          >
+            {copy.disconnect}
+          </button>
+        </div>
+      ) : (
+        <form className="space-y-3" onSubmit={(event) => void connect(event)}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {isTrading212 ? (
+              <>
+                <label className="grid gap-1 text-sm">
+                  {copy.apiKey}
+                  <input
+                    required
+                    type="password"
+                    autoComplete="new-password"
+                    value={apiKey}
+                    onChange={(event) => setApiKey(event.target.value)}
+                    className={input}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  {copy.apiSecret}
+                  <input
+                    required
+                    type="password"
+                    autoComplete="new-password"
+                    value={apiSecret}
+                    onChange={(event) => setApiSecret(event.target.value)}
+                    className={input}
+                  />
+                </label>
+              </>
+            ) : (
+              <>
+                <label className="grid gap-1 text-sm">
+                  {copy.token}
+                  <input
+                    required
+                    type="password"
+                    autoComplete="new-password"
+                    value={token}
+                    onChange={(event) => setToken(event.target.value)}
+                    className={input}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  {copy.queryId}
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9]+"
+                    autoComplete="off"
+                    value={queryId}
+                    onChange={(event) => setQueryId(event.target.value)}
+                    className={input}
+                  />
+                </label>
+              </>
+            )}
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {isTrading212 ? copy.t212Help : copy.ibkrHelp}
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">{copy.privacy}</p>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {busy ? "…" : copy.connect}
+            </button>
+            {connected && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setEditing(false)}
+                className="rounded-full border border-border px-4 py-2 text-sm"
+              >
+                {copy.cancel}
+              </button>
+            )}
+          </div>
+        </form>
+      )}
+    </Card>
   );
 }
 

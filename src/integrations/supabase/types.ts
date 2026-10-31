@@ -145,6 +145,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      broker_api_credentials: {
+        Row: {
+          broker_id: string;
+          created_at: string;
+          encrypted_credentials: string;
+          id: string;
+          last_synced_at: string | null;
+          provider: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          broker_id: string;
+          created_at?: string;
+          encrypted_credentials: string;
+          id?: string;
+          last_synced_at?: string | null;
+          provider: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          broker_id?: string;
+          created_at?: string;
+          encrypted_credentials?: string;
+          id?: string;
+          last_synced_at?: string | null;
+          provider?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "broker_api_credentials_broker_id_fkey";
+            columns: ["broker_id"];
+            isOneToOne: true;
+            referencedRelation: "brokers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       direct_messages: {
         Row: {
           body: string;
@@ -462,6 +503,7 @@ export type Database = {
           kind: string;
           price: number;
           quantity: number;
+          source_transaction_id: string | null;
           user_id: string;
         };
         Insert: {
@@ -474,6 +516,7 @@ export type Database = {
           kind: string;
           price: number;
           quantity: number;
+          source_transaction_id?: string | null;
           user_id?: string;
         };
         Update: {
@@ -486,6 +529,7 @@ export type Database = {
           kind?: string;
           price?: number;
           quantity?: number;
+          source_transaction_id?: string | null;
           user_id?: string;
         };
         Relationships: [

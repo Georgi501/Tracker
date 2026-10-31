@@ -40,4 +40,21 @@ describe("splitDuplicates", () => {
     );
     expect(result.duplicates).toEqual([imported]);
   });
+  it("uses provider transaction IDs to deduplicate broker syncs", () => {
+    const imported = tx({ sourceTransactionId: "t212:fill:7788", price: 101 });
+    const result = splitDuplicates(
+      [imported],
+      [
+        {
+          symbol: "AAPL",
+          kind: "buy",
+          date: "2024-01-15",
+          quantity: 10,
+          price: 100,
+          sourceTransactionId: "t212:fill:7788",
+        },
+      ],
+    );
+    expect(result.duplicates).toEqual([imported]);
+  });
 });
