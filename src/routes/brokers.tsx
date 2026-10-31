@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
+import { ProBadge } from "@/components/ProFeatures";
 import { usePortfolio } from "@/lib/store";
 import { useState } from "react";
 import {
@@ -22,6 +23,7 @@ import {
   type ImportedTx,
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
+import { proCopy } from "@/lib/pro-i18n";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { notifyImportWithUndo } from "@/lib/import-undo";
 import {
@@ -391,6 +393,7 @@ function Brokers() {
             <DirectBrokerConnection
               brokerId={b.id}
               provider={b.format}
+              isPro={p.isPro}
               connected={connectionsQuery.data?.some((item) => item.brokerId === b.id) ?? false}
               lastSyncedAt={
                 connectionsQuery.data?.find((item) => item.brokerId === b.id)?.lastSyncedAt ?? null
@@ -472,6 +475,7 @@ function Brokers() {
 function DirectBrokerConnection({
   brokerId,
   provider,
+  isPro,
   connected,
   lastSyncedAt,
   onRows,
@@ -480,6 +484,7 @@ function DirectBrokerConnection({
 }: {
   brokerId: string;
   provider: "ibkr" | "trading212";
+  isPro: boolean;
   connected: boolean;
   lastSyncedAt: string | null;
   onRows: (rows: ImportedTx[]) => Promise<void>;
@@ -487,6 +492,7 @@ function DirectBrokerConnection({
   lang: Lang;
 }) {
   const copy = DIRECT_BROKER_COPY[lang];
+  const pc = proCopy[lang];
   const connectFn = useServerFn(connectDirectBroker);
   const syncFn = useServerFn(syncDirectBroker);
   const disconnectFn = useServerFn(disconnectDirectBroker);
@@ -541,6 +547,35 @@ function DirectBrokerConnection({
       setBusy(false);
     }
   };
+  if (!isPro)
+    return (
+      <Card className="space-y-3 border-primary/30 bg-primary/[0.03]">
+        <div className="flex items-center gap-2">
+          <h3 className="font-display font-semibold">{pc.directBrokerSync}</h3>
+          <ProBadge />
+        </div>
+        <p className="text-sm text-muted-foreground">{pc.directBrokerSyncDesc}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/pricing"
+            hash="plan-comparison"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {pc.unlock}
+          </Link>
+          {connected && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void disconnect()}
+              className="text-sm text-destructive disabled:opacity-50"
+            >
+              {busy ? "…" : copy.disconnect}
+            </button>
+          )}
+        </div>
+      </Card>
+    );
   return (
     <Card className="space-y-3 border-primary/20 bg-primary/[0.03]">
       <p className="text-xs text-muted-foreground">{copy.symbolHelp}</p>

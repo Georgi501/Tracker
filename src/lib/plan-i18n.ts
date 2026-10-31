@@ -34,7 +34,7 @@ const en: PlanCopy = {
     {
       title: "Brokers & import",
       free: "1 broker, CSV import",
-      pro: "Up to 5 brokers, import preview & duplicate checks",
+      pro: "Up to 5 brokers, direct IBKR & Trading 212 sync, import preview & duplicate checks",
     },
     {
       title: "Portfolio",
@@ -108,7 +108,7 @@ const bg: PlanCopy = {
     {
       title: "Брокери и импорт",
       free: "1 брокер, CSV импорт",
-      pro: "До 5 брокера, преглед и проверка за дублирани сделки",
+      pro: "До 5 брокера, директна връзка с IBKR и Trading 212, преглед и проверка за дубликати",
     },
     {
       title: "Портфолио",
@@ -183,7 +183,7 @@ const de: PlanCopy = {
     {
       title: "Broker & Import",
       free: "1 Broker, CSV-Import",
-      pro: "Bis zu 5 Broker, Importvorschau & Duplikatprüfung",
+      pro: "Bis zu 5 Broker, direkte IBKR- und Trading-212-Synchronisierung, Importvorschau & Duplikatprüfung",
     },
     {
       title: "Portfolio",
@@ -259,7 +259,7 @@ const es: PlanCopy = {
     {
       title: "Brókers e importación",
       free: "1 bróker, importación CSV",
-      pro: "Hasta 5 brókers, vista previa y control de duplicados",
+      pro: "Hasta 5 brókers, sincronización directa con IBKR y Trading 212, vista previa y control de duplicados",
     },
     {
       title: "Cartera",
@@ -335,7 +335,7 @@ const it: PlanCopy = {
     {
       title: "Broker e import",
       free: "1 broker, import CSV",
-      pro: "Fino a 5 broker, anteprima e controllo duplicati",
+      pro: "Fino a 5 broker, sincronizzazione diretta IBKR e Trading 212, anteprima e controllo duplicati",
     },
     { title: "Portafoglio", free: "Patrimonio, P&L, posizioni, prezzi live", pro: "Tutto di Free" },
     {

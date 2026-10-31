@@ -40,6 +40,11 @@ export const connectDirectBroker = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { data: isPro, error: proError } = await context.supabase.rpc("is_pro", {
+      _user_id: context.userId,
+    });
+    if (proError) throw new Error("Could not verify Pro access for direct broker connection.");
+    if (!isPro) throw new Error("A Pro subscription is required for direct broker connections.");
     const { data: broker, error: brokerError } = await context.supabase
       .from("brokers")
       .select("id,format")
@@ -72,6 +77,12 @@ export const syncDirectBroker = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => brokerInput.parse(input))
   .handler(async ({ data, context }) => {
+    const { data: isPro, error: proError } = await context.supabase.rpc("is_pro", {
+      _user_id: context.userId,
+    });
+    if (proError) throw new Error("Could not verify Pro access for direct broker sync.");
+    if (!isPro)
+      throw new Error("A Pro subscription is required to sync direct broker connections.");
     const { data: broker, error: brokerError } = await context.supabase
       .from("brokers")
       .select("id")

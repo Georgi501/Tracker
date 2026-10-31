@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { isCreemTestMode } from "@/lib/creem";
 import { paymentsCopy } from "@/lib/payments-i18n";
-import { Check, Bot, Flame, LayoutGrid, CalendarRange, Layers } from "lucide-react";
+import { Check, Bot, Flame, LayoutGrid, CalendarRange, Layers, RefreshCw } from "lucide-react";
 import { proCopy } from "@/lib/pro-i18n";
 import {
   BarsSilhouette,
@@ -202,6 +202,7 @@ function Pricing() {
             <Feature>{p.t("proF1")}</Feature>
             <Feature>{p.t("proF2")}</Feature>
             <Feature>{p.t("proF3")}</Feature>
+            <Feature>{pc.directBrokerSync}</Feature>
             <Feature>{pc.heatmap}</Feature>
             <Feature>{pc.income}</Feature>
             <Feature>{pc.fire}</Feature>
@@ -346,12 +347,19 @@ function Pricing() {
             );
           })}
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <div className="mt-5 grid gap-5 md:grid-cols-3">
           <Card className="flex gap-3 p-5">
             <Bot className="shrink-0 text-primary" />
             <div>
               <h3 className="font-display font-semibold">{pc.advisor}</h3>
               <p className="text-sm text-muted-foreground">{pc.advisorDesc}</p>
+            </div>
+          </Card>
+          <Card className="flex gap-3 p-5">
+            <RefreshCw className="shrink-0 text-primary" />
+            <div>
+              <h3 className="font-display font-semibold">{pc.directBrokerSync}</h3>
+              <p className="text-sm text-muted-foreground">{pc.directBrokerSyncDesc}</p>
             </div>
           </Card>
           <Card className="flex gap-3 p-5">

@@ -19,7 +19,10 @@ const en = {
   communityDesc:
     "A profile with a photo, member connections, portfolio allocation sharing, and private chat are included with Pro.",
   brokers: "Up to 5 brokers",
-  brokersDesc: "Combine CSV imports from Trading 212, Interactive Brokers and Revolut.",
+  brokersDesc: "Manage up to 5 broker accounts and import CSV statements.",
+  directBrokerSync: "Direct IBKR & Trading 212 sync",
+  directBrokerSyncDesc:
+    "Securely connect read-only broker APIs, fetch trades and dividends, then review every import before adding it.",
   noHoldings: "Add positions to see your heatmap.",
   goal: "Monthly goal",
   goalProgress: "of your monthly goal on average",
@@ -56,7 +59,10 @@ export const proCopy: Record<Lang, Copy> = {
     communityDesc:
       "Профил със снимка, свързване с други абонати, споделено портфолио и личен чат са включени в Pro.",
     brokers: "До 5 брокера",
-    brokersDesc: "Обедини CSV импорти от Trading 212, Interactive Brokers и Revolut.",
+    brokersDesc: "Управлявай до 5 брокерски сметки и импортирай CSV извлечения.",
+    directBrokerSync: "Директна връзка с IBKR и Trading 212",
+    directBrokerSyncDesc:
+      "Свържи сигурно read-only API на брокера, зареди сделки и дивиденти и прегледай импорта преди добавяне.",
     noHoldings: "Добави позиции, за да видиш картата.",
     goal: "Месечна цел",
     goalProgress: "от месечната цел средно",
@@ -90,7 +96,10 @@ export const proCopy: Record<Lang, Copy> = {
     communityDesc:
       "Ein Profil mit Foto, Kontakte zu anderen Mitgliedern, geteilte Portfolioaufteilung und privater Chat sind in Pro enthalten.",
     brokers: "Bis zu 5 Broker",
-    brokersDesc: "CSV-Importe von Trading 212, Interactive Brokers und Revolut kombinieren.",
+    brokersDesc: "Verwalte bis zu 5 Brokerkonten und importiere CSV-Abrechnungen.",
+    directBrokerSync: "Direkte IBKR- und Trading-212-Synchronisierung",
+    directBrokerSyncDesc:
+      "Verbinde Broker-APIs sicher mit Leseberechtigung, lade Trades und Dividenden und prüfe jeden Import vor dem Hinzufügen.",
     noHoldings: "Füge Positionen hinzu, um die Heatmap zu sehen.",
     goal: "Monatsziel",
     goalProgress: "deines Monatsziels im Schnitt",
@@ -124,7 +133,10 @@ export const proCopy: Record<Lang, Copy> = {
     communityDesc:
       "Un perfil con foto, conexiones con otros miembros, distribución compartida de la cartera y chat privado están incluidos en Pro.",
     brokers: "Hasta 5 brókers",
-    brokersDesc: "Combina importaciones CSV de Trading 212, Interactive Brokers y Revolut.",
+    brokersDesc: "Administra hasta 5 cuentas de bróker e importa extractos CSV.",
+    directBrokerSync: "Sincronización directa con IBKR y Trading 212",
+    directBrokerSyncDesc:
+      "Conecta de forma segura APIs de solo lectura, carga operaciones y dividendos y revisa cada importación antes de añadirla.",
     noHoldings: "Añade posiciones para ver el mapa.",
     goal: "Objetivo mensual",
     goalProgress: "de tu objetivo mensual de media",
@@ -158,7 +170,10 @@ export const proCopy: Record<Lang, Copy> = {
     communityDesc:
       "Profilo con foto, contatti con altri membri, allocazione condivisa del portafoglio e chat privata sono inclusi in Pro.",
     brokers: "Fino a 5 broker",
-    brokersDesc: "Combina importazioni CSV da Trading 212, Interactive Brokers e Revolut.",
+    brokersDesc: "Gestisci fino a 5 conti broker e importa estratti CSV.",
+    directBrokerSync: "Sincronizzazione diretta IBKR e Trading 212",
+    directBrokerSyncDesc:
+      "Collega in sicurezza le API broker in sola lettura, carica operazioni e dividendi e controlla ogni importazione prima di aggiungerla.",
     noHoldings: "Aggiungi posizioni per vedere la heatmap.",
     goal: "Obiettivo mensile",
     goalProgress: "del tuo obiettivo mensile in media",
