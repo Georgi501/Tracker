@@ -10,6 +10,7 @@ type MonthlyHistory = {
   points: PortfolioPoint[];
   unavailable: boolean;
   assetReturns: { assetId: string; returnPct: number }[];
+  assetContributions: { assetId: string; amount: number }[];
 };
 
 const COPY: Record<

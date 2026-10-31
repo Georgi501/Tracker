@@ -43,6 +43,7 @@ import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiThesisRouteImport } from './routes/api/thesis'
 import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
 import { Route as CommunityUserIdRouteImport } from './routes/community.$userId'
+import { Route as MarketSlugRouteImport } from './routes/market.$slug'
 import { Route as ApiAccountDeleteRouteImport } from './routes/api/account/delete'
 import { Route as ApiAccountPortalRouteImport } from './routes/api/account/portal'
 import { Route as ApiPaymentsCheckoutRouteImport } from './routes/api/payments/checkout'
@@ -220,6 +221,11 @@ const CommunityUserIdRoute = CommunityUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => CommunityRoute,
 } as any)
+const MarketSlugRoute = MarketSlugRouteImport.update({
+  id: '/market/$slug',
+  path: '/market/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAccountDeleteRoute = ApiAccountDeleteRouteImport.update({
   id: '/api/account/delete',
   path: '/api/account/delete',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
+  '/market/$slug': typeof MarketSlugRoute
   '/advisor/': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
+  '/market/$slug': typeof MarketSlugRoute
   '/advisor': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
   '/community/$userId': typeof CommunityUserIdRoute
+  '/market/$slug': typeof MarketSlugRoute
   '/advisor/': typeof AdvisorIndexRoute
   '/api/account/delete': typeof ApiAccountDeleteRoute
   '/api/account/portal': typeof ApiAccountPortalRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/api/thesis'
     | '/asset/$symbol'
     | '/community/$userId'
+    | '/market/$slug'
     | '/advisor/'
     | '/api/account/delete'
     | '/api/account/portal'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/thesis'
     | '/asset/$symbol'
     | '/community/$userId'
+    | '/market/$slug'
     | '/advisor'
     | '/api/account/delete'
     | '/api/account/portal'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/api/thesis'
     | '/asset/$symbol'
     | '/community/$userId'
+    | '/market/$slug'
     | '/advisor/'
     | '/api/account/delete'
     | '/api/account/portal'
@@ -541,6 +553,7 @@ export interface RootRouteChildren {
   ApiReviewRoute: typeof ApiReviewRoute
   ApiThesisRoute: typeof ApiThesisRoute
   AssetSymbolRoute: typeof AssetSymbolRoute
+  MarketSlugRoute: typeof MarketSlugRoute
   AdvisorIndexRoute: typeof AdvisorIndexRoute
   ApiAccountDeleteRoute: typeof ApiAccountDeleteRoute
   ApiAccountPortalRoute: typeof ApiAccountPortalRoute
@@ -790,6 +803,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunityUserIdRouteImport
       parentRoute: typeof CommunityRoute
     }
+    '/market/$slug': {
+      id: '/market/$slug'
+      path: '/market/$slug'
+      fullPath: '/market/$slug'
+      preLoaderRoute: typeof MarketSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/account/delete': {
       id: '/api/account/delete'
       path: '/api/account/delete'
@@ -880,6 +900,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReviewRoute: ApiReviewRoute,
   ApiThesisRoute: ApiThesisRoute,
   AssetSymbolRoute: AssetSymbolRoute,
+  MarketSlugRoute: MarketSlugRoute,
   AdvisorIndexRoute: AdvisorIndexRoute,
   ApiAccountDeleteRoute: ApiAccountDeleteRoute,
   ApiAccountPortalRoute: ApiAccountPortalRoute,

@@ -76,10 +76,13 @@ export function buildPortfolioHistory(
   const points: PortfolioPoint[] = [];
   const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
   const qty = new Map<string, number>();
+  const contributions = new Map<string, number>();
+  let previousValues: Map<string, number> | null = null;
   let index = 0;
   for (let t = Date.parse(start); t <= Date.parse(end); t += 86400000) {
     const date = new Date(t).toISOString().slice(0, 10);
     let flow = 0;
+    const assetFlows = new Map<string, number>();
     while (index < sorted.length) {
       const tx = sorted[index];
       if (!tx || tx.date > date) break;
@@ -91,31 +94,59 @@ export function buildPortfolioHistory(
             (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity),
           ),
         );
-      if (tx.date === date && tx.kind !== "dividend")
-        flow +=
+      if (tx.date === date && tx.kind !== "dividend") {
+        const txFlow =
           tx.kind === "buy"
             ? tx.quantity * tx.price + (tx.fee ?? 0)
             : -(tx.quantity * tx.price - (tx.fee ?? 0));
+        flow += txFlow;
+        assetFlows.set(tx.assetId, (assetFlows.get(tx.assetId) ?? 0) + txFlow);
+      }
       index++;
     }
     let value = 0;
     let available = true;
+    const values = new Map<string, number>();
     for (const asset of assets) {
       const units = qty.get(asset.id) ?? 0;
-      if (!units) continue;
+      if (!units) {
+        values.set(asset.id, 0);
+        continue;
+      }
       const price = asset.type === "cash" ? 1 : closeAt(asset.prices, date);
       const rate = currencyRate(asset.currency, date, eurUsd, gbpUsd);
       if (price === null || rate === null) {
         available = false;
         break;
       }
-      value += units * price * rate;
+      const assetValue = units * price * rate;
+      values.set(asset.id, assetValue);
+      value += assetValue;
     }
     const baseRate = base === "USD" ? 1 : currencyRate("EUR", date, eurUsd, gbpUsd);
-    if (!available || baseRate === null) return { points: [], unavailable: true };
+    if (!available || baseRate === null)
+      return { points: [], unavailable: true, assetContributions: [] };
     points.push({ t, v: value / baseRate, flow: flow / baseRate });
+    if (previousValues) {
+      for (const asset of assets) {
+        const dailyContribution =
+          ((values.get(asset.id) ?? 0) -
+            (previousValues.get(asset.id) ?? 0) -
+            (assetFlows.get(asset.id) ?? 0)) /
+          baseRate;
+        contributions.set(asset.id, (contributions.get(asset.id) ?? 0) + dailyContribution);
+      }
+    }
+    previousValues = values;
   }
-  return { points, unavailable: false };
+  return {
+    points,
+    unavailable: false,
+    assetContributions: [...contributions.entries()].map(([assetId, amount]) => ({
+      assetId,
+      amount,
+    })),
+  };
 }
 /** End-of-day external cash flow adjustment; never confuse contributions with investment returns. */
 export function historyReturn(points: PortfolioPoint[]): number | null {

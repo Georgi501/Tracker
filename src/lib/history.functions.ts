@@ -22,7 +22,8 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         .select("id,asset_id,kind,quantity,price,fee,date")
         .order("date"),
     ]);
-    if (a.error || t.error) return { points: [], unavailable: true, assetReturns: [] };
+    if (a.error || t.error)
+      return { points: [], unavailable: true, assetReturns: [], assetContributions: [] };
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
       id: r.id,
       assetId: r.asset_id,
@@ -32,7 +33,8 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       fee: Number(r.fee ?? 0),
       date: r.date,
     }));
-    if (!txs.length) return { points: [], unavailable: false, assetReturns: [] };
+    if (!txs.length)
+      return { points: [], unavailable: false, assetReturns: [], assetContributions: [] };
     const now = new Date();
     const end = now.toISOString().slice(0, 10);
     const first = txs[0]?.date ?? end;
@@ -55,10 +57,22 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           assets.push({ id: asset.id, type: asset.type, currency: "USD", prices: [] });
           continue;
         }
-        if (asset.type === "bond") return { points: [], unavailable: true, assetReturns: [] };
+        if (asset.type === "bond")
+          return {
+            points: [],
+            unavailable: true,
+            assetReturns: [],
+            assetContributions: [],
+          };
         const h = await dailyHistory(asset.symbol, fetchStart, end, asset.type);
         // Corporate-action reconciliation is not represented in transaction records yet: never draw a misleading series.
-        if (h.splits) return { points: [], unavailable: true, assetReturns: [] };
+        if (h.splits)
+          return {
+            points: [],
+            unavailable: true,
+            assetReturns: [],
+            assetContributions: [],
+          };
         assets.push({ id: asset.id, type: asset.type, currency: h.currency, prices: h.prices });
       }
       const history = buildPortfolioHistory(
@@ -113,7 +127,12 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       });
       return { ...history, assetReturns };
     } catch {
-      return { points: [], unavailable: true, assetReturns: [] };
+      return {
+        points: [],
+        unavailable: true,
+        assetReturns: [],
+        assetContributions: [],
+      };
     }
   });
 

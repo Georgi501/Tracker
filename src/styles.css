@@ -855,6 +855,9 @@ main .card-interactive.dashboard-primary-card {
 .market-ticker:focus-within .market-ticker-track {
   animation-play-state: paused;
 }
+.market-ticker-track.is-paused {
+  animation-play-state: paused;
+}
 .market-ticker-item {
   transition:
     transform 0.18s ease,
@@ -886,6 +889,9 @@ main .card-interactive.dashboard-primary-card {
     overflow-x: auto;
     scrollbar-width: none;
     touch-action: pan-y;
+  }
+  .market-index-ticker {
+    overflow: hidden;
   }
   .market-ticker::-webkit-scrollbar {
     display: none;

@@ -44,6 +44,9 @@ import { PortfolioHealth } from "@/components/PortfolioHealth";
 import { PortfolioDataCheck } from "@/components/PortfolioDataCheck";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
 import { MonthlyOverview } from "@/components/MonthlyOverview";
+import { PortfolioContributors } from "@/components/PortfolioContributors";
+import { MarketTicker } from "@/components/MarketTicker";
+import { LandingSections } from "@/components/LandingSections";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioIrr, type Transaction } from "@/lib/portfolio";
 import { fifoTaxReport } from "@/lib/tools";
@@ -535,6 +538,8 @@ function Dashboard() {
       <div className="lg:col-span-3">
         <WelcomeHero />
       </div>
+      <MarketTicker />
+      {!p.user && <LandingSections />}
       {p.user && p.holdings.length > 0 && (
         <Card className="flex flex-col gap-4 border-primary/20 bg-primary/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -957,6 +962,9 @@ function Dashboard() {
           isError={history.isError}
           onRetry={() => void history.refetch()}
         />
+      </div>
+      <div className="order-3 lg:contents">
+        <PortfolioContributors data={history.data} isLoading={history.isFetching} />
       </div>
       <div className="order-3 lg:contents">
         <PortfolioHealth />

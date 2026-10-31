@@ -160,11 +160,13 @@ export function QuoteHero({
   name,
   type,
   lang,
+  kindLabel,
 }: {
   symbol: string;
   name: string;
   type: T;
   lang: Lang;
+  kindLabel?: string;
 }) {
   const c = L[lang];
   const loc = languageLocale(lang);
@@ -240,7 +242,7 @@ export function QuoteHero({
         <CompanyLogo symbol={symbol} type={type} />
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">
-            {type.toUpperCase()} · {cur}
+            {kindLabel ?? type.toUpperCase()} · {cur}
           </p>
           <h1 className="truncate font-display text-xl font-bold sm:text-2xl">
             {name}

@@ -52,6 +52,38 @@ it("values daily quantities rather than today's quantities", () => {
   );
   expect(result.points.map((p) => p.v)).toEqual([0, 24]);
 });
+it("attributes price changes to each asset after excluding dated trade flows", () => {
+  const result = buildPortfolioHistory(
+    [
+      {
+        id: "a",
+        type: "stock",
+        currency: "USD",
+        prices: [
+          { date: "2024-01-01", close: 10 },
+          { date: "2024-01-02", close: 12 },
+          { date: "2024-01-03", close: 11 },
+        ],
+      },
+    ],
+    [
+      { id: "buy", assetId: "a", kind: "buy", quantity: 10, price: 10, date: "2024-01-01" },
+      { id: "add", assetId: "a", kind: "buy", quantity: 5, price: 12, date: "2024-01-02" },
+      { id: "sell", assetId: "a", kind: "sell", quantity: 5, price: 11, date: "2024-01-03" },
+    ],
+    "2024-01-01",
+    "2024-01-03",
+    "USD",
+    [],
+    [],
+  );
+  expect(result.assetContributions).toEqual([{ assetId: "a", amount: 5 }]);
+  expect(result.assetContributions.reduce((sum, item) => sum + item.amount, 0)).toBeCloseTo(
+    result.points.at(-1)!.v -
+      result.points[0]!.v -
+      result.points.slice(1).reduce((sum, point) => sum + point.flow, 0),
+  );
+});
 it("adjusts returns for added capital", () => {
   expect(
     historyReturn([

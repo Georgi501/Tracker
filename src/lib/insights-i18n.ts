@@ -32,6 +32,13 @@ const en = {
   scenarios: "Scenarios (−3 / base / +3 pp)",
   noGoals: "No goals yet.",
   assumption: "Projection from your current value and your assumptions; not a forecast.",
+  monthlyImpact: "Estimated value added by planned monthly contributions",
+  historyGraph: "Historical portfolio value relative to target",
+  historyUnavailable: "Portfolio history is not available for this chart.",
+  start: "Start",
+  now: "Now",
+  historyNote:
+    "This shows the whole portfolio, not money reserved for this goal. Past values are not a forecast.",
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -66,6 +73,13 @@ const bg: Copy = {
   scenarios: "Сценарии (−3 / база / +3 п.п.)",
   noGoals: "Все още няма цели.",
   assumption: "Проекция от текущата стойност и твоите допускания; не е прогноза.",
+  monthlyImpact: "Очакван принос на планираните месечни вноски",
+  historyGraph: "Историческа стойност на портфейла спрямо целта",
+  historyUnavailable: "Историята на портфейла не е налична за тази графика.",
+  start: "Начало",
+  now: "Сега",
+  historyNote:
+    "Графиката показва цялото портфолио, а не средства, отделени за тази цел. Миналите стойности не са прогноза.",
 };
 const de: Copy = {
   signIn: "Melde dich an, um Ziele im Konto zu speichern.",
@@ -99,6 +113,13 @@ const de: Copy = {
   scenarios: "Szenarien (−3 / Basis / +3 Pp.)",
   noGoals: "Noch keine Ziele.",
   assumption: "Projektion aus aktuellem Wert und deinen Annahmen; keine Prognose.",
+  monthlyImpact: "Geschätzter Wert der geplanten monatlichen Einzahlungen",
+  historyGraph: "Historischer Portfoliowert im Verhältnis zum Ziel",
+  historyUnavailable: "Der Portfolioverlauf ist für dieses Diagramm nicht verfügbar.",
+  start: "Start",
+  now: "Jetzt",
+  historyNote:
+    "Das Diagramm zeigt das gesamte Portfolio, nicht für dieses Ziel reserviertes Geld. Vergangene Werte sind keine Prognose.",
 };
 const es: Copy = {
   signIn: "Inicia sesión para guardar objetivos en tu cuenta.",
@@ -132,6 +153,13 @@ const es: Copy = {
   scenarios: "Escenarios (−3 / base / +3 pp)",
   noGoals: "Aún no hay objetivos.",
   assumption: "Proyección con tu valor actual y tus supuestos; no es un pronóstico.",
+  monthlyImpact: "Valor estimado añadido por las aportaciones mensuales previstas",
+  historyGraph: "Valor histórico de la cartera respecto al objetivo",
+  historyUnavailable: "El historial de la cartera no está disponible para este gráfico.",
+  start: "Inicio",
+  now: "Ahora",
+  historyNote:
+    "El gráfico muestra toda la cartera, no el dinero reservado para este objetivo. Los valores pasados no son una previsión.",
 };
 const it: Copy = {
   signIn: "Accedi per salvare gli obiettivi nel tuo account.",
@@ -165,5 +193,12 @@ const it: Copy = {
   scenarios: "Scenari (−3 / base / +3 pp)",
   noGoals: "Nessun obiettivo.",
   assumption: "Proiezione dal valore attuale e dalle tue ipotesi; non è una previsione.",
+  monthlyImpact: "Valore stimato aggiunto dai contributi mensili pianificati",
+  historyGraph: "Valore storico del portafoglio rispetto all'obiettivo",
+  historyUnavailable: "Lo storico del portafoglio non è disponibile per questo grafico.",
+  start: "Inizio",
+  now: "Ora",
+  historyNote:
+    "Il grafico mostra l'intero portafoglio, non il denaro riservato a questo obiettivo. I valori passati non sono una previsione.",
 };
 export const insightsCopy: Record<Lang, Copy> = { en, bg, de, es, it };

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import { Card } from "@/components/AppShell";
@@ -7,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { pct, usePortfolio } from "@/lib/store";
 import { insightsCopy } from "@/lib/insights-i18n";
 import { concentration, goalProjection, requiredMonthly, type DividendRow } from "@/lib/insights";
-import { languageLocale } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import { getPortfolioHistory } from "@/lib/history.functions";
+import type { PortfolioPoint } from "@/lib/history";
 
 export function ConcentrationCard() {
   const p = usePortfolio();
@@ -117,6 +120,7 @@ export function GoalsCard() {
   const p = usePortfolio();
   const c = insightsCopy[p.lang];
   const qc = useQueryClient();
+  const historyFn = useServerFn(getPortfolioHistory);
   const usd = p.holdings.reduce((s, h) => s + (Number.isFinite(h.value) ? h.value : 0), 0);
   const inCur = (cur: Goal["currency"]) => usd * (cur === "USD" ? 1 : (p.eurPerUsd ?? Number.NaN));
   const key = ["goals", p.user?.id];
@@ -141,6 +145,18 @@ export function GoalsCard() {
     },
   });
   const goals = q.data ?? [];
+  const historyCurrencies = [...new Set(goals.map((goal) => goal.currency))];
+  const historyQueries = useQueries({
+    queries: historyCurrencies.map((currency) => ({
+      queryKey: ["portfolio-history", p.user?.id, p.transactions, "ALL", currency],
+      queryFn: () => historyFn({ data: { period: "ALL", currency } }),
+      enabled: !!p.user,
+      staleTime: 60_000,
+    })),
+  });
+  const histories = new Map(
+    historyCurrencies.map((currency, index) => [currency, historyQueries[index]]),
+  );
   const [f, setF] = useState({ name: "", target: "", date: "", monthly: "300", ret: "6" });
   const [err, setErr] = useState("");
   const fmt = (v: number, cur: string) =>
@@ -278,6 +294,10 @@ export function GoalsCard() {
                 : Number.NaN;
               const progress = known ? Math.min(100, (cur / g.target) * 100) : 0;
               const ok = base! >= g.target;
+              const withoutMonthly = known
+                ? goalProjection({ current: cur, monthly: 0, annualReturnPct: g.ret, months })
+                : Number.NaN;
+              const historical = histories.get(g.currency);
               return (
                 <li key={g.id} className="rounded-xl border border-border p-3">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
@@ -323,6 +343,23 @@ export function GoalsCard() {
                       </div>
                     ))}
                   </div>
+                  {known && g.monthly > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {c.monthlyImpact}:{" "}
+                      <span className="font-semibold text-foreground">
+                        {fmt(base! - withoutMonthly, g.currency)}
+                      </span>
+                    </p>
+                  )}
+                  <GoalProgressChart
+                    points={historical?.data?.points ?? []}
+                    target={g.target}
+                    loading={historical?.isLoading ?? false}
+                    unavailable={
+                      historical?.isError === true || historical?.data?.unavailable === true
+                    }
+                    lang={p.lang}
+                  />
                 </li>
               );
             })}
@@ -330,5 +367,77 @@ export function GoalsCard() {
         </>
       )}
     </Card>
+  );
+}
+
+function GoalProgressChart({
+  points,
+  target,
+  loading,
+  unavailable,
+  lang,
+}: {
+  points: PortfolioPoint[];
+  target: number;
+  loading: boolean;
+  unavailable: boolean;
+  lang: Lang;
+}) {
+  const c = insightsCopy[lang];
+  const values = points
+    .filter((point) => Number.isFinite(point.v) && point.v >= 0)
+    .map((point) => (point.v / target) * 100);
+  if (loading || unavailable || values.length < 2)
+    return (
+      <p className="mt-2 text-xs text-muted-foreground">{loading ? "…" : c.historyUnavailable}</p>
+    );
+  const step = Math.max(1, Math.ceil(values.length / 48));
+  const sampled = values.filter((_, index) => index % step === 0);
+  const latest = values.at(-1)!;
+  if (sampled.at(-1) !== latest) sampled.push(latest);
+  const max = Math.max(100, ...sampled) * 1.08;
+  const line = sampled
+    .map((value, index) => `${(index / (sampled.length - 1)) * 100},${35 - (value / max) * 30}`)
+    .join(" ");
+  const targetY = 35 - (100 / max) * 30;
+  const start = values[0]!;
+  return (
+    <div className="mt-3 rounded-lg bg-muted/40 p-2">
+      <p className="text-[11px] font-medium text-muted-foreground">{c.historyGraph}</p>
+      <svg
+        role="img"
+        aria-label={`${c.historyGraph}: ${c.start} ${start.toFixed(1)}%, ${c.now} ${latest.toFixed(1)}%`}
+        viewBox="0 0 100 38"
+        preserveAspectRatio="none"
+        className="mt-1 h-16 w-full"
+      >
+        <line
+          x1="0"
+          x2="100"
+          y1={targetY}
+          y2={targetY}
+          stroke="var(--muted-foreground)"
+          strokeDasharray="2 2"
+          strokeOpacity="0.7"
+        />
+        <polyline
+          points={line}
+          fill="none"
+          stroke="var(--primary)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <div className="flex justify-between gap-2 text-[10px] text-muted-foreground">
+        <span>
+          {c.start}: {start.toFixed(1)}%
+        </span>
+        <span>
+          {c.now}: {latest.toFixed(1)}%
+        </span>
+        <span>100% = {c.target}</span>
+      </div>
+      <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{c.historyNote}</p>
+    </div>
   );
 }
