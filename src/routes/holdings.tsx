@@ -8,6 +8,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
+  Landmark,
   Pencil,
   Plus,
   Search,
@@ -28,6 +29,7 @@ import { marketQuote, searchMarket } from "@/lib/market.functions";
 import { getSparklines } from "@/lib/sparklines.functions";
 import { EmptyIllustration, Sparkline } from "@/components/Motion";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
+import { AllocationCard } from "@/components/AllocationCard";
 
 export const Route = createFileRoute("/holdings")({
   head: () => ({
@@ -95,6 +97,7 @@ const COPY: Record<
     | "empty"
     | "emptyHint"
     | "addHolding"
+    | "connectBroker"
     | "addFirst"
     | "unavailable"
     | "popular"
@@ -113,6 +116,7 @@ const COPY: Record<
     empty: "Your portfolio is empty",
     emptyHint: "Search any stock, ETF or crypto above to see its market quote and add it.",
     addHolding: "Add holding",
+    connectBroker: "Connect broker",
     addFirst: "Add first position",
     unavailable: "Quote unavailable",
     popular: "Popular",
@@ -130,6 +134,7 @@ const COPY: Record<
     emptyHint:
       "Потърси акция, ETF или крипто отгоре, за да видиш пазарната котировка и да я добавиш.",
     addHolding: "Добави холдинг",
+    connectBroker: "Свържи брокер",
     addFirst: "Добави първа позиция",
     unavailable: "Няма котировка",
     popular: "Популярни",
@@ -147,6 +152,7 @@ const COPY: Record<
     emptyHint:
       "Suche oben eine Aktie, einen ETF oder Krypto, um den Marktkurs zu sehen und hinzuzufügen.",
     addHolding: "Position hinzufügen",
+    connectBroker: "Broker verbinden",
     addFirst: "Erste Position hinzufügen",
     unavailable: "Kurs nicht verfügbar",
     popular: "Beliebt",
@@ -163,6 +169,7 @@ const COPY: Record<
     empty: "Tu cartera está vacía",
     emptyHint: "Busca arriba una acción, ETF o cripto para ver su cotización y añadirla.",
     addHolding: "Añadir posición",
+    connectBroker: "Conectar bróker",
     addFirst: "Añadir primera posición",
     unavailable: "Cotización no disponible",
     popular: "Populares",
@@ -180,6 +187,7 @@ const COPY: Record<
     emptyHint:
       "Cerca sopra un'azione, un ETF o una cripto per vederne la quotazione e aggiungerla.",
     addHolding: "Aggiungi posizione",
+    connectBroker: "Collega broker",
     addFirst: "Aggiungi prima posizione",
     unavailable: "Quotazione non disponibile",
     popular: "Popolari",
@@ -593,9 +601,17 @@ function Holdings() {
             </Card>
           );
         })()}
+      {p.holdings.length > 0 && <AllocationCard />}
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="font-display mr-auto text-2xl font-bold">{p.t("holdings")}</h1>
+          <Link
+            to="/brokers"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Landmark size={15} aria-hidden />
+            {c.connectBroker}
+          </Link>
           <button
             type="button"
             onClick={() => openAdd(null)}

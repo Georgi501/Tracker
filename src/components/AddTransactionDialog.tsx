@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Landmark, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { usePortfolio } from "@/lib/store";
+import type { Lang } from "@/lib/i18n";
 import { type AssetType, type Currency } from "@/lib/portfolio";
 import { searchCatalog, MARKET_ASSETS, type MarketAsset } from "@/lib/market-search";
 import { searchMarket, marketQuote } from "@/lib/market.functions";
@@ -10,6 +12,30 @@ import { CompanyLogo } from "@/components/CompanyLogo";
 
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
+
+const BROKER_PROMPT: Record<Lang, { title: string; description: string }> = {
+  en: {
+    title: "Connect a broker or import a statement",
+    description: "Sync IBKR and Trading 212 directly with Pro, or import a broker CSV.",
+  },
+  bg: {
+    title: "Свържи брокер или импортирай извлечение",
+    description: "Директна синхронизация с IBKR и Trading 212 с Pro или импорт на брокерски CSV.",
+  },
+  de: {
+    title: "Broker verbinden oder Abrechnung importieren",
+    description:
+      "IBKR und Trading 212 direkt mit Pro synchronisieren oder einen Broker-CSV importieren.",
+  },
+  es: {
+    title: "Conecta un bróker o importa un extracto",
+    description: "Sincroniza IBKR y Trading 212 directamente con Pro o importa un CSV del bróker.",
+  },
+  it: {
+    title: "Collega un broker o importa un estratto",
+    description: "Sincronizza IBKR e Trading 212 direttamente con Pro o importa un CSV del broker.",
+  },
+};
 
 export interface TxPreset {
   symbol: string;
@@ -52,6 +78,7 @@ export function AddTransactionDialog({
 }) {
   const p = usePortfolio();
   const bg = p.lang === "bg";
+  const brokerPrompt = BROKER_PROMPT[p.lang];
   const [kind, setKind] = useState<"buy" | "sell">("buy");
   const [sellId, setSellId] = useState("");
   const [query, setQuery] = useState("");
@@ -268,6 +295,21 @@ export function AddTransactionDialog({
             <X size={18} />
           </button>
         </div>
+        <Link
+          to="/brokers"
+          className="flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/5 p-3 transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Landmark size={18} className="shrink-0 text-primary" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{brokerPrompt.title}</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {brokerPrompt.description}
+            </span>
+          </span>
+          <span aria-hidden className="text-primary">
+            →
+          </span>
+        </Link>
         <div className="grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1">
           {(["buy", "sell"] as const).map((k) => (
             <button

@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Clock3, Info, Lightbulb, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import {
+  ArrowRight,
+  Clock3,
+  Info,
+  Landmark,
+  Lightbulb,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { CountUp } from "@/components/Motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -240,6 +250,7 @@ const DASHBOARD_COPY: Record<
   {
     quickActions: string;
     addInvestment: string;
+    connectBroker: string;
     importCsv: string;
     chooseIndex: string;
     snapshot: string;
@@ -254,6 +265,7 @@ const DASHBOARD_COPY: Record<
   en: {
     quickActions: "Quick actions",
     addInvestment: "Add investment",
+    connectBroker: "Connect broker",
     importCsv: "Import CSV",
     chooseIndex: "Choose an index",
     snapshot: "Portfolio snapshot",
@@ -268,6 +280,7 @@ const DASHBOARD_COPY: Record<
   bg: {
     quickActions: "Бързи действия",
     addInvestment: "Добави инвестиция",
+    connectBroker: "Свържи брокер",
     importCsv: "Импортирай CSV",
     chooseIndex: "Избери индекс",
     snapshot: "Портфолиото накратко",
@@ -282,6 +295,7 @@ const DASHBOARD_COPY: Record<
   de: {
     quickActions: "Schnellzugriff",
     addInvestment: "Investment hinzufügen",
+    connectBroker: "Broker verbinden",
     importCsv: "CSV importieren",
     chooseIndex: "Index auswählen",
     snapshot: "Portfolio im Überblick",
@@ -296,6 +310,7 @@ const DASHBOARD_COPY: Record<
   es: {
     quickActions: "Acciones rápidas",
     addInvestment: "Añadir inversión",
+    connectBroker: "Conectar bróker",
     importCsv: "Importar CSV",
     chooseIndex: "Elegir un índice",
     snapshot: "Resumen de cartera",
@@ -309,6 +324,7 @@ const DASHBOARD_COPY: Record<
   it: {
     quickActions: "Azioni rapide",
     addInvestment: "Aggiungi investimento",
+    connectBroker: "Collega broker",
     importCsv: "Importa CSV",
     chooseIndex: "Scegli un indice",
     snapshot: "Riepilogo del portafoglio",
@@ -553,6 +569,13 @@ function Dashboard() {
               <Plus size={16} aria-hidden />
               {dashboardCopy.addInvestment}
             </button>
+            <Link
+              to="/brokers"
+              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <Landmark size={15} aria-hidden />
+              {dashboardCopy.connectBroker}
+            </Link>
             <Link
               to="/brokers"
               className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
