@@ -24,7 +24,7 @@ const COPY: Record<
 > = {
   en: {
     title: "Markets today",
-    updated: "Updated",
+    updated: "Latest quote",
     source: "Yahoo Finance",
     delayed: "Quotes may be delayed",
     unavailable: "Unavailable",
@@ -34,7 +34,7 @@ const COPY: Record<
   },
   bg: {
     title: "Пазарите днес",
-    updated: "Обновено",
+    updated: "Последна котировка",
     source: "Yahoo Finance",
     delayed: "Котировките може да са забавени",
     unavailable: "Недостъпно",
@@ -44,7 +44,7 @@ const COPY: Record<
   },
   de: {
     title: "Märkte heute",
-    updated: "Aktualisiert",
+    updated: "Letzte Notierung",
     source: "Yahoo Finance",
     delayed: "Kurse können verzögert sein",
     unavailable: "Nicht verfügbar",
@@ -54,7 +54,7 @@ const COPY: Record<
   },
   es: {
     title: "Mercados hoy",
-    updated: "Actualizado",
+    updated: "Última cotización",
     source: "Yahoo Finance",
     delayed: "Las cotizaciones pueden tener retraso",
     unavailable: "No disponible",
@@ -64,7 +64,7 @@ const COPY: Record<
   },
   it: {
     title: "Mercati oggi",
-    updated: "Aggiornato",
+    updated: "Ultima quotazione",
     source: "Yahoo Finance",
     delayed: "Le quotazioni potrebbero essere ritardate",
     unavailable: "Non disponibile",
@@ -98,9 +98,12 @@ export function MarketTicker() {
     .sort()
     .at(-1);
   const updated = latestAt
-    ? new Intl.DateTimeFormat(languageLocale(lang), { hour: "2-digit", minute: "2-digit" }).format(
-        new Date(latestAt),
-      )
+    ? new Intl.DateTimeFormat(languageLocale(lang), {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(latestAt))
     : null;
 
   const formatPrice = (price: number, currency: string | null, fx: boolean) => {

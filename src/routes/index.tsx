@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod } from "@/lib/history";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   Clock3,
@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Pencil,
   Plus,
+  ShieldAlert,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -33,18 +34,11 @@ import {
   YAxis,
 } from "recharts";
 import { Card, Delta } from "@/components/AppShell";
-import { AllocationCard } from "@/components/AllocationCard";
-import { DashboardMovers } from "@/components/DashboardMovers";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
-import { PortfolioHealth } from "@/components/PortfolioHealth";
-import { PortfolioDataCheck } from "@/components/PortfolioDataCheck";
-import { WeeklyDigest } from "@/components/WeeklyDigest";
-import { MonthlyOverview } from "@/components/MonthlyOverview";
-import { PortfolioContributors } from "@/components/PortfolioContributors";
 import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections } from "@/components/LandingSections";
 import { pct, usePortfolio } from "@/lib/store";
@@ -69,6 +63,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
+
+const MonthlyOverview = lazy(() =>
+  import("@/components/MonthlyOverview").then((module) => ({
+    default: module.MonthlyOverview,
+  })),
+);
+const PortfolioContributors = lazy(() =>
+  import("@/components/PortfolioContributors").then((module) => ({
+    default: module.PortfolioContributors,
+  })),
+);
+const PortfolioHealth = lazy(() =>
+  import("@/components/PortfolioHealth").then((module) => ({
+    default: module.PortfolioHealth,
+  })),
+);
+const WeeklyDigest = lazy(() =>
+  import("@/components/WeeklyDigest").then((module) => ({
+    default: module.WeeklyDigest,
+  })),
+);
+const DashboardMovers = lazy(() =>
+  import("@/components/DashboardMovers").then((module) => ({
+    default: module.DashboardMovers,
+  })),
+);
+const PortfolioDataCheck = lazy(() =>
+  import("@/components/PortfolioDataCheck").then((module) => ({
+    default: module.PortfolioDataCheck,
+  })),
+);
+const AllocationCard = lazy(() =>
+  import("@/components/AllocationCard").then((module) => ({
+    default: module.AllocationCard,
+  })),
+);
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { benchmarkCopy } from "@/lib/benchmark-i18n";
 import type { Lang } from "@/lib/i18n";
@@ -259,6 +289,10 @@ const DASHBOARD_COPY: Record<
     snapshot: string;
     unavailableSnapshot: string;
     largestPosition: (name: string, share: string) => string;
+    concentrationTitle: string;
+    concentrationSignal: (name: string, share: string) => string;
+    concentrationContext: string;
+    reviewHoldings: string;
     recentActivity: string;
     viewAll: string;
     noRecentActivity: string;
@@ -274,6 +308,11 @@ const DASHBOARD_COPY: Record<
     unavailableSnapshot: "Portfolio values are not currently available.",
     largestPosition: (name, share) =>
       `${name} is your largest position at ${share} of the portfolio.`,
+    concentrationTitle: "Single-position concentration",
+    concentrationSignal: (name, share) => `${name} represents ${share} of your portfolio.`,
+    concentrationContext:
+      "This is a concentration signal, not investment advice. Review it against your intended allocation.",
+    reviewHoldings: "Review holdings",
     recentActivity: "Recent activity",
     viewAll: "View all",
     noRecentActivity: "No recent transactions.",
@@ -288,6 +327,11 @@ const DASHBOARD_COPY: Record<
     unavailableSnapshot: "Стойностите на портфолиото не са налични в момента.",
     largestPosition: (name, share) =>
       `${name} е най-голямата ти позиция с дял ${share} от портфолиото.`,
+    concentrationTitle: "Концентрация в една позиция",
+    concentrationSignal: (name, share) => `${name} представлява ${share} от портфолиото ти.`,
+    concentrationContext:
+      "Това е сигнал за концентрация, а не инвестиционен съвет. Сравни го с планираното от теб разпределение.",
+    reviewHoldings: "Прегледай позициите",
     recentActivity: "Последни трансакции",
     viewAll: "Виж всички",
     noRecentActivity: "Няма скорошни трансакции.",
@@ -302,6 +346,11 @@ const DASHBOARD_COPY: Record<
     unavailableSnapshot: "Portfoliowerte sind derzeit nicht verfügbar.",
     largestPosition: (name, share) =>
       `${name} ist deine größte Position mit ${share} des Portfolios.`,
+    concentrationTitle: "Konzentration auf eine Position",
+    concentrationSignal: (name, share) => `${name} macht ${share} deines Portfolios aus.`,
+    concentrationContext:
+      "Dies ist ein Konzentrationssignal, keine Anlageberatung. Vergleiche es mit deiner geplanten Aufteilung.",
+    reviewHoldings: "Positionen ansehen",
     recentActivity: "Letzte Aktivitäten",
     viewAll: "Alle anzeigen",
     noRecentActivity: "Keine aktuellen Transaktionen.",
@@ -315,6 +364,11 @@ const DASHBOARD_COPY: Record<
     snapshot: "Resumen de cartera",
     unavailableSnapshot: "El valor de la cartera no está disponible en este momento.",
     largestPosition: (name, share) => `${name} es tu mayor posición con un ${share} de la cartera.`,
+    concentrationTitle: "Concentración en una posición",
+    concentrationSignal: (name, share) => `${name} representa el ${share} de tu cartera.`,
+    concentrationContext:
+      "Es una señal de concentración, no asesoramiento financiero. Compárala con la asignación que tienes prevista.",
+    reviewHoldings: "Revisar posiciones",
     recentActivity: "Actividad reciente",
     viewAll: "Ver todas",
     noRecentActivity: "No hay operaciones recientes.",
@@ -329,6 +383,11 @@ const DASHBOARD_COPY: Record<
     unavailableSnapshot: "I valori del portafoglio non sono al momento disponibili.",
     largestPosition: (name, share) =>
       `${name} è la tua posizione principale con il ${share} del portafoglio.`,
+    concentrationTitle: "Concentrazione su una posizione",
+    concentrationSignal: (name, share) => `${name} rappresenta il ${share} del tuo portafoglio.`,
+    concentrationContext:
+      "È un segnale di concentrazione, non una consulenza finanziaria. Confrontalo con l'allocazione che hai pianificato.",
+    reviewHoldings: "Rivedi le posizioni",
     recentActivity: "Attività recenti",
     viewAll: "Vedi tutte",
     noRecentActivity: "Nessuna operazione recente.",
@@ -411,6 +470,47 @@ const TRANSACTION_ACTION_COPY: Record<
     restored: "Operazione ripristinata.",
   },
 };
+
+function DeferredDashboardSection({ children }: { children: ReactNode }) {
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const trigger = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = trigger.current;
+    if (!element) return;
+    if (!("IntersectionObserver" in window)) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px 0px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      <div ref={trigger} className="order-3 h-px lg:col-span-3" aria-hidden />
+      {shouldLoad ? (
+        <Suspense
+          fallback={<div className="order-3 min-h-28 rounded-2xl bg-card/40" aria-hidden />}
+        >
+          {children}
+        </Suspense>
+      ) : (
+        <div className="order-3 min-h-8 lg:col-span-3" aria-hidden />
+      )}
+    </>
+  );
+}
 
 function Dashboard() {
   const p = usePortfolio();
@@ -514,12 +614,15 @@ function Dashboard() {
       (largest, holding) => (!largest || holding.value > largest.value ? holding : largest),
       null,
     );
+  const largestShareRatio =
+    largestHolding && portfolioValue > 0 ? largestHolding.value / portfolioValue : null;
   const largestShare =
-    largestHolding && portfolioValue > 0
+    largestShareRatio !== null
       ? new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(
-          largestHolding.value / portfolioValue,
+          largestShareRatio,
         )
       : null;
+  const isConcentrated = largestShareRatio !== null && largestShareRatio >= 0.5;
   const recentTransactions = [...p.transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4);
@@ -541,20 +644,67 @@ function Dashboard() {
       <MarketTicker />
       {!p.user && <LandingSections />}
       {p.user && p.holdings.length > 0 && (
-        <Card className="flex flex-col gap-4 border-primary/20 bg-primary/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3">
+        <Card
+          className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3 ${
+            isConcentrated
+              ? "border-amber-500/35 bg-amber-500/[0.045]"
+              : "border-primary/20 bg-primary/[0.035]"
+          }`}
+        >
           <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-              <Lightbulb size={19} aria-hidden />
+            <span
+              className={`grid size-10 shrink-0 place-items-center rounded-xl ${
+                isConcentrated
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                  : "bg-primary/10 text-primary"
+              }`}
+            >
+              {isConcentrated ? (
+                <ShieldAlert size={19} aria-hidden />
+              ) : (
+                <Lightbulb size={19} aria-hidden />
+              )}
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {dashboardCopy.snapshot}
+                {isConcentrated ? dashboardCopy.concentrationTitle : dashboardCopy.snapshot}
               </p>
               <p className="mt-1 text-sm font-medium leading-relaxed">
                 {largestHolding && largestShare
-                  ? dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
+                  ? isConcentrated
+                    ? dashboardCopy.concentrationSignal(largestHolding.asset.name, largestShare)
+                    : dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
                   : dashboardCopy.unavailableSnapshot}
               </p>
+              {isConcentrated && largestHolding && largestShare && (
+                <>
+                  <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+                    {dashboardCopy.concentrationContext}
+                  </p>
+                  {largestShareRatio !== null && (
+                    <div
+                      className="mt-2 h-1.5 max-w-sm overflow-hidden rounded-full bg-amber-500/15"
+                      role="img"
+                      aria-label={dashboardCopy.concentrationSignal(
+                        largestHolding.asset.name,
+                        largestShare,
+                      )}
+                    >
+                      <div
+                        className="h-full rounded-full bg-amber-500"
+                        style={{ width: `${Math.min(largestShareRatio, 1) * 100}%` }}
+                      />
+                    </div>
+                  )}
+                  <Link
+                    to="/holdings"
+                    className="mt-2 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    {dashboardCopy.reviewHoldings}{" "}
+                    <ArrowRight size={13} className="ml-1" aria-hidden />
+                  </Link>
+                </>
+              )}
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
@@ -588,7 +738,7 @@ function Dashboard() {
       )}
       {p.user && p.holdings.length > 0 && (
         <>
-          <Card className="dashboard-primary-card order-2 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
+          <Card className="dashboard-primary-card order-1 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {p.t("netWorth")}
@@ -899,7 +1049,7 @@ function Dashboard() {
             </p>
           </Card>
           <TooltipProvider>
-            <div className="dashboard-metrics order-1 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5 lg:order-none">
+            <div className="dashboard-metrics order-2 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5 lg:order-none">
               <Metric
                 label={p.t("totalPnl")}
                 help={METRIC_HELP[p.lang].totalPnl}
@@ -955,75 +1105,79 @@ function Dashboard() {
           </TooltipProvider>
         </>
       )}
-      <div className="order-3 lg:contents">
-        <MonthlyOverview
-          data={history.data}
-          isLoading={history.isFetching}
-          isError={history.isError}
-          onRetry={() => void history.refetch()}
-        />
-      </div>
-      <div className="order-3 lg:contents">
-        <PortfolioContributors data={history.data} isLoading={history.isFetching} />
-      </div>
-      <div className="order-3 lg:contents">
-        <PortfolioHealth />
-      </div>
-      <div className="order-3 lg:contents">
-        <WeeklyDigest />
-      </div>
-      <div className="order-3 lg:contents">
-        <DashboardMovers />
-      </div>
-      <div className="order-3 lg:contents">
-        <PortfolioDataCheck />
-      </div>
-      {p.holdings.length > 0 && (
-        <div className="order-3 lg:contents">
-          <AllocationCard />
-        </div>
-      )}
-      {p.holdings.length > 0 && (
-        <div className="order-3 lg:contents">
-          <Card className="lg:col-span-2">
-            <div className="mb-3 flex justify-between">
-              <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
-              <Link to="/holdings" className="text-sm font-semibold text-primary">
-                {p.t("holdings")} →
-              </Link>
+      <DeferredDashboardSection>
+        <>
+          <div className="order-3 lg:contents">
+            <MonthlyOverview
+              data={history.data}
+              isLoading={history.isFetching}
+              isError={history.isError}
+              onRetry={() => void history.refetch()}
+            />
+          </div>
+          <div className="order-3 lg:contents">
+            <PortfolioContributors data={history.data} isLoading={history.isFetching} />
+          </div>
+          <div className="order-3 lg:contents">
+            <PortfolioHealth />
+          </div>
+          <div className="order-3 lg:contents">
+            <WeeklyDigest />
+          </div>
+          <div className="order-3 lg:contents">
+            <DashboardMovers />
+          </div>
+          <div className="order-3 lg:contents">
+            <PortfolioDataCheck />
+          </div>
+          {p.holdings.length > 0 && (
+            <div className="order-3 lg:contents">
+              <AllocationCard />
             </div>
-            <ul className="divide-y divide-border">
-              {p.holdings.slice(0, 6).map((h) => (
-                <li key={h.asset.id}>
-                  <Link
-                    to="/asset/$symbol"
-                    params={{ symbol: h.asset.symbol }}
-                    className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold">{h.asset.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <p className="font-semibold">{p.money(h.value)}</p>
-                      <div className="flex items-center justify-end gap-2 text-xs">
-                        <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                        <span className="text-muted-foreground">
-                          {portfolioValue > 0 && Number.isFinite(h.value)
-                            ? ((h.value / portfolioValue) * 100).toFixed(1)
-                            : "0.0"}
-                          % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
-                        </span>
-                      </div>
-                    </div>
+          )}
+          {p.holdings.length > 0 && (
+            <div className="order-3 lg:contents">
+              <Card className="lg:col-span-2">
+                <div className="mb-3 flex justify-between">
+                  <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
+                  <Link to="/holdings" className="text-sm font-semibold text-primary">
+                    {p.t("holdings")} →
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
-      )}
+                </div>
+                <ul className="divide-y divide-border">
+                  {p.holdings.slice(0, 6).map((h) => (
+                    <li key={h.asset.id}>
+                      <Link
+                        to="/asset/$symbol"
+                        params={{ symbol: h.asset.symbol }}
+                        className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold">{h.asset.name}</p>
+                          <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
+                        </div>
+                        <div className="text-right text-sm">
+                          <p className="font-semibold">{p.money(h.value)}</p>
+                          <div className="flex items-center justify-end gap-2 text-xs">
+                            <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
+                            <span className="text-muted-foreground">
+                              {portfolioValue > 0 && Number.isFinite(h.value)
+                                ? ((h.value / portfolioValue) * 100).toFixed(1)
+                                : "0.0"}
+                              % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
+          )}
+        </>
+      </DeferredDashboardSection>
       {p.user && p.holdings.length > 0 && (
         <div className="order-3 lg:contents">
           <Card className="min-w-0">
