@@ -14,6 +14,20 @@ export interface PortfolioPoint {
   v: number;
   flow: number;
 }
+export async function mapInBatches<T, R>(
+  items: T[],
+  batchSize: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (!Number.isInteger(batchSize) || batchSize < 1)
+    throw new Error("Batch size must be a positive integer");
+  const results: R[] = [];
+  for (let start = 0; start < items.length; start += batchSize) {
+    const batch = items.slice(start, start + batchSize);
+    results.push(...(await Promise.all(batch.map(mapper))));
+  }
+  return results;
+}
 export type HistoryPeriod = "1M" | "3M" | "6M" | "YTD" | "1Y" | "3Y" | "5Y" | "ALL";
 const HISTORY_MONTHS: Partial<Record<HistoryPeriod, number>> = {
   "1M": 1,

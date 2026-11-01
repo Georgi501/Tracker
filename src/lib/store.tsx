@@ -118,6 +118,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const quoteFn = useServerFn(getQuotes);
   const fxFn = useServerFn(getExchangeRate);
   const convertFn = useServerFn(convertImport);
+  const holdings = useMemo(() => computeHoldings(assets, transactions), [assets, transactions]);
 
   useEffect(() => {
     const refresh = () => {
@@ -126,7 +127,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         .catch(() => setEurPerUsd(null));
     };
     refresh();
-    const timer = setInterval(refresh, 60000);
+    const timer = setInterval(refresh, 300000);
     return () => clearInterval(timer);
   }, [fxFn]);
 
@@ -598,7 +599,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           return moneyBase(usd, o);
         }
       },
-      holdings: computeHoldings(assets, transactions),
+      holdings,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -611,6 +612,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     displayName,
     assets,
     transactions,
+    holdings,
     brokers,
     dataError,
     pricesLive,

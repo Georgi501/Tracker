@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buildPortfolioHistory, closeAt, currencyRate, periodStart } from "./history";
+import { buildPortfolioHistory, closeAt, currencyRate, mapInBatches, periodStart } from "./history";
 import type { Transaction } from "./portfolio";
+
+const HISTORY_BATCH_SIZE = 5;
 
 export const getPortfolioHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -46,35 +48,55 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         dailyHistory("EURUSD=X", fetchStart, end),
         dailyHistory("GBPUSD=X", fetchStart, end),
       ]);
+      const transactedAssetIds = new Set(
+        txs
+          .filter((transaction) => transaction.kind !== "dividend")
+          .map((transaction) => transaction.assetId),
+      );
+      const portfolioAssets = (a.data ?? []).filter((asset) => transactedAssetIds.has(asset.id));
+      if (portfolioAssets.some((asset) => asset.type === "bond"))
+        return {
+          points: [],
+          unavailable: true,
+          assetReturns: [],
+          assetContributions: [],
+        };
+      const downloadedAssets = await mapInBatches(
+        portfolioAssets.filter((asset) => asset.type !== "cash"),
+        HISTORY_BATCH_SIZE,
+        async (asset) => {
+          const history = await dailyHistory(asset.symbol, fetchStart, end, asset.type);
+          return {
+            id: asset.id,
+            type: asset.type,
+            currency: history.currency,
+            prices: history.prices,
+            splits: history.splits,
+          };
+        },
+      );
+      if (downloadedAssets.some((asset) => asset.splits))
+        return {
+          points: [],
+          unavailable: true,
+          assetReturns: [],
+          assetContributions: [],
+        };
+      const downloadedById = new Map(downloadedAssets.map((asset) => [asset.id, asset]));
       const assets: {
         id: string;
         type: string;
         currency: string;
         prices: { date: string; close: number }[];
-      }[] = [];
-      for (const asset of a.data ?? []) {
-        if (asset.type === "cash") {
-          assets.push({ id: asset.id, type: asset.type, currency: "USD", prices: [] });
-          continue;
-        }
-        if (asset.type === "bond")
-          return {
-            points: [],
-            unavailable: true,
-            assetReturns: [],
-            assetContributions: [],
-          };
-        const h = await dailyHistory(asset.symbol, fetchStart, end, asset.type);
-        // Corporate-action reconciliation is not represented in transaction records yet: never draw a misleading series.
-        if (h.splits)
-          return {
-            points: [],
-            unavailable: true,
-            assetReturns: [],
-            assetContributions: [],
-          };
-        assets.push({ id: asset.id, type: asset.type, currency: h.currency, prices: h.prices });
-      }
+      }[] = portfolioAssets.map(
+        (asset) =>
+          downloadedById.get(asset.id) ?? {
+            id: asset.id,
+            type: asset.type,
+            currency: "USD",
+            prices: [],
+          },
+      );
       const history = buildPortfolioHistory(
         assets,
         txs,

@@ -1,5 +1,11 @@
 import { expect, it } from "vitest";
-import { buildPortfolioHistory, currencyRate, periodStart, historyReturn } from "@/lib/history";
+import {
+  buildPortfolioHistory,
+  currencyRate,
+  historyReturn,
+  mapInBatches,
+  periodStart,
+} from "@/lib/history";
 const eur = [
   { date: "2024-01-01", close: 1.1 },
   { date: "2024-01-02", close: 1.2 },
@@ -91,4 +97,26 @@ it("adjusts returns for added capital", () => {
       { t: 2, v: 220, flow: 100 },
     ]),
   ).toBeCloseTo(20);
+});
+it("limits parallel history work to each batch and preserves result order", async () => {
+  let active = 0;
+  let peak = 0;
+  const result = await mapInBatches(
+    Array.from({ length: 8 }, (_, index) => index),
+    3,
+    async (item) => {
+      active++;
+      peak = Math.max(peak, active);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      active--;
+      return item * 2;
+    },
+  );
+  expect(peak).toBe(3);
+  expect(result).toEqual([0, 2, 4, 6, 8, 10, 12, 14]);
+});
+it("rejects an invalid history batch size", async () => {
+  await expect(mapInBatches([1], 0, async (value) => value)).rejects.toThrow(
+    "Batch size must be a positive integer",
+  );
 });

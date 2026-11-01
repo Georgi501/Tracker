@@ -903,6 +903,12 @@ main .card-interactive.dashboard-primary-card {
     animation-play-state: paused;
   }
 }
+@media (max-width: 767px) {
+  .holdings-mobile-list > li {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 7rem;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .market-ticker {
     overflow-x: auto;

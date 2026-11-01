@@ -1,6 +1,6 @@
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -221,13 +221,17 @@ function Holdings() {
   });
 
   const sparkFn = useServerFn(getSparklines);
-  const sparkItems = p.holdings
-    .flatMap((h) =>
-      h.asset.type === "stock" || h.asset.type === "etf" || h.asset.type === "crypto"
-        ? [{ symbol: h.asset.symbol, type: h.asset.type }]
-        : [],
-    )
-    .slice(0, 40);
+  const sparkItems = useMemo(
+    () =>
+      p.holdings
+        .flatMap((h) =>
+          h.asset.type === "stock" || h.asset.type === "etf" || h.asset.type === "crypto"
+            ? [{ symbol: h.asset.symbol, type: h.asset.type }]
+            : [],
+        )
+        .slice(0, 40),
+    [p.holdings],
+  );
   const sparkKey = sparkItems.map((s) => s.symbol).join(",");
   const sparks = useQuery({
     queryKey: ["holdings-sparklines", sparkKey],
@@ -240,21 +244,24 @@ function Holdings() {
     setSort((s) =>
       s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: key === "name" ? 1 : -1 },
     );
-  const rows = p.holdings
-    .filter(
-      (h) =>
-        (type === "all" || h.asset.type === type) &&
-        (h.asset.name + h.asset.symbol).toLowerCase().includes(q.toLowerCase()),
-    )
-    .sort((a, b) => {
-      if (sort.key === "name") return a.asset.name.localeCompare(b.asset.name) * sort.dir;
-      const av = sortValue(a, sort.key),
-        bv = sortValue(b, sort.key);
-      // Missing quotes always sink to the bottom regardless of direction.
-      if (!Number.isFinite(av)) return Number.isFinite(bv) ? 1 : 0;
-      if (!Number.isFinite(bv)) return -1;
-      return (av - bv) * sort.dir;
-    });
+  const rows = useMemo(
+    () =>
+      p.holdings
+        .filter(
+          (h) =>
+            (type === "all" || h.asset.type === type) &&
+            (h.asset.name + h.asset.symbol).toLowerCase().includes(q.toLowerCase()),
+        )
+        .sort((a, b) => {
+          if (sort.key === "name") return a.asset.name.localeCompare(b.asset.name) * sort.dir;
+          const av = sortValue(a, sort.key),
+            bv = sortValue(b, sort.key);
+          if (!Number.isFinite(av)) return Number.isFinite(bv) ? 1 : 0;
+          if (!Number.isFinite(bv)) return -1;
+          return (av - bv) * sort.dir;
+        }),
+    [p.holdings, q, sort, type],
+  );
   const Th = ({
     k,
     label,
@@ -313,7 +320,7 @@ function Holdings() {
       return p.money(a.price);
     }
   };
-  const owned = new Set(p.assets.map((a) => a.symbol.toUpperCase()));
+  const owned = useMemo(() => new Set(p.assets.map((a) => a.symbol.toUpperCase())), [p.assets]);
 
   const openAdd = (next: TxPreset | null) => {
     if (!p.user) {
@@ -738,11 +745,11 @@ function Holdings() {
                 {sort.dir === 1 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
               </button>
             </div>
-            <ul className="space-y-2.5 md:hidden">
+            <ul className="holdings-mobile-list space-y-2.5 md:hidden">
               {rows.map((h, i) => (
                 <li
                   key={h.asset.id}
-                  style={{ animationDelay: `${i * 40}ms` }}
+                  style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
                   className="rise-in rounded-2xl border border-border bg-background/60 p-3"
                 >
                   <div className="flex items-center gap-3">

@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
-import { historyReturn, type HistoryPeriod } from "@/lib/history";
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { historyReturn, type HistoryPeriod, type PortfolioPoint } from "@/lib/history";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   Clock3,
@@ -102,6 +102,8 @@ const AllocationCard = lazy(() =>
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { benchmarkCopy } from "@/lib/benchmark-i18n";
 import type { Lang } from "@/lib/i18n";
+
+const EMPTY_HISTORY_POINTS: PortfolioPoint[] = [];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -537,6 +539,7 @@ function DeferredDashboardSection({ children }: { children: ReactNode }) {
 
 function Dashboard() {
   const p = usePortfolio();
+  const { holdings, transactions } = p;
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   const [deletingBusy, setDeletingBusy] = useState(false);
@@ -563,15 +566,24 @@ function Dashboard() {
   }, [benchmark, benchmarkLoaded]);
   const c = benchmarkCopy[p.lang];
   const chartNote = CHART_NOTE[p.lang];
-  const total = p.holdings.reduce((s, h) => s + h.value, 0);
-  const portfolioValue = p.holdings.reduce(
-    (sum, holding) => (Number.isFinite(holding.value) ? sum + holding.value : sum),
-    0,
-  );
-  const cost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
-  const pnl = total - cost;
-  const realized = fifoTaxReport(p.transactions).reduce((s, y) => s + y.realized, 0);
-  const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
+  const portfolioMetrics = useMemo(() => {
+    const total = holdings.reduce((sum, holding) => sum + holding.value, 0);
+    const cost = holdings.reduce((sum, holding) => sum + holding.costBasis, 0);
+    return {
+      total,
+      portfolioValue: holdings.reduce(
+        (sum, holding) => (Number.isFinite(holding.value) ? sum + holding.value : sum),
+        0,
+      ),
+      cost,
+      pnl: total - cost,
+      realized: fifoTaxReport(transactions).reduce((sum, year) => sum + year.realized, 0),
+      day: holdings.reduce((sum, holding) => sum + holding.dayChange, 0),
+      irr:
+        holdings.length && Number.isFinite(total) ? portfolioIrr(transactions, total) : Number.NaN,
+    };
+  }, [holdings, transactions]);
+  const { total, portfolioValue, cost, pnl, realized, day, irr: irrV } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
   const history = useQuery({
     queryKey: ["portfolio-history", p.user?.id, p.transactions, period, p.currency],
@@ -579,7 +591,7 @@ function Dashboard() {
     enabled: !!p.user,
     staleTime: 60000,
   });
-  const series = history.data?.points ?? [];
+  const series = history.data?.points ?? EMPTY_HISTORY_POINTS;
   const indexFn = useServerFn(getBenchmarkHistory);
   const first = series[0];
   const last = series.at(-1);
@@ -594,49 +606,65 @@ function Dashboard() {
     enabled: benchmark !== "none" && !!first && !!last,
     staleTime: 300000,
   });
-  const comparison = indexHistory.data?.index
-    ? benchmarkSeries(
-        series,
-        indexHistory.data.index.prices,
-        indexHistory.data.index.currency,
-        p.currency,
-        indexHistory.data.eur,
-        indexHistory.data.gbp,
-        indexHistory.data.jpy,
-      )
-    : [];
+  const comparison = useMemo(
+    () =>
+      indexHistory.data?.index
+        ? benchmarkSeries(
+            series,
+            indexHistory.data.index.prices,
+            indexHistory.data.index.currency,
+            p.currency,
+            indexHistory.data.eur,
+            indexHistory.data.gbp,
+            indexHistory.data.jpy,
+          )
+        : [],
+    [indexHistory.data, p.currency, series],
+  );
   const comparisonLast = comparison.at(-1);
-  const performanceSeries: { t: number; v: number }[] = [];
-  if (series.length > 1 && historyReturn(series) !== null) {
-    let growth = 1;
-    series.forEach((point, index) => {
-      const prior = series[index - 1];
-      if (prior) growth *= (point.v - point.flow) / prior.v;
-      performanceSeries.push({ t: point.t, v: (growth - 1) * 100 });
-    });
-  }
-  const performanceChart = performanceSeries.map((point, index) => ({
-    ...point,
-    benchmark: comparison[index]?.benchmark,
-  }));
+  const performanceSeries = useMemo(() => {
+    const points: { t: number; v: number }[] = [];
+    if (series.length > 1 && historyReturn(series) !== null) {
+      let growth = 1;
+      series.forEach((point, index) => {
+        const prior = series[index - 1];
+        if (prior) growth *= (point.v - point.flow) / prior.v;
+        points.push({ t: point.t, v: (growth - 1) * 100 });
+      });
+    }
+    return points;
+  }, [series]);
+  const performanceChart = useMemo(
+    () =>
+      performanceSeries.map((point, index) => ({
+        ...point,
+        benchmark: comparison[index]?.benchmark,
+      })),
+    [comparison, performanceSeries],
+  );
   const indexName = BENCHMARKS.find((b) => b.symbol === benchmark)?.name ?? "";
-  const tw = historyReturn(series) ?? Number.NaN;
-  const irrV =
-    p.holdings.length && Number.isFinite(total) ? portfolioIrr(p.transactions, total) : Number.NaN;
-  const chg =
-    series.length > 1
-      ? (series.at(-1)?.v ?? 0) -
-        (series[0]?.v ?? 0) -
-        series.slice(1).reduce((sum, point) => sum + point.flow, 0)
-      : Number.NaN;
+  const tw = useMemo(() => historyReturn(series) ?? Number.NaN, [series]);
+  const chg = useMemo(
+    () =>
+      series.length > 1
+        ? (series.at(-1)?.v ?? 0) -
+          (series[0]?.v ?? 0) -
+          series.slice(1).reduce((sum, point) => sum + point.flow, 0)
+        : Number.NaN,
+    [series],
+  );
   const locale = languageLocale(p.lang);
   const dashboardCopy = DASHBOARD_COPY[p.lang];
-  const largestHolding = p.holdings
-    .filter((holding) => Number.isFinite(holding.value))
-    .reduce<(typeof p.holdings)[number] | null>(
-      (largest, holding) => (!largest || holding.value > largest.value ? holding : largest),
-      null,
-    );
+  const largestHolding = useMemo(
+    () =>
+      holdings
+        .filter((holding) => Number.isFinite(holding.value))
+        .reduce<(typeof holdings)[number] | null>(
+          (largest, holding) => (!largest || holding.value > largest.value ? holding : largest),
+          null,
+        ),
+    [holdings],
+  );
   const largestShareRatio =
     largestHolding && portfolioValue > 0 ? largestHolding.value / portfolioValue : null;
   const largestShare =
