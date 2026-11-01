@@ -41,6 +41,7 @@ import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections } from "@/components/LandingSections";
+import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioIrr, type Transaction } from "@/lib/portfolio";
 import { fifoTaxReport } from "@/lib/tools";
@@ -694,6 +695,7 @@ function Dashboard() {
       <div className="lg:col-span-3">
         <WelcomeHero />
       </div>
+      <VideoPresentation mode={p.user ? "pro" : "visitor"} />
       <MarketTicker />
       {!p.user && <LandingSections />}
       {p.user && p.holdings.length > 0 && (

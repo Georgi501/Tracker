@@ -9,7 +9,7 @@ Produce two English cuts from one product-footage session:
 
 Use a 16:9 master with important UI kept inside a centered mobile-safe area. Capture the public sample portfolio and clearly retain its sample-data label. Never record a user's real account. Use controlled screen captures, quiet music, English captions, and no autoplay with sound.
 
-For a quick review before recording, open the [interactive product walkthrough](./capispot-video-preview.html). It uses screen captures from Capispot's real public pages, including the clearly labelled sample portfolio and the Free-vs-Pro comparison. The visitor cut runs for 36 seconds; the Pro cut runs for 30 seconds. Captions, chapter controls and optional quiet ambient sound make it easy to review locally; the captures contain no personal portfolio data and are not the final voiced video.
+The [interactive product walkthrough](./capispot-video-preview.html) is embedded on the homepage. Visitors see the portfolio tour; signed-in users see the Pro tools tour. It uses screen captures from Capispot's real public pages, including the clearly labelled sample portfolio and the Free-vs-Pro comparison. The visitor cut runs for 36 seconds; the Pro cut runs for 30 seconds. Chapter controls and optional quiet ambient sound make it easy to review; the captures contain no personal portfolio data and are not the final voiced video.
 
 ## Visitor cut — 60 seconds
 
@@ -47,4 +47,4 @@ Small end-card disclosure: “Analysis and scenarios are informational, not pers
 - Keep the index disclosure visible where comparison is shown: index lines represent price return, not total return.
 - Provide captions matching the English voiceover and a transcript for accessibility.
 - For the final video, use a poster image and `preload="none"`; require an explicit play action and provide keyboard-accessible native controls. Keep sound off until the visitor starts playback.
-- On the homepage, place the visitor cut in the signed-out landing content. For signed-in users, show only the Pro cut. Keep both versions out of the initial critical loading path.
+- The homepage embeds the visitor cut for signed-out visitors and only the Pro cut for signed-in users. The walkthrough is lazy-loaded and keeps the original Capispot screens unmodified.

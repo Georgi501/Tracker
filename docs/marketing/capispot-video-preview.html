@@ -864,6 +864,34 @@
           transition-duration: 0.01ms !important;
         }
       }
+
+      body.embedded {
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      body.embedded .site-header,
+      body.embedded .hero,
+      body.embedded .proof,
+      body.embedded .closing,
+      body.embedded .disclosure {
+        display: none;
+      }
+
+      body.embedded .shell {
+        width: 100%;
+        margin: 0;
+      }
+
+      body.embedded main {
+        padding: 0;
+      }
+
+      body.embedded .preview {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
     </style>
   </head>
   <body>
@@ -1249,6 +1277,9 @@
       const time = document.querySelector("#player-time");
       const chapters = document.querySelector("#chapters");
       const status = document.querySelector("#player-status");
+      const params = new URLSearchParams(window.location.search);
+      const embedded = params.get("embed") === "1";
+      if (embedded) document.body.classList.add("embedded");
 
       function currentMode() {
         return modes[activeMode];
@@ -1520,7 +1551,22 @@
           ? "Ambient sound is enabled."
           : "Walkthrough sound is muted.";
       });
-      setMode("visitor");
+      setMode(params.get("mode") === "pro" ? "pro" : "visitor");
+
+      if (embedded && window.parent !== window) {
+        const sendHeight = () => {
+          window.parent.postMessage(
+            {
+              type: "capispot-video-preview:resize",
+              height: document.documentElement.scrollHeight,
+            },
+            window.location.origin,
+          );
+        };
+        new ResizeObserver(sendHeight).observe(document.documentElement);
+        window.addEventListener("load", sendHeight, { once: true });
+        sendHeight();
+      }
     </script>
   </body>
 </html>
