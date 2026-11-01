@@ -693,7 +693,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label={shellCopy.quickNavigation}
         data-hidden={navHidden}
-        className="glass-bar fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
+        className="mobile-bottom-nav glass-bar fixed inset-x-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
         {(
           [
@@ -705,7 +705,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             key={to}
             to={to}
             activeOptions={{ exact: true }}
-            className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
+            className="flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium text-muted-foreground"
             activeProps={{ className: "text-primary bg-primary/10" }}
           >
             <Icon size={20} />
@@ -718,14 +718,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             else navigate({ to: "/auth" });
           }}
           aria-label={p.t("addTx")}
-          className="bg-brand-gradient -mt-7 grid size-14 place-items-center rounded-full text-primary-foreground shadow-glow ring-4 ring-background press"
+          className="press -mt-6 grid size-12 place-items-center rounded-full bg-primary text-primary-foreground ring-2 ring-background"
         >
           <Plus size={24} />
         </button>
         <Link
           to="/markets"
           activeOptions={{ exact: true }}
-          className="flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium text-muted-foreground"
+          className="flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium text-muted-foreground"
           activeProps={{ className: "text-primary bg-primary/10" }}
         >
           <Search size={20} />
@@ -736,7 +736,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               aria-label={shellCopy.more}
               aria-current={["/", "/holdings", "/markets"].includes(pathname) ? undefined : "page"}
-              className={`flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium ${
+              className={`flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium ${
                 ["/", "/holdings", "/markets"].includes(pathname)
                   ? "text-muted-foreground"
                   : "bg-primary/10 text-primary"
