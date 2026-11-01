@@ -34,6 +34,8 @@ const COPY: Record<Lang, Copy> = {
       staleQuote: "Market quote may be out of date",
       targetReviewDue: "Price alert target may need review",
       orphan: "Transaction is linked to a missing asset",
+      priceOutlier:
+        "Transaction unit price is far from this asset's median; check splits and import details",
     },
   },
   bg: {
@@ -53,6 +55,7 @@ const COPY: Record<Lang, Copy> = {
       staleQuote: "Пазарната котировка може да е остаряла",
       targetReviewDue: "Целевата цена може да се нуждае от преглед",
       orphan: "Сделката е свързана с липсващ актив",
+      priceOutlier: "Единичната цена е далеч от медианата; провери сплитове и импортирани данни",
     },
   },
   de: {
@@ -73,6 +76,7 @@ const COPY: Record<Lang, Copy> = {
       staleQuote: "Marktkurs möglicherweise veraltet",
       targetReviewDue: "Kursziel sollte eventuell überprüft werden",
       orphan: "Transaktion ist einem fehlenden Wert zugeordnet",
+      priceOutlier: "Transaktionspreis weicht stark vom Median ab; Splits und Import prüfen",
     },
   },
   es: {
@@ -92,6 +96,7 @@ const COPY: Record<Lang, Copy> = {
       staleQuote: "La cotización puede estar desactualizada",
       targetReviewDue: "El precio objetivo quizá necesite revisión",
       orphan: "La operación está vinculada a un activo inexistente",
+      priceOutlier: "El precio unitario se aleja mucho de la mediana; revisa splits e importación",
     },
   },
   it: {
@@ -112,6 +117,8 @@ const COPY: Record<Lang, Copy> = {
       staleQuote: "La quotazione potrebbe non essere aggiornata",
       targetReviewDue: "Il prezzo obiettivo potrebbe richiedere una verifica",
       orphan: "La transazione è collegata a un asset mancante",
+      priceOutlier:
+        "Il prezzo unitario si discosta molto dalla mediana; verifica split e importazione",
     },
   },
 };

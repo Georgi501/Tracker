@@ -11,6 +11,7 @@ import { CRYPTO_SYMBOLS } from "@/lib/crypto-assets";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketEarningsCalendar } from "@/lib/market.functions";
 import { getCorporateActions, type CorporateActions } from "@/lib/dividends.functions";
+import { UnifiedPortfolioCalendar } from "@/components/UnifiedPortfolioCalendar";
 import { earningsSurprisePercent, type EarningsCalendarData } from "@/lib/earnings";
 import { writeEarningsReminders } from "@/lib/watchlist";
 
@@ -373,6 +374,13 @@ function EarningsCalendar() {
               )
                 void Notification.requestPermission();
             }}
+          />
+          <UnifiedPortfolioCalendar
+            assets={p.holdings.map((holding) => holding.asset)}
+            earnings={query.data?.upcoming ?? []}
+            names={names}
+            locale={locale}
+            lang={p.lang}
           />
           {capped.length > 0 && (
             <CorporateActionsSection

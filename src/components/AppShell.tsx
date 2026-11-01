@@ -54,6 +54,7 @@ import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
 import { PriceAlertMonitor } from "./PriceAlertMonitor";
 import { PortfolioReminderMonitor } from "./PortfolioReminderMonitor";
+import { AllocationDriftMonitor } from "./AllocationDriftMonitor";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const SHELL_COPY: Record<
@@ -788,6 +789,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <AnalyticsConsent />
       <PriceAlertMonitor />
       <PortfolioReminderMonitor />
+      <AllocationDriftMonitor />
     </div>
   );
 }

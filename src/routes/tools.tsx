@@ -1,4 +1,8 @@
 import { SnapshotCard } from "@/components/SnapshotCard";
+import { ScenarioStudio } from "@/components/ScenarioStudio";
+import { AllocationTargetsCard } from "@/components/AllocationTargetsCard";
+import { AssetRiskAnalysis } from "@/components/AssetRiskAnalysis";
+import { DividendIncomeDashboard } from "@/components/DividendIncomeDashboard";
 import { RecurringReminders } from "@/components/RecurringReminders";
 import { PortfolioReview, DataQuality, proToolsCopy } from "@/components/ProTools";
 import { CurveSilhouette, FireCalculator, ProGate } from "@/components/ProFeatures";
@@ -17,6 +21,7 @@ import { toolsCopy } from "@/lib/tools-i18n";
 import {
   classValues,
   exportCsv,
+  fifoSalePreview,
   fifoTaxReport,
   rebalance,
   riskMetrics,
@@ -316,7 +321,51 @@ function Tools() {
       <ProGate title={c.rebalance} desc={c.rebalanceHint} preview={<CurveSilhouette />}>
         <Rebalance />
       </ProGate>
+      <ProGate
+        title={proCopy[p.lang].scenarioStudio}
+        desc={proCopy[p.lang].scenarioStudioDesc}
+        preview={<CurveSilhouette />}
+      >
+        <ScenarioStudio />
+      </ProGate>
+      <ProGate
+        title={proCopy[p.lang].allocationAlerts}
+        desc={proCopy[p.lang].allocationAlertsDesc}
+        preview={<CurveSilhouette />}
+      >
+        <AllocationTargetsCard />
+      </ProGate>
       <Risk />
+      <ProGate
+        title={proCopy[p.lang].dividendIncome}
+        desc={proCopy[p.lang].dividendIncomeDesc}
+        preview={<CurveSilhouette />}
+      >
+        <DividendIncomeDashboard />
+      </ProGate>
+      <ProGate
+        title={
+          {
+            en: "Asset correlation & risk contribution",
+            bg: "Корелация и принос към риска",
+            de: "Korrelation & Risikobeitrag",
+            es: "Correlación y contribución al riesgo",
+            it: "Correlazione e contributo al rischio",
+          }[p.lang]
+        }
+        desc={
+          {
+            en: "Real daily closes converted with dated FX rates.",
+            bg: "Реални дневни котировки, конвертирани с датиран валутен курс.",
+            de: "Tatsächliche Tageskurse, umgerechnet mit datierten Wechselkursen.",
+            es: "Cierres diarios reales convertidos con tipos de cambio fechados.",
+            it: "Chiusure giornaliere reali convertite con tassi FX datati.",
+          }[p.lang]
+        }
+        preview={<CurveSilhouette />}
+      >
+        <AssetRiskAnalysis />
+      </ProGate>
       <ConcentrationCard />
       <RecurringReminders />
       <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}>
@@ -423,6 +472,34 @@ function Rebalance() {
   const [cash, setCash] = useState(1000);
   const plan = rebalance(current, targets, cash);
   const sum = Object.values(targets).reduce((s, v) => s + v, 0);
+  const portfolioValue = Object.values(current).reduce((s, value) => s + value, 0);
+  const taxPreview =
+    Math.abs(sum - 100) <= 0.01 && portfolioValue > 0
+      ? p.holdings.flatMap((holding) => {
+          const classValue = current[holding.asset.type] ?? 0;
+          const targetValue = portfolioValue * ((targets[holding.asset.type] ?? 0) / 100);
+          const excessValue = Math.max(0, classValue - targetValue);
+          if (
+            excessValue <= 0 ||
+            classValue <= 0 ||
+            !Number.isFinite(holding.asset.price) ||
+            holding.asset.price <= 0 ||
+            !Number.isFinite(holding.value)
+          )
+            return [];
+          const saleValue = excessValue * (holding.value / classValue);
+          const quantity = Math.min(holding.quantity, saleValue / holding.asset.price);
+          const preview = fifoSalePreview(
+            p.transactions,
+            holding.asset.id,
+            quantity,
+            holding.asset.price,
+          );
+          return [{ holding, quantity, preview }];
+        })
+      : [];
+  const estimatedGain = taxPreview.reduce((sum, row) => sum + (row.preview?.gain ?? 0), 0);
+  const estimateComplete = taxPreview.every((row) => row.preview !== null);
   return (
     <Card>
       <h3 className="font-display font-semibold">{c.rebalance}</h3>
@@ -470,6 +547,34 @@ function Rebalance() {
       <p className={`mt-2 text-xs ${sum === 100 ? "text-muted-foreground" : "text-destructive"}`}>
         {c.targetSum}: {sum}%
       </p>
+      {taxPreview.length > 0 && (
+        <div className="mt-4 border-t border-border pt-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h4 className="text-sm font-semibold">{c.rebalanceTaxPreview}</h4>
+            {estimateComplete ? (
+              <Delta value={estimatedGain}>{p.money(estimatedGain, { sign: true })}</Delta>
+            ) : (
+              <span className="text-sm text-muted-foreground">{c.unavailable}</span>
+            )}
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {taxPreview.map(({ holding, quantity, preview }) => (
+              <li
+                key={holding.asset.id}
+                className="flex flex-wrap justify-between gap-x-3 rounded-lg bg-secondary/50 px-3 py-2 text-xs"
+              >
+                <span>
+                  {c.rebalanceSell}: <b>{holding.asset.symbol}</b> · {quantity.toPrecision(4)}
+                </span>
+                <span className="tabular-nums">
+                  {preview ? p.money(preview.gain, { sign: true }) : c.rebalanceBasisUnavailable}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{c.rebalanceTaxNote}</p>
+        </div>
+      )}
     </Card>
   );
 }

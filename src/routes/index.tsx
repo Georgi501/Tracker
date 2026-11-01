@@ -292,6 +292,9 @@ const DASHBOARD_COPY: Record<
     concentrationTitle: string;
     concentrationSignal: (name: string, share: string) => string;
     concentrationContext: string;
+    fundExposureTitle: string;
+    fundExposureSignal: (name: string, share: string) => string;
+    fundExposureContext: string;
     reviewHoldings: string;
     recentActivity: string;
     viewAll: string;
@@ -312,6 +315,10 @@ const DASHBOARD_COPY: Record<
     concentrationSignal: (name, share) => `${name} represents ${share} of your portfolio.`,
     concentrationContext:
       "This is a concentration signal, not investment advice. Review it against your intended allocation.",
+    fundExposureTitle: "High allocation to one ETF",
+    fundExposureSignal: (name, share) => `${name} represents ${share} of your portfolio.`,
+    fundExposureContext:
+      "This measures your share in the fund, not how many companies it holds. If it is a broad index ETF, it can diversify across companies while your portfolio remains concentrated in that fund and its tracked market.",
     reviewHoldings: "Review holdings",
     recentActivity: "Recent activity",
     viewAll: "View all",
@@ -331,6 +338,10 @@ const DASHBOARD_COPY: Record<
     concentrationSignal: (name, share) => `${name} представлява ${share} от портфолиото ти.`,
     concentrationContext:
       "Това е сигнал за концентрация, а не инвестиционен съвет. Сравни го с планираното от теб разпределение.",
+    fundExposureTitle: "Висок дял в един ETF",
+    fundExposureSignal: (name, share) => `${name} представлява ${share} от портфолиото ти.`,
+    fundExposureContext:
+      "Това показва дела ти в самия фонд, а не броя компании в него. Ако е широк индексен ETF, той може да разпределя риска между компании, но портфейлът ти остава концентриран в този фонд и следвания от него пазар.",
     reviewHoldings: "Прегледай позициите",
     recentActivity: "Последни трансакции",
     viewAll: "Виж всички",
@@ -350,6 +361,10 @@ const DASHBOARD_COPY: Record<
     concentrationSignal: (name, share) => `${name} macht ${share} deines Portfolios aus.`,
     concentrationContext:
       "Dies ist ein Konzentrationssignal, keine Anlageberatung. Vergleiche es mit deiner geplanten Aufteilung.",
+    fundExposureTitle: "Hoher Anteil in einem ETF",
+    fundExposureSignal: (name, share) => `${name} macht ${share} deines Portfolios aus.`,
+    fundExposureContext:
+      "Dies zeigt deinen Anteil am Fonds, nicht die Anzahl seiner Unternehmen. Ein breit gestreuter Index-ETF kann über viele Unternehmen streuen, während dein Portfolio auf diesen Fonds und den abgebildeten Markt konzentriert bleibt.",
     reviewHoldings: "Positionen ansehen",
     recentActivity: "Letzte Aktivitäten",
     viewAll: "Alle anzeigen",
@@ -368,6 +383,10 @@ const DASHBOARD_COPY: Record<
     concentrationSignal: (name, share) => `${name} representa el ${share} de tu cartera.`,
     concentrationContext:
       "Es una señal de concentración, no asesoramiento financiero. Compárala con la asignación que tienes prevista.",
+    fundExposureTitle: "Alta asignación a un ETF",
+    fundExposureSignal: (name, share) => `${name} representa el ${share} de tu cartera.`,
+    fundExposureContext:
+      "Esto mide tu peso en el fondo, no cuántas empresas contiene. Si es un ETF de índice amplio, puede diversificar entre empresas, aunque la cartera siga concentrada en ese fondo y en el mercado que sigue.",
     reviewHoldings: "Revisar posiciones",
     recentActivity: "Actividad reciente",
     viewAll: "Ver todas",
@@ -387,6 +406,10 @@ const DASHBOARD_COPY: Record<
     concentrationSignal: (name, share) => `${name} rappresenta il ${share} del tuo portafoglio.`,
     concentrationContext:
       "È un segnale di concentrazione, non una consulenza finanziaria. Confrontalo con l'allocazione che hai pianificato.",
+    fundExposureTitle: "Elevata allocazione in un ETF",
+    fundExposureSignal: (name, share) => `${name} rappresenta il ${share} del tuo portafoglio.`,
+    fundExposureContext:
+      "Questo misura il peso del fondo, non quante società contiene. Se è un ETF su un indice ampio, può diversificare tra società, mentre il portafoglio resta concentrato su quel fondo e sul mercato seguito.",
     reviewHoldings: "Rivedi le posizioni",
     recentActivity: "Attività recenti",
     viewAll: "Vedi tutte",
@@ -623,6 +646,8 @@ function Dashboard() {
         )
       : null;
   const isConcentrated = largestShareRatio !== null && largestShareRatio >= 0.5;
+  const isFundExposure = largestHolding?.asset.type === "etf";
+  const showConcentrationWarning = isConcentrated && !isFundExposure;
   const recentTransactions = [...p.transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4);
@@ -646,7 +671,7 @@ function Dashboard() {
       {p.user && p.holdings.length > 0 && (
         <Card
           className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3 ${
-            isConcentrated
+            showConcentrationWarning
               ? "border-amber-500/35 bg-amber-500/[0.045]"
               : "border-primary/20 bg-primary/[0.035]"
           }`}
@@ -654,12 +679,12 @@ function Dashboard() {
           <div className="flex min-w-0 items-start gap-3">
             <span
               className={`grid size-10 shrink-0 place-items-center rounded-xl ${
-                isConcentrated
+                showConcentrationWarning
                   ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
                   : "bg-primary/10 text-primary"
               }`}
             >
-              {isConcentrated ? (
+              {showConcentrationWarning ? (
                 <ShieldAlert size={19} aria-hidden />
               ) : (
                 <Lightbulb size={19} aria-hidden />
@@ -667,31 +692,50 @@ function Dashboard() {
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {isConcentrated ? dashboardCopy.concentrationTitle : dashboardCopy.snapshot}
+                {isConcentrated
+                  ? isFundExposure
+                    ? dashboardCopy.fundExposureTitle
+                    : dashboardCopy.concentrationTitle
+                  : dashboardCopy.snapshot}
               </p>
               <p className="mt-1 text-sm font-medium leading-relaxed">
                 {largestHolding && largestShare
                   ? isConcentrated
-                    ? dashboardCopy.concentrationSignal(largestHolding.asset.name, largestShare)
+                    ? isFundExposure
+                      ? dashboardCopy.fundExposureSignal(largestHolding.asset.name, largestShare)
+                      : dashboardCopy.concentrationSignal(largestHolding.asset.name, largestShare)
                     : dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
                   : dashboardCopy.unavailableSnapshot}
               </p>
               {isConcentrated && largestHolding && largestShare && (
                 <>
                   <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-                    {dashboardCopy.concentrationContext}
+                    {isFundExposure
+                      ? dashboardCopy.fundExposureContext
+                      : dashboardCopy.concentrationContext}
                   </p>
                   {largestShareRatio !== null && (
                     <div
-                      className="mt-2 h-1.5 max-w-sm overflow-hidden rounded-full bg-amber-500/15"
+                      className={`mt-2 h-1.5 max-w-sm overflow-hidden rounded-full ${
+                        showConcentrationWarning ? "bg-amber-500/15" : "bg-primary/15"
+                      }`}
                       role="img"
-                      aria-label={dashboardCopy.concentrationSignal(
-                        largestHolding.asset.name,
-                        largestShare,
-                      )}
+                      aria-label={
+                        isFundExposure
+                          ? dashboardCopy.fundExposureSignal(
+                              largestHolding.asset.name,
+                              largestShare,
+                            )
+                          : dashboardCopy.concentrationSignal(
+                              largestHolding.asset.name,
+                              largestShare,
+                            )
+                      }
                     >
                       <div
-                        className="h-full rounded-full bg-amber-500"
+                        className={`h-full rounded-full ${
+                          showConcentrationWarning ? "bg-amber-500" : "bg-primary"
+                        }`}
                         style={{ width: `${Math.min(largestShareRatio, 1) * 100}%` }}
                       />
                     </div>

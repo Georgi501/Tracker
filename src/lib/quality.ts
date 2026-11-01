@@ -8,7 +8,8 @@ export type IssueKind =
   | "noQuote"
   | "staleQuote"
   | "targetReviewDue"
-  | "orphan";
+  | "orphan"
+  | "priceOutlier";
 export interface Issue {
   kind: IssueKind;
   symbol: string;
@@ -41,6 +42,30 @@ export function qualityIssues(
       const [id = "", , date = ""] = k.split("|");
       out.push({ kind: "duplicate", symbol: sym(id), date, count: n });
     }
+  const pricesByAsset = new Map<string, Transaction[]>();
+  for (const transaction of txs) {
+    if (
+      transaction.kind === "dividend" ||
+      !Number.isFinite(transaction.price) ||
+      transaction.price <= 0
+    )
+      continue;
+    const list = pricesByAsset.get(transaction.assetId) ?? [];
+    list.push(transaction);
+    pricesByAsset.set(transaction.assetId, list);
+  }
+  for (const [assetId, transactions] of pricesByAsset) {
+    if (transactions.length < 4) continue;
+    const sortedPrices = transactions.map((item) => item.price).sort((a, b) => a - b);
+    const middle = Math.floor(sortedPrices.length / 2);
+    const median =
+      sortedPrices.length % 2
+        ? sortedPrices[middle]!
+        : (sortedPrices[middle - 1]! + sortedPrices[middle]!) / 2;
+    for (const transaction of transactions)
+      if (transaction.price > median * 4 || transaction.price < median / 4)
+        out.push({ kind: "priceOutlier", symbol: sym(assetId), date: transaction.date });
+  }
   const qty = new Map<string, number>();
   for (const t of [...txs].sort((a, b) => a.date.localeCompare(b.date))) {
     if (t.kind === "dividend") continue;

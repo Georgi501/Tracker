@@ -300,6 +300,15 @@ function Analytics() {
         new Date(quoteTimes[0]),
       )
     : "—";
+  const recordedDividends = p.transactions.filter((transaction) => {
+    if (transaction.kind !== "dividend" || !range) return false;
+    const time = Date.parse(`${transaction.date}T00:00:00Z`);
+    return Number.isFinite(time) && time >= range.start && time < range.end;
+  });
+  const recordedDividendTotal = recordedDividends.reduce(
+    (sum, transaction) => sum + transaction.quantity * transaction.price - (transaction.fee ?? 0),
+    0,
+  );
   const reportSections: AnalyticsReportSection[] = [
     {
       title: c.summary,
@@ -314,6 +323,14 @@ function Analytics() {
         [c.drawdown, risk ? pct(risk.maxDrawdown) : c.unavailable],
         [c.sharpe, risk ? risk.sharpe.toFixed(2) : c.unavailable],
         [c.sortino, risk ? risk.sortino.toFixed(2) : c.unavailable],
+      ],
+    },
+    {
+      title: c.recordedDividends,
+      columns: [c.metric, c.value],
+      rows: [
+        [c.recordedDividends, recordedDividendTotal],
+        [c.dividendTransactions, recordedDividends.length],
       ],
     },
     ...exposures.map((exposure) => ({
@@ -406,6 +423,14 @@ function Analytics() {
     link.download = `capispot-analytics-${today}.csv`;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const selectLastFullMonth = () => {
+    const day = new Date(`${today}T00:00:00Z`);
+    const currentMonthStart = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), 1);
+    const previousMonthStart = Date.UTC(day.getUTCFullYear(), day.getUTCMonth() - 1, 1);
+    setStartDate(dateInput(previousMonthStart));
+    setEndDate(dateInput(currentMonthStart - DAY));
+    setPeriod("CUSTOM");
   };
   const printReport = () => {
     const printWindow = window.open("", "_blank");
@@ -981,7 +1006,11 @@ function Analytics() {
           <section className="sm:col-span-2 lg:col-span-3 border-t border-border pt-4">
             <h4 className="font-semibold">{c.report}</h4>
             <p className="mb-3 text-xs text-muted-foreground">{c.reportDescription}</p>
+            <p className="mb-3 text-xs text-muted-foreground">{c.monthlyReportHint}</p>
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={selectLastFullMonth}>
+                {c.monthlyRangeAction}
+              </Button>
               <Button size="sm" onClick={downloadReport}>
                 {c.downloadCsv}
               </Button>

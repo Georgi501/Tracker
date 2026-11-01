@@ -37,6 +37,11 @@ const en = {
   noUpcoming: "No confirmed upcoming dividend dates.",
   dividendSource: "Confirmed events from Yahoo Finance; no estimates.",
   unavailable: "Unavailable",
+  rebalanceTaxPreview: "Estimated FIFO gain from proposed sales",
+  rebalanceSell: "Hypothetical sale",
+  rebalanceTaxNote:
+    "Estimate only, based on FIFO transaction records and current quoted prices. Excludes fees and taxes; does not execute trades or provide tax advice.",
+  rebalanceBasisUnavailable: "FIFO basis unavailable",
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -76,6 +81,11 @@ const bg: Copy = {
   noUpcoming: "Няма потвърдени предстоящи дати.",
   dividendSource: "Потвърдени събития от Yahoo Finance; без прогнози.",
   unavailable: "Няма данни",
+  rebalanceTaxPreview: "Оценена FIFO печалба от предложени продажби",
+  rebalanceSell: "Хипотетична продажба",
+  rebalanceTaxNote:
+    "Само ориентировъчна оценка по FIFO сделките и текущите котировки. Не включва такси и данъци, не изпълнява сделки и не е данъчен съвет.",
+  rebalanceBasisUnavailable: "FIFO себестойността не е налична",
 };
 const de: Copy = {
   tools: "Werkzeuge",
@@ -114,6 +124,11 @@ const de: Copy = {
   noUpcoming: "Keine bestätigten kommenden Termine.",
   dividendSource: "Bestätigte Ereignisse von Yahoo Finance; keine Schätzungen.",
   unavailable: "Nicht verfügbar",
+  rebalanceTaxPreview: "Geschätzter FIFO-Gewinn aus geplanten Verkäufen",
+  rebalanceSell: "Hypothetischer Verkauf",
+  rebalanceTaxNote:
+    "Nur eine Schätzung anhand der FIFO-Transaktionen und aktueller Kurse. Ohne Gebühren und Steuern; führt keine Trades aus und ist keine Steuerberatung.",
+  rebalanceBasisUnavailable: "FIFO-Einstandswert nicht verfügbar",
 };
 const es: Copy = {
   tools: "Herramientas",
@@ -152,6 +167,11 @@ const es: Copy = {
   noUpcoming: "No hay fechas futuras confirmadas.",
   dividendSource: "Eventos confirmados de Yahoo Finance; sin estimaciones.",
   unavailable: "No disponible",
+  rebalanceTaxPreview: "Ganancia FIFO estimada de las ventas propuestas",
+  rebalanceSell: "Venta hipotética",
+  rebalanceTaxNote:
+    "Solo es una estimación basada en transacciones FIFO y cotizaciones actuales. Excluye comisiones e impuestos; no ejecuta operaciones ni constituye asesoramiento fiscal.",
+  rebalanceBasisUnavailable: "Coste FIFO no disponible",
 };
 const it: Copy = {
   tools: "Strumenti",
@@ -191,5 +211,10 @@ const it: Copy = {
   noUpcoming: "Nessuna data futura confermata.",
   dividendSource: "Eventi confermati da Yahoo Finance; nessuna stima.",
   unavailable: "Non disponibile",
+  rebalanceTaxPreview: "Plusvalenza FIFO stimata dalle vendite proposte",
+  rebalanceSell: "Vendita ipotetica",
+  rebalanceTaxNote:
+    "Solo una stima basata sulle transazioni FIFO e sulle quotazioni attuali. Esclude commissioni e imposte; non esegue operazioni e non è consulenza fiscale.",
+  rebalanceBasisUnavailable: "Costo FIFO non disponibile",
 };
 export const toolsCopy: Record<Lang, Copy> = { en, bg, de, es, it };

@@ -69,6 +69,11 @@ const en = {
   reportPeriod: "Selected period",
   selectedBenchmark: "Selected benchmark",
   contribution: "Value change (base currency)",
+  monthlyRangeAction: "Use last full month",
+  monthlyReportHint:
+    "Set the report period to the last completed calendar month, then export CSV or PDF. The report includes recorded dividends and a current portfolio snapshot; it is not emailed automatically.",
+  recordedDividends: "Recorded dividends in selected period (USD)",
+  dividendTransactions: "Recorded dividend transactions",
 } as const;
 
 type AnalyticsCopy = { [K in keyof typeof en]: string };
@@ -142,6 +147,11 @@ const bg: AnalyticsCopy = {
   reportPeriod: "Избран период",
   selectedBenchmark: "Избран бенчмарк",
   contribution: "Промяна в стойността (базова валута)",
+  monthlyRangeAction: "Избери последния пълен месец",
+  monthlyReportHint:
+    "Задай периода на последния завършен календарен месец и после експортирай CSV или PDF. Отчетът включва записаните дивиденти и текуща снимка на портфейла; не се изпраща автоматично по имейл.",
+  recordedDividends: "Записани дивиденти за периода (USD)",
+  dividendTransactions: "Записани дивидентни трансакции",
 };
 
 const de: AnalyticsCopy = {
@@ -213,6 +223,11 @@ const de: AnalyticsCopy = {
   reportPeriod: "Gewählter Zeitraum",
   selectedBenchmark: "Gewählter Benchmark",
   contribution: "Wertänderung (Basiswährung)",
+  monthlyRangeAction: "Letzten vollständigen Monat auswählen",
+  monthlyReportHint:
+    "Lege den Zeitraum auf den letzten abgeschlossenen Kalendermonat fest und exportiere anschließend CSV oder PDF. Der Bericht enthält erfasste Dividenden und einen aktuellen Portfolioüberblick; er wird nicht automatisch per E-Mail versendet.",
+  recordedDividends: "Erfasste Dividenden im Zeitraum (USD)",
+  dividendTransactions: "Erfasste Dividendentransaktionen",
 };
 
 const es: AnalyticsCopy = {
@@ -284,6 +299,11 @@ const es: AnalyticsCopy = {
   reportPeriod: "Período seleccionado",
   selectedBenchmark: "Referencia seleccionada",
   contribution: "Cambio de valor (moneda base)",
+  monthlyRangeAction: "Usar el último mes completo",
+  monthlyReportHint:
+    "Selecciona el último mes natural completo y después exporta CSV o PDF. El informe incluye dividendos registrados y una instantánea actual de la cartera; no se envía por correo automáticamente.",
+  recordedDividends: "Dividendos registrados en el periodo (USD)",
+  dividendTransactions: "Operaciones de dividendos registradas",
 };
 
 const it: AnalyticsCopy = {
@@ -355,6 +375,11 @@ const it: AnalyticsCopy = {
   reportPeriod: "Periodo selezionato",
   selectedBenchmark: "Benchmark selezionato",
   contribution: "Variazione di valore (valuta base)",
+  monthlyRangeAction: "Usa l'ultimo mese completo",
+  monthlyReportHint:
+    "Imposta il periodo sull'ultimo mese di calendario completo, poi esporta CSV o PDF. Il report include i dividendi registrati e una fotografia attuale del portafoglio; non viene inviato automaticamente via e-mail.",
+  recordedDividends: "Dividendi registrati nel periodo (USD)",
+  dividendTransactions: "Operazioni di dividendo registrate",
 };
 
 export const analyticsCopy: Record<Lang, AnalyticsCopy> = { en, bg, de, es, it };

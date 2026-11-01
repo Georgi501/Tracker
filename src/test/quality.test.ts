@@ -40,6 +40,20 @@ describe("qualityIssues", () => {
     );
     expect(r.some((i) => i.kind === "oversell")).toBe(true);
   });
+  it("flags a suspicious per-unit price outlier only when there is enough comparable history", () => {
+    const txs = [
+      t("1", "x", "buy", 1, "2024-01-01", 100),
+      t("2", "x", "buy", 1, "2024-02-01", 101),
+      t("3", "x", "sell", 1, "2024-03-01", 99),
+      t("4", "x", "buy", 1, "2024-04-01", 1000),
+    ];
+    expect(qualityIssues([a("x")], txs, "2025-01-01")).toContainEqual({
+      kind: "priceOutlier",
+      symbol: "X",
+      date: "2024-04-01",
+    });
+    expect(qualityIssues([a("x")], txs.slice(0, 3), "2025-01-01")).toEqual([]);
+  });
   it("flags future dates and held assets without a quote", () => {
     const r = qualityIssues(
       [a("x", Number.NaN)],

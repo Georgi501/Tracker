@@ -15,6 +15,14 @@ const en = {
   fireDesc: "When your portfolio can cover your living costs, using the 4% rule.",
   advisor: "AI portfolio advisor",
   advisorDesc: "Ask questions and get answers based on your real positions.",
+  scenarioStudio: "Interactive scenario studio",
+  scenarioStudioDesc: "Explore hypothetical class-level price changes and contributions.",
+  allocationAlerts: "Target-allocation drift alerts",
+  allocationAlertsDesc: "Set portfolio weights and get in-app alerts when allocations drift.",
+  dividendIncome: "Recorded dividend income dashboard",
+  dividendIncomeDesc: "Review recorded cash dividends by month and asset, with period comparisons.",
+  taxAwareRebalancing: "Estimated FIFO gains before hypothetical rebalancing sales",
+  monthlyReport: "Monthly analytics report export",
   communityTitle: "Investor community",
   communityDesc:
     "A profile with a photo, member connections, portfolio allocation sharing, and private chat are included with Pro.",
@@ -55,6 +63,16 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Кога портфейлът ще покрива разходите ти за живот по правилото на 4%.",
     advisor: "AI съветник за портфейла",
     advisorDesc: "Задавай въпроси и получавай отговори според реалните ти позиции.",
+    scenarioStudio: "Интерактивно студио за сценарии",
+    scenarioStudioDesc:
+      "Разгледай хипотетични промени в цените по класове и допълнителните вноски.",
+    allocationAlerts: "Известия при отклонение от целевото разпределение",
+    allocationAlertsDesc: "Задай целеви тегла и получавай известия в приложението при отклонение.",
+    dividendIncome: "Табло за записаните дивидентни доходи",
+    dividendIncomeDesc:
+      "Прегледай записаните парични дивиденти по месеци и активи със сравнение между периоди.",
+    taxAwareRebalancing: "Оценка на FIFO печалбите преди хипотетични продажби при ребалансиране",
+    monthlyReport: "Експорт на месечен аналитичен отчет",
     communityTitle: "Общност на инвеститорите",
     communityDesc:
       "Профил със снимка, свързване с други абонати, споделено портфолио и личен чат са включени в Pro.",
@@ -92,6 +110,16 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Wann dein Portfolio deine Lebenskosten deckt (4%-Regel).",
     advisor: "KI-Portfolioberater",
     advisorDesc: "Stelle Fragen und erhalte Antworten zu deinen echten Positionen.",
+    scenarioStudio: "Interaktives Szenario-Studio",
+    scenarioStudioDesc:
+      "Untersuche hypothetische Preisänderungen je Klasse und zusätzliche Beiträge.",
+    allocationAlerts: "Hinweise bei Abweichungen von der Zielallokation",
+    allocationAlertsDesc: "Lege Zielgewichte fest und erhalte In-App-Hinweise bei Abweichungen.",
+    dividendIncome: "Dashboard für erfasste Dividendeneinnahmen",
+    dividendIncomeDesc:
+      "Erfasste Bardividenden nach Monat und Wert mit Periodenvergleichen ansehen.",
+    taxAwareRebalancing: "Geschätzte FIFO-Gewinne vor hypothetischen Verkäufen beim Rebalancing",
+    monthlyReport: "Export eines monatlichen Analyseberichts",
     communityTitle: "Anleger-Community",
     communityDesc:
       "Ein Profil mit Foto, Kontakte zu anderen Mitgliedern, geteilte Portfolioaufteilung und privater Chat sind in Pro enthalten.",
@@ -129,6 +157,17 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Cuándo tu cartera cubrirá tus gastos, con la regla del 4%.",
     advisor: "Asesor de IA",
     advisorDesc: "Haz preguntas y recibe respuestas basadas en tus posiciones reales.",
+    scenarioStudio: "Estudio interactivo de escenarios",
+    scenarioStudioDesc:
+      "Explora cambios hipotéticos de precios por clase y aportaciones adicionales.",
+    allocationAlerts: "Avisos de desviación de la asignación objetivo",
+    allocationAlertsDesc:
+      "Define pesos objetivo y recibe avisos en la aplicación cuando se desvíen.",
+    dividendIncome: "Panel de ingresos por dividendos registrados",
+    dividendIncomeDesc:
+      "Consulta los dividendos registrados por mes y activo, con comparaciones entre periodos.",
+    taxAwareRebalancing: "Ganancias FIFO estimadas antes de ventas hipotéticas de rebalanceo",
+    monthlyReport: "Exportación del informe mensual de análisis",
     communityTitle: "Comunidad de inversores",
     communityDesc:
       "Un perfil con foto, conexiones con otros miembros, distribución compartida de la cartera y chat privado están incluidos en Pro.",
@@ -166,6 +205,18 @@ export const proCopy: Record<Lang, Copy> = {
     fireDesc: "Quando il portafoglio coprirà le tue spese, con la regola del 4%.",
     advisor: "Consulente IA",
     advisorDesc: "Fai domande e ricevi risposte basate sulle tue posizioni reali.",
+    scenarioStudio: "Studio interattivo degli scenari",
+    scenarioStudioDesc:
+      "Esplora variazioni ipotetiche dei prezzi per classe e contributi aggiuntivi.",
+    allocationAlerts: "Avvisi di scostamento dall'allocazione obiettivo",
+    allocationAlertsDesc:
+      "Imposta i pesi obiettivo e ricevi avvisi nell'app in caso di scostamento.",
+    dividendIncome: "Dashboard dei redditi da dividendi registrati",
+    dividendIncomeDesc:
+      "Esamina i dividendi registrati per mese e asset, con confronti tra periodi.",
+    taxAwareRebalancing:
+      "Plusvalenze FIFO stimate prima delle vendite ipotetiche di ribilanciamento",
+    monthlyReport: "Esportazione del report mensile di analisi",
     communityTitle: "Community degli investitori",
     communityDesc:
       "Profilo con foto, contatti con altri membri, allocazione condivisa del portafoglio e chat privata sono inclusi in Pro.",

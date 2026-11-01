@@ -27,6 +27,7 @@ const en = {
     staleQuote: "Quote is more than four days old",
     targetReviewDue: "Buy target needs review",
     orphan: "Transaction without asset",
+    priceOutlier: "Unit price far from the asset median; review split/import details",
   } as Record<IssueKind, string>,
 };
 const bg: typeof en = {
@@ -48,6 +49,7 @@ const bg: typeof en = {
     staleQuote: "Котировката е на повече от четири дни",
     targetReviewDue: "Цената за покупка трябва да се прегледа",
     orphan: "Трансакция без актив",
+    priceOutlier: "Единичната цена се отклонява от медианата; провери сплит/импорт",
   },
 };
 const de: typeof en = {
@@ -64,6 +66,7 @@ const de: typeof en = {
     ...en.k,
     staleQuote: "Kurs älter als vier Tage",
     targetReviewDue: "Kaufziel sollte geprüft werden",
+    priceOutlier: "Stückpreis weicht stark vom Median ab; Split/Import prüfen",
   },
 };
 const es: typeof en = {
@@ -80,6 +83,7 @@ const es: typeof en = {
     ...en.k,
     staleQuote: "Cotización de hace más de cuatro días",
     targetReviewDue: "Revisar objetivo de compra",
+    priceOutlier: "Precio unitario muy distinto de la mediana; revisar split/importación",
   },
 };
 const it: typeof en = {
@@ -97,6 +101,7 @@ const it: typeof en = {
     ...en.k,
     staleQuote: "Quotazione più vecchia di quattro giorni",
     targetReviewDue: "Obiettivo di acquisto da rivedere",
+    priceOutlier: "Prezzo unitario molto diverso dalla mediana; verificare split/importazione",
   },
 };
 export const proToolsCopy: Record<L, typeof en> = { en, bg, de, es, it };

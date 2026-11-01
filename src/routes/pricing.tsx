@@ -208,6 +208,10 @@ function Pricing() {
             <Feature>{pc.fire}</Feature>
             <Feature>{pc.advisor}</Feature>
             <Feature>{planCopy[p.lang].watchlist}</Feature>
+            <Feature>{pc.scenarioStudio}</Feature>
+            <Feature>{pc.allocationAlerts}</Feature>
+            <Feature>{pc.taxAwareRebalancing}</Feature>
+            <Feature>{pc.monthlyReport}</Feature>
           </ul>
           <div className="mt-6">
             {p.isPro ? (

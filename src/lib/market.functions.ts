@@ -127,6 +127,72 @@ export const getExchangeRate = createServerFn({ method: "GET" }).handler(async (
   return { eurPerUsd: await fetchFx() };
 });
 
+export const getAssetRiskHistory = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        assets: z
+          .array(
+            z.object({
+              symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
+              type: z.enum(["stock", "etf", "crypto"]),
+              weight: z.number().finite().positive(),
+            }),
+          )
+          .min(2)
+          .max(12),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { dailyHistory } = await import("./history.server");
+    const { currencyRate } = await import("./history");
+    const end = new Date().toISOString().slice(0, 10);
+    const start = new Date(Date.now() - 366 * 86400000).toISOString().slice(0, 10);
+    const unique = [...new Map(data.assets.map((asset) => [asset.symbol, asset])).values()];
+    const histories = await Promise.all(
+      unique.map(async (asset) => {
+        try {
+          return {
+            asset,
+            history: await dailyHistory(asset.symbol, start, end, asset.type),
+          };
+        } catch {
+          return { asset, history: null };
+        }
+      }),
+    );
+    const currencies = new Set(histories.flatMap(({ history }) => history?.currency ?? []));
+    const [eur, gbp, jpy] = await Promise.all([
+      currencies.has("EUR") || currencies.has("BGN")
+        ? dailyHistory("EURUSD=X", start, end)
+            .then((value) => value.prices)
+            .catch(() => [])
+        : Promise.resolve([]),
+      currencies.has("GBP") || currencies.has("GBX") || currencies.has("GBp")
+        ? dailyHistory("GBPUSD=X", start, end)
+            .then((value) => value.prices)
+            .catch(() => [])
+        : Promise.resolve([]),
+      currencies.has("JPY")
+        ? dailyHistory("JPY=X", start, end)
+            .then((value) => value.prices)
+            .catch(() => [])
+        : Promise.resolve([]),
+    ]);
+    return histories.map(({ asset, history }) => ({
+      symbol: asset.symbol,
+      weight: asset.weight,
+      prices:
+        history?.prices.flatMap((point) => {
+          const rate = currencyRate(history.currency, point.date, eur, gbp, jpy);
+          return rate && Number.isFinite(point.close * rate)
+            ? [{ date: point.date, value: point.close * rate }]
+            : [];
+        }) ?? [],
+    }));
+  });
+
 export const CHART_RANGES = ["1D", "1W", "1M", "3M", "6M", "YTD", "1Y", "3Y", "MAX"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
 export type MarketCandle = {

@@ -18,6 +18,224 @@ export interface TaxYear {
   sales: RealizedLot[];
 }
 
+export interface FifoSalePreview {
+  quantity: number;
+  proceeds: number;
+  cost: number;
+  gain: number;
+}
+
+export interface AssetReturnSeries {
+  symbol: string;
+  weight: number;
+  prices: { date: string; value: number }[];
+}
+
+export interface DividendIncomeSummary {
+  currentMonth: number;
+  previousMonth: number;
+  yearToDate: number;
+  previousYearToDate: number;
+  excludedTransactions: number;
+  monthly: { month: string; amount: number }[];
+  byAsset: { assetId: string; symbol: string; amount: number }[];
+}
+
+export function dividendIncomeSummary(
+  transactions: Transaction[],
+  assets: Pick<Asset, "id" | "symbol">[],
+  asOfDate = new Date().toISOString().slice(0, 10),
+): DividendIncomeSummary {
+  const [yearText = "", monthText = "", dayText = ""] = asOfDate.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const validAsOf =
+    /^\d{4}-\d{2}-\d{2}$/.test(asOfDate) &&
+    Number.isInteger(year) &&
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (!validAsOf) throw new Error("Invalid dividend summary date");
+
+  const currentMonth = asOfDate.slice(0, 7);
+  const previousMonthDate = new Date(Date.UTC(year, month - 2, 1));
+  const previousMonth = previousMonthDate.toISOString().slice(0, 7);
+  const previousYear = year - 1;
+  const previousYearLastDay = new Date(Date.UTC(previousYear, month, 0)).getUTCDate();
+  const previousYearCutoff = `${previousYearText(previousYear)}-${monthText}-${String(Math.min(day, previousYearLastDay)).padStart(2, "0")}`;
+  const monthly = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(Date.UTC(year, month - 12 + index, 1));
+    return { month: date.toISOString().slice(0, 7), amount: 0 };
+  });
+  const monthlyByKey = new Map(monthly.map((item) => [item.month, item]));
+  const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
+  const byAsset = new Map<string, number>();
+  let currentMonthTotal = 0;
+  let previousMonthTotal = 0;
+  let yearToDate = 0;
+  let previousYearToDate = 0;
+  let excludedTransactions = 0;
+
+  for (const transaction of transactions) {
+    if (transaction.kind !== "dividend") continue;
+    const amount = transaction.quantity * transaction.price - (transaction.fee ?? 0);
+    const transactionDate = new Date(`${transaction.date}T00:00:00Z`);
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(transaction.date) ||
+      !Number.isFinite(transactionDate.getTime()) ||
+      transactionDate.toISOString().slice(0, 10) !== transaction.date ||
+      !Number.isFinite(amount) ||
+      transaction.date > asOfDate
+    ) {
+      excludedTransactions++;
+      continue;
+    }
+    const transactionMonth = transaction.date.slice(0, 7);
+    const monthPoint = monthlyByKey.get(transactionMonth);
+    if (monthPoint) monthPoint.amount += amount;
+    if (transactionMonth === currentMonth) currentMonthTotal += amount;
+    if (transactionMonth === previousMonth) previousMonthTotal += amount;
+    if (transaction.date >= `${yearText}-01-01` && transaction.date <= asOfDate) {
+      yearToDate += amount;
+      byAsset.set(transaction.assetId, (byAsset.get(transaction.assetId) ?? 0) + amount);
+    }
+    if (transaction.date >= `${previousYear}-01-01` && transaction.date <= previousYearCutoff)
+      previousYearToDate += amount;
+  }
+  return {
+    currentMonth: currentMonthTotal,
+    previousMonth: previousMonthTotal,
+    yearToDate,
+    previousYearToDate,
+    excludedTransactions,
+    monthly,
+    byAsset: [...byAsset]
+      .map(([assetId, amount]) => ({
+        assetId,
+        symbol: assetsById.get(assetId)?.symbol ?? "?",
+        amount,
+      }))
+      .sort((a, b) => b.amount - a.amount),
+  };
+}
+
+function previousYearText(year: number): string {
+  return String(year).padStart(4, "0");
+}
+
+export function assetRiskAnalysis(series: AssetReturnSeries[]) {
+  const eligible = series.filter((item) => item.weight > 0 && item.prices.length >= 2);
+  if (eligible.length < 2) return null;
+  const commonDates = eligible.reduce(
+    (dates, item) => new Set([...dates].filter((date) => item.prices.some((p) => p.date === date))),
+    new Set(eligible[0]!.prices.map((point) => point.date)),
+  );
+  const dates = [...commonDates].sort();
+  if (dates.length < 31) return null;
+  const returns = eligible.map((item) => {
+    const byDate = new Map(item.prices.map((point) => [point.date, point.value]));
+    return dates.slice(1).map((date, index) => {
+      const current = byDate.get(date);
+      const previous = byDate.get(dates[index]!);
+      return current && previous ? current / previous - 1 : Number.NaN;
+    });
+  });
+  if (returns.some((values) => values.some((value) => !Number.isFinite(value)))) return null;
+  const means = returns.map(
+    (values) => values.reduce((sum, value) => sum + value, 0) / values.length,
+  );
+  const cov = returns.map((left, i) =>
+    returns.map((right, j) => {
+      const total = left.reduce(
+        (sum, value, index) => sum + (value - means[i]!) * (right[index]! - means[j]!),
+        0,
+      );
+      return total / (left.length - 1);
+    }),
+  );
+  if (cov.some((row, index) => !(row[index]! > 0))) return null;
+  const totalWeight = eligible.reduce((sum, item) => sum + item.weight, 0);
+  const weights = eligible.map((item) => item.weight / totalWeight);
+  const variance = weights.reduce(
+    (sum, weight, i) =>
+      sum + weights.reduce((inner, other, j) => inner + weight * other * cov[i]![j]!, 0),
+    0,
+  );
+  if (!(variance > 0)) return null;
+  const volatility = Math.sqrt(variance * 252);
+  const correlations = eligible.map((item, i) => ({
+    symbol: item.symbol,
+    values: eligible.map((other, j) => ({
+      symbol: other.symbol,
+      value: cov[i]![j]! / Math.sqrt(cov[i]![i]! * cov[j]![j]!),
+    })),
+  }));
+  const contributions = eligible.map((item, i) => ({
+    symbol: item.symbol,
+    share:
+      (weights[i]! * weights.reduce((sum, other, j) => sum + other * cov[i]![j]!, 0)) / variance,
+  }));
+  return { observations: dates.length - 1, volatility, correlations, contributions };
+}
+
+/** Estimates FIFO proceeds and gain for a hypothetical sale; it never changes transactions. */
+export function fifoSalePreview(
+  txs: Transaction[],
+  assetId: string,
+  quantity: number,
+  price: number,
+): FifoSalePreview | null {
+  if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0)
+    return null;
+
+  const lots: { quantity: number; costPerUnit: number }[] = [];
+  for (const transaction of [...txs]
+    .filter((item) => item.assetId === assetId && item.kind !== "dividend")
+    .sort((a, b) => a.date.localeCompare(b.date))) {
+    if (
+      !Number.isFinite(transaction.quantity) ||
+      transaction.quantity <= 0 ||
+      !Number.isFinite(transaction.price) ||
+      transaction.price < 0 ||
+      (transaction.fee !== undefined && (!Number.isFinite(transaction.fee) || transaction.fee < 0))
+    )
+      return null;
+    if (transaction.kind === "buy") {
+      lots.push({
+        quantity: transaction.quantity,
+        costPerUnit: transaction.price + (transaction.fee ?? 0) / transaction.quantity,
+      });
+      continue;
+    }
+
+    let remaining = transaction.quantity;
+    while (remaining > 1e-12 && lots.length) {
+      const lot = lots[0]!;
+      const used = Math.min(remaining, lot.quantity);
+      lot.quantity -= used;
+      remaining -= used;
+      if (lot.quantity <= 1e-12) lots.shift();
+    }
+  }
+
+  const available = lots.reduce((sum, lot) => sum + lot.quantity, 0);
+  if (quantity > available + 1e-9) return null;
+  let remaining = quantity;
+  let cost = 0;
+  while (remaining > 1e-12 && lots.length) {
+    const lot = lots[0]!;
+    const used = Math.min(remaining, lot.quantity);
+    cost += used * lot.costPerUnit;
+    lot.quantity -= used;
+    remaining -= used;
+    if (lot.quantity <= 1e-12) lots.shift();
+  }
+  const proceeds = quantity * price;
+  return { quantity, proceeds, cost, gain: proceeds - cost };
+}
+
 /** FIFO realized gains per sale, plus dividends received, grouped by calendar year (USD). */
 export function fifoTaxReport(txs: Transaction[]): TaxYear[] {
   const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
