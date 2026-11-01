@@ -9,7 +9,7 @@ Produce two English cuts from one product-footage session:
 
 Use a 16:9 master with important UI kept inside a centered mobile-safe area. Capture the public sample portfolio and clearly retain its sample-data label. Never record a user's real account. Use controlled screen captures, quiet music, English captions, and no autoplay with sound.
 
-For a quick review before recording, open the [interactive concept preview](./capispot-video-preview.html). It is an 18-second condensed animatic with animated storyboard crops, captions, and a quiet synthesized ambient bed with a mute control; it is not the final voiced product video. The [storyboard artwork](./capispot-storyboard-concept.png) is illustrative and contains fictional sample UI.
+For a quick review before recording, open the [interactive product walkthrough](./capispot-video-preview.html). It uses screen captures from Capispot's real public pages, including the clearly labelled sample portfolio and the Free-vs-Pro comparison. The visitor cut runs for 36 seconds; the Pro cut runs for 30 seconds. Captions, chapter controls and optional quiet ambient sound make it easy to review locally; the captures contain no personal portfolio data and are not the final voiced video.
 
 ## Visitor cut — 60 seconds
 
@@ -41,9 +41,9 @@ Small end-card disclosure: “Analysis and scenarios are informational, not pers
 
 ## Footage and publication checklist
 
-- Record using the clearly labeled sample portfolio or a dedicated test account with no personal information.
+- Record using the clearly labeled sample portfolio or a dedicated test account with no personal information. The local walkthrough uses only public Capispot pages and illustrative sample data.
 - Keep sample figures visibly identified as illustrative; do not present them as live performance.
-- Do not imply direct brokerage connectivity, guaranteed returns, or that a rebalance preview executes trades.
+- Describe only the supported read-only IBKR and Trading 212 sync; do not imply other brokerage integrations, guaranteed returns, or that a rebalance preview executes trades.
 - Keep the index disclosure visible where comparison is shown: index lines represent price return, not total return.
 - Provide captions matching the English voiceover and a transcript for accessibility.
 - For the final video, use a poster image and `preload="none"`; require an explicit play action and provide keyboard-accessible native controls. Keep sound off until the visitor starts playback.

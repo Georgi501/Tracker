@@ -2,12 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <base href="../../public/video-preview/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="An animated concept preview of how Capispot could introduce its product videos on the homepage."
+      content="See the real Capispot interface, portfolio tracking, market discovery and Pro tools in a short product walkthrough."
     />
-    <title>Capispot video concept preview</title>
+    <meta name="theme-color" content="#070a10" />
+    <title>See Capispot in action</title>
     <style>
       :root {
         color-scheme: dark;
@@ -20,15 +22,17 @@
           BlinkMacSystemFont,
           "Segoe UI",
           sans-serif;
-        background: #070d12;
-        color: #eef5f3;
+        background: #070a10;
+        color: #f0f3f2;
         font-synthesis: none;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
-        --muted: #aab8bf;
-        --line: rgb(194 218 212 / 14%);
-        --green: #63d8b0;
-        --panel: rgb(15 25 32 / 94%);
+        --muted: #a4afb9;
+        --line: rgb(191 211 214 / 14%);
+        --mint: #72dfb5;
+        --panel: #0c121a;
+        --green: #81c887;
+        --red: #ef8d7f;
       }
 
       * {
@@ -40,8 +44,9 @@
         min-height: 100vh;
         margin: 0;
         background:
-          radial-gradient(ellipse at 12% 5%, rgb(20 129 103 / 18%), transparent 35rem),
-          radial-gradient(ellipse at 95% 35%, rgb(71 58 125 / 17%), transparent 34rem), #070d12;
+          radial-gradient(ellipse at 9% 1%, rgb(16 111 75 / 19%), transparent 36rem),
+          radial-gradient(ellipse at 100% 25%, rgb(93 35 89 / 18%), transparent 38rem),
+          radial-gradient(ellipse at 50% 100%, rgb(79 75 28 / 10%), transparent 36rem), #070a10;
       }
 
       button,
@@ -51,19 +56,20 @@
 
       button:focus-visible,
       a:focus-visible {
-        outline: 2px solid var(--green);
+        outline: 2px solid var(--mint);
         outline-offset: 3px;
       }
 
       .shell {
-        width: min(1120px, calc(100% - 40px));
+        width: min(1180px, calc(100% - 40px));
         margin-inline: auto;
       }
 
-      header {
+      .site-header {
         height: 72px;
         border-bottom: 1px solid var(--line);
-        background: rgb(5 13 13 / 72%);
+        background: rgb(6 13 14 / 82%);
+        backdrop-filter: blur(18px);
       }
 
       .header-inner,
@@ -71,9 +77,10 @@
       .header-nav,
       .hero-actions,
       .section-heading,
+      .mode-switch,
       .player-controls,
-      .player-progress,
-      .benefit-row {
+      .control-group,
+      .chapter-meta {
         display: flex;
         align-items: center;
       }
@@ -84,33 +91,22 @@
       }
 
       .brand {
-        gap: 10px;
-        color: #f6f7f4;
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: -0.06em;
+        gap: 1px;
+        color: #f5f4ed;
+        font-size: 23px;
+        font-weight: 850;
+        letter-spacing: -0.07em;
         text-decoration: none;
       }
 
-      .brand-mark {
-        display: grid;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        border-radius: 10px;
-        background: linear-gradient(140deg, #5de0b0, #17a9d2);
-        color: #05201b;
-        font-size: 14px;
-      }
-
       .brand span:last-child {
-        background: linear-gradient(100deg, #f3c878, #e8a7c7 56%, #65d8b2);
+        background: linear-gradient(105deg, #f0c16f 5%, #e99cc5 52%, #70d7b4 98%);
         background-clip: text;
         color: transparent;
       }
 
       .header-nav {
-        gap: 24px;
+        gap: 22px;
         color: var(--muted);
         font-size: 13px;
       }
@@ -118,6 +114,7 @@
       .header-nav a {
         color: inherit;
         text-decoration: none;
+        transition: color 160ms ease;
       }
 
       .header-nav a:hover {
@@ -125,42 +122,68 @@
       }
 
       .header-cta,
-      .primary-cta {
+      .primary-cta,
+      .secondary-cta {
         display: inline-flex;
-        min-height: 42px;
+        min-height: 44px;
         align-items: center;
         justify-content: center;
-        padding: 0 17px;
+        gap: 8px;
+        padding: 0 18px;
         border: 1px solid transparent;
         border-radius: 999px;
-        background: var(--green);
-        color: #06221a;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 750;
         text-decoration: none;
         transition:
           transform 160ms ease,
-          background 160ms ease;
+          background 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .header-cta,
+      .primary-cta {
+        background: var(--mint);
+        color: #06221a;
       }
 
       .header-cta:hover,
       .primary-cta:hover {
         transform: translateY(-1px);
-        background: #83e9c5;
+        background: #91ebc7;
+      }
+
+      .secondary-cta {
+        border-color: var(--line);
+        color: #eef4f1;
+      }
+
+      .secondary-cta:hover {
+        border-color: rgb(114 223 181 / 55%);
+        background: rgb(114 223 181 / 7%);
       }
 
       main {
-        padding-block: 42px 72px;
+        padding-block: 48px 72px;
       }
 
-      .eyebrow {
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+        align-items: end;
+        gap: 48px;
+        margin-bottom: 34px;
+      }
+
+      .eyebrow,
+      .scene-kicker {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        color: var(--green);
-        font-size: 11px;
+        gap: 9px;
+        color: var(--mint);
+        font-size: 10px;
         font-weight: 800;
-        letter-spacing: 0.13em;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
       }
 
@@ -169,70 +192,84 @@
         height: 7px;
         border-radius: 50%;
         background: currentColor;
+        box-shadow: 0 0 15px rgb(114 223 181 / 80%);
         content: "";
       }
 
-      .hero {
-        max-width: 780px;
-        margin: 0 auto 27px;
-        text-align: center;
-      }
-
       h1 {
-        margin: 16px 0 12px;
-        font-size: clamp(32px, 5vw, 54px);
-        letter-spacing: -0.055em;
-        line-height: 1.08;
+        max-width: 760px;
+        margin: 16px 0 13px;
+        font-size: clamp(36px, 5.2vw, 64px);
+        letter-spacing: -0.065em;
+        line-height: 0.99;
       }
 
-      .hero p {
-        max-width: 630px;
-        margin: 0 auto;
+      .hero-copy {
+        max-width: 650px;
+        margin: 0;
         color: var(--muted);
-        font-size: clamp(14px, 1.8vw, 17px);
-        line-height: 1.7;
+        font-size: clamp(14px, 1.5vw, 17px);
+        line-height: 1.75;
       }
 
       .hero-actions {
-        justify-content: center;
-        gap: 11px;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-top: 21px;
       }
 
-      .secondary-cta {
-        display: inline-flex;
-        min-height: 42px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 17px;
+      .hero-aside {
+        padding: 20px 21px;
         border: 1px solid var(--line);
-        border-radius: 999px;
-        color: #edf4f2;
-        font-size: 13px;
-        font-weight: 700;
-        text-decoration: none;
+        border-radius: 20px;
+        background: linear-gradient(145deg, rgb(17 28 34 / 85%), rgb(10 17 24 / 88%));
+        box-shadow: inset 0 1px rgb(255 255 255 / 4%);
       }
 
-      .secondary-cta:hover {
-        border-color: rgb(99 216 176 / 50%);
-        background: rgb(99 216 176 / 7%);
+      .hero-aside strong {
+        display: block;
+        margin-bottom: 13px;
+        font-size: 13px;
+      }
+
+      .asset-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .asset-tags span {
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: #d7e1df;
+        font-size: 10px;
+        font-weight: 650;
+      }
+
+      .hero-aside small {
+        display: block;
+        margin-top: 12px;
+        color: #8e9ba4;
+        font-size: 10px;
+        line-height: 1.55;
       }
 
       .preview {
         overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: 23px;
-        background: var(--panel);
+        border-radius: 26px;
+        background: rgb(12 18 26 / 92%);
         box-shadow:
-          0 30px 90px -50px rgb(0 0 0 / 90%),
+          0 32px 100px -48px rgb(0 0 0 / 94%),
           inset 0 1px rgb(255 255 255 / 5%);
       }
 
       .section-heading {
-        min-height: 62px;
+        min-height: 76px;
         justify-content: space-between;
-        gap: 15px;
-        padding: 12px 17px;
+        gap: 18px;
+        padding: 14px 20px;
         border-bottom: 1px solid var(--line);
       }
 
@@ -243,24 +280,23 @@
 
       .section-heading small {
         display: block;
-        margin-top: 4px;
+        margin-top: 5px;
         color: var(--muted);
         font-size: 11px;
       }
 
-      .switcher {
-        display: inline-flex;
+      .mode-switch {
         flex: 0 0 auto;
         gap: 3px;
         padding: 4px;
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: #091117;
+        background: #080e14;
       }
 
-      .switcher button {
-        min-height: 32px;
-        padding: 0 12px;
+      .mode-switch button {
+        min-height: 34px;
+        padding: 0 13px;
         border: 0;
         border-radius: 999px;
         background: transparent;
@@ -268,159 +304,252 @@
         cursor: pointer;
         font-size: 11px;
         font-weight: 700;
+        transition:
+          color 160ms ease,
+          background 160ms ease;
       }
 
-      .switcher button[aria-pressed="true"] {
+      .mode-switch button[aria-pressed="true"] {
         background: #1b302e;
         color: #aaf2d8;
       }
 
-      .player {
+      .player-layout {
+        display: grid;
+        min-height: 590px;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        background:
+          radial-gradient(ellipse at 25% 45%, rgb(25 102 81 / 12%), transparent 45%),
+          linear-gradient(115deg, #080f15, #0d141c 58%, #0b1118);
+      }
+
+      .screen-stage {
         position: relative;
-        aspect-ratio: 16 / 8.3;
+        display: grid;
+        min-width: 0;
+        place-items: center;
         overflow: hidden;
-        background: #060b10;
+        padding: 25px;
+        border-right: 1px solid var(--line);
       }
 
-      .poster {
+      .screen-stage::before,
+      .screen-stage::after {
         position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(180deg, rgb(5 10 14 / 0%) 42%, rgb(5 10 14 / 90%) 100%),
-          url("./capispot-storyboard-concept.png");
-        background-position:
-          center,
-          var(--scene-x, 50%) var(--scene-y, 18%);
-        background-size:
-          cover,
-          310% auto;
-        filter: saturate(0.82);
-        opacity: 0.84;
-        transition:
-          opacity 250ms ease,
-          transform 3000ms ease,
-          background-position 1800ms cubic-bezier(0.2, 0.75, 0.25, 1),
-          filter 500ms ease;
-      }
-
-      .player[data-playing="true"] .poster {
-        opacity: 0.92;
-        filter: saturate(1);
-        transform: scale(1.045);
-      }
-
-      .player[data-playing="true"] .poster::after {
-        position: absolute;
-        inset: -35% -60%;
-        background: linear-gradient(
-          112deg,
-          transparent 42%,
-          rgb(106 237 194 / 8%) 49%,
-          rgb(106 237 194 / 22%) 50%,
-          transparent 58%
-        );
-        animation: scene-light-sweep 4.8s ease-in-out infinite;
+        width: 340px;
+        height: 340px;
+        border-radius: 50%;
+        background: rgb(82 208 165 / 7%);
         content: "";
+        filter: blur(90px);
         pointer-events: none;
       }
 
-      @keyframes scene-light-sweep {
-        0% {
-          transform: translateX(-58%);
-          opacity: 0;
-        }
-        18%,
-        76% {
-          opacity: 1;
-        }
-        100% {
-          transform: translateX(58%);
-          opacity: 0;
-        }
+      .screen-stage::before {
+        top: 4%;
+        left: 12%;
       }
 
-      .player-center {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
+      .screen-stage::after {
+        right: -14%;
+        bottom: -28%;
+        background: rgb(94 84 164 / 10%);
       }
 
-      .play-button {
-        display: grid;
-        width: 68px;
-        height: 68px;
-        place-items: center;
-        border: 1px solid rgb(255 255 255 / 35%);
-        border-radius: 50%;
-        background: rgb(10 24 28 / 72%);
-        color: white;
-        cursor: pointer;
-        font-size: 24px;
-        backdrop-filter: blur(8px);
+      .screen-frame {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 510px);
+        aspect-ratio: 916 / 984;
+        overflow: hidden;
+        border: 1px solid rgb(205 222 221 / 20%);
+        border-radius: 21px;
+        background: #060a0f;
+        box-shadow:
+          0 28px 75px -24px rgb(0 0 0 / 92%),
+          0 0 0 7px rgb(255 255 255 / 2%);
+      }
+
+      .screen-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
         transition:
-          transform 180ms ease,
-          background 180ms ease;
+          opacity 260ms ease,
+          transform 6s cubic-bezier(0.2, 0.65, 0.3, 1);
       }
 
-      .play-button:hover {
-        transform: scale(1.06);
-        background: rgb(22 91 74 / 88%);
+      .screen-frame img.is-changing {
+        opacity: 0.28;
+        transform: scale(0.985);
       }
 
-      .player-caption {
-        position: absolute;
-        right: 20px;
-        bottom: 56px;
-        left: 20px;
-        max-width: 760px;
-        margin-inline: auto;
-        text-align: center;
-        text-shadow: 0 2px 12px #000;
+      .player[data-playing="true"] .screen-frame img {
+        transform: scale(1.025);
       }
 
-      .player-caption strong {
-        display: block;
-        font-size: clamp(18px, 3.2vw, 32px);
-        letter-spacing: -0.035em;
+      .scene-copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(28px, 4.2vw, 56px);
       }
 
-      .player-caption span {
-        display: block;
-        margin-top: 7px;
-        color: #e0e8e7;
-        font-size: clamp(12px, 1.5vw, 15px);
+      .chapter-meta {
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+
+      .scene-kicker {
+        gap: 7px;
+        color: var(--mint);
+        font-size: 9px;
+      }
+
+      .scene-number {
+        color: #83929b;
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .scene-copy h2 {
+        max-width: 480px;
+        margin: 0;
+        font-size: clamp(26px, 3.1vw, 40px);
+        letter-spacing: -0.05em;
+        line-height: 1.08;
+      }
+
+      .scene-copy p {
+        max-width: 470px;
+        margin: 16px 0 0;
+        color: #aab6bd;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .scene-points {
+        display: grid;
+        gap: 12px;
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .scene-points li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: #d7e1de;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .scene-points li::before {
+        display: grid;
+        width: 17px;
+        height: 17px;
+        flex: 0 0 17px;
+        place-items: center;
+        margin-top: 1px;
+        border: 1px solid rgb(114 223 181 / 35%);
+        border-radius: 50%;
+        background: rgb(114 223 181 / 9%);
+        color: var(--mint);
+        content: "✓";
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .scene-note {
+        margin-top: 27px;
+        padding-top: 15px;
+        border-top: 1px solid var(--line);
+        color: #78868f;
+        font-size: 9px;
+        line-height: 1.55;
       }
 
       .player-controls {
-        position: absolute;
-        right: 16px;
-        bottom: 13px;
-        left: 16px;
-        gap: 11px;
-        color: #f4f6f5;
-        font-size: 11px;
+        min-height: 64px;
+        gap: 14px;
+        padding: 11px 18px;
+        border-top: 1px solid var(--line);
+        background: #090f16;
+      }
+
+      .control-group {
+        flex: 0 0 auto;
+        gap: 7px;
       }
 
       .player-controls button {
         display: grid;
-        width: 30px;
-        height: 30px;
-        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
         place-items: center;
-        border: 0;
+        border: 1px solid var(--line);
         border-radius: 50%;
-        background: rgb(255 255 255 / 12%);
-        color: inherit;
+        background: rgb(255 255 255 / 4%);
+        color: #edf4f2;
         cursor: pointer;
+        font-size: 13px;
+        transition:
+          border-color 150ms ease,
+          background 150ms ease,
+          color 150ms ease;
       }
 
-      .player-controls button[aria-pressed="true"] {
-        background: rgb(99 216 176 / 22%);
+      .player-controls button:hover {
+        border-color: rgb(114 223 181 / 45%);
+        background: rgb(114 223 181 / 12%);
         color: #aaf2d8;
       }
 
-      .audio-status {
+      .player-controls button[aria-pressed="true"] {
+        color: var(--mint);
+      }
+
+      .progress-wrap {
+        display: flex;
+        min-width: 40px;
+        flex: 1;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .player-progress {
+        position: relative;
+        height: 4px;
+        flex: 1;
+        overflow: hidden;
+        border-radius: 99px;
+        background: rgb(255 255 255 / 17%);
+      }
+
+      .player-progress span {
+        display: block;
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #37bda0, #8ee6bd);
+        box-shadow: 0 0 14px rgb(114 223 181 / 45%);
+        transition: width 180ms linear;
+      }
+
+      .player-time {
+        min-width: 70px;
+        color: #9eabb2;
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      .player-status {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -430,155 +559,298 @@
         clip-path: inset(50%);
       }
 
-      .player-progress {
-        height: 3px;
-        flex: 1;
-        overflow: hidden;
-        border-radius: 9px;
-        background: rgb(255 255 255 / 28%);
+      .chapters {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 14px 17px;
+        border-top: 1px solid var(--line);
+        scrollbar-width: thin;
+        scrollbar-color: rgb(114 223 181 / 28%) transparent;
       }
 
-      .player-progress span {
-        width: 0;
-        height: 100%;
-        border-radius: inherit;
-        background: var(--green);
-        transition: width 350ms linear;
+      .chapter-button {
+        display: inline-flex;
+        min-height: 32px;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 8px;
+        padding: 0 11px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: transparent;
+        color: #96a4ac;
+        cursor: pointer;
+        font-size: 10px;
+        transition:
+          border-color 150ms ease,
+          background 150ms ease,
+          color 150ms ease;
       }
 
-      .player-time {
-        min-width: 60px;
-        text-align: right;
+      .chapter-button span {
+        color: #687880;
+        font-size: 9px;
         font-variant-numeric: tabular-nums;
       }
 
-      .benefits {
+      .chapter-button[aria-current="step"] {
+        border-color: rgb(114 223 181 / 22%);
+        background: rgb(114 223 181 / 8%);
+        color: #c9f4e3;
+      }
+
+      .chapter-button[aria-current="step"] span {
+        color: var(--mint);
+      }
+
+      .proof {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 11px;
-        padding: 14px;
-        border-top: 1px solid var(--line);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 13px;
+        margin-top: 24px;
       }
 
-      .benefit {
-        min-height: 75px;
-        padding: 13px;
+      .proof-card {
+        min-height: 130px;
+        padding: 18px;
         border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgb(255 255 255 / 2%);
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgb(16 25 32 / 80%), rgb(10 16 24 / 82%));
       }
 
-      .benefit b {
+      .proof-card .proof-number {
         display: block;
-        font-size: 12px;
-      }
-
-      .benefit span {
-        display: block;
-        margin-top: 5px;
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.45;
-      }
-
-      .bottom-note {
-        margin: 12px 18px 17px;
-        color: #93a2a8;
+        margin-bottom: 14px;
+        color: var(--mint);
         font-size: 10px;
-        line-height: 1.5;
+        font-weight: 800;
+        letter-spacing: 0.12em;
       }
 
-      .below {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        margin-top: 22px;
+      .proof-card strong {
+        display: block;
+        font-size: 13px;
       }
 
-      .below p {
-        max-width: 600px;
-        margin: 0;
+      .proof-card p {
+        margin: 7px 0 0;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 10px;
         line-height: 1.6;
       }
 
-      @media (max-width: 640px) {
+      .closing {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-top: 34px;
+        padding: 26px 28px;
+        border: 1px solid rgb(114 223 181 / 20%);
+        border-radius: 22px;
+        background:
+          radial-gradient(ellipse at 95% 0%, rgb(114 223 181 / 12%), transparent 45%),
+          linear-gradient(120deg, #101a20, #0b1219);
+      }
+
+      .closing h2 {
+        margin: 0;
+        font-size: clamp(20px, 2.4vw, 28px);
+        letter-spacing: -0.04em;
+      }
+
+      .closing p {
+        max-width: 640px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .closing .primary-cta {
+        flex: 0 0 auto;
+      }
+
+      .disclosure {
+        margin: 14px 3px 0;
+        color: #84919a;
+        font-size: 9px;
+        line-height: 1.65;
+      }
+
+      @media (max-width: 760px) {
         .shell {
-          width: min(100% - 24px, 540px);
+          width: min(100% - 24px, 600px);
         }
 
-        header {
+        .site-header {
           height: 62px;
-        }
-
-        .header-nav a:not(.header-cta) {
-          display: none;
         }
 
         .header-nav {
           gap: 0;
         }
 
+        .header-nav > a:not(.header-cta) {
+          display: none;
+        }
+
+        .header-cta {
+          min-height: 38px;
+          padding-inline: 13px;
+          font-size: 11px;
+        }
+
         main {
-          padding-block: 30px 45px;
+          padding-block: 31px 48px;
+        }
+
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 19px;
+          margin-bottom: 22px;
+        }
+
+        h1 {
+          max-width: 550px;
+          font-size: clamp(36px, 10vw, 52px);
+        }
+
+        .hero-aside {
+          padding: 14px;
+          border-radius: 16px;
+        }
+
+        .hero-aside strong {
+          margin-bottom: 9px;
+        }
+
+        .hero-aside small {
+          margin-top: 8px;
+        }
+
+        .preview {
+          border-radius: 20px;
         }
 
         .section-heading {
           align-items: flex-start;
           flex-direction: column;
-          padding: 14px;
+          gap: 12px;
+          padding: 15px;
         }
 
-        .switcher {
+        .mode-switch {
           width: 100%;
         }
 
-        .switcher button {
+        .mode-switch button {
           flex: 1;
         }
 
-        .player {
-          aspect-ratio: 4 / 3;
-        }
-
-        .poster {
-          background-position:
-            center,
-            var(--scene-x, 50%) var(--scene-y, 18%);
-        }
-
-        .play-button {
-          width: 56px;
-          height: 56px;
-        }
-
-        .player-caption {
-          right: 12px;
-          bottom: 52px;
-          left: 12px;
-        }
-
-        .player-caption span {
-          max-width: 330px;
-          margin-inline: auto;
-        }
-
-        .benefits {
+        .player-layout {
+          min-height: 0;
           grid-template-columns: 1fr;
+        }
+
+        .screen-stage {
+          min-height: 0;
+          padding: 17px 17px 13px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .screen-frame {
+          width: min(100%, 410px);
+          border-radius: 17px;
+        }
+
+        .scene-copy {
+          padding: 21px 20px 23px;
+        }
+
+        .chapter-meta {
+          margin-bottom: 13px;
+        }
+
+        .scene-copy h2 {
+          font-size: clamp(24px, 7vw, 32px);
+        }
+
+        .scene-copy p {
+          margin-top: 10px;
+          font-size: 12px;
+        }
+
+        .scene-points {
           gap: 8px;
-          padding: 11px;
+          margin-top: 16px;
         }
 
-        .benefit {
-          min-height: auto;
-          padding: 11px 12px;
+        .scene-note {
+          margin-top: 17px;
+          padding-top: 11px;
         }
 
-        .below {
-          align-items: stretch;
+        .player-controls {
+          gap: 9px;
+          padding: 10px 12px;
+        }
+
+        .control-group {
+          gap: 5px;
+        }
+
+        .player-controls button {
+          width: 32px;
+          height: 32px;
+        }
+
+        .progress-wrap {
+          gap: 7px;
+        }
+
+        .player-time {
+          min-width: 62px;
+          font-size: 9px;
+        }
+
+        .chapters {
+          padding: 11px 10px;
+        }
+
+        .chapter-button {
+          min-height: 30px;
+          padding-inline: 9px;
+        }
+
+        .proof {
+          grid-template-columns: 1fr;
+          gap: 9px;
+          margin-top: 15px;
+        }
+
+        .proof-card {
+          min-height: 0;
+          padding: 14px;
+        }
+
+        .proof-card .proof-number {
+          margin-bottom: 8px;
+        }
+
+        .closing {
+          align-items: flex-start;
           flex-direction: column;
+          gap: 16px;
+          margin-top: 20px;
+          padding: 20px;
+          border-radius: 18px;
+        }
+
+        .closing .primary-cta {
+          width: 100%;
         }
       }
 
@@ -587,84 +859,123 @@
         *::before,
         *::after {
           scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
           transition-duration: 0.01ms !important;
-        }
-
-        .player[data-playing="true"] .poster::after {
-          animation: none;
         }
       }
     </style>
   </head>
   <body>
-    <header>
+    <header class="site-header">
       <div class="shell header-inner">
-        <a class="brand" href="https://capispot.com/" aria-label="Capispot home">
-          <span class="brand-mark" aria-hidden="true">C</span>
-          <span>Capispot</span>
+        <a class="brand" href="https://capispot.com/" aria-label="CapiSpot home">
+          <span>Capi</span><span>Spot</span>
         </a>
         <nav class="header-nav" aria-label="Main navigation">
           <a href="https://capispot.com/features">Features</a>
           <a href="https://capispot.com/pricing">Pricing</a>
-          <a class="header-cta" href="https://capispot.com/auth">Create free account</a>
+          <a class="header-cta" href="https://capispot.com/auth">Create free portfolio</a>
         </nav>
       </div>
     </header>
 
     <main class="shell">
       <section class="hero" aria-labelledby="hero-title">
-        <span class="eyebrow" id="audience-label">For investors who want a clearer view</span>
-        <h1 id="hero-title">Your investments, clearly in view.</h1>
-        <p id="hero-description">
-          Track stocks, ETFs and crypto, with portfolio performance, allocation and dividend
-          insights in one place.
-        </p>
-        <div class="hero-actions">
-          <a class="primary-cta" id="hero-cta" href="https://capispot.com/auth">
-            Create free account
-          </a>
-          <a class="secondary-cta" id="hero-secondary" href="https://capispot.com/demo">
-            Explore sample portfolio
-          </a>
+        <div>
+          <span class="eyebrow" id="hero-eyebrow">A clearer view of your investments</span>
+          <h1 id="hero-title">Your investments, clearly in view.</h1>
+          <p class="hero-copy" id="hero-copy">
+            See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools
+            into one calm, connected experience.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-cta" id="hero-cta" href="https://capispot.com/auth">
+              Create free portfolio <span aria-hidden="true">→</span>
+            </a>
+            <a class="secondary-cta" id="hero-secondary" href="https://capispot.com/demo">
+              Explore sample portfolio
+            </a>
+          </div>
         </div>
+        <aside class="hero-aside" aria-label="Supported portfolio asset types">
+          <strong>One portfolio. More perspective.</strong>
+          <div class="asset-tags">
+            <span>Stocks</span>
+            <span>ETFs</span>
+            <span>Crypto</span>
+            <span>Bonds</span>
+            <span>Cash</span>
+            <span>Real estate</span>
+          </div>
+          <small>Captured from Capispot's real public interface. No personal portfolio data.</small>
+        </aside>
       </section>
 
-      <section class="preview" aria-labelledby="video-section-title">
+      <section class="preview" aria-labelledby="preview-title">
         <div class="section-heading">
           <div>
-            <strong id="video-section-title">See how Capispot works</strong>
-            <small id="video-duration">A 60-second introduction to the platform and Pro</small>
+            <strong id="preview-title">See the product. Understand the difference.</strong>
+            <small id="preview-duration">A 36-second walkthrough · real Capispot screens</small>
           </div>
-          <div class="switcher" role="group" aria-label="Preview audience">
-            <button type="button" data-mode="visitor" aria-pressed="true">Visitor view</button>
-            <button type="button" data-mode="signed-in" aria-pressed="false">Signed-in view</button>
+          <div class="mode-switch" role="group" aria-label="Choose a product walkthrough">
+            <button type="button" data-mode="visitor" aria-pressed="true">Portfolio tour</button>
+            <button type="button" data-mode="pro" aria-pressed="false">Pro tools</button>
           </div>
         </div>
 
         <div class="player" id="player" data-playing="false">
-          <div
-            class="poster"
-            role="img"
-            aria-label="Concept storyboard artwork for Capispot videos"
-          ></div>
-          <div class="player-center">
-            <button
-              class="play-button"
-              id="play-button"
-              type="button"
-              aria-label="Play concept preview"
-            >
-              <span id="play-icon" aria-hidden="true">▶</span>
-            </button>
+          <div class="player-layout">
+            <div class="screen-stage">
+              <div class="screen-frame">
+                <img
+                  id="product-image"
+                  src="./ui-overview.png"
+                  alt="CapiSpot sample portfolio page with its actual navigation and sample-data label"
+                  fetchpriority="high"
+                />
+              </div>
+            </div>
+            <div class="scene-copy" aria-live="polite">
+              <div class="chapter-meta">
+                <span class="scene-kicker" id="scene-kicker">CORE PORTFOLIO</span>
+                <span class="scene-number" id="scene-number">01 / 06</span>
+              </div>
+              <h2 id="scene-title">Your investments, clearly in view.</h2>
+              <p id="scene-caption">
+                Capispot brings your investment activity together in one portfolio, with a calmer
+                view of what you own.
+              </p>
+              <ul class="scene-points" id="scene-points">
+                <li>Stocks, ETFs, crypto, bonds, cash and real estate</li>
+                <li>A portfolio view—not another market feed</li>
+                <li>Explore a clearly labelled sample before signing up</li>
+              </ul>
+              <div class="scene-note" id="scene-note">
+                The public portfolio shown here uses illustrative sample data.
+              </div>
+            </div>
           </div>
-          <div class="player-caption" aria-live="polite">
-            <strong id="scene-title">Your investments, in one clear view.</strong>
-            <span id="scene-caption"
-              >A concept preview — the final video will use real product footage.</span
-            >
-          </div>
-          <div class="player-controls">
-            <button type="button" id="control-play" aria-label="Play concept preview">▶</button>
+
+          <div class="player-controls" aria-label="Walkthrough controls">
+            <div class="control-group">
+              <button type="button" id="previous-scene" aria-label="Previous scene">‹</button>
+              <button type="button" id="control-play" aria-label="Play walkthrough">▶</button>
+              <button type="button" id="next-scene" aria-label="Next scene">›</button>
+            </div>
+            <div class="progress-wrap">
+              <div
+                class="player-progress"
+                role="progressbar"
+                aria-label="Walkthrough progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+              >
+                <span id="progress"></span>
+              </div>
+              <span class="player-time" id="player-time">0:00 / 0:36</span>
+            </div>
             <button
               type="button"
               id="sound-toggle"
@@ -673,146 +984,245 @@
             >
               ♪
             </button>
-            <div
-              class="player-progress"
-              role="progressbar"
-              aria-label="Preview progress"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-valuenow="0"
-            >
-              <span id="progress"></span>
-            </div>
-            <span class="player-time" id="player-time">0:00 / 0:18</span>
           </div>
-          <span class="audio-status" id="audio-status" aria-live="polite">
-            Soft ambient sound is enabled when the preview plays.
+          <span class="player-status" id="player-status" aria-live="polite">
+            Ambient sound is enabled when the walkthrough plays.
           </span>
+          <div class="chapters" id="chapters" aria-label="Walkthrough chapters"></div>
         </div>
-
-        <div class="benefits" id="benefits" aria-label="Video highlights">
-          <div class="benefit">
-            <b>One clear portfolio view</b>
-            <span>Holdings, allocation and history together.</span>
-          </div>
-          <div class="benefit">
-            <b>Performance with context</b>
-            <span>Dated history and cash-flow-aware comparisons.</span>
-          </div>
-          <div class="benefit">
-            <b>More depth with Pro</b>
-            <span>Research, risk and planning tools when you need them.</span>
-          </div>
-        </div>
-        <p class="bottom-note" id="disclosure">
-          Capispot is a portfolio tracking and analytics tool, not investment advice. Investing
-          involves risk. Storyboard graphics are illustrative, not live portfolio data.
-        </p>
       </section>
 
-      <div class="below">
-        <p id="below-copy">
-          This is a concept preview of where the video could appear. Playback uses storyboard
-          artwork and captions; it is not the final recorded product video.
-        </p>
-        <a class="secondary-cta" id="below-cta" href="https://capispot.com/pricing">Explore Pro</a>
-      </div>
+      <section class="proof" aria-label="Why investors choose Capispot">
+        <article class="proof-card">
+          <span class="proof-number">01 / CLARITY</span>
+          <strong>See the whole portfolio</strong>
+          <p>
+            Positions, asset mix and market discovery in one place, with a clear sample to explore.
+          </p>
+        </article>
+        <article class="proof-card">
+          <span class="proof-number">02 / CONTEXT</span>
+          <strong>Trust the story behind the numbers</strong>
+          <p>
+            Dated market history and cash-flow-aware returns. Gaps stay visible instead of guessed.
+          </p>
+        </article>
+        <article class="proof-card">
+          <span class="proof-number">03 / PRO</span>
+          <strong>Go deeper when you are ready</strong>
+          <p>
+            Research, concentration, risk and planning tools build on the free portfolio tracker.
+          </p>
+        </article>
+      </section>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <div>
+          <h2 id="closing-title">A clearer picture starts with your portfolio.</h2>
+          <p id="closing-copy">
+            Start with the core tracker for free. Explore Pro when you want more depth—not because
+            you have to.
+          </p>
+        </div>
+        <a class="primary-cta" id="closing-cta" href="https://capispot.com/auth">
+          Start your free portfolio <span aria-hidden="true">→</span>
+        </a>
+      </section>
+
+      <p class="disclosure" id="disclosure">
+        Screens are captured from Capispot's public site. Portfolio values and holdings shown in the
+        sample are fictional and illustrative, not live quotes or a recommendation. Capispot is
+        tracking and analytics software, not investment advice. Investing involves risk.
+      </p>
     </main>
 
     <script>
       const modes = {
         visitor: {
           title: "Your investments, clearly in view.",
+          eyebrow: "A clearer view of your investments",
           description:
-            "Track stocks, ETFs and crypto, with portfolio performance, allocation and dividend insights in one place.",
-          audience: "For investors who want a clearer view",
-          section: "See how Capispot works",
-          duration: "18-second animatic · planned visitor film: 60 seconds",
-          previewSeconds: 18,
-          primary: "Create free account",
-          primaryUrl: "https://capispot.com/auth",
+            "See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools into one calm, connected experience.",
+          duration: 36,
+          sceneDuration: 6,
+          sectionDuration: "A 36-second walkthrough · real Capispot screens",
+          cta: "Create free portfolio",
+          ctaUrl: "https://capispot.com/auth",
           secondary: "Explore sample portfolio",
           secondaryUrl: "https://capispot.com/demo",
-          below:
-            "This is a concept preview of where the video could appear. Playback uses storyboard artwork and captions; it is not the final recorded product video.",
-          belowCta: "Explore Pro",
-          belowUrl: "https://capispot.com/pricing",
-          disclosure:
-            "Capispot is a portfolio tracking and analytics tool, not investment advice. Investing involves risk. Storyboard graphics are illustrative, not live portfolio data.",
-          benefits: [
-            ["One clear portfolio view", "Holdings, allocation and history together."],
-            ["Performance with context", "Dated history and cash-flow-aware comparisons."],
-            ["More depth with Pro", "Research, risk and planning tools when you need them."],
-          ],
           scenes: [
-            [
-              "Your investments, in one clear view.",
-              "A portfolio tracker designed to bring your activity together.",
-            ],
-            [
-              "Import or add transactions.",
-              "Bring supported broker CSVs or record activity manually.",
-            ],
-            [
-              "See your portfolio at a glance.",
-              "Review holdings and allocation across asset types.",
-            ],
-            [
-              "Understand performance over time.",
-              "Explore dated history and cash-flow-adjusted returns.",
-            ],
-            [
-              "Plan with clearer information.",
-              "Follow confirmed dividend data and set your own goals.",
-            ],
-            [
-              "Go further with Pro.",
-              "Explore research, risk and planning tools. Start free when you're ready.",
-            ],
+            {
+              image: "./ui-overview.png",
+              imageAlt: "CapiSpot sample portfolio overview with a visible sample-data label",
+              kicker: "CORE PORTFOLIO",
+              title: "Your investments, clearly in view.",
+              caption:
+                "Bring your investing activity into one organized portfolio and see what you own at a glance.",
+              points: [
+                "Stocks, ETFs, crypto, bonds, cash and real estate",
+                "Import compatible CSVs or add transactions manually",
+                "Explore a clearly labelled sample before signing up",
+              ],
+              note: "The public portfolio shown here uses illustrative sample data.",
+            },
+            {
+              image: "./ui-holdings.png",
+              imageAlt:
+                "CapiSpot holdings table showing asset, quantity, average cost, value and gain or loss",
+              kicker: "PORTFOLIO CLARITY",
+              title: "Know what each position contributes.",
+              caption:
+                "Review quantity, average cost, current value and profit or loss side by side.",
+              points: [
+                "Holdings are easy to scan",
+                "Cost basis sits beside value",
+                "Sample figures are clearly disclosed",
+              ],
+              note: "Values and returns in the sample are fictional and not live market performance.",
+            },
+            {
+              image: "./ui-market-discovery.png",
+              imageAlt: "CapiSpot asset search with stock, ETF and crypto categories",
+              kicker: "MARKET DISCOVERY",
+              title: "Find assets without losing the thread.",
+              caption:
+                "Search across market assets from the same workspace where you follow your portfolio.",
+              points: [
+                "Search by company, asset name or ticker",
+                "Browse featured stocks, ETFs and crypto",
+                "Market quotes may be delayed",
+              ],
+              note: "Search and quote availability depend on the market-data provider.",
+            },
+            {
+              image: "./ui-features.png",
+              imageAlt: "CapiSpot features page describing real portfolio history and privacy",
+              kicker: "REAL HISTORY",
+              title: "Performance grounded in real history.",
+              caption:
+                "Follow dated portfolio values and returns that take your recorded cash flows into account.",
+              points: [
+                "Dated provider closes and currency rates",
+                "Cash-flow-adjusted portfolio returns",
+                "Missing history is not filled with estimates",
+              ],
+              note: "Benchmark lines represent index price return, not total return including dividends.",
+            },
+            {
+              image: "./ui-pro-preview.png",
+              imageAlt: "CapiSpot Pro preview with allocation and portfolio heatmap controls",
+              kicker: "PRO INSIGHT",
+              title: "See allocation—not just a list.",
+              caption:
+                "Explore a portfolio heatmap or asset-class breakdown to understand how your holdings are distributed.",
+              points: [
+                "See portfolio weights at a glance",
+                "Move between heatmap and allocation",
+                "Pro analysis builds on your portfolio",
+              ],
+              note: "This real product preview is populated with fictional sample positions.",
+            },
+            {
+              image: "./ui-pro-features.png",
+              imageAlt:
+                "CapiSpot Free versus Pro comparison showing broker import, analytics, dividends and research",
+              kicker: "MORE WITH PRO",
+              title: "Start free. Go deeper when you are ready.",
+              caption:
+                "The free tracker covers the essentials. Pro adds advanced analytics, research and planning tools.",
+              points: [
+                "Portfolio heatmap, benchmark and risk insights",
+                "AI review, company research and ETF overlap",
+                "Choose a plan when the extra depth is useful",
+              ],
+              note: "Tools are informational and do not place trades or promise investment outcomes.",
+            },
           ],
         },
-        "signed-in": {
+        pro: {
           title: "Go deeper with Pro.",
+          eyebrow: "For investors ready for more insight",
           description:
-            "Explore advanced portfolio analysis, company research and planning tools—all in one place.",
-          audience: "For members exploring advanced tools",
-          section: "Explore what Pro adds",
-          duration: "18-second animatic · planned Pro film: 35 seconds",
-          previewSeconds: 18,
-          primary: "Explore Pro",
-          primaryUrl: "https://capispot.com/pricing",
+            "Explore how Capispot Pro adds research, portfolio analysis and planning to the tracker you already know.",
+          duration: 30,
+          sceneDuration: 6,
+          sectionDuration: "A 30-second Pro walkthrough · real Capispot screens",
+          cta: "Explore Pro plans",
+          ctaUrl: "https://capispot.com/pricing",
           secondary: "See all features",
           secondaryUrl: "https://capispot.com/features",
-          below:
-            "A short introduction to Pro tools available from your account. Your portfolio remains private; any figures in the concept artwork are illustrative.",
-          belowCta: "View Pro plans",
-          belowUrl: "https://capispot.com/pricing",
-          disclosure:
-            "Analysis and scenarios are informational, not personalized investment advice or a guarantee of results. Storyboard graphics are illustrative.",
-          benefits: [
-            ["AI portfolio review", "Review concentration, risks and questions to revisit."],
-            ["Research and risk tools", "Explore company research, ETF overlap and risk."],
-            ["Planning tools", "Examine tax, rebalancing and scenarios using your assumptions."],
-          ],
           scenes: [
-            ["Get more from your portfolio data.", "Meet the advanced tools included with Pro."],
-            [
-              "Review your portfolio with AI.",
-              "Explore concentration, risks and a checklist to revisit.",
-            ],
-            ["Research companies and ETFs.", "See company research and overlapping fund exposure."],
-            [
-              "Examine risk and possible next steps.",
-              "Review risk, tax and a rebalance preview—not an order.",
-            ],
-            [
-              "Build scenarios around your assumptions.",
-              "Explore possible paths without treating projections as promises.",
-            ],
-            [
-              "More insight. Better-informed decisions.",
-              "Explore Pro tools and choose the plan that fits.",
-            ],
+            {
+              image: "./ui-pro-preview.png",
+              imageAlt: "CapiSpot Pro portfolio heatmap and allocation preview",
+              kicker: "PORTFOLIO ANALYSIS",
+              title: "See beyond the headline number.",
+              caption:
+                "Turn your holdings into a clearer picture of portfolio weights and concentration.",
+              points: [
+                "Heatmap and asset-class allocation views",
+                "Understand where the portfolio is concentrated",
+                "Use your own portfolio—not generic advice",
+              ],
+              note: "Sample figures are illustrative. Analysis is not investment advice.",
+            },
+            {
+              image: "./ui-pro-features.png",
+              imageAlt: "CapiSpot pricing comparison highlighting Pro analytics and research",
+              kicker: "RESEARCH & RISK",
+              title: "Research companies. Understand exposure.",
+              caption:
+                "Go further with company research, financial statements, ETF overlap and risk tools.",
+              points: [
+                "Compare portfolio analytics across plans",
+                "AI portfolio review and ETF exposure tools",
+                "Supported read-only IBKR and Trading 212 sync",
+              ],
+              note: "Research and risk tools support your analysis; they are not buy or sell recommendations.",
+            },
+            {
+              image: "./ui-features.png",
+              imageAlt: "CapiSpot features page describing portfolio history, goals and risk",
+              kicker: "PLAN WITH CONTEXT",
+              title: "Make room for the questions that matter.",
+              caption:
+                "Use goals, risk views and scenarios to examine possibilities around assumptions you choose.",
+              points: [
+                "Plan with explicit assumptions",
+                "Explore tax and buy-only rebalancing previews",
+                "Projections are possibilities—not promises",
+              ],
+              note: "Preview tools do not place trades and are not personalized investment advice.",
+            },
+            {
+              image: "./ui-holdings.png",
+              imageAlt: "CapiSpot sample holdings table with transparent sample values",
+              kicker: "BUILT ON YOUR PORTFOLIO",
+              title: "Keep the details connected.",
+              caption:
+                "Pro tools build on the holdings and transactions you track in your private portfolio.",
+              points: [
+                "Your portfolio stays account-scoped",
+                "Broker imports and manual transactions",
+                "The public sample never uses personal data",
+              ],
+              note: "Broker limits and availability depend on your plan and supported providers.",
+            },
+            {
+              image: "./ui-pro-features.png",
+              imageAlt:
+                "CapiSpot Free and Pro comparison showing broker sync, analytics, dividends and research",
+              kicker: "YOUR CHOICE",
+              title: "Upgrade for depth—not pressure.",
+              caption:
+                "Start with the free portfolio tracker, then choose Pro if its extra tools fit your workflow.",
+              points: [
+                "Compare Free and Pro feature coverage",
+                "Review Pro analytics, research and portfolio tools",
+                "Decide when the added depth fits",
+              ],
+              note: "Check the pricing page for current plan details and trial terms.",
+            },
           ],
         },
       };
@@ -823,32 +1233,48 @@
       let playing = false;
       let soundEnabled = true;
       let timer = null;
-      let playbackRequest = 0;
+      let lastTick = 0;
       let audioContext = null;
       let masterGain = null;
+      let imageRequest = 0;
+
       const player = document.querySelector("#player");
-      const playButton = document.querySelector("#play-button");
-      const controlPlay = document.querySelector("#control-play");
+      const productImage = document.querySelector("#product-image");
+      const playButton = document.querySelector("#control-play");
+      const previousButton = document.querySelector("#previous-scene");
+      const nextButton = document.querySelector("#next-scene");
       const soundToggle = document.querySelector("#sound-toggle");
       const progress = document.querySelector("#progress");
       const progressBar = document.querySelector(".player-progress");
       const time = document.querySelector("#player-time");
+      const chapters = document.querySelector("#chapters");
+      const status = document.querySelector("#player-status");
+
+      function currentMode() {
+        return modes[activeMode];
+      }
+
+      function formatTime(seconds) {
+        const wholeSeconds = Math.floor(seconds);
+        return `${Math.floor(wholeSeconds / 60)}:${String(wholeSeconds % 60).padStart(2, "0")}`;
+      }
 
       function ensureAudio() {
         if (audioContext) return;
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) throw new Error("Audio is not supported in this browser.");
+
         audioContext = new AudioContextClass();
         masterGain = audioContext.createGain();
-        masterGain.gain.value = soundEnabled ? 0.035 : 0;
+        masterGain.gain.value = soundEnabled ? 0.04 : 0;
         masterGain.connect(audioContext.destination);
 
         [110, 164.81, 220].forEach((frequency, index) => {
           const oscillator = audioContext.createOscillator();
           const voiceGain = audioContext.createGain();
-          oscillator.type = index === 0 ? "sine" : "triangle";
+          oscillator.type = "sine";
           oscillator.frequency.value = frequency;
-          voiceGain.gain.value = index === 0 ? 0.22 : 0.1;
+          voiceGain.gain.value = index === 0 ? 0.13 : 0.075;
           oscillator.connect(voiceGain);
           voiceGain.connect(masterGain);
           oscillator.start();
@@ -860,19 +1286,19 @@
         const notes =
           activeMode === "visitor"
             ? [392, 329.63, 440, 349.23, 392, 293.66]
-            : [440, 392, 493.88, 349.23, 440, 329.63];
+            : [440, 392, 493.88, 349.23, 440];
         const oscillator = audioContext.createOscillator();
         const envelope = audioContext.createGain();
         const now = audioContext.currentTime;
         oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(notes[sceneIndex], now);
+        oscillator.frequency.setValueAtTime(notes[sceneIndex % notes.length], now);
         envelope.gain.setValueAtTime(0.0001, now);
-        envelope.gain.exponentialRampToValueAtTime(0.34, now + 0.08);
-        envelope.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+        envelope.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
         oscillator.connect(envelope);
         envelope.connect(masterGain);
         oscillator.start(now);
-        oscillator.stop(now + 1.85);
+        oscillator.stop(now + 1.4);
         oscillator.addEventListener(
           "ended",
           () => {
@@ -891,142 +1317,208 @@
         );
         soundToggle.textContent = soundEnabled ? "♪" : "♫̸";
         if (masterGain && audioContext) {
-          masterGain.gain.setTargetAtTime(soundEnabled ? 0.035 : 0, audioContext.currentTime, 0.12);
+          masterGain.gain.setTargetAtTime(soundEnabled ? 0.04 : 0, audioContext.currentTime, 0.12);
         }
       }
 
-      function formatTime(seconds) {
-        return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+      function renderImage(scene) {
+        productImage.alt = scene.imageAlt;
+        if (
+          productImage.getAttribute("src") === scene.image &&
+          productImage.complete &&
+          productImage.naturalWidth > 0
+        ) {
+          return;
+        }
+        const request = ++imageRequest;
+        const preload = new Image();
+        productImage.classList.add("is-changing");
+        preload.onload = () => {
+          if (request !== imageRequest) return;
+          productImage.src = scene.image;
+          productImage.alt = scene.imageAlt;
+          requestAnimationFrame(() => productImage.classList.remove("is-changing"));
+        };
+        preload.onerror = () => {
+          if (request !== imageRequest) return;
+          productImage.classList.remove("is-changing");
+          status.textContent = `The product screen could not be loaded: ${scene.image}`;
+        };
+        preload.src = scene.image;
+      }
+
+      productImage.addEventListener("error", () => {
+        status.textContent = "The Capispot screen could not be loaded.";
+      });
+
+      function renderChapters() {
+        const buttons = currentMode().scenes.map((scene, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "chapter-button";
+          button.setAttribute("aria-label", `Show scene ${index + 1}: ${scene.title}`);
+          button.addEventListener("click", () => goToScene(index));
+          const number = document.createElement("span");
+          number.textContent = String(index + 1).padStart(2, "0");
+          const label = document.createElement("span");
+          label.textContent = scene.kicker.toLowerCase();
+          button.append(number, label);
+          return button;
+        });
+        chapters.replaceChildren(...buttons);
+      }
+
+      function renderProgress() {
+        const percent = (elapsedSeconds / currentMode().duration) * 100;
+        progress.style.width = `${percent}%`;
+        progressBar.setAttribute("aria-valuenow", String(Math.round(percent)));
+        time.textContent = `${formatTime(elapsedSeconds)} / ${formatTime(currentMode().duration)}`;
       }
 
       function renderScene() {
-        const scene = modes[activeMode].scenes[sceneIndex];
-        const scenePositions = [0, 20, 40, 60, 80, 100];
-        player.style.setProperty("--scene-x", `${scenePositions[sceneIndex]}%`);
-        player.style.setProperty("--scene-y", activeMode === "visitor" ? "18%" : "82%");
-        player.dataset.scene = String(sceneIndex);
-        document.querySelector("#scene-title").textContent = scene[0];
-        document.querySelector("#scene-caption").textContent = scene[1];
-        const duration = modes[activeMode].previewSeconds;
-        const percent = (elapsedSeconds / duration) * 100;
-        progress.style.width = `${percent}%`;
-        progressBar.setAttribute("aria-valuenow", String(Math.round(percent)));
-        time.textContent = `${formatTime(elapsedSeconds)} / ${formatTime(duration)}`;
+        const mode = currentMode();
+        const scene = mode.scenes[sceneIndex];
+        renderImage(scene);
+        document.querySelector("#scene-kicker").textContent = scene.kicker;
+        document.querySelector("#scene-number").textContent =
+          `${String(sceneIndex + 1).padStart(2, "0")} / ${String(mode.scenes.length).padStart(2, "0")}`;
+        document.querySelector("#scene-title").textContent = scene.title;
+        document.querySelector("#scene-caption").textContent = scene.caption;
+        document.querySelector("#scene-note").textContent = scene.note;
+        document.querySelector("#scene-points").replaceChildren(
+          ...scene.points.map((text) => {
+            const item = document.createElement("li");
+            item.textContent = text;
+            return item;
+          }),
+        );
+        chapters.querySelectorAll("button").forEach((button, index) => {
+          if (index === sceneIndex) button.setAttribute("aria-current", "step");
+          else button.removeAttribute("aria-current");
+        });
+        renderProgress();
       }
 
-      async function setPlaying(next) {
-        const request = ++playbackRequest;
-        if (next && playing) return;
+      function setPlaying(next) {
+        if (next === playing) return;
         if (next) {
-          if (elapsedSeconds >= modes[activeMode].previewSeconds) {
+          if (elapsedSeconds >= currentMode().duration) {
             elapsedSeconds = 0;
             sceneIndex = 0;
             renderScene();
           }
           playing = true;
           player.dataset.playing = "true";
-          document.querySelector("#play-icon").textContent = "Ⅱ";
-          playButton.setAttribute("aria-label", "Pause concept preview");
-          controlPlay.setAttribute("aria-label", "Pause concept preview");
-          controlPlay.textContent = "Ⅱ";
+          playButton.textContent = "Ⅱ";
+          playButton.setAttribute("aria-label", "Pause walkthrough");
+          status.textContent = soundEnabled
+            ? "The walkthrough is playing with soft ambient sound."
+            : "The walkthrough is playing with sound muted.";
           try {
             ensureAudio();
-            await audioContext.resume();
-            document.querySelector("#audio-status").textContent = soundEnabled
-              ? "Soft ambient sound is playing."
-              : "Preview is playing with sound muted.";
+            void audioContext
+              .resume()
+              .then(() => playSoftNote())
+              .catch(() => {
+                status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+              });
           } catch {
-            document.querySelector("#audio-status").textContent =
-              "Ambient sound is unavailable; the visual preview will continue.";
+            status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
           }
-          if (!playing || request !== playbackRequest) return;
-          playSoftNote();
-          clearInterval(timer);
-          timer = setInterval(() => {
-            elapsedSeconds += 1;
-            if (elapsedSeconds >= modes[activeMode].previewSeconds) {
-              elapsedSeconds = modes[activeMode].previewSeconds;
-              sceneIndex = modes[activeMode].scenes.length - 1;
+          lastTick = performance.now();
+          timer = window.setInterval(() => {
+            const now = performance.now();
+            elapsedSeconds += Math.min((now - lastTick) / 1000, 0.25);
+            lastTick = now;
+            if (elapsedSeconds >= currentMode().duration) {
+              elapsedSeconds = currentMode().duration;
+              sceneIndex = currentMode().scenes.length - 1;
               renderScene();
-              document.querySelector("#audio-status").textContent =
-                "Preview finished. Press play to replay.";
-              void setPlaying(false);
+              setPlaying(false);
+              status.textContent = "Walkthrough finished. Press play to watch it again.";
               return;
             }
-            const nextScene = Math.floor(elapsedSeconds / 3);
+            const nextScene = Math.floor(elapsedSeconds / currentMode().sceneDuration);
             if (nextScene !== sceneIndex) {
               sceneIndex = nextScene;
+              renderScene();
               playSoftNote();
+            } else {
+              renderProgress();
             }
-            renderScene();
-          }, 1000);
+          }, 120);
           return;
         }
+
         playing = false;
         player.dataset.playing = "false";
-        document.querySelector("#play-icon").textContent = "▶";
-        playButton.setAttribute("aria-label", "Play concept preview");
-        controlPlay.setAttribute("aria-label", "Play concept preview");
-        controlPlay.textContent = "▶";
-        clearInterval(timer);
-        document.querySelector("#audio-status").textContent =
-          elapsedSeconds >= modes[activeMode].previewSeconds
-            ? "Preview finished. Press play to replay."
-            : "Preview paused.";
-        if (audioContext?.state === "running") await audioContext.suspend();
+        playButton.textContent = "▶";
+        playButton.setAttribute("aria-label", "Play walkthrough");
+        window.clearInterval(timer);
+        timer = null;
+        if (audioContext?.state === "running") void audioContext.suspend();
+        if (elapsedSeconds < currentMode().duration) status.textContent = "Walkthrough paused.";
       }
 
-      function setMode(mode) {
-        void setPlaying(false);
-        activeMode = mode;
+      function goToScene(index) {
+        setPlaying(false);
+        sceneIndex = (index + currentMode().scenes.length) % currentMode().scenes.length;
+        elapsedSeconds = sceneIndex * currentMode().sceneDuration;
+        renderScene();
+        status.textContent = `Scene ${sceneIndex + 1} of ${currentMode().scenes.length}.`;
+      }
+
+      function setMode(modeName) {
+        setPlaying(false);
+        activeMode = modeName;
         sceneIndex = 0;
         elapsedSeconds = 0;
-        const copy = modes[mode];
+        const mode = currentMode();
         document.querySelectorAll("[data-mode]").forEach((button) => {
-          button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+          button.setAttribute("aria-pressed", String(button.dataset.mode === modeName));
         });
-        document.querySelector("#hero-title").textContent = copy.title;
-        document.querySelector("#hero-description").textContent = copy.description;
-        document.querySelector("#audience-label").textContent = copy.audience;
-        document.querySelector("#video-section-title").textContent = copy.section;
-        document.querySelector("#video-duration").textContent = copy.duration;
-        document.querySelector("#hero-cta").textContent = copy.primary;
-        document.querySelector("#hero-cta").href = copy.primaryUrl;
-        document.querySelector("#hero-secondary").textContent = copy.secondary;
-        document.querySelector("#hero-secondary").href = copy.secondaryUrl;
-        document.querySelector("#below-copy").textContent = copy.below;
-        document.querySelector("#below-cta").textContent = copy.belowCta;
-        document.querySelector("#below-cta").href = copy.belowUrl;
-        document.querySelector("#disclosure").textContent = copy.disclosure;
-        document.querySelector("#benefits").replaceChildren(
-          ...copy.benefits.map(([title, body]) => {
-            const article = document.createElement("article");
-            article.className = "benefit";
-            const heading = document.createElement("b");
-            heading.textContent = title;
-            const detail = document.createElement("span");
-            detail.textContent = body;
-            article.append(heading, detail);
-            return article;
-          }),
-        );
+        document.querySelector("#hero-title").textContent = mode.title;
+        document.querySelector("#hero-eyebrow").textContent = mode.eyebrow;
+        document.querySelector("#hero-copy").textContent = mode.description;
+        document.querySelector("#preview-duration").textContent = mode.sectionDuration;
+        document.querySelector("#hero-cta").textContent = mode.cta;
+        document.querySelector("#hero-cta").href = mode.ctaUrl;
+        document.querySelector("#hero-secondary").textContent = mode.secondary;
+        document.querySelector("#hero-secondary").href = mode.secondaryUrl;
+        document.querySelector("#closing-title").textContent =
+          modeName === "visitor"
+            ? "A clearer picture starts with your portfolio."
+            : "More depth. Your call.";
+        document.querySelector("#closing-copy").textContent =
+          modeName === "visitor"
+            ? "Start with the core tracker for free. Explore Pro when you want more depth—not because you have to."
+            : "Explore the analysis and planning tools, compare plans, and choose Pro only if it fits your workflow.";
+        document.querySelector("#closing-cta").textContent =
+          modeName === "visitor" ? "Start your free portfolio →" : "Explore Pro plans →";
+        document.querySelector("#closing-cta").href = mode.ctaUrl;
+        document.querySelector("#disclosure").textContent =
+          modeName === "visitor"
+            ? "Screens are captured from Capispot's public site. Portfolio values and holdings shown in the sample are fictional and illustrative, not live quotes or a recommendation. Capispot is tracking and analytics software, not investment advice. Investing involves risk."
+            : "Screens are captured from Capispot's public site. Portfolio examples use fictional sample data. Pro analysis, scenarios and AI outputs are informational, not personalized investment advice or a guarantee of results.";
+        renderChapters();
         renderScene();
-        document.querySelector("#audio-status").textContent = soundEnabled
-          ? "Soft ambient sound is enabled when the preview plays."
-          : "Preview sound is muted.";
+        status.textContent = soundEnabled
+          ? "Ambient sound is enabled when the walkthrough plays."
+          : "Walkthrough sound is muted.";
       }
 
       document.querySelectorAll("[data-mode]").forEach((button) => {
         button.addEventListener("click", () => setMode(button.dataset.mode));
       });
-      playButton.addEventListener("click", () => void setPlaying(!playing));
-      controlPlay.addEventListener("click", () => void setPlaying(!playing));
+      playButton.addEventListener("click", () => setPlaying(!playing));
+      previousButton.addEventListener("click", () => goToScene(sceneIndex - 1));
+      nextButton.addEventListener("click", () => goToScene(sceneIndex + 1));
       soundToggle.addEventListener("click", () => {
         soundEnabled = !soundEnabled;
         updateSoundButton();
-        document.querySelector("#audio-status").textContent = soundEnabled
-          ? "Soft ambient sound will play when the preview starts."
-          : "Preview sound is muted.";
+        status.textContent = soundEnabled
+          ? "Ambient sound is enabled."
+          : "Walkthrough sound is muted.";
       });
       setMode("visitor");
     </script>
