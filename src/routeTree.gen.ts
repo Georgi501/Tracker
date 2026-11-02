@@ -32,6 +32,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as StockTaxBgRouteImport } from './routes/stock-tax-bg'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as ToolsRouteImport } from './routes/tools'
@@ -170,6 +171,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StockTaxBgRoute = StockTaxBgRouteImport.update({
+  id: '/stock-tax-bg',
+  path: '/stock-tax-bg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
     | '/tools'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
     | '/tools'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
     | '/tools'
@@ -592,6 +604,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RefundRoute: typeof RefundRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  StockTaxBgRoute: typeof StockTaxBgRoute
   TermsRoute: typeof TermsRoute
   TimelineRoute: typeof TimelineRoute
   ToolsRoute: typeof ToolsRoute
@@ -776,6 +789,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock-tax-bg': {
+      id: '/stock-tax-bg'
+      path: '/stock-tax-bg'
+      fullPath: '/stock-tax-bg'
+      preLoaderRoute: typeof StockTaxBgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -971,6 +991,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RefundRoute: RefundRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  StockTaxBgRoute: StockTaxBgRoute,
   TermsRoute: TermsRoute,
   TimelineRoute: TimelineRoute,
   ToolsRoute: ToolsRoute,
