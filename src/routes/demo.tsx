@@ -3,6 +3,8 @@ import { ArrowRight, Info } from "lucide-react";
 import { useState } from "react";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { ProBadge } from "@/components/ProFeatures";
+import { dcfCopy } from "@/components/DcfCalculator";
+import { dcfAnalysis, scenario } from "@/lib/dcf";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
@@ -47,6 +49,7 @@ const COPY: Record<
     explore: string;
     samplePreview: string;
     openPortfolio: string;
+    dcfNote: string;
   }
 > = {
   en: {
@@ -67,6 +70,8 @@ const COPY: Record<
     explore: "Explore markets",
     samplePreview: "Explore the Pro preview",
     openPortfolio: "Open your portfolio",
+    dcfNote:
+      "Fictional company and assumptions, shown only to illustrate how the DCF scenarios work. Not a forecast or investment advice.",
   },
   bg: {
     badge: "Примерни данни",
@@ -86,6 +91,8 @@ const COPY: Record<
     explore: "Разгледай пазарите",
     samplePreview: "Разгледай Pro прегледа",
     openPortfolio: "Отвори портфейла си",
+    dcfNote:
+      "Измислена компания и допускания, показани само за илюстрация как работят DCF сценариите. Не е прогноза или инвестиционен съвет.",
   },
   de: {
     badge: "Beispieldaten",
@@ -105,6 +112,8 @@ const COPY: Record<
     explore: "Märkte entdecken",
     samplePreview: "Pro-Vorschau entdecken",
     openPortfolio: "Portfolio öffnen",
+    dcfNote:
+      "Fiktives Unternehmen und fiktive Annahmen, nur zur Veranschaulichung der DCF-Szenarien. Keine Prognose und keine Anlageberatung.",
   },
   es: {
     badge: "Datos de ejemplo",
@@ -124,6 +133,8 @@ const COPY: Record<
     explore: "Explorar mercados",
     samplePreview: "Explora la vista previa Pro",
     openPortfolio: "Abrir tu cartera",
+    dcfNote:
+      "Empresa y supuestos ficticios, solo para ilustrar cómo funcionan los escenarios DCF. No es una previsión ni asesoramiento de inversión.",
   },
   it: {
     badge: "Dati di esempio",
@@ -143,6 +154,8 @@ const COPY: Record<
     explore: "Esplora i mercati",
     samplePreview: "Scopri l'anteprima Pro",
     openPortfolio: "Apri il tuo portafoglio",
+    dcfNote:
+      "Azienda e ipotesi fittizie, usate solo per illustrare come funzionano gli scenari DCF. Non è una previsione né una consulenza di investimento.",
   },
 };
 
@@ -176,6 +189,27 @@ function DemoPage() {
     name: classLabels[cls] ?? cls,
     value: rows.filter((r) => r.cls === cls).reduce((s, r) => s + r.totalValue, 0),
   }));
+  const heatRows = rows
+    .map((r) => ({
+      ...r,
+      weight: (r.totalValue / totalValue) * 100,
+      change: ((r.value - r.cost) / r.cost) * 100,
+    }))
+    .sort((a, b) => b.weight - a.weight);
+  const dc = dcfCopy[p.lang];
+  const baseGrowth = 0.08;
+  const dcfCases = (["bear", "base", "bull"] as const).map((key) => {
+    const assumptions = scenario(key, baseGrowth);
+    const result = dcfAnalysis({
+      fcf: 10000,
+      cash: 8000,
+      debt: 4000,
+      shares: 1000,
+      ...assumptions,
+    });
+    return { key, label: dc[key], assumptions, result };
+  });
+  const dcfPrice = 135;
 
   return (
     <div className="flex flex-col gap-5">
@@ -299,27 +333,52 @@ function DemoPage() {
           </button>
         </div>
         {showHeatmap ? (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map((row) => {
-              const change = ((row.value - row.cost) / row.cost) * 100;
-              const weight = (row.totalValue / totalValue) * 100;
-              return (
-                <div
-                  key={row.symbol}
-                  className={`flex min-h-24 flex-col justify-between rounded-xl p-3 ${
-                    change >= 0
-                      ? "bg-success/15 text-success"
-                      : "bg-destructive/15 text-destructive"
-                  }`}
-                >
-                  <span className="font-display font-bold">{row.symbol}</span>
-                  <span className="text-xs text-foreground">
-                    {weight.toFixed(1)}% · {change >= 0 ? "+" : ""}
-                    {change.toFixed(1)}%
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex flex-col gap-2" role="list">
+            {[heatRows.slice(0, 3), heatRows.slice(3)].map((line, lineIndex) => (
+              <div
+                key={lineIndex}
+                className={`flex flex-col gap-2 sm:flex-row ${lineIndex === 0 ? "sm:h-52" : "sm:h-32"}`}
+              >
+                {line.map((row) => {
+                  const up = row.change >= 0;
+                  const tone = up ? "var(--success)" : "var(--destructive)";
+                  const strength = Math.min(60, 22 + Math.abs(row.change) * 0.9);
+                  return (
+                    <div
+                      key={row.symbol}
+                      role="listitem"
+                      style={{
+                        flexGrow: row.weight,
+                        flexBasis: 0,
+                        background: `linear-gradient(145deg, color-mix(in oklab, ${tone} ${strength + 14}%, transparent), color-mix(in oklab, ${tone} ${strength - 10}%, transparent))`,
+                        borderColor: `color-mix(in oklab, ${tone} 55%, transparent)`,
+                      }}
+                      className="flex min-h-24 flex-col justify-between rounded-xl border p-3 transition-transform hover:scale-[1.015]"
+                    >
+                      <div>
+                        <span className="font-display text-lg font-bold text-foreground">
+                          {row.symbol}
+                        </span>
+                        <span className="block truncate text-xs text-foreground/70">
+                          {row.name}
+                        </span>
+                      </div>
+                      <div className="flex items-end justify-between gap-2 text-foreground">
+                        <span className="numeric-display text-sm font-semibold">
+                          {row.weight.toFixed(1)}%
+                        </span>
+                        <span
+                          className={`numeric-display rounded-full bg-background/60 px-2 py-0.5 text-xs font-bold ${up ? "text-success" : "text-destructive"}`}
+                        >
+                          {up ? "▲ +" : "▼ "}
+                          {row.change.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         ) : (
           <AllocationBreakdown
@@ -329,6 +388,66 @@ function DemoPage() {
           />
         )}
         {showHeatmap && <p className="mt-3 text-xs text-muted-foreground">{c.heatmapNote}</p>}
+      </section>
+
+      <section
+        id="dcf-preview"
+        className="card-interactive scroll-mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">{dc.intrinsic} (DCF)</h2>
+          <ProBadge />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {dcfCases.map(({ key, label, assumptions, result }) => {
+            const gap = result ? result.valuePerShare / dcfPrice - 1 : null;
+            return (
+              <div
+                key={key}
+                className={`rounded-xl border p-4 ${key === "base" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
+              >
+                <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                <p className="numeric-display mt-1 text-3xl font-bold">
+                  {result ? usd(result.valuePerShare, languageLocale(p.lang)) : "—"}
+                </p>
+                {gap !== null && (
+                  <p
+                    className={`numeric-display mt-1 text-sm font-semibold ${gap >= 0 ? "text-success" : "text-destructive"}`}
+                  >
+                    {gap >= 0 ? "+" : "−"}
+                    {Math.abs(gap * 100).toFixed(1)}% · {dc.price}{" "}
+                    {usd(dcfPrice, languageLocale(p.lang))}
+                  </p>
+                )}
+                <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  {(
+                    [
+                      [dc.growth, assumptions.growth],
+                      [dc.discount, assumptions.discount],
+                      [dc.terminal, assumptions.terminal],
+                    ] as const
+                  ).map(([name, value]) => (
+                    <div key={name} className="flex justify-between gap-2">
+                      <dt>{name}</dt>
+                      <dd className="numeric-display font-semibold text-foreground">
+                        {(value * 100).toFixed(1)}%
+                      </dd>
+                    </div>
+                  ))}
+                  {result && (
+                    <div className="flex justify-between gap-2">
+                      <dt>{dc.terminalShare}</dt>
+                      <dd className="numeric-display font-semibold text-foreground">
+                        {(result.terminalValueShare * 100).toFixed(0)}%
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">{c.dcfNote}</p>
       </section>
     </div>
   );
