@@ -883,6 +883,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                                     {p.lang === "bg" ? "Данък върху печалба" : "Stock gains tax (BG)"}
                                   </Link>
                                 </li>
+                                <li>
+                                  <Link to="/ibkr-import">{p.lang === "bg" ? "Импорт от IBKR" : "IBKR import"}</Link>
+                                </li>
+                                <li>
+                                  <Link to="/dividend-tracker">
+                                    {p.lang === "bg" ? "Следене на дивиденти" : "Dividend tracker"}
+                                  </Link>
+                                </li>
             </ul>
           </div>
           <div>

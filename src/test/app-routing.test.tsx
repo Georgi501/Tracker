@@ -37,6 +37,8 @@ describe("App routing", () => {
     "/fifo-guide",
     "/trading212-import",
     "/stock-tax-bg",
+    "/ibkr-import",
+    "/dividend-tracker",
     "/admin",
   ])("matches %s instead of falling back to not found", (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });

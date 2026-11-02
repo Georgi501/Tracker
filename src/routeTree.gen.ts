@@ -20,11 +20,13 @@ import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as DividendTrackerRouteImport } from './routes/dividend-tracker'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as EarningsRouteImport } from './routes/earnings'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FifoGuideRouteImport } from './routes/fifo-guide'
 import { Route as HoldingsRouteImport } from './routes/holdings'
+import { Route as IbkrImportRouteImport } from './routes/ibkr-import'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -111,6 +113,11 @@ const DisclaimerRoute = DisclaimerRouteImport.update({
   path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DividendTrackerRoute = DividendTrackerRouteImport.update({
+  id: '/dividend-tracker',
+  path: '/dividend-tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DividendsRoute = DividendsRouteImport.update({
   id: '/dividends',
   path: '/dividends',
@@ -134,6 +141,11 @@ const FifoGuideRoute = FifoGuideRouteImport.update({
 const HoldingsRoute = HoldingsRouteImport.update({
   id: '/holdings',
   path: '/holdings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IbkrImportRoute = IbkrImportRouteImport.update({
+  id: '/ibkr-import',
+  path: '/ibkr-import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -300,11 +312,13 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
+  '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
@@ -348,11 +362,13 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
+  '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
@@ -397,11 +413,13 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
+  '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/pricing': typeof PricingRoute
@@ -447,11 +465,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/demo'
     | '/disclaimer'
+    | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
+    | '/ibkr-import'
     | '/markets'
     | '/messages'
     | '/pricing'
@@ -495,11 +515,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/demo'
     | '/disclaimer'
+    | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
+    | '/ibkr-import'
     | '/markets'
     | '/messages'
     | '/pricing'
@@ -543,11 +565,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/demo'
     | '/disclaimer'
+    | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
+    | '/ibkr-import'
     | '/markets'
     | '/messages'
     | '/pricing'
@@ -592,11 +616,13 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   DemoRoute: typeof DemoRoute
   DisclaimerRoute: typeof DisclaimerRoute
+  DividendTrackerRoute: typeof DividendTrackerRoute
   DividendsRoute: typeof DividendsRoute
   EarningsRoute: typeof EarningsRoute
   FeaturesRoute: typeof FeaturesRoute
   FifoGuideRoute: typeof FifoGuideRoute
   HoldingsRoute: typeof HoldingsRoute
+  IbkrImportRoute: typeof IbkrImportRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
   PricingRoute: typeof PricingRoute
@@ -707,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dividend-tracker': {
+      id: '/dividend-tracker'
+      path: '/dividend-tracker'
+      fullPath: '/dividend-tracker'
+      preLoaderRoute: typeof DividendTrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dividends': {
       id: '/dividends'
       path: '/dividends'
@@ -740,6 +773,13 @@ declare module '@tanstack/react-router' {
       path: '/holdings'
       fullPath: '/holdings'
       preLoaderRoute: typeof HoldingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ibkr-import': {
+      id: '/ibkr-import'
+      path: '/ibkr-import'
+      fullPath: '/ibkr-import'
+      preLoaderRoute: typeof IbkrImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -979,11 +1019,13 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   DemoRoute: DemoRoute,
   DisclaimerRoute: DisclaimerRoute,
+  DividendTrackerRoute: DividendTrackerRoute,
   DividendsRoute: DividendsRoute,
   EarningsRoute: EarningsRoute,
   FeaturesRoute: FeaturesRoute,
   FifoGuideRoute: FifoGuideRoute,
   HoldingsRoute: HoldingsRoute,
+  IbkrImportRoute: IbkrImportRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,
   PricingRoute: PricingRoute,
