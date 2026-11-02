@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AverageCostRouteImport } from './routes/average-cost'
 import { Route as BrokersRouteImport } from './routes/brokers'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompareRouteImport } from './routes/compare'
@@ -86,6 +87,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AverageCostRoute = AverageCostRouteImport.update({
+  id: '/average-cost',
+  path: '/average-cost',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrokersRoute = BrokersRouteImport.update({
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
+  '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
+  '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
+  '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
@@ -460,6 +469,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/auth'
+    | '/average-cost'
     | '/brokers'
     | '/community'
     | '/compare'
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/auth'
+    | '/average-cost'
     | '/brokers'
     | '/community'
     | '/compare'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/auth'
+    | '/average-cost'
     | '/brokers'
     | '/community'
     | '/compare'
@@ -611,6 +623,7 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
+  AverageCostRoute: typeof AverageCostRoute
   BrokersRoute: typeof BrokersRoute
   CommunityRoute: typeof CommunityRouteWithChildren
   CompareRoute: typeof CompareRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/average-cost': {
+      id: '/average-cost'
+      path: '/average-cost'
+      fullPath: '/average-cost'
+      preLoaderRoute: typeof AverageCostRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brokers': {
@@ -1014,6 +1034,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsRoute: AlertsRoute,
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
+  AverageCostRoute: AverageCostRoute,
   BrokersRoute: BrokersRoute,
   CommunityRoute: CommunityRouteWithChildren,
   CompareRoute: CompareRoute,

@@ -891,6 +891,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                                     {p.lang === "bg" ? "Следене на дивиденти" : "Dividend tracker"}
                                   </Link>
                                 </li>
+                                <li>
+                                  <Link to="/average-cost">
+                                    {p.lang === "bg" ? "Средна цена на покупка" : "Average buy price"}
+                                  </Link>
+                                </li>
             </ul>
           </div>
           <div>

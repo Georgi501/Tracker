@@ -39,6 +39,7 @@ describe("App routing", () => {
     "/stock-tax-bg",
     "/ibkr-import",
     "/dividend-tracker",
+    "/average-cost",
     "/admin",
   ])("matches %s instead of falling back to not found", (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
