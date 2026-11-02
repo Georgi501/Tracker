@@ -31,6 +31,7 @@ import {
   LayoutDashboard,
   LogOut,
   Facebook,
+  Share2,
   MessageSquare,
   Moon,
   PieChart,
@@ -872,6 +873,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li>
                 <Link to="/fifo-guide">{p.lang === "bg" ? "FIFO ръководство" : "FIFO guide"}</Link>
               </li>
+              <li>
+                <Link to="/trading212-import">
+                  {p.lang === "bg" ? "Импорт от Trading 212" : "Trading 212 import"}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -910,6 +916,30 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Facebook size={16} />
               Facebook
             </a>
+            <button
+              type="button"
+              onClick={async () => {
+                const url = "https://capispot.com";
+                const text =
+                  p.lang === "bg"
+                    ? "Безплатен тракер за инвестиционно портфолио с FIFO справка и импорт от брокери:"
+                    : "Free portfolio tracker with FIFO report and broker imports:";
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ title: "CapiSpot", text, url });
+                    return;
+                  }
+                  await navigator.clipboard.writeText(`${text} ${url}`);
+                  toast.success(p.lang === "bg" ? "Връзката е копирана" : "Link copied");
+                } catch {
+                  // Sharing cancelled by the user.
+                }
+              }}
+              className="mt-3 flex items-center gap-2 text-sm"
+            >
+              <Share2 size={16} />
+              {p.lang === "bg" ? "Покани приятел" : "Invite a friend"}
+            </button>
           </div>
         </div>
         <div className="footer-bottom">

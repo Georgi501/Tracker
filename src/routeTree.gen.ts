@@ -35,6 +35,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as Trading212ImportRouteImport } from './routes/trading212-import'
 import { Route as WallRouteImport } from './routes/wall'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
@@ -184,6 +185,11 @@ const ToolsRoute = ToolsRouteImport.update({
   path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Trading212ImportRoute = Trading212ImportRouteImport.update({
+  id: '/trading212-import',
+  path: '/trading212-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WallRoute = WallRouteImport.update({
   id: '/wall',
   path: '/wall',
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/trading212-import': typeof Trading212ImportRoute
   '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
@@ -349,6 +356,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/trading212-import': typeof Trading212ImportRoute
   '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
@@ -396,6 +404,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/trading212-import': typeof Trading212ImportRoute
   '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
@@ -444,6 +453,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/trading212-import'
     | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/trading212-import'
     | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/trading212-import'
     | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TimelineRoute: typeof TimelineRoute
   ToolsRoute: typeof ToolsRoute
+  Trading212ImportRoute: typeof Trading212ImportRoute
   WallRoute: typeof WallRoute
   WatchlistRoute: typeof WatchlistRoute
   AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
@@ -786,6 +799,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trading212-import': {
+      id: '/trading212-import'
+      path: '/trading212-import'
+      fullPath: '/trading212-import'
+      preLoaderRoute: typeof Trading212ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wall': {
       id: '/wall'
       path: '/wall'
@@ -954,6 +974,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TimelineRoute: TimelineRoute,
   ToolsRoute: ToolsRoute,
+  Trading212ImportRoute: Trading212ImportRoute,
   WallRoute: WallRoute,
   WatchlistRoute: WatchlistRoute,
   AdvisorThreadIdRoute: AdvisorThreadIdRoute,
