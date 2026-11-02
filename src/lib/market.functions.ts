@@ -235,16 +235,18 @@ export const marketDetails = createServerFn({ method: "POST" })
       closes: MarketCandle[];
       lastPrice: number | null;
       lastPriceAt: string | null;
+      dailyChangePct: number | null;
       low: number | null;
       high: number | null;
       currency: string | null;
       unavailable: boolean;
     }> => {
-      const { yahooClient } = await import("./prices.server");
+      const { fetchLiveQuote, yahooClient } = await import("./prices.server");
       const empty = {
         closes: [],
         lastPrice: null,
         lastPriceAt: null,
+        dailyChangePct: null,
         low: null,
         high: null,
         currency: null,
@@ -260,7 +262,10 @@ export const marketDetails = createServerFn({ method: "POST" })
             : cfg.days > 0
               ? new Date(now.getTime() - cfg.days * 86400000)
               : new Date("1970-01-02");
-        const chart = await yahooClient().chart(symbol, { period1, interval: cfg.interval });
+        const [chart, liveQuote] = await Promise.all([
+          yahooClient().chart(symbol, { period1, interval: cfg.interval }),
+          data.range === "1D" ? fetchLiveQuote(data.symbol, data.type) : Promise.resolve(null),
+        ]);
         const closes = chart.quotes
           .filter((q) => q.close != null && q.close > 0)
           .map((q) => ({
@@ -286,22 +291,25 @@ export const marketDetails = createServerFn({ method: "POST" })
         return {
           closes,
           lastPrice:
-            m.regularMarketPrice != null &&
+            (data.range === "1D" ? liveQuote?.price : null) ??
+            (m.regularMarketPrice != null &&
             Number.isFinite(m.regularMarketPrice) &&
             m.regularMarketPrice > 0
               ? m.regularMarketPrice
-              : (closes.at(-1)?.c ?? null),
+              : (closes.at(-1)?.c ?? null)),
           lastPriceAt:
-            m.regularMarketPrice != null &&
+            (data.range === "1D" ? liveQuote?.at : null) ??
+            (m.regularMarketPrice != null &&
             Number.isFinite(m.regularMarketPrice) &&
             m.regularMarketPrice > 0
               ? (quoteAt ?? (closes.at(-1)?.t ? new Date(closes.at(-1)!.t).toISOString() : null))
               : closes.at(-1)?.t
                 ? new Date(closes.at(-1)!.t).toISOString()
-                : null,
+                : null),
+          dailyChangePct: data.range === "1D" ? (liveQuote?.change ?? null) : null,
           low: m.fiftyTwoWeekLow ?? (fromData && vals.length ? Math.min(...vals) : null),
           high: m.fiftyTwoWeekHigh ?? (fromData && vals.length ? Math.max(...vals) : null),
-          currency: m.currency ?? null,
+          currency: (data.range === "1D" ? liveQuote?.currency : null) ?? m.currency ?? null,
           unavailable: false,
         };
       } catch (error) {

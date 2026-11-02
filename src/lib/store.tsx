@@ -41,6 +41,11 @@ interface State {
   theme: "light" | "dark";
   toggleTheme: () => void;
   user: User | null;
+  authReady: boolean;
+  authError: boolean;
+  accessReady: boolean;
+  portfolioReady: boolean;
+  dataUpdatedAt: number | null;
   isPro: boolean;
   isAdmin: boolean;
   displayName: string;
@@ -99,6 +104,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyS] = useState<Currency>("EUR");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [user, setUser] = useState<User | null>(null);
+  const userRef = useRef(user);
+  userRef.current = user;
+  const [authReady, setAuthReady] = useState(false);
+  const [authError, setAuthError] = useState(false);
+  const [accessReady, setAccessReady] = useState(false);
+  const [portfolioReady, setPortfolioReady] = useState(false);
+  const [dataUpdatedAt, setDataUpdatedAt] = useState<number | null>(null);
   const [isPro, setIsPro] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -113,6 +125,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [pricesLive, setPricesLive] = useState(false);
   const [priceNote, setPriceNote] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const authEventVersion = useRef(0);
 
   const [eurPerUsd, setEurPerUsd] = useState<number | null>(null);
   const quoteFn = useServerFn(getQuotes);
@@ -153,21 +166,95 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   // auth
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    let active = true;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (
         event === "SIGNED_IN" ||
         event === "SIGNED_OUT" ||
         event === "USER_UPDATED" ||
         event === "INITIAL_SESSION"
-      )
-        setUser(session?.user ?? null);
+      ) {
+        authEventVersion.current++;
+        const nextUser = session?.user ?? null;
+        const previousUserId = userRef.current?.id;
+        userRef.current = nextUser;
+        if (nextUser?.id !== previousUserId) {
+          setAssets([]);
+          setTx([]);
+          setBrokers([]);
+          setIsPro(false);
+          setIsAdmin(false);
+          setDataError(false);
+          setPricesLive(false);
+          setDisplayName("");
+          setPortfolioReady(!nextUser);
+          setDataUpdatedAt(null);
+        }
+        setUser(nextUser);
+        setAuthError(false);
+        setAuthReady(true);
+        setAccessReady(!nextUser);
+        if (!nextUser) {
+          setAssets([]);
+          setTx([]);
+          setBrokers([]);
+          setIsPro(false);
+          setIsAdmin(false);
+          setDataError(false);
+          setPricesLive(false);
+          setPortfolioReady(true);
+          setDataUpdatedAt(null);
+        }
+      }
     });
-    return () => data.subscription.unsubscribe();
+    const initialVersion = authEventVersion.current;
+    void supabase.auth
+      .getSession()
+      .then(({ data: sessionData, error }) => {
+        if (!active || initialVersion !== authEventVersion.current) return;
+        if (error) {
+          console.error("Unable to initialize authentication", error);
+          setAuthError(true);
+          setDataError(true);
+          setAuthReady(true);
+          return;
+        }
+        const nextUser = sessionData.session?.user ?? null;
+        const previousUserId = userRef.current?.id;
+        userRef.current = nextUser;
+        if (nextUser?.id !== previousUserId) {
+          setAssets([]);
+          setTx([]);
+          setBrokers([]);
+          setIsPro(false);
+          setIsAdmin(false);
+          setDataError(false);
+          setPricesLive(false);
+          setDisplayName("");
+          setPortfolioReady(!nextUser);
+          setDataUpdatedAt(null);
+        }
+        setUser(nextUser);
+        setAuthReady(true);
+        setAccessReady(!nextUser);
+        if (!nextUser) setPortfolioReady(true);
+      })
+      .catch((error: unknown) => {
+        if (!active || initialVersion !== authEventVersion.current) return;
+        console.error("Unable to initialize authentication", error);
+        setAuthError(true);
+        setDataError(true);
+        setAuthReady(true);
+      });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   const reload = useCallback(async () => {
     if (!user) {
+      if (userRef.current) return;
       setAssets([]);
       setTx([]);
       setBrokers([]);
@@ -175,26 +262,48 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       setDataError(false);
       setPricesLive(false);
+      setAccessReady(true);
+      setPortfolioReady(true);
+      setDataUpdatedAt(null);
       return;
     }
-    const [a, t, b, p, pro, admin] = await Promise.all([
+    if (userRef.current?.id !== user.id) return;
+    const result = await Promise.all([
       supabase.from("assets").select("*"),
       supabase.from("transactions").select("*"),
       supabase.from("brokers").select("id,name,format").order("created_at"),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.rpc("is_pro", { _user_id: user.id }),
       supabase.rpc("is_site_admin"),
-    ]);
-    if (a.error || t.error || b.error || p.error || pro.error || admin.error) {
+    ]).catch((error: unknown) => {
+      if (userRef.current?.id !== user.id) return null;
+      console.error("Unable to reload portfolio data", error);
+      setAccessReady(false);
+      setDataError(true);
+      return null;
+    });
+    if (!result) return;
+    const [a, t, b, p, pro, admin] = result;
+    if (userRef.current?.id !== user.id) return;
+    if (pro.error) {
+      console.error("Unable to verify portfolio access", pro.error);
+      setAccessReady(false);
+      setDataError(true);
+      return;
+    }
+    setIsPro(!!pro.data);
+    setAccessReady(true);
+    if (a.error || t.error || b.error || p.error || admin.error) {
       console.error(
         "Unable to reload portfolio data",
-        a.error ?? t.error ?? b.error ?? p.error ?? pro.error ?? admin.error,
+        a.error ?? t.error ?? b.error ?? p.error ?? admin.error,
       );
       setDataError(true);
       return;
     }
     setDataError(false);
-    setIsPro(!!pro.data);
+    setPortfolioReady(true);
+    setDataUpdatedAt(Date.now());
     setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
     if (p.data) {
@@ -252,6 +361,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const res = await quoteFn({
         data: { items: quoteAssets.map((x) => ({ symbol: x.symbol, type: x.type })) },
       });
+      if (userRef.current?.id !== user.id) return;
       setAssets(
         base.map((x) => {
           const q = res.quotes[x.symbol];
@@ -271,6 +381,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setPricesLive(Object.keys(res.quotes).length > 0);
       setPriceNote(res.missing.length ? "unavailable" : null);
     } catch (e) {
+      if (userRef.current?.id !== user.id) return;
       console.error(e);
       setPriceNote("error");
     }
@@ -329,6 +440,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       currency,
       theme,
       user,
+      authReady,
+      authError,
+      accessReady,
+      portfolioReady,
+      dataUpdatedAt,
       isPro,
       isAdmin,
       displayName,
@@ -607,6 +723,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     currency,
     theme,
     user,
+    authReady,
+    authError,
+    accessReady,
+    portfolioReady,
+    dataUpdatedAt,
     isPro,
     isAdmin,
     displayName,

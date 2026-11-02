@@ -56,6 +56,9 @@ export const communityCopy = {
     signIn: "Влез, за да използваш общността.",
     makePublic: "Направи профила си публичен, за да те намират другите.",
     search: "Търси членове",
+    loading: "Зареждане…",
+    loadError: "Данните не можаха да се заредят. Провери връзката и опитай отново.",
+    retry: "Опитай отново",
   },
   en: {
     community: "Community",
@@ -81,6 +84,9 @@ export const communityCopy = {
     signIn: "Sign in to use the community.",
     makePublic: "Make your profile public so others can find you.",
     search: "Search members",
+    loading: "Loading…",
+    loadError: "The data could not be loaded. Check your connection and try again.",
+    retry: "Try again",
   },
 };
 export const cc = (lang: string) => (lang === "bg" ? communityCopy.bg : communityCopy.en);

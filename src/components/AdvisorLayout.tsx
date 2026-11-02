@@ -88,7 +88,24 @@ export function AdvisorLayout({ activeId, children }: { activeId?: string; child
           <Plus size={16} />
           {c.newChat}
         </Button>
-        {!threads.data?.length && <p className="px-2 text-sm text-muted-foreground">{c.empty}</p>}
+        {threads.isError ? (
+          <div role="alert" className="px-2 text-sm">
+            <p className="text-muted-foreground">{c.error}</p>
+            <button
+              type="button"
+              onClick={() => void threads.refetch()}
+              className="mt-2 font-semibold text-primary hover:underline"
+            >
+              {c.retry}
+            </button>
+          </div>
+        ) : threads.isPending ? (
+          <p role="status" className="px-2 text-sm text-muted-foreground">
+            {c.loading}
+          </p>
+        ) : !threads.data?.length ? (
+          <p className="px-2 text-sm text-muted-foreground">{c.empty}</p>
+        ) : null}
         <ul className="space-y-1">
           {threads.data?.map((t) => (
             <li

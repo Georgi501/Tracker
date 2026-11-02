@@ -34,37 +34,57 @@ function Messages() {
   const [convs, setConvs] = useState<Conv[] | null>(null);
   const [people, setPeople] = useState<Record<string, MemberProfile>>({});
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
-    if (!p.user) return;
+    if (!p.user || !p.isPro) {
+      setConvs(null);
+      return;
+    }
+    let active = true;
     const me = p.user.id;
-    void supabase
-      .from("direct_messages")
-      .select("sender_id, recipient_id, body, created_at, read_at")
-      .order("created_at", { ascending: false })
-      .limit(500)
-      .then(async ({ data }) => {
-        const map = new Map<string, Conv>();
-        for (const m of data ?? []) {
-          const other = m.sender_id === me ? m.recipient_id : m.sender_id;
-          const cv = map.get(other) ?? { other, last: m.body, at: m.created_at, unread: 0 };
-          if (m.recipient_id === me && !m.read_at) cv.unread++;
-          map.set(other, cv);
-        }
-        const list = [...map.values()];
+    setConvs(null);
+    setLoadError(false);
+    void (async () => {
+      const { data, error } = await supabase
+        .from("direct_messages")
+        .select("sender_id, recipient_id, body, created_at, read_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const map = new Map<string, Conv>();
+      for (const m of data ?? []) {
+        const other = m.sender_id === me ? m.recipient_id : m.sender_id;
+        const cv = map.get(other) ?? { other, last: m.body, at: m.created_at, unread: 0 };
+        if (m.recipient_id === me && !m.read_at) cv.unread++;
+        map.set(other, cv);
+      }
+      const list = [...map.values()];
+      const { data: profs, error: profileError } = list.length
+        ? await supabase
+            .from("profiles")
+            .select(PROFILE_COLS)
+            .in(
+              "id",
+              list.map((x) => x.other),
+            )
+        : { data: [], error: null };
+      if (profileError) throw profileError;
+      const rows = (profs ?? []) as MemberProfile[];
+      const signedUrls = await avatarUrls(rows.map((r) => r.avatar_path));
+      if (active) {
         setConvs(list);
-        if (!list.length) return;
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select(PROFILE_COLS)
-          .in(
-            "id",
-            list.map((x) => x.other),
-          );
-        const rows = (profs ?? []) as MemberProfile[];
         setPeople(Object.fromEntries(rows.map((r) => [r.id, r])));
-        setUrls(await avatarUrls(rows.map((r) => r.avatar_path)));
-      });
-  }, [p.user]);
+        setUrls(signedUrls);
+      }
+    })().catch((error: unknown) => {
+      console.error("Unable to load conversations", error);
+      if (active) setLoadError(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [p.user, p.isPro, reloadKey]);
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
@@ -82,8 +102,23 @@ function Messages() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="font-display text-2xl font-bold">{c.messages}</h1>
-      {convs === null ? (
-        <div className="h-40 animate-pulse rounded-3xl" />
+      {loadError ? (
+        <div role="alert">
+          <Card className="text-center">
+            <p className="text-sm text-muted-foreground">{c.loadError}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {c.retry}
+            </button>
+          </Card>
+        </div>
+      ) : convs === null ? (
+        <div role="status" className="h-40 animate-pulse rounded-3xl">
+          <span className="sr-only">{c.loading}</span>
+        </div>
       ) : !convs.length ? (
         <Card className="text-center text-sm text-muted-foreground">
           {c.noChats}{" "}

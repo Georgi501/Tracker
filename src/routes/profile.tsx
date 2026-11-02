@@ -31,27 +31,48 @@ function ProfilePage() {
   const c = cc(p.lang);
   const [f, setF] = useState<MemberProfile | null>(null);
   const [url, setUrl] = useState<string>();
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
-    if (!p.user) return;
-    void supabase
-      .from("profiles")
-      .select(PROFILE_COLS)
-      .eq("id", p.user.id)
-      .maybeSingle()
-      .then(async ({ data }) => {
-        const prof = (data ?? {
-          id: p.user!.id,
-          display_name: "",
-          bio: "",
-          investing_style: "",
-          avatar_path: null,
-          is_public: false,
-          share_portfolio: false,
-        }) as MemberProfile;
+    if (!p.user || !p.isPro) {
+      setF(null);
+      return;
+    }
+    let active = true;
+    setF(null);
+    setUrl(undefined);
+    setLoadError(false);
+    void (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(PROFILE_COLS)
+        .eq("id", p.user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      const prof = (data ?? {
+        id: p.user!.id,
+        display_name: "",
+        bio: "",
+        investing_style: "",
+        avatar_path: null,
+        is_public: false,
+        share_portfolio: false,
+      }) as MemberProfile;
+      const avatar = prof.avatar_path
+        ? (await avatarUrls([prof.avatar_path]))[prof.avatar_path]
+        : undefined;
+      if (active) {
         setF(prof);
-        if (prof.avatar_path) setUrl((await avatarUrls([prof.avatar_path]))[prof.avatar_path]);
-      });
-  }, [p.user]);
+        setUrl(avatar);
+      }
+    })().catch((error: unknown) => {
+      console.error("Unable to load community profile", error);
+      if (active) setLoadError(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [p.user, p.isPro, reloadKey]);
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
@@ -66,6 +87,21 @@ function ProfilePage() {
       </Card>
     );
   if (!p.isPro) return <CommunityUpsell lang={p.lang} />;
+  if (loadError)
+    return (
+      <div role="alert">
+        <Card className="mx-auto max-w-xl text-center">
+          <p className="text-sm text-muted-foreground">{c.loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+            className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {c.retry}
+          </button>
+        </Card>
+      </div>
+    );
   if (!f) return <div className="mx-auto h-64 max-w-xl animate-pulse rounded-3xl" />;
 
   const upload = async (file: File) => {

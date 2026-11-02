@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   comparisonReturns,
+  cumulativeReturns,
   customRange,
   DAY,
   periodRange,
@@ -40,6 +41,16 @@ describe("custom return periods", () => {
     expect(rows[0]?.current).toBeCloseTo(20);
     expect(rows[0]?.previous).toBeCloseTo(10);
     expect(rangeReturn(series, range)).toBeCloseTo(20);
+  });
+  it("compounds interval returns into a cumulative performance curve", () => {
+    const result = cumulativeReturns([10, -10, 5]);
+    expect(result[0]).toBeCloseTo(10);
+    expect(result[1]).toBeCloseTo(-1);
+    expect(result[2]).toBeCloseTo(3.95);
+    const incomplete = cumulativeReturns([10, null, 5]);
+    expect(incomplete[0]).toBeCloseTo(10);
+    expect(incomplete.slice(1)).toEqual([null, null]);
+    expect(cumulativeReturns([-100, 5])).toEqual([-100, null]);
   });
   it("returns unavailable rather than zero for missing or empty history", () => {
     expect(rangeReturn([], { start: 0, end: DAY })).toBeNull();

@@ -9,6 +9,7 @@ import { usePortfolio } from "@/lib/store";
 import { languageLocale } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDetails, type ChartRange } from "@/lib/market.functions";
+import { rangeChange, sharedSparklineScale, sparklineReturns } from "@/lib/ticker-movement";
 
 const POPULAR = [
   "AAPL",
@@ -103,19 +104,22 @@ const assetOf = (s: string) =>
     type: "stock" as const,
   };
 
-function Spark({ v }: { v: number[] }) {
-  if (v.length < 2) return <div className="h-6" />;
-  const min = Math.min(...v),
-    span = Math.max(...v) - min || 1;
-  const pts = v
-    .map((y, i) => `${(i / (v.length - 1)) * 100},${30 - ((y - min) / span) * 26}`)
+function Spark({ values, scale }: { values: number[]; scale: number }) {
+  if (values.length < 2) return <div className="h-6" />;
+  const pts = values
+    .map((value, index) => `${(index / (values.length - 1)) * 100},${16 - (value / scale) * 13}`)
     .join(" ");
-  const col = v.at(-1)! >= v[0]! ? "var(--success)" : "var(--destructive)";
+  const col = values.at(-1)! >= 0 ? "var(--success)" : "var(--destructive)";
   return (
     <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-6 w-full" aria-hidden>
-      <polygon
-        points={`0,32 ${pts} 100,32`}
-        style={{ fill: `color-mix(in oklab, ${col} 18%, transparent)` }}
+      <line
+        x1="0"
+        y1="16"
+        x2="100"
+        y2="16"
+        stroke="var(--border)"
+        strokeDasharray="2 3"
+        strokeWidth="1"
       />
       <polyline
         points={pts}
@@ -146,32 +150,42 @@ export function DashboardMovers() {
   const fn = useServerFn(marketDetails);
   const charts = useQueries({
     queries: assets.map((a) => ({
-      queryKey: ["market-details", a.symbol, a.type, range],
+      queryKey: ["market-details", "movement-v2", a.symbol, a.type, range],
       queryFn: () => fn({ data: { symbol: a.symbol, type: a.type, range } }),
       staleTime: range === "1D" ? 60_000 : 600_000,
     })),
   });
   const rows = assets.map((a, i) => {
-    const closes = (charts[i]?.data?.closes ?? []).map((x) => x.c).filter((n) => n > 0);
-    const latestCandle = charts[i]?.data?.closes.at(-1);
-    const ret = closes.length > 1 ? (closes.at(-1)! / closes[0]! - 1) * 100 : null;
+    const data = charts[i]?.data;
+    const closes = (data?.closes ?? []).map((x) => x.c).filter((n) => n > 0);
+    const latestCandle = data?.closes.at(-1);
+    const price = data?.lastPrice ?? closes.at(-1) ?? null;
+    const dailyChange = data?.dailyChangePct ?? null;
+    const referencePrice =
+      range === "1D" && dailyChange != null && price != null && 1 + dailyChange / 100 > 0
+        ? price / (1 + dailyChange / 100)
+        : null;
     return {
       a,
       closes,
-      price: charts[i]?.data?.lastPrice ?? closes.at(-1) ?? null,
+      price,
+      change: range === "1D" ? dailyChange : rangeChange(closes, price),
+      sparkline: sparklineReturns(closes, referencePrice, price),
       priceAt:
-        charts[i]?.data?.lastPriceAt ??
-        (latestCandle?.t ? new Date(latestCandle.t).toISOString() : null),
-      ret,
-      cur: charts[i]?.data?.currency ?? undefined,
+        data?.lastPriceAt ?? (latestCandle?.t ? new Date(latestCandle.t).toISOString() : null),
+      cur: data?.currency ?? undefined,
       loading: !!charts[i]?.isLoading,
     };
   });
+  const sparklineScale = sharedSparklineScale(
+    rows.map((row) => row.sparkline),
+    range,
+  );
   const unavailable = charts.some((chart) => chart.isError || chart.data?.unavailable);
-  const ranked = rows.filter((r) => r.ret != null).sort((x, y) => y.ret! - x.ret!);
-  const gainers = ranked.filter((r) => r.ret! > 0).slice(0, 3);
+  const ranked = rows.filter((r) => r.change != null).sort((x, y) => y.change! - x.change!);
+  const gainers = ranked.filter((r) => r.change! > 0).slice(0, 3);
   const weakest = ranked
-    .filter((r) => r.ret! < 0)
+    .filter((r) => r.change! < 0)
     .reverse()
     .slice(0, 3);
   const fmt = (n: number, cur?: string) => {
@@ -208,7 +222,7 @@ export function DashboardMovers() {
           className={`rounded-full px-2 py-0.5 text-xs font-bold ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
         >
           {up ? "+" : ""}
-          {r.ret!.toFixed(2)}%
+          {r.change!.toFixed(2)}%
         </span>
       </Link>
     </li>
@@ -230,16 +244,18 @@ export function DashboardMovers() {
         </div>
       </div>
       <div className="mt-1.5">
-        <Spark v={r.closes} />
+        <Spark values={r.sparkline} scale={sparklineScale} />
       </div>
       <div className="mt-1 flex items-baseline justify-between gap-1">
         <span className="truncate text-base font-bold tabular-nums">
           {r.price != null ? fmt(r.price, r.cur) : r.loading ? "…" : "—"}
         </span>
-        {r.ret != null && (
-          <span className={`text-xs font-bold ${r.ret >= 0 ? "text-success" : "text-destructive"}`}>
-            {r.ret >= 0 ? "+" : ""}
-            {r.ret.toFixed(2)}%
+        {r.change != null && (
+          <span
+            className={`shrink-0 text-xs font-bold ${r.change >= 0 ? "text-success" : "text-destructive"}`}
+          >
+            {r.change >= 0 ? "+" : ""}
+            {r.change.toFixed(2)}%
           </span>
         )}
       </div>
@@ -372,14 +388,14 @@ export function DashboardMovers() {
         </div>
         <div>
           <p
-            className={`text-xs font-semibold uppercase ${weakest.some((r) => r.ret! < 0) ? "text-destructive" : "text-muted-foreground"}`}
+            className={`text-xs font-semibold uppercase ${weakest.some((r) => r.change! < 0) ? "text-destructive" : "text-muted-foreground"}`}
           >
             ▼ {c.loss}
           </p>
           {weakest.length ? (
             <ul>
               {weakest.map((r) => (
-                <Mover key={r.a.symbol} r={r} up={r.ret! >= 0} />
+                <Mover key={r.a.symbol} r={r} up={r.change! >= 0} />
               ))}
             </ul>
           ) : (

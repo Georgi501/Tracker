@@ -77,6 +77,24 @@ export function comparisonReturns(series: ValuePoint[], range: DateRange, bucket
   });
 }
 
+export function cumulativeReturns(values: readonly (number | null)[]): (number | null)[] {
+  let growth = 1;
+  let available = true;
+  return values.map((value) => {
+    if (value === null || !Number.isFinite(value) || value < -100) {
+      available = false;
+      return null;
+    }
+    if (!available) return null;
+    if (value === -100) {
+      available = false;
+      return -100;
+    }
+    growth *= 1 + value / 100;
+    return (growth - 1) * 100;
+  });
+}
+
 export type ReturnPeriod = "1W" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "3Y" | "5Y" | "ALL";
 export const RETURN_PERIODS: ReturnPeriod[] = [
   "1W",

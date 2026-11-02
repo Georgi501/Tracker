@@ -4,7 +4,7 @@ import { paymentsCopy } from "@/lib/payments-i18n";
 import { isCreemTestMode } from "@/lib/creem";
 import { toolsCopy } from "@/lib/tools-i18n";
 import { europeCopy } from "@/lib/europe-i18n";
-import { isLang, languages, type Lang } from "@/lib/i18n";
+import { isLang, languageLocale, languages, type Lang } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
 import { feedbackCopy } from "@/lib/feedback-i18n";
 import { FeedbackDialog } from "./FeedbackDialog";
@@ -73,6 +73,8 @@ const SHELL_COPY: Record<
     planningGroup: string;
     exploreGroup: string;
     quickNavigation: string;
+    upgrade: string;
+    plans: string;
   }
 > = {
   en: {
@@ -89,6 +91,8 @@ const SHELL_COPY: Record<
     planningGroup: "Planning",
     exploreGroup: "Explore",
     quickNavigation: "Quick navigation",
+    upgrade: "Upgrade to Pro",
+    plans: "View plans",
   },
   bg: {
     watchlist: "Списък за наблюдение",
@@ -104,6 +108,8 @@ const SHELL_COPY: Record<
     planningGroup: "Планиране",
     exploreGroup: "Разглеждане",
     quickNavigation: "Бърза навигация",
+    upgrade: "Надгради до Pro",
+    plans: "Виж плановете",
   },
   de: {
     watchlist: "Beobachtungsliste",
@@ -119,6 +125,8 @@ const SHELL_COPY: Record<
     planningGroup: "Planung",
     exploreGroup: "Entdecken",
     quickNavigation: "Schnellnavigation",
+    upgrade: "Auf Pro upgraden",
+    plans: "Tarife ansehen",
   },
   es: {
     watchlist: "Lista de seguimiento",
@@ -134,6 +142,8 @@ const SHELL_COPY: Record<
     planningGroup: "Planificación",
     exploreGroup: "Explorar",
     quickNavigation: "Navegación rápida",
+    upgrade: "Pasar a Pro",
+    plans: "Ver planes",
   },
   it: {
     watchlist: "Lista di controllo",
@@ -149,32 +159,83 @@ const SHELL_COPY: Record<
     planningGroup: "Pianificazione",
     exploreGroup: "Esplora",
     quickNavigation: "Navigazione rapida",
+    upgrade: "Passa a Pro",
+    plans: "Vedi i piani",
   },
 };
 
-const DATA_ERROR_COPY: Record<Lang, { message: string; retry: string }> = {
+const DATA_ERROR_COPY: Record<
+  Lang,
+  {
+    message: string;
+    retry: string;
+    sessionLoading: string;
+    dataLoading: string;
+    sessionError: string;
+    accessError: string;
+    portfolioError: string;
+    staleData: string;
+    noStaleData: string;
+  }
+> = {
   en: {
     message: "Portfolio data could not be refreshed. Your saved transactions were not changed.",
     retry: "Retry",
+    sessionLoading: "Checking your account…",
+    dataLoading: "Loading your portfolio…",
+    sessionError: "Your session could not be verified. Reload the page to try again.",
+    accessError: "Your plan access could not be verified. Retry to safely load your account.",
+    portfolioError: "Your portfolio data is temporarily unavailable.",
+    staleData: "Showing the last successful refresh: {time}.",
+    noStaleData: "No previously refreshed portfolio data is available.",
   },
   bg: {
     message: "Данните за портфолиото не се обновиха. Записаните сделки не са променени.",
     retry: "Опитай отново",
+    sessionLoading: "Проверяваме профила ти…",
+    dataLoading: "Зареждаме портфолиото…",
+    sessionError: "Сесията не можа да бъде потвърдена. Презареди страницата и опитай отново.",
+    accessError:
+      "Планът не можа да бъде потвърден. Опитай отново, за да заредим профила безопасно.",
+    portfolioError: "Данните за портфолиото временно не са достъпни.",
+    staleData: "Показваме последните успешно обновени данни: {time}.",
+    noStaleData: "Няма налични предишни данни за портфолиото.",
   },
   de: {
     message:
       "Portfoliodaten konnten nicht aktualisiert werden. Gespeicherte Transaktionen blieben unverändert.",
     retry: "Erneut versuchen",
+    sessionLoading: "Konto wird überprüft…",
+    dataLoading: "Portfolio wird geladen…",
+    sessionError: "Deine Sitzung konnte nicht überprüft werden. Lade die Seite neu.",
+    accessError: "Dein Tarif konnte nicht überprüft werden. Versuche es erneut.",
+    portfolioError: "Deine Portfoliodaten sind vorübergehend nicht verfügbar.",
+    staleData: "Letzte erfolgreiche Aktualisierung: {time}.",
+    noStaleData: "Es sind keine zuvor aktualisierten Portfoliodaten verfügbar.",
   },
   es: {
     message:
       "No se pudieron actualizar los datos de la cartera. Las operaciones guardadas no cambiaron.",
     retry: "Reintentar",
+    sessionLoading: "Comprobando tu cuenta…",
+    dataLoading: "Cargando tu cartera…",
+    sessionError: "No se pudo verificar tu sesión. Recarga la página para intentarlo de nuevo.",
+    accessError: "No se pudo verificar tu plan. Inténtalo de nuevo.",
+    portfolioError: "Los datos de tu cartera no están disponibles temporalmente.",
+    staleData: "Última actualización correcta: {time}.",
+    noStaleData: "No hay datos de cartera actualizados anteriormente.",
   },
   it: {
     message:
       "Impossibile aggiornare i dati del portafoglio. Le operazioni salvate non sono state modificate.",
     retry: "Riprova",
+    sessionLoading: "Verifica dell'account…",
+    dataLoading: "Caricamento del portafoglio…",
+    sessionError: "Impossibile verificare la sessione. Ricarica la pagina per riprovare.",
+    accessError: "Impossibile verificare il tuo piano. Riprova.",
+    portfolioError: "I dati del portafoglio non sono temporaneamente disponibili.",
+    staleData: "Ultimo aggiornamento riuscito: {time}.",
+    noStaleData: "Non sono disponibili dati del portafoglio aggiornati in precedenza.",
   },
 };
 
@@ -395,18 +456,29 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <CommandMenu onAddTx={openTransactionDialog} />
-            {p.isPro ? (
-              <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">
-                PRO
-              </span>
-            ) : (
-              <Link
-                to="/pricing"
-                className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
-              >
-                {p.lang === "bg" ? "Безплатен план" : "Free plan"}
-              </Link>
-            )}
+            {p.authReady &&
+              !p.authError &&
+              (!p.user || p.accessReady) &&
+              (p.isPro ? (
+                <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">
+                  PRO
+                </span>
+              ) : p.user ? (
+                <Link
+                  to="/pricing"
+                  hash="plan-comparison"
+                  className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
+                >
+                  {shellCopy.upgrade}
+                </Link>
+              ) : (
+                <Link
+                  to="/pricing"
+                  className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
+                >
+                  {shellCopy.plans}
+                </Link>
+              ))}
             <button
               onClick={() => {
                 if (p.user) openTransactionDialog();
@@ -485,7 +557,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {p.user ? (
+            {!p.authReady || p.authError || (p.user && !p.accessReady) ? (
+              <span
+                aria-hidden="true"
+                className="ml-1 size-9 animate-pulse rounded-full bg-secondary"
+              />
+            ) : p.user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -510,7 +587,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </div>
                   {!p.isPro && (
                     <DropdownMenuItem asChild>
-                      <Link to="/pricing" className="font-semibold text-primary">
+                      <Link
+                        to="/pricing"
+                        hash="plan-comparison"
+                        className="font-semibold text-primary"
+                      >
                         <Crown size={14} />
                         {p.lang === "bg" ? "Надгради до Pro" : "Upgrade to Pro"}
                       </Link>
@@ -578,13 +659,38 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6">
-        {p.user && p.dataError && (
+        {p.user && p.dataError && !p.authError && (
           <div
             role="alert"
-            className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm"
+            className="mb-4 flex flex-wrap items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm"
           >
             <TriangleAlert size={16} className="shrink-0 text-destructive" aria-hidden />
-            <span className="min-w-0 flex-1">{DATA_ERROR_COPY[p.lang].message}</span>
+            <div className="min-w-0 flex-1">
+              <p>
+                {!p.accessReady
+                  ? DATA_ERROR_COPY[p.lang].accessError
+                  : !p.portfolioReady
+                    ? DATA_ERROR_COPY[p.lang].portfolioError
+                    : DATA_ERROR_COPY[p.lang].message}
+              </p>
+              {p.dataUpdatedAt ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {DATA_ERROR_COPY[p.lang].staleData.replace(
+                    "{time}",
+                    new Intl.DateTimeFormat(languageLocale(p.lang), {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(p.dataUpdatedAt),
+                  )}
+                </p>
+              ) : (
+                !p.portfolioReady && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {DATA_ERROR_COPY[p.lang].noStaleData}
+                  </p>
+                )
+              )}
+            </div>
             <button
               type="button"
               onClick={() => void p.reload()}
@@ -594,7 +700,34 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         )}
-        {children}
+        {p.authError ? (
+          <div
+            role="alert"
+            className="mx-auto max-w-xl rounded-2xl border border-destructive/30 bg-card p-6 text-center"
+          >
+            <p className="text-sm text-muted-foreground">{DATA_ERROR_COPY[p.lang].sessionError}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {DATA_ERROR_COPY[p.lang].retry}
+            </button>
+          </div>
+        ) : !p.authReady || (p.user && (!p.accessReady || !p.portfolioReady)) ? (
+          !p.dataError && (
+            <div role="status" className="mx-auto max-w-xl py-16 text-center">
+              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+              <p className="text-sm text-muted-foreground">
+                {p.authReady
+                  ? DATA_ERROR_COPY[p.lang].dataLoading
+                  : DATA_ERROR_COPY[p.lang].sessionLoading}
+              </p>
+            </div>
+          )
+        ) : (
+          children
+        )}
       </main>
       <footer className="site-footer mt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">

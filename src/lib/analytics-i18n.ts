@@ -2,6 +2,8 @@ import type { Lang } from "./i18n";
 
 const en = {
   benchmark: "Benchmark comparison",
+  periodCurveDescription:
+    "Cumulative, cash-flow-adjusted portfolio return compounded across the selected period.",
   benchmarkDescription:
     "Flow-adjusted portfolio return versus index price return, aligned to the same dates and base currency.",
   benchmarkLabel: "Index",
@@ -80,6 +82,7 @@ type AnalyticsCopy = { [K in keyof typeof en]: string };
 
 const bg: AnalyticsCopy = {
   benchmark: "Сравнение с бенчмарк",
+  periodCurveDescription: "Натрупана доходност с корекция за паричните потоци за избрания период.",
   benchmarkDescription:
     "Доходност на портфейла с корекция за паричните потоци спрямо ценова доходност на индекс за същите дати и базова валута.",
   benchmarkLabel: "Индекс",
@@ -156,6 +159,8 @@ const bg: AnalyticsCopy = {
 
 const de: AnalyticsCopy = {
   benchmark: "Benchmark-Vergleich",
+  periodCurveDescription:
+    "Kumulierte, um Zahlungsströme bereinigte Portfoliorendite für den ausgewählten Zeitraum.",
   benchmarkDescription:
     "Um externe Zahlungsströme bereinigte Portfoliorendite gegenüber der Index-Kursrendite für dieselben Daten und Basiswährung.",
   benchmarkLabel: "Index",
@@ -232,6 +237,8 @@ const de: AnalyticsCopy = {
 
 const es: AnalyticsCopy = {
   benchmark: "Comparación con referencia",
+  periodCurveDescription:
+    "Rentabilidad acumulada de la cartera, ajustada por flujos de efectivo, durante el periodo seleccionado.",
   benchmarkDescription:
     "Rentabilidad de la cartera ajustada por flujos frente a la rentabilidad de precio del índice en las mismas fechas y moneda base.",
   benchmarkLabel: "Índice",
@@ -308,6 +315,8 @@ const es: AnalyticsCopy = {
 
 const it: AnalyticsCopy = {
   benchmark: "Confronto con benchmark",
+  periodCurveDescription:
+    "Rendimento cumulativo del portafoglio, corretto per i flussi di cassa, nel periodo selezionato.",
   benchmarkDescription:
     "Rendimento del portafoglio corretto per i flussi rispetto al rendimento di prezzo dell’indice, sulle stesse date e nella valuta base.",
   benchmarkLabel: "Indice",

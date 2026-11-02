@@ -89,6 +89,8 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const [googleLoadFailed, setGoogleLoadFailed] = useState(false);
+  const [googleAttempt, setGoogleAttempt] = useState(0);
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const googleSignInRef = useRef<(credential: string, nonce: string) => void>(() => {});
   const c = authCopy[p.lang];
@@ -180,6 +182,7 @@ export function AuthForm({
     const container = googleButtonRef.current;
     if (!container) return;
     setGoogleReady(false);
+    setGoogleLoadFailed(false);
 
     void loadGoogleIdentityScript()
       .then(() => {
@@ -212,6 +215,7 @@ export function AuthForm({
           };
           renderButton();
           setGoogleReady(true);
+          setGoogleLoadFailed(false);
           resizeObserver = new ResizeObserver(renderButton);
           resizeObserver.observe(container);
         });
@@ -219,6 +223,7 @@ export function AuthForm({
       .catch(() => {
         if (active) {
           setGoogleReady(false);
+          setGoogleLoadFailed(true);
           setError(c.googleLoadError);
         }
       });
@@ -228,7 +233,7 @@ export function AuthForm({
       resizeObserver?.disconnect();
       container.replaceChildren();
     };
-  }, [c.googleFailed, c.googleLoadError, p.lang]);
+  }, [c.googleFailed, c.googleLoadError, p.lang, googleAttempt]);
   const forgot = async () => {
     const target = email.trim();
     if (!target) {
@@ -335,6 +340,19 @@ export function AuthForm({
         <p role="status" className="mt-1 text-center text-xs text-muted-foreground">
           {c.googleLoading}
         </p>
+      )}
+      {!googleReady && googleLoadFailed && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setGoogleLoadFailed(false);
+            setGoogleAttempt((attempt) => attempt + 1);
+          }}
+          className="mt-1 w-full text-center text-xs font-semibold text-primary hover:underline"
+        >
+          {c.googleRetry}
+        </button>
       )}
       <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
         <button

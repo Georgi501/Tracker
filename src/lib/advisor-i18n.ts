@@ -11,6 +11,8 @@ const en = {
   upgrade: "Upgrade to Pro",
   signIn: "Sign in to use the AI Advisor.",
   empty: "No conversations yet.",
+  loading: "Loading conversations…",
+  retry: "Try again",
   disclaimer:
     "Answers use your real positions and transactions. General information, not financial advice.",
   error: "The assistant could not answer.",
@@ -28,6 +30,8 @@ const bg: Copy = {
   upgrade: "Вземи Pro",
   signIn: "Влез, за да използваш AI съветника.",
   empty: "Все още няма разговори.",
+  loading: "Зареждане на разговорите…",
+  retry: "Опитай отново",
   disclaimer:
     "Отговорите използват реалните ти позиции и трансакции. Обща информация, не финансов съвет.",
   error: "Асистентът не успя да отговори.",
@@ -44,6 +48,8 @@ const de: Copy = {
   upgrade: "Auf Pro upgraden",
   signIn: "Melde dich an, um den KI-Berater zu nutzen.",
   empty: "Noch keine Gespräche.",
+  loading: "Gespräche werden geladen…",
+  retry: "Erneut versuchen",
   disclaimer:
     "Antworten nutzen deine echten Positionen und Transaktionen. Allgemeine Information, keine Finanzberatung.",
   error: "Der Assistent konnte nicht antworten.",
@@ -60,6 +66,8 @@ const es: Copy = {
   upgrade: "Pasar a Pro",
   signIn: "Inicia sesión para usar el Asesor IA.",
   empty: "Aún no hay conversaciones.",
+  loading: "Cargando conversaciones…",
+  retry: "Reintentar",
   disclaimer:
     "Las respuestas usan tus posiciones y operaciones reales. Información general, no asesoramiento financiero.",
   error: "El asistente no pudo responder.",
@@ -76,6 +84,8 @@ const it: Copy = {
   upgrade: "Passa a Pro",
   signIn: "Accedi per usare il Consulente IA.",
   empty: "Nessuna conversazione.",
+  loading: "Caricamento delle conversazioni…",
+  retry: "Riprova",
   disclaimer:
     "Le risposte usano posizioni e operazioni reali. Informazioni generali, non consulenza finanziaria.",
   error: "L'assistente non ha potuto rispondere.",

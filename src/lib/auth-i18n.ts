@@ -21,6 +21,7 @@ type Copy = {
   passwordMismatch: string;
   resetSessionExpired: string;
   googleLoading: string;
+  googleRetry: string;
   googleFailed: string;
   googleLoadError: string;
 };
@@ -48,6 +49,7 @@ export const authCopy: Record<Lang, Copy> = {
     passwordMismatch: "The passwords do not match.",
     resetSessionExpired: "This reset link is invalid or expired. Request a new one and try again.",
     googleLoading: "Loading secure Google sign-in…",
+    googleRetry: "Retry Google sign-in",
     googleFailed: "Google sign-in couldn't be completed.",
     googleLoadError: "Google sign-in couldn't be loaded. Please try again or use email sign-in.",
   },
@@ -73,6 +75,7 @@ export const authCopy: Record<Lang, Copy> = {
     passwordMismatch: "Паролите не съвпадат.",
     resetSessionExpired: "Линкът за смяна е невалиден или изтекъл. Поискай нов и опитай отново.",
     googleLoading: "Зареждане на защитения вход с Google…",
+    googleRetry: "Опитай Google входа отново",
     googleFailed: "Входът с Google не беше завършен.",
     googleLoadError: "Google входът не се зареди. Опитай отново или използвай имейл.",
   },
@@ -100,6 +103,7 @@ export const authCopy: Record<Lang, Copy> = {
     resetSessionExpired:
       "Dieser Link ist ungültig oder abgelaufen. Fordere einen neuen an und versuche es erneut.",
     googleLoading: "Sichere Google-Anmeldung wird geladen…",
+    googleRetry: "Google-Anmeldung erneut versuchen",
     googleFailed: "Die Google-Anmeldung konnte nicht abgeschlossen werden.",
     googleLoadError:
       "Google-Anmeldung konnte nicht geladen werden. Bitte erneut versuchen oder E-Mail nutzen.",
@@ -127,6 +131,7 @@ export const authCopy: Record<Lang, Copy> = {
     resetSessionExpired:
       "Este enlace no es válido o ha caducado. Solicita uno nuevo e inténtalo de nuevo.",
     googleLoading: "Cargando el acceso seguro de Google…",
+    googleRetry: "Reintentar acceso con Google",
     googleFailed: "No se pudo completar el acceso con Google.",
     googleLoadError: "No se pudo cargar Google. Inténtalo de nuevo o usa el acceso por correo.",
   },
@@ -153,6 +158,7 @@ export const authCopy: Record<Lang, Copy> = {
     passwordMismatch: "Le password non coincidono.",
     resetSessionExpired: "Questo link non è valido o è scaduto. Richiedine uno nuovo e riprova.",
     googleLoading: "Caricamento dell'accesso sicuro con Google…",
+    googleRetry: "Riprova l'accesso con Google",
     googleFailed: "Non è stato possibile completare l'accesso con Google.",
     googleLoadError: "Impossibile caricare Google. Riprova o accedi con l'email.",
   },

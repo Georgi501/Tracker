@@ -43,6 +43,7 @@ function Pricing() {
   const [yearly, setYearly] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [activationTimedOut, setActivationTimedOut] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralCounts, setReferralCounts] = useState({ pending: 0, rewarded: 0 });
   const c = paymentsCopy[p.lang];
@@ -53,7 +54,10 @@ function Pricing() {
     if (new URLSearchParams(window.location.search).get("checkout") === "success") {
       trackAnalyticsEvent("checkout_completed");
       if (isCreemTestMode()) toast.success(c.testSuccess);
-      else setActivating(true);
+      else {
+        setActivationTimedOut(false);
+        setActivating(true);
+      }
     }
   }, [c.testSuccess]);
   useEffect(() => {
@@ -96,13 +100,21 @@ function Pricing() {
     if (!activating) return;
     if (isPro) {
       setActivating(false);
+      setActivationTimedOut(false);
       toast.success(c.success);
       return;
     }
-    const t = setInterval(() => {
+    const interval = window.setInterval(() => {
       void reload();
     }, 3000);
-    return () => clearInterval(t);
+    const timeout = window.setTimeout(() => {
+      setActivating(false);
+      setActivationTimedOut(true);
+    }, 60_000);
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
   }, [activating, isPro, reload, c.success]);
   const buy = async () => {
     if (!p.user) return;
@@ -247,6 +259,24 @@ function Pricing() {
         <p className="mt-3 text-center text-xs font-semibold text-primary">
           {planCopy[p.lang].yearlySave}
         </p>
+      )}
+      {activationTimedOut && !isPro && (
+        <div
+          role="status"
+          className="mx-auto mt-4 max-w-xl rounded-xl border border-border bg-secondary/40 p-4 text-center"
+        >
+          <p className="text-sm text-muted-foreground">{c.stillProcessing}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setActivationTimedOut(false);
+              setActivating(true);
+            }}
+            className="mt-3 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+          >
+            {c.checkStatus}
+          </button>
+        </div>
       )}
       <div className="mt-2 text-center">
         <Link

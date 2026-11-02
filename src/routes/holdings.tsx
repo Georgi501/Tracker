@@ -96,9 +96,12 @@ const COPY: Record<
     | "owned"
     | "empty"
     | "emptyHint"
+    | "guestHint"
     | "addHolding"
     | "connectBroker"
     | "addFirst"
+    | "signUp"
+    | "sample"
     | "unavailable"
     | "popular"
     | "remove"
@@ -115,9 +118,12 @@ const COPY: Record<
     owned: "In portfolio",
     empty: "Your portfolio is empty",
     emptyHint: "Search any stock, ETF or crypto above to see its market quote and add it.",
+    guestHint: "Create an account to save positions, or explore a sample portfolio first.",
     addHolding: "Add holding",
     connectBroker: "Connect broker",
     addFirst: "Add first position",
+    signUp: "Create free account",
+    sample: "View sample portfolio",
     unavailable: "Quote unavailable",
     popular: "Popular",
     remove: "Delete position",
@@ -133,9 +139,13 @@ const COPY: Record<
     empty: "Портфейлът ти е празен",
     emptyHint:
       "Потърси акция, ETF или крипто отгоре, за да видиш пазарната котировка и да я добавиш.",
+    guestHint:
+      "Създай профил, за да запазваш позициите си, или първо разгледай примерното портфолио.",
     addHolding: "Добави холдинг",
     connectBroker: "Свържи брокер",
     addFirst: "Добави първа позиция",
+    signUp: "Създай безплатен профил",
+    sample: "Разгледай примерното портфолио",
     unavailable: "Няма котировка",
     popular: "Популярни",
     remove: "Изтрий позиция",
@@ -151,9 +161,13 @@ const COPY: Record<
     empty: "Dein Portfolio ist leer",
     emptyHint:
       "Suche oben eine Aktie, einen ETF oder Krypto, um den Marktkurs zu sehen und hinzuzufügen.",
+    guestHint:
+      "Erstelle ein Konto, um Positionen zu speichern, oder sieh dir zuerst ein Beispielportfolio an.",
     addHolding: "Position hinzufügen",
     connectBroker: "Broker verbinden",
     addFirst: "Erste Position hinzufügen",
+    signUp: "Kostenloses Konto erstellen",
+    sample: "Beispielportfolio ansehen",
     unavailable: "Kurs nicht verfügbar",
     popular: "Beliebt",
     remove: "Position löschen",
@@ -168,9 +182,12 @@ const COPY: Record<
     owned: "En cartera",
     empty: "Tu cartera está vacía",
     emptyHint: "Busca arriba una acción, ETF o cripto para ver su cotización y añadirla.",
+    guestHint: "Crea una cuenta para guardar posiciones o explora primero una cartera de ejemplo.",
     addHolding: "Añadir posición",
     connectBroker: "Conectar bróker",
     addFirst: "Añadir primera posición",
+    signUp: "Crear cuenta gratis",
+    sample: "Ver cartera de ejemplo",
     unavailable: "Cotización no disponible",
     popular: "Populares",
     remove: "Eliminar posición",
@@ -186,9 +203,13 @@ const COPY: Record<
     empty: "Il tuo portafoglio è vuoto",
     emptyHint:
       "Cerca sopra un'azione, un ETF o una cripto per vederne la quotazione e aggiungerla.",
+    guestHint:
+      "Crea un account per salvare le posizioni oppure esplora prima un portafoglio di esempio.",
     addHolding: "Aggiungi posizione",
     connectBroker: "Collega broker",
     addFirst: "Aggiungi prima posizione",
+    signUp: "Crea un account gratuito",
+    sample: "Vedi il portafoglio di esempio",
     unavailable: "Quotazione non disponibile",
     popular: "Popolari",
     remove: "Elimina posizione",
@@ -714,12 +735,32 @@ function Holdings() {
             <EmptyIllustration />
             <p className="font-display text-lg font-semibold">{c.empty}</p>
             <p className="max-w-sm text-sm text-muted-foreground">{c.emptyHint}</p>
-            <button
-              onClick={() => openAdd(null)}
-              className="bg-brand-gradient shadow-glow press mt-1 flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-            >
-              <Plus size={16} /> {c.addFirst}
-            </button>
+            {p.user ? (
+              <button
+                onClick={() => openAdd(null)}
+                className="bg-brand-gradient shadow-glow press mt-1 flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              >
+                <Plus size={16} /> {c.addFirst}
+              </button>
+            ) : (
+              <div className="mt-1 grid justify-items-center gap-2">
+                <p className="max-w-sm text-xs text-muted-foreground">{c.guestHint}</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Link
+                    to="/auth"
+                    className="bg-brand-gradient shadow-glow press inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {c.signUp}
+                  </Link>
+                  <Link
+                    to="/demo"
+                    className="press inline-flex items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-secondary"
+                  >
+                    {c.sample}
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>

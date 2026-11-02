@@ -33,20 +33,38 @@ function Directory() {
   const [list, setList] = useState<MemberProfile[] | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [q, setQ] = useState("");
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
-    if (!p.user) return;
-    void supabase
-      .from("profiles")
-      .select(PROFILE_COLS)
-      .eq("is_public", true)
-      .neq("id", p.user.id)
-      .limit(200)
-      .then(async ({ data }) => {
-        const rows = (data ?? []) as MemberProfile[];
+    if (!p.user || !p.isPro) {
+      setList(null);
+      return;
+    }
+    let active = true;
+    setList(null);
+    setLoadError(false);
+    void (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(PROFILE_COLS)
+        .eq("is_public", true)
+        .neq("id", p.user!.id)
+        .limit(200);
+      if (error) throw error;
+      const rows = (data ?? []) as MemberProfile[];
+      const signedUrls = await avatarUrls(rows.map((r) => r.avatar_path));
+      if (active) {
         setList(rows);
-        setUrls(await avatarUrls(rows.map((r) => r.avatar_path)));
-      });
-  }, [p.user]);
+        setUrls(signedUrls);
+      }
+    })().catch((error: unknown) => {
+      console.error("Unable to load community directory", error);
+      if (active) setLoadError(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [p.user, p.isPro, reloadKey]);
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
@@ -91,8 +109,23 @@ function Directory() {
         placeholder={c.search}
         className="w-full rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
-      {list === null ? (
-        <div className="h-40 animate-pulse rounded-3xl" />
+      {loadError ? (
+        <div role="alert">
+          <Card className="text-center">
+            <p className="text-sm text-muted-foreground">{c.loadError}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {c.retry}
+            </button>
+          </Card>
+        </div>
+      ) : list === null ? (
+        <div role="status" className="h-40 animate-pulse rounded-3xl">
+          <span className="sr-only">{c.loading}</span>
+        </div>
       ) : shown.length === 0 ? (
         <Card className="text-center text-sm text-muted-foreground">
           {c.none}

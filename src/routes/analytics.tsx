@@ -23,10 +23,9 @@ import {
 } from "@/lib/analytics-report";
 import { toast } from "sonner";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
@@ -50,6 +49,7 @@ import {
   periodRange,
   previousRange,
   rangeReturn,
+  cumulativeReturns,
   RETURN_BUCKETS,
   RETURN_PERIODS,
   type ReturnPeriod,
@@ -191,6 +191,30 @@ function Analytics() {
         ...r,
         label: tickLabel(r.t),
       }))
+    : [];
+  const cumulativeCurrent = cumulativeReturns(returns.map((item) => item.current));
+  const cumulativePrevious = cumulativeReturns(returns.map((item) => item.previous));
+  const periodDuration = range && returns.length ? (range.end - range.start) / returns.length : 0;
+  const performanceCurve = range
+    ? [
+        {
+          t: range.start,
+          previousT: previousRange(range).start,
+          current: 0,
+          previous: compare ? 0 : null,
+          label: tickLabel(range.start),
+        },
+        ...returns.map((item, index) => {
+          const currentT = Math.min(range.end, item.t + periodDuration);
+          return {
+            t: currentT,
+            previousT: Math.min(previousRange(range).end, item.previousT + periodDuration),
+            current: cumulativeCurrent[index] ?? null,
+            previous: compare ? (cumulativePrevious[index] ?? null) : null,
+            label: tickLabel(currentT),
+          };
+        }),
+      ]
     : [];
   const currentReturn = range ? rangeReturn(history, range) : null;
   const previousReturn = range ? rangeReturn(history, previousRange(range)) : null;
@@ -500,6 +524,9 @@ function Analytics() {
             ))}
           </div>
         </div>
+        <p className="mb-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          {c.periodCurveDescription}
+        </p>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           {period === "CUSTOM" && (
             <div className="flex flex-wrap gap-3">
@@ -541,26 +568,36 @@ function Analytics() {
           </p>
         )}
         {range && (
-          <div className="mb-4 flex flex-wrap gap-x-8 gap-y-3 text-sm" aria-live="polite">
-            <div>
+          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+            <div className="rounded-xl border border-border/70 bg-secondary/30 px-4 py-3">
               <p className="text-muted-foreground">{p.t("selectedPeriod")}</p>
-              <p className="font-semibold">{currentReturn === null ? "—" : pct(currentReturn)}</p>
+              <p
+                className={`mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums ${
+                  currentReturn === null
+                    ? ""
+                    : currentReturn < 0
+                      ? "text-destructive"
+                      : "text-success"
+                }`}
+              >
+                {currentReturn === null ? "—" : pct(currentReturn)}
+              </p>
               <p className="text-xs text-muted-foreground">{rangeLabel(range)}</p>
             </div>
             {compare && (
               <>
-                <div>
+                <div className="rounded-xl border border-border/70 bg-secondary/30 px-4 py-3">
                   <p className="text-muted-foreground">{p.t("previousPeriod")}</p>
-                  <p className="font-semibold">
+                  <p className="mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums">
                     {previousReturn === null ? "—" : pct(previousReturn)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {rangeLabel(previousRange(range))}
                   </p>
                 </div>
-                <div>
+                <div className="rounded-xl border border-border/70 bg-secondary/30 px-4 py-3">
                   <p className="text-muted-foreground">{p.t("returnDifference")}</p>
-                  <p className="font-semibold">
+                  <p className="mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums">
                     {currentReturn === null || previousReturn === null
                       ? "—"
                       : `${(currentReturn - previousReturn).toFixed(2)} ${p.t("percentagePoints")}`}
@@ -582,47 +619,50 @@ function Analytics() {
         {range && currentReturn !== null && (
           <div
             role="img"
-            aria-label={`${p.t("performance")} ${c.periodReturns} ${p.t("chart")}, ${returns.length} ${p.t("dataPoints")}${returns.length ? `, ${p.t("latestValue")} ${returns.at(-1)!.current == null ? "—" : pct(returns.at(-1)!.current!)}` : ""}.`}
-            className="h-60"
+            aria-label={`${p.t("performance")} ${c.periodReturns} ${p.t("chart")}, ${returns.length} ${p.t("dataPoints")}${performanceCurve.length ? `, ${p.t("latestValue")} ${performanceCurve.at(-1)!.current == null ? "—" : pct(performanceCurve.at(-1)!.current!)}` : ""}.`}
+            className="h-64 sm:h-72"
           >
             <ResponsiveContainer>
-              <BarChart data={returns}>
+              <AreaChart
+                data={performanceCurve}
+                margin={{ top: 8, right: 12, bottom: 0, left: -12 }}
+              >
                 <defs>
-                  <linearGradient id={`${gradientId}-positive`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--success)" />
-                    <stop offset="100%" stopColor="var(--success)" stopOpacity={0.65} />
-                  </linearGradient>
-                  <linearGradient id={`${gradientId}-negative`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--destructive)" />
-                    <stop offset="100%" stopColor="var(--destructive)" stopOpacity={0.65} />
-                  </linearGradient>
-                  <linearGradient id={`${gradientId}-previous`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-2)" />
-                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.65} />
+                  <linearGradient id={`${gradientId}-portfolio-fill`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.015} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   stroke="var(--border)"
-                  strokeDasharray="3 3"
+                  strokeDasharray="2 5"
                   vertical={false}
-                  strokeOpacity={0.55}
+                  strokeOpacity={0.42}
                 />
                 <XAxis
                   dataKey="label"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  tickMargin={10}
+                  minTickGap={24}
+                  interval="preserveStartEnd"
                 />
                 <YAxis
-                  tickFormatter={(v) => `${v.toFixed(0)}%`}
+                  tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                  width={40}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  width={48}
                 />
-                <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
+                <ReferenceLine
+                  y={0}
+                  stroke="var(--muted-foreground)"
+                  strokeOpacity={0.55}
+                  strokeDasharray="4 4"
+                />
                 <Tooltip
-                  cursor={{ fill: "var(--secondary)" }}
+                  cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.35 }}
                   content={(props) => (
                     <ChartTooltipContent
                       {...props}
@@ -636,66 +676,72 @@ function Analytics() {
                     />
                   )}
                 />
-                <Bar
+                <Area
+                  type="monotone"
                   dataKey="current"
-                  name={p.t("selectedPeriod")}
-                  maxBarSize={36}
-                  radius={[4, 4, 4, 4]}
-                  activeBar={{ filter: "brightness(1.15)" }}
-                >
-                  {returns.map((r, i) => (
-                    <Cell
-                      key={i}
-                      fill={
-                        (r.current ?? 0) >= 0
-                          ? `url(#${gradientId}-positive)`
-                          : `url(#${gradientId}-negative)`
-                      }
-                    />
-                  ))}
-                </Bar>
+                  name={c.portfolioReturn}
+                  stroke="var(--primary)"
+                  strokeWidth={2.5}
+                  fill={`url(#${gradientId}-portfolio-fill)`}
+                  baseValue={0}
+                  connectNulls={false}
+                  dot={false}
+                  activeDot={{
+                    r: 4,
+                    fill: "var(--primary)",
+                    stroke: "var(--card)",
+                    strokeWidth: 2,
+                  }}
+                  animationDuration={450}
+                />
                 {compare && (
-                  <Bar
+                  <Line
+                    type="monotone"
                     dataKey="previous"
                     name={p.t("previousPeriod")}
-                    fill={`url(#${gradientId}-previous)`}
-                    maxBarSize={36}
-                    radius={[4, 4, 4, 4]}
-                    activeBar={{ filter: "brightness(1.15)" }}
+                    stroke="var(--chart-2)"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    connectNulls={false}
+                    dot={false}
+                    activeDot={{
+                      r: 3,
+                      fill: "var(--chart-2)",
+                      stroke: "var(--card)",
+                      strokeWidth: 2,
+                    }}
                   />
                 )}
-              </BarChart>
+              </AreaChart>
             </ResponsiveContainer>
+          </div>
+        )}
+        {range && currentReturn !== null && (
+          <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-0.5 w-5 rounded-full bg-primary" />
+              {c.portfolioReturn}
+            </span>
+            {compare && (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-0 w-5 border-t-2 border-dashed border-chart-2" />
+                {p.t("previousPeriod")}
+              </span>
+            )}
+            {compare && previousReturn === null && <span>{p.t("noComparisonData")}</span>}
           </div>
         )}
         {range && currentReturn !== null && (
           <ChartDataTable
             summary={p.t("viewChartData")}
             caption={`${p.t("performance")} ${c.periodReturns}`}
-            headers={[
-              p.t("date"),
-              p.t("selectedPeriod"),
-              ...(compare ? [p.t("previousPeriod")] : []),
-            ]}
-            rows={returns.map((item) => [
+            headers={[p.t("date"), c.portfolioReturn, ...(compare ? [p.t("previousPeriod")] : [])]}
+            rows={performanceCurve.map((item) => [
               formatDate(item.t),
               item.current == null ? "—" : pct(item.current),
               ...(compare ? [item.previous == null ? "—" : pct(item.previous)] : []),
             ])}
           />
-        )}
-        {compare && range && (
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-sm bg-success" />
-              {p.t("selectedPeriod")}
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-sm bg-chart-2" />
-              {p.t("previousPeriod")}
-            </span>
-            {previousReturn === null && <span>{p.t("noComparisonData")}</span>}
-          </div>
         )}
       </Card>
       <Breakdown
