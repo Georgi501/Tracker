@@ -23,6 +23,7 @@ import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as EarningsRouteImport } from './routes/earnings'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as FifoGuideRouteImport } from './routes/fifo-guide'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -121,6 +122,11 @@ const EarningsRoute = EarningsRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FifoGuideRoute = FifoGuideRouteImport.update({
+  id: '/fifo-guide',
+  path: '/fifo-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HoldingsRoute = HoldingsRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
+  '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
+  '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -376,6 +384,7 @@ export interface FileRoutesById {
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
   '/features': typeof FeaturesRoute
+  '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/dividends'
     | '/earnings'
     | '/features'
+    | '/fifo-guide'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/dividends'
     | '/earnings'
     | '/features'
+    | '/fifo-guide'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/dividends'
     | '/earnings'
     | '/features'
+    | '/fifo-guide'
     | '/holdings'
     | '/markets'
     | '/messages'
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   DividendsRoute: typeof DividendsRoute
   EarningsRoute: typeof EarningsRoute
   FeaturesRoute: typeof FeaturesRoute
+  FifoGuideRoute: typeof FifoGuideRoute
   HoldingsRoute: typeof HoldingsRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
@@ -687,6 +700,13 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fifo-guide': {
+      id: '/fifo-guide'
+      path: '/fifo-guide'
+      fullPath: '/fifo-guide'
+      preLoaderRoute: typeof FifoGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/holdings': {
@@ -922,6 +942,7 @@ const rootRouteChildren: RootRouteChildren = {
   DividendsRoute: DividendsRoute,
   EarningsRoute: EarningsRoute,
   FeaturesRoute: FeaturesRoute,
+  FifoGuideRoute: FifoGuideRoute,
   HoldingsRoute: HoldingsRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,

@@ -34,6 +34,7 @@ describe("App routing", () => {
     "/privacy",
     "/refund",
     "/disclaimer",
+    "/fifo-guide",
     "/admin",
   ])("matches %s instead of falling back to not found", (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });

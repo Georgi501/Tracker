@@ -868,6 +868,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li>
                 <Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link>
               </li>
+              <li>
+                <Link to="/fifo-guide">{p.lang === "bg" ? "FIFO ръководство" : "FIFO guide"}</Link>
+              </li>
             </ul>
           </div>
           <div>
