@@ -432,6 +432,10 @@
         padding-left: 0;
       }
 
+      .player[data-playing="true"] .screen-frame:not(:hover):not(:focus-within) .big-play {
+        opacity: 0;
+      }
+
       .player[data-playing="true"] .screen-frame img {
         transform: scale(1.025);
       }
@@ -3100,45 +3104,21 @@
         }
       };
       const toggleManualPlayback = () => {
-        if (playing && manualPlayback) {
+        if (playing) {
           manualPlayback = false;
-          hoverPaused = true;
           setPlaying(false);
           return;
         }
         manualPlayback = true;
-        hoverPaused = false;
         // A click is a user gesture, so sound can start unless it was muted explicitly.
         if (!soundEnabled && !userMuted) {
           soundEnabled = true;
           updateSoundButton();
         }
-        if (playing) {
-          status.textContent = soundEnabled ? copy.soundPlaying : copy.soundPlayingMuted;
-          if (soundEnabled) startSound();
-          return;
-        }
         setPlaying(true);
       };
       playButton.addEventListener("click", toggleManualPlayback);
       bigPlayButton.addEventListener("click", toggleManualPlayback);
-      if (embedded) {
-        screenFrame.addEventListener("pointerover", (event) => {
-          if (
-            event.pointerType !== "mouse" ||
-            manualPlayback ||
-            hoverPaused ||
-            (event.target instanceof Element && event.target.closest("button"))
-          ) {
-            return;
-          }
-          setPlaying(true);
-        });
-        screenFrame.addEventListener("pointerleave", () => {
-          if (!manualPlayback) setPlaying(false);
-          hoverPaused = false;
-        });
-      }
       progressBar.addEventListener("click", (event) => {
         const bounds = progressBar.getBoundingClientRect();
         seekTo(((event.clientX - bounds.left) / bounds.width) * currentMode().duration);
