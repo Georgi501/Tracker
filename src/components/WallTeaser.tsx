@@ -13,6 +13,13 @@ const TEXT: Record<string, (posts: number, members: number) => string> = {
     `${posts} publicaciones en los últimos 30 días · ${members} perfiles públicos`,
   it: (posts, members) => `${posts} post negli ultimi 30 giorni · ${members} profili pubblici`,
 };
+const EARLY: Record<string, string> = {
+  bg: "Общност в ранен етап — влез сред първите",
+  en: "Early-stage community — join among the first",
+  de: "Community in der Anfangsphase — sei einer der Ersten",
+  es: "Comunidad en fase inicial — únete entre los primeros",
+  it: "Community nelle fasi iniziali — unisciti tra i primi",
+};
 /** Shows only aggregate counts to signed-in members; no post content or names are exposed. */
 export function WallTeaser() {
   const p = usePortfolio();
@@ -29,6 +36,8 @@ export function WallTeaser() {
     };
   }, [p.user]);
   if (!stats) return null;
+  if (stats.members < 50)
+    return <p className="text-xs font-medium text-primary">{EARLY[p.lang] ?? EARLY["en"]}</p>;
   return (
     <p className="text-xs font-medium text-primary tabular-nums">
       {(TEXT[p.lang] ?? TEXT["en"])?.(stats.posts, stats.members)}

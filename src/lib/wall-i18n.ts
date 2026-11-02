@@ -9,6 +9,9 @@ export interface WallCopy {
   post: string;
   moods: { brag: string; vent: string; question: string; chat: string };
   empty: string;
+  team: string;
+  example: string;
+  exampleBody: string;
   commentPh: string;
   needPublic: string;
   report: string;
@@ -47,6 +50,10 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Публикувай",
     moods: { brag: "Хваля се", vent: "Оплаквам се", question: "Въпрос", chat: "Разговор" },
     empty: "Още няма публикации. Бъди първият!",
+    team: "Екип Capispot",
+    example: "Пример",
+    exampleBody:
+      "Така изглежда публикация: текст, настроение, етикети, реакции и по желание снимка на портфолиото ти — само до нивото, което избереш.",
     commentPh: "Напиши коментар…",
     needPublic: "Направи профила си публичен, за да публикуваш и коментираш.",
     report: "Докладвай",
@@ -85,6 +92,10 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Post",
     moods: { brag: "Bragging", vent: "Venting", question: "Question", chat: "Chat" },
     empty: "No posts yet. Be the first!",
+    team: "Capispot team",
+    example: "Example",
+    exampleBody:
+      "This is what a post looks like: text, mood, tags, reactions and an optional portfolio snapshot — shared only up to the level you choose.",
     commentPh: "Write a comment…",
     needPublic: "Make your profile public to post and comment.",
     report: "Report",
@@ -123,6 +134,10 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Veröffentlichen",
     moods: { brag: "Angeben", vent: "Frust", question: "Frage", chat: "Plausch" },
     empty: "Noch keine Beiträge. Sei der Erste!",
+    team: "Capispot-Team",
+    example: "Beispiel",
+    exampleBody:
+      "So sieht ein Beitrag aus: Text, Stimmung, Tags, Reaktionen und optional eine Portfolio-Momentaufnahme — nur bis zu der Stufe, die du wählst.",
     commentPh: "Kommentar schreiben…",
     needPublic: "Mach dein Profil öffentlich, um zu posten und zu kommentieren.",
     report: "Melden",
@@ -161,6 +176,10 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Publicar",
     moods: { brag: "Presumo", vent: "Me quejo", question: "Pregunta", chat: "Charla" },
     empty: "Aún no hay publicaciones. ¡Sé el primero!",
+    team: "Equipo Capispot",
+    example: "Ejemplo",
+    exampleBody:
+      "Así se ve una publicación: texto, ánimo, etiquetas, reacciones y, si quieres, una instantánea de tu cartera — solo hasta el nivel que elijas.",
     commentPh: "Escribe un comentario…",
     needPublic: "Haz público tu perfil para publicar y comentar.",
     report: "Denunciar",
@@ -199,6 +218,10 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Pubblica",
     moods: { brag: "Mi vanto", vent: "Mi sfogo", question: "Domanda", chat: "Chiacchiere" },
     empty: "Ancora nessun post. Sii il primo!",
+    team: "Team Capispot",
+    example: "Esempio",
+    exampleBody:
+      "Ecco come appare un post: testo, umore, tag, reazioni e, se vuoi, un'istantanea del portafoglio — solo fino al livello che scegli.",
     commentPh: "Scrivi un commento…",
     needPublic: "Rendi pubblico il tuo profilo per pubblicare e commentare.",
     report: "Segnala",

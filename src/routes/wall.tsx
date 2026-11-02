@@ -75,6 +75,7 @@ interface Post {
   snapshot: SnapshotRow[] | null;
   tags: string[];
   edited_at: string | null;
+  is_team: boolean;
   created_at: string;
 }
 interface Reaction {
@@ -134,7 +135,9 @@ function Wall() {
     try {
       const { data, error: e } = await db
         .from("wall_posts")
-        .select("id, user_id, body, mood, share_level, snapshot, tags, edited_at, created_at")
+        .select(
+          "id, user_id, body, mood, share_level, snapshot, tags, edited_at, is_team, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(50);
       if (e) throw e;
@@ -296,7 +299,15 @@ function Wall() {
           <span className="sr-only">{c.loading}</span>
         </div>
       ) : posts.length === 0 ? (
-        <Card className="text-center text-sm text-muted-foreground">{w.empty}</Card>
+        <div className="space-y-4">
+          <Card className="text-center text-sm text-muted-foreground">{w.empty}</Card>
+          <Card className="space-y-2 border-dashed opacity-80">
+            <span className="inline-block rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
+              {w.example}
+            </span>
+            <p className="text-sm">{w.exampleBody}</p>
+          </Card>
+        </div>
       ) : shownPosts.length === 0 ? (
         <Card className="text-center text-sm text-muted-foreground">{w.noMatch}</Card>
       ) : (
@@ -604,17 +615,24 @@ function PostCard({
           size={40}
         />
         <div className="min-w-0 flex-1">
-          {author ? (
-            <Link
-              to="/community/$userId"
-              params={{ userId: author.id }}
-              className="truncate font-semibold hover:underline"
-            >
-              {name(post.user_id)}
-            </Link>
-          ) : (
-            <p className="font-semibold">{w.unknown}</p>
-          )}
+          <div className="flex items-center gap-2">
+            {author ? (
+              <Link
+                to="/community/$userId"
+                params={{ userId: author.id }}
+                className="truncate font-semibold hover:underline"
+              >
+                {name(post.user_id)}
+              </Link>
+            ) : (
+              <p className="font-semibold">{w.unknown}</p>
+            )}
+            {post.is_team && (
+              <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                {w.team}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">
             {MOOD_EMOJI[post.mood]} {w.moods[post.mood]} · {ago(post.created_at, lang)}
             {post.edited_at && ` · ${w.edited}`}
