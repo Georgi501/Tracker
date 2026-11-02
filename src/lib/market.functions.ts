@@ -233,13 +233,23 @@ export const marketDetails = createServerFn({ method: "POST" })
       data,
     }): Promise<{
       closes: MarketCandle[];
+      lastPrice: number | null;
+      lastPriceAt: string | null;
       low: number | null;
       high: number | null;
       currency: string | null;
       unavailable: boolean;
     }> => {
       const { yahooClient } = await import("./prices.server");
-      const empty = { closes: [], low: null, high: null, currency: null, unavailable: false };
+      const empty = {
+        closes: [],
+        lastPrice: null,
+        lastPriceAt: null,
+        low: null,
+        high: null,
+        currency: null,
+        unavailable: false,
+      };
       const cfg = RANGE_CFG[data.range];
       try {
         const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
@@ -264,11 +274,31 @@ export const marketDetails = createServerFn({ method: "POST" })
           fiftyTwoWeekLow?: number;
           fiftyTwoWeekHigh?: number;
           currency?: string;
+          regularMarketPrice?: number;
+          regularMarketTime?: Date | null;
         };
         const vals = closes.map((x) => x.c);
         const fromData = data.range === "1Y";
+        const quoteAt =
+          m.regularMarketTime instanceof Date && Number.isFinite(m.regularMarketTime.getTime())
+            ? m.regularMarketTime.toISOString()
+            : null;
         return {
           closes,
+          lastPrice:
+            m.regularMarketPrice != null &&
+            Number.isFinite(m.regularMarketPrice) &&
+            m.regularMarketPrice > 0
+              ? m.regularMarketPrice
+              : (closes.at(-1)?.c ?? null),
+          lastPriceAt:
+            m.regularMarketPrice != null &&
+            Number.isFinite(m.regularMarketPrice) &&
+            m.regularMarketPrice > 0
+              ? (quoteAt ?? (closes.at(-1)?.t ? new Date(closes.at(-1)!.t).toISOString() : null))
+              : closes.at(-1)?.t
+                ? new Date(closes.at(-1)!.t).toISOString()
+                : null,
           low: m.fiftyTwoWeekLow ?? (fromData && vals.length ? Math.min(...vals) : null),
           high: m.fiftyTwoWeekHigh ?? (fromData && vals.length ? Math.max(...vals) : null),
           currency: m.currency ?? null,

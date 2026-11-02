@@ -38,21 +38,21 @@ export function VideoPresentation({ mode, theme }: { mode: VideoMode; theme: App
   return (
     <section
       aria-label="Capispot product walkthrough"
-      className="grid overflow-hidden rounded-3xl border border-border bg-card lg:col-span-3 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]"
+      className="grid overflow-hidden rounded-3xl border border-border bg-card lg:col-span-3 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)]"
     >
-      <div className="flex flex-col items-start justify-center gap-4 border-b border-border p-6 sm:p-8 lg:border-b-0 lg:border-r">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+      <div className="flex flex-col items-start justify-center gap-2 border-b border-border p-4 sm:gap-4 sm:p-8 lg:border-b-0 lg:border-r">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-xs">
           PRODUCT WALKTHROUGH
         </p>
-        <h2 className="max-w-md text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h2 className="max-w-md text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
           See Capispot in action.
         </h2>
-        <p className="max-w-md text-sm leading-6 text-muted-foreground">
+        <p className="max-w-md text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
           Explore real screens, from portfolio tracking to market context and Pro insights.
         </p>
         <a
           href="/video-preview/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          className="inline-flex items-center gap-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 sm:text-sm"
         >
           Open the full walkthrough
           <ArrowUpRight size={16} aria-hidden />

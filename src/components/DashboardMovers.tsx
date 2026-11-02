@@ -40,6 +40,7 @@ const T = {
     none: "Няма данни",
     unavailable: "Пазарните данни не можаха да се заредят.",
     retry: "Опитай отново",
+    asOf: "Към",
   },
   en: {
     title: "Companies you follow",
@@ -52,6 +53,7 @@ const T = {
     none: "No data",
     unavailable: "Market data could not be loaded.",
     retry: "Retry",
+    asOf: "As of",
   },
   de: {
     title: "Beobachtete Unternehmen",
@@ -64,6 +66,7 @@ const T = {
     none: "Keine Daten",
     unavailable: "Marktdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
+    asOf: "Stand",
   },
   es: {
     title: "Empresas que sigues",
@@ -76,6 +79,7 @@ const T = {
     none: "Sin datos",
     unavailable: "No se pudieron cargar los datos de mercado.",
     retry: "Reintentar",
+    asOf: "A fecha de",
   },
   it: {
     title: "Aziende che segui",
@@ -88,6 +92,7 @@ const T = {
     none: "Nessun dato",
     unavailable: "Impossibile caricare i dati di mercato.",
     retry: "Riprova",
+    asOf: "Al",
   },
 } as const;
 
@@ -99,7 +104,7 @@ const assetOf = (s: string) =>
   };
 
 function Spark({ v }: { v: number[] }) {
-  if (v.length < 2) return <div className="h-8" />;
+  if (v.length < 2) return <div className="h-6" />;
   const min = Math.min(...v),
     span = Math.max(...v) - min || 1;
   const pts = v
@@ -107,7 +112,7 @@ function Spark({ v }: { v: number[] }) {
     .join(" ");
   const col = v.at(-1)! >= v[0]! ? "var(--success)" : "var(--destructive)";
   return (
-    <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-8 w-full" aria-hidden>
+    <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-6 w-full" aria-hidden>
       <polygon
         points={`0,32 ${pts} 100,32`}
         style={{ fill: `color-mix(in oklab, ${col} 18%, transparent)` }}
@@ -148,10 +153,15 @@ export function DashboardMovers() {
   });
   const rows = assets.map((a, i) => {
     const closes = (charts[i]?.data?.closes ?? []).map((x) => x.c).filter((n) => n > 0);
+    const latestCandle = charts[i]?.data?.closes.at(-1);
     const ret = closes.length > 1 ? (closes.at(-1)! / closes[0]! - 1) * 100 : null;
     return {
       a,
       closes,
+      price: charts[i]?.data?.lastPrice ?? closes.at(-1) ?? null,
+      priceAt:
+        charts[i]?.data?.lastPriceAt ??
+        (latestCandle?.t ? new Date(latestCandle.t).toISOString() : null),
       ret,
       cur: charts[i]?.data?.currency ?? undefined,
       loading: !!charts[i]?.isLoading,
@@ -175,6 +185,13 @@ export function DashboardMovers() {
       return n.toFixed(2);
     }
   };
+  const fmtPriceAt = (value: string) =>
+    new Intl.DateTimeFormat(languageLocale(p.lang), {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
 
   const Mover = ({ r, up }: { r: (typeof rows)[number]; up: boolean }) => (
     <li>
@@ -203,7 +220,7 @@ export function DashboardMovers() {
       to="/asset/$symbol"
       params={{ symbol: r.a.symbol }}
       tabIndex={copy ? -1 : undefined}
-      className="market-ticker-item card-interactive press w-40 shrink-0 rounded-2xl border border-border bg-card p-3"
+      className="market-ticker-item card-interactive press w-40 shrink-0 rounded-xl border border-border/70 bg-card/90 p-2.5"
     >
       <div className="flex items-center gap-2">
         <CompanyLogo symbol={r.a.symbol} type={r.a.type} size={32} />
@@ -212,12 +229,12 @@ export function DashboardMovers() {
           <p className="truncate text-[0.7rem] text-muted-foreground">{r.a.name}</p>
         </div>
       </div>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <Spark v={r.closes} />
       </div>
       <div className="mt-1 flex items-baseline justify-between gap-1">
-        <span className="truncate text-sm font-semibold">
-          {r.closes.length ? fmt(r.closes.at(-1)!, r.cur) : r.loading ? "…" : "—"}
+        <span className="truncate text-base font-bold tabular-nums">
+          {r.price != null ? fmt(r.price, r.cur) : r.loading ? "…" : "—"}
         </span>
         {r.ret != null && (
           <span className={`text-xs font-bold ${r.ret >= 0 ? "text-success" : "text-destructive"}`}>
@@ -226,25 +243,36 @@ export function DashboardMovers() {
           </span>
         )}
       </div>
+      {r.priceAt && (
+        <p
+          className="mt-0.5 truncate text-[10px] leading-4 text-muted-foreground"
+          title={`${c.asOf} ${new Date(r.priceAt).toLocaleString(languageLocale(p.lang))}`}
+        >
+          {c.asOf} {fmtPriceAt(r.priceAt)}
+        </p>
+      )}
     </Link>
   );
 
   return (
     <Card className="min-w-0 lg:col-span-3">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="font-display font-semibold">{list.length ? c.title : c.popular}</h3>
-        <div className="flex items-center gap-1">
+        <div className="flex w-full items-center gap-1 overflow-x-auto pb-1 sm:w-auto">
           {RANGES.map((x) => (
             <button
               key={x}
               onClick={() => setRange(x)}
               aria-pressed={range === x}
-              className={`press rounded-full px-2.5 py-1 text-xs font-semibold ${range === x ? "bg-brand-gradient text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
+              className={`press shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${range === x ? "bg-brand-gradient text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
             >
               {x}
             </button>
           ))}
-          <Link to="/watchlist" className="ml-2 text-sm font-semibold text-primary">
+          <Link
+            to="/watchlist"
+            className="ml-auto shrink-0 whitespace-nowrap pl-2 text-sm font-semibold text-primary sm:ml-2"
+          >
             {c.all}
           </Link>
         </div>

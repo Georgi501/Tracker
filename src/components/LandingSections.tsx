@@ -25,8 +25,6 @@ type LandingCopy = {
   }[];
   trustTitle: string;
   trust: { title: string; body: string }[];
-  faqTitle: string;
-  faq: { question: string; answer: string }[];
   finalTitle: string;
   finalBody: string;
   signup: string;
@@ -92,34 +90,6 @@ const COPY: Record<Lang, LandingCopy> = {
         body: "Missing prices, exchange rates or split reconciliation can make a chart unavailable.",
       },
     ],
-    faqTitle: "Frequently asked questions",
-    faq: [
-      {
-        question: "Can I try Capispot before creating an account?",
-        answer:
-          "Yes. Open the sample portfolio to explore the interface without adding your own portfolio data.",
-      },
-      {
-        question: "Can I import transactions from my broker?",
-        answer:
-          "Yes. Import a supported broker CSV and review the transactions before adding them, or record activity manually.",
-      },
-      {
-        question: "Where do prices and exchange rates come from?",
-        answer:
-          "Market quotes and historical prices use Yahoo Finance. Historical currency conversion uses dated provider rates; unavailable data is not replaced with a fixed estimate.",
-      },
-      {
-        question: "Is Capispot investment advice?",
-        answer:
-          "No. Capispot is a portfolio tracking and analytics tool, not a recommendation to buy or sell. Investing involves risk.",
-      },
-      {
-        question: "What is free and what is Pro?",
-        answer:
-          "The core portfolio tracker is free. Pro adds advanced analysis and planning features. See the pricing page for current plan details.",
-      },
-    ],
     finalTitle: "Ready to see your portfolio more clearly?",
     finalBody: "Start with a free account, or look around the sample portfolio first.",
     signup: "Create a free account",
@@ -183,34 +153,6 @@ const COPY: Record<Lang, LandingCopy> = {
         body: "Липсващи цени, валутни курсове или несъгласувани сплитове могат да направят графиката недостъпна.",
       },
     ],
-    faqTitle: "Често задавани въпроси",
-    faq: [
-      {
-        question: "Мога ли да разгледам Capispot без регистрация?",
-        answer:
-          "Да. Отвори примерното портфолио, за да разгледаш интерфейса, без да добавяш свои данни.",
-      },
-      {
-        question: "Мога ли да импортирам сделки от брокера си?",
-        answer:
-          "Да. Импортирай поддържан брокерски CSV и прегледай сделките преди добавяне или ги въведи ръчно.",
-      },
-      {
-        question: "Откъде идват цените и валутните курсове?",
-        answer:
-          "Котировките и историческите цени използват Yahoo Finance. Историческото превалутиране използва датирани курсове от доставчика; липсващите данни не се заместват с фиксирана оценка.",
-      },
-      {
-        question: "Capispot дава ли инвестиционни съвети?",
-        answer:
-          "Не. Capispot е инструмент за следене и анализ на портфейл, а не препоръка за покупка или продажба. Инвестирането носи риск.",
-      },
-      {
-        question: "Какво включват безплатният и Pro планът?",
-        answer:
-          "Основното следене на портфейл е безплатно. Pro добавя разширени анализи и инструменти за планиране. Виж страницата с цени за актуалните подробности.",
-      },
-    ],
     finalTitle: "Готов ли си да виждаш портфолиото си по-ясно?",
     finalBody: "Започни с безплатен профил или първо разгледай примерното портфолио.",
     signup: "Създай безплатен профил",
@@ -272,34 +214,6 @@ const COPY: Record<Lang, LandingCopy> = {
       {
         title: "Keine erfundene Historie",
         body: "Fehlende Kurse, Wechselkurse oder nicht abgeglichene Splits können ein Diagramm verhindern.",
-      },
-    ],
-    faqTitle: "Häufig gestellte Fragen",
-    faq: [
-      {
-        question: "Kann ich Capispot vor der Registrierung testen?",
-        answer:
-          "Ja. Öffne das Beispielportfolio, um die Oberfläche ohne eigene Portfoliodaten zu erkunden.",
-      },
-      {
-        question: "Kann ich Transaktionen von meinem Broker importieren?",
-        answer:
-          "Ja. Importiere eine unterstützte Broker-CSV und prüfe die Transaktionen vor dem Hinzufügen oder erfasse sie manuell.",
-      },
-      {
-        question: "Woher stammen Kurse und Wechselkurse?",
-        answer:
-          "Kurse und historische Preise verwenden Yahoo Finance. Die historische Währungsumrechnung verwendet datierte Anbieter-Kurse; fehlende Daten werden nicht durch feste Schätzungen ersetzt.",
-      },
-      {
-        question: "Ist Capispot eine Anlageberatung?",
-        answer:
-          "Nein. Capispot ist ein Portfolio-Tracking- und Analysewerkzeug, keine Kauf- oder Verkaufsempfehlung. Investitionen sind mit Risiken verbunden.",
-      },
-      {
-        question: "Was ist kostenlos und was bietet Pro?",
-        answer:
-          "Der Kern-Tracker ist kostenlos. Pro ergänzt erweiterte Analyse- und Planungsfunktionen. Aktuelle Details stehen auf der Preisseite.",
       },
     ],
     finalTitle: "Möchtest du dein Portfolio klarer sehen?",
@@ -368,34 +282,6 @@ const COPY: Record<Lang, LandingCopy> = {
         body: "La falta de precios, divisas o conciliación de splits puede impedir mostrar un gráfico.",
       },
     ],
-    faqTitle: "Preguntas frecuentes",
-    faq: [
-      {
-        question: "¿Puedo probar Capispot antes de crear una cuenta?",
-        answer:
-          "Sí. Abre la cartera de ejemplo para explorar la interfaz sin añadir tus propios datos.",
-      },
-      {
-        question: "¿Puedo importar operaciones de mi bróker?",
-        answer:
-          "Sí. Importa un CSV compatible y revisa las operaciones antes de añadirlas, o regístralas manualmente.",
-      },
-      {
-        question: "¿De dónde proceden los precios y los tipos de cambio?",
-        answer:
-          "Las cotizaciones y los precios históricos utilizan Yahoo Finance. La conversión histórica usa tipos fechados del proveedor; los datos ausentes no se sustituyen por estimaciones fijas.",
-      },
-      {
-        question: "¿Capispot ofrece asesoramiento de inversión?",
-        answer:
-          "No. Capispot es una herramienta de seguimiento y análisis, no una recomendación de compra o venta. Invertir conlleva riesgos.",
-      },
-      {
-        question: "¿Qué incluye el plan gratuito y qué añade Pro?",
-        answer:
-          "El seguimiento básico de cartera es gratuito. Pro añade análisis avanzado y herramientas de planificación. Consulta precios para ver los detalles actuales.",
-      },
-    ],
     finalTitle: "¿Listo para ver tu cartera con más claridad?",
     finalBody: "Crea una cuenta gratis o explora primero la cartera de ejemplo.",
     signup: "Crear cuenta gratis",
@@ -462,34 +348,6 @@ const COPY: Record<Lang, LandingCopy> = {
         body: "Dati mancanti, cambi o split non riconciliati possono rendere indisponibile un grafico.",
       },
     ],
-    faqTitle: "Domande frequenti",
-    faq: [
-      {
-        question: "Posso provare Capispot prima di creare un account?",
-        answer:
-          "Sì. Apri il portafoglio di esempio per esplorare l'interfaccia senza aggiungere i tuoi dati.",
-      },
-      {
-        question: "Posso importare le operazioni dal mio broker?",
-        answer:
-          "Sì. Importa un CSV supportato e controlla le operazioni prima di aggiungerle, oppure inseriscile manualmente.",
-      },
-      {
-        question: "Da dove provengono prezzi e cambi?",
-        answer:
-          "Le quotazioni e i prezzi storici utilizzano Yahoo Finance. La conversione storica usa cambi datati del fornitore; i dati mancanti non sono sostituiti con stime fisse.",
-      },
-      {
-        question: "Capispot offre consulenza sugli investimenti?",
-        answer:
-          "No. Capispot è uno strumento di monitoraggio e analisi, non una raccomandazione di acquisto o vendita. Investire comporta rischi.",
-      },
-      {
-        question: "Cosa è incluso nel piano gratuito e in Pro?",
-        answer:
-          "Il tracker di base è gratuito. Pro aggiunge analisi avanzate e strumenti di pianificazione. Consulta i prezzi per i dettagli aggiornati.",
-      },
-    ],
     finalTitle: "Pronto a vedere il tuo portafoglio più chiaramente?",
     finalBody: "Crea un account gratuito o visita prima il portafoglio di esempio.",
     signup: "Crea un account gratuito",
@@ -503,7 +361,7 @@ export function LandingSections() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
   return (
-    <div className="space-y-10 lg:col-span-3">
+    <div className="space-y-8 lg:col-span-3">
       <section aria-labelledby="landing-steps" className="space-y-2">
         <div className="text-center">
           <h2 id="landing-steps" className="font-display text-2xl font-bold">
@@ -511,20 +369,26 @@ export function LandingSections() {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
         </div>
-        <ol className="grid gap-3 md:grid-cols-3">
+        <ol className="grid gap-2.5 md:grid-cols-3">
           {c.steps.map((step, index) => {
             const Icon = STEP_ICONS[index] ?? Target;
             return (
               <li key={step.title}>
-                <Card className="h-full p-5">
-                  <span className="mb-3 grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Card className="flex h-full items-start gap-3 p-3.5 sm:p-4">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                     <Icon size={18} aria-hidden />
                   </span>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {index + 1}
-                  </p>
-                  <h3 className="mt-1 font-display font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {String(index + 1).padStart(2, "0")}
+                      </p>
+                      <h3 className="font-display text-sm font-semibold">{step.title}</h3>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {step.body}
+                    </p>
+                  </div>
                 </Card>
               </li>
             );
@@ -538,13 +402,13 @@ export function LandingSections() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {c.features.map((feature) => (
-            <Card key={feature.title} className="p-5">
+            <Card key={feature.title} className="border-border/60 bg-card/60 p-4 sm:p-5">
               <h3 className="font-display font-semibold">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
               <Link
                 to={feature.href}
                 {...(feature.hash ? { hash: feature.hash } : {})}
-                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
               >
                 {feature.link}
                 <ArrowRight size={14} aria-hidden />
@@ -554,11 +418,8 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section
-        aria-labelledby="landing-trust"
-        className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/[0.05] via-card/70 to-chart-2/[0.06] p-5 sm:p-7"
-      >
-        <div className="mb-4 flex items-center justify-center gap-2">
+      <section aria-labelledby="landing-trust" className="space-y-3">
+        <div className="flex items-center justify-center gap-2">
           <LockKeyhole className="text-primary" size={18} aria-hidden />
           <h2 id="landing-trust" className="font-display text-center text-xl font-bold">
             {c.trustTitle}
@@ -566,16 +427,13 @@ export function LandingSections() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {c.trust.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-border/70 bg-background/50 p-4"
-            >
+            <div key={item.title} className="border-l-2 border-primary/30 py-1 pl-3">
               <h3 className="text-sm font-semibold">{item.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center">
+        <p className="text-center">
           <Link
             to="/features"
             hash="methodology"
@@ -586,36 +444,10 @@ export function LandingSections() {
         </p>
       </section>
 
-      <section aria-labelledby="landing-faq" className="mx-auto w-full max-w-3xl">
-        <h2 id="landing-faq" className="font-display mb-3 text-center text-2xl font-bold">
-          {c.faqTitle}
-        </h2>
-        <div className="divide-y divide-border rounded-2xl border border-border bg-card px-4">
-          {c.faq.map((item, index) => (
-            <details key={item.question} className="group py-4" open={index === 0}>
-              <summary className="cursor-pointer list-none pr-6 font-semibold marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <span className="flex items-center justify-between gap-3">
-                  {item.question}
-                  <span
-                    className="text-lg text-primary transition-transform group-open:rotate-45"
-                    aria-hidden
-                  >
-                    +
-                  </span>
-                </span>
-              </summary>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                {item.answer}
-              </p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-primary/20 bg-primary/[0.045] px-5 py-8 text-center sm:px-8">
-        <h2 className="font-display text-balance text-2xl font-bold">{c.finalTitle}</h2>
+      <section className="border-t border-border pt-5 text-center">
+        <h2 className="font-display text-balance text-xl font-bold sm:text-2xl">{c.finalTitle}</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{c.finalBody}</p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/auth"
             className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
