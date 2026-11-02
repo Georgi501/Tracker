@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Users } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { ProBadge } from "@/components/ProFeatures";
+import { WallTeaser } from "@/components/WallTeaser";
 import { planCopy } from "@/lib/plan-i18n";
 import { proCopy } from "@/lib/pro-i18n";
 import type { Lang } from "@/lib/i18n";
@@ -18,6 +19,7 @@ export function CommunityUpsell({ lang }: { lang: Lang }) {
         <ProBadge />
       </div>
       <p className="text-sm text-muted-foreground">{proCopy[lang].communityDesc}</p>
+      <WallTeaser />
       <p className="text-xs text-muted-foreground">{planCopy[lang].freeRemains}</p>
       <Link
         to="/pricing"

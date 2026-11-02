@@ -340,6 +340,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/advisor", label: advisorCopy[p.lang].advisor },
     { to: "/brokers", label: p.t("brokers") },
     { to: "/community", label: shellCopy.community },
+    {
+      to: "/wall",
+      label: { bg: "Стена", en: "Wall", de: "Pinnwand", es: "Muro", it: "Bacheca" }[p.lang],
+    },
     { to: "/demo", label: shellCopy.demo },
     { to: "/pricing", label: p.t("pricing") },
   ];
@@ -358,7 +362,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     },
     {
       label: shellCopy.exploreGroup,
-      links: nav.filter((item) => ["/community", "/demo", "/pricing"].includes(item.to)),
+      links: nav.filter(
+        (item) =>
+          ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
+          (item.to !== "/wall" || p.isPro),
+      ),
     },
   ];
   const mobileMoreGroups = [
@@ -384,7 +392,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       label: shellCopy.exploreGroup,
       links: [
-        ...nav.filter((item) => ["/community", "/demo", "/pricing"].includes(item.to)),
+        ...nav.filter(
+          (item) =>
+            ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
+            (item.to !== "/wall" || p.isPro),
+        ),
         { to: "/profile", label: shellCopy.profile },
         { to: "/account", label: shellCopy.account },
       ],
