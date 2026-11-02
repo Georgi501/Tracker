@@ -989,7 +989,17 @@
       }
 
       body.embedded .player-layout {
+        min-height: 640px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
         background: var(--app-background, #101722);
+      }
+
+      body.embedded .screen-stage {
+        padding: 18px;
+      }
+
+      body.embedded .screen-frame {
+        width: min(100%, 540px);
       }
 
       body.embedded .screen-stage,

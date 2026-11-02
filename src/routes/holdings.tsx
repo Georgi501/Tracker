@@ -681,7 +681,7 @@ function Holdings() {
               <button
                 key={s}
                 onClick={() => setQ(s)}
-                className="press rounded-full border border-border px-3 py-1.5 font-semibold hover:border-primary hover:text-primary"
+                className="press min-h-9 rounded-full border border-border px-3 py-1.5 font-semibold hover:border-primary hover:text-primary"
               >
                 {s}
               </button>
@@ -723,7 +723,7 @@ function Holdings() {
             <button
               key={t}
               onClick={() => setType(t)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${type === t ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+              className={`min-h-8 rounded-full px-3 py-1 text-xs font-semibold ${type === t ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
             >
               {t === "all" ? p.t("all") : p.t(t)}
             </button>

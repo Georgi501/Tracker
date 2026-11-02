@@ -1,3 +1,4 @@
+import { CompoundCalculator } from "@/components/CompoundCalculator";
 import { SnapshotCard } from "@/components/SnapshotCard";
 import { ScenarioStudio } from "@/components/ScenarioStudio";
 import { AllocationTargetsCard } from "@/components/AllocationTargetsCard";
@@ -272,6 +273,7 @@ function Tools() {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <h1 className="font-display text-2xl font-bold lg:col-span-2">{c.tools}</h1>
+      <CompoundCalculator />
       <ProGate
         title={proCopy[p.lang].fire}
         desc={proCopy[p.lang].fireDesc}

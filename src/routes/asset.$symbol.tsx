@@ -30,7 +30,7 @@ import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
 export const Route = createFileRoute("/asset/$symbol")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.symbol} — position details | Capispot` },
+      { title: `${params.symbol} — quote, charts and position details | Capispot` },
       {
         name: "description",
         content: `Your ${params.symbol} position: P&L, dividends, transaction history, company overview and investing journal.`,
@@ -50,6 +50,7 @@ export const Route = createFileRoute("/asset/$symbol")({
 const C = {
   en: {
     back: "Holdings",
+    backMarkets: "Markets",
     qty: "Quantity",
     avg: "Average cost",
     value: "Value",
@@ -92,6 +93,7 @@ const C = {
   },
   bg: {
     back: "Позиции",
+    backMarkets: "Пазари",
     qty: "Количество",
     avg: "Средна цена",
     value: "Стойност",
@@ -134,6 +136,7 @@ const C = {
   },
   de: {
     back: "Positionen",
+    backMarkets: "Märkte",
     qty: "Menge",
     avg: "Durchschnittskosten",
     value: "Wert",
@@ -176,6 +179,7 @@ const C = {
   },
   es: {
     back: "Posiciones",
+    backMarkets: "Mercados",
     qty: "Cantidad",
     avg: "Coste medio",
     value: "Valor",
@@ -218,6 +222,7 @@ const C = {
   },
   it: {
     back: "Posizioni",
+    backMarkets: "Mercati",
     qty: "Quantità",
     avg: "Costo medio",
     value: "Valore",
@@ -399,11 +404,11 @@ function AssetPage() {
   return (
     <div className="page-enter space-y-5">
       <Link
-        to="/holdings"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        to={h ? "/holdings" : "/markets"}
+        className="inline-flex min-h-9 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        {c.back}
+        {h ? c.back : c.backMarkets}
       </Link>
       <div id="overview" className="scroll-mt-24">
         {type ? (

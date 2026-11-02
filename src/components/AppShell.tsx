@@ -751,12 +751,27 @@ export function AppShell({ children }: { children: ReactNode }) {
         ) : !p.authReady || (p.user && (!p.accessReady || !p.portfolioReady)) ? (
           !p.dataError && (
             <div role="status" className="mx-auto max-w-xl py-16 text-center">
-              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-              <p className="text-sm text-muted-foreground">
-                {p.authReady
-                  ? DATA_ERROR_COPY[p.lang].dataLoading
-                  : DATA_ERROR_COPY[p.lang].sessionLoading}
-              </p>
+              {p.authReady ? (
+                <>
+                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                  <p className="text-sm text-muted-foreground">
+                    {DATA_ERROR_COPY[p.lang].dataLoading}
+                  </p>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-4" aria-hidden>
+                  <div className="mx-auto h-8 w-2/3 rounded-lg bg-secondary" />
+                  <div className="h-40 rounded-2xl bg-secondary/70" />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="h-20 rounded-2xl bg-secondary/60" />
+                    <div className="h-20 rounded-2xl bg-secondary/60" />
+                    <div className="h-20 rounded-2xl bg-secondary/60" />
+                  </div>
+                </div>
+              )}
+              {!p.authReady && (
+                <span className="sr-only">{DATA_ERROR_COPY[p.lang].sessionLoading}</span>
+              )}
             </div>
           )
         ) : (

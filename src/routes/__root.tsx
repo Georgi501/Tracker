@@ -174,8 +174,10 @@ const ERROR_COPY: Record<
   },
 };
 
+const canonicalUrl = (pathname = "/") => `https://capispot.com${pathname.replace(/\/+$/, "")}`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -205,6 +207,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap",
+      },
+      {
+        rel: "canonical",
+        href: canonicalUrl(matches.at(-1)?.pathname),
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "manifest", href: "/manifest.webmanifest" },

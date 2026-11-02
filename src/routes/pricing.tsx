@@ -185,6 +185,9 @@ function Pricing() {
             <Feature>{p.t("freeF1")}</Feature>
             <Feature>{p.t("freeF2")}</Feature>
             <Feature>{p.t("freeF3")}</Feature>
+            {[4, 5, 6].map((i) => (
+              <Feature key={i}>{planCopy[p.lang].groups[i]?.free ?? ""}</Feature>
+            ))}
           </ul>
           <div className="mt-6">
             {p.user ? (
@@ -213,8 +216,6 @@ function Pricing() {
           <ul className="space-y-2">
             <Feature>{p.t("proF1")}</Feature>
             <Feature>{p.t("proF2")}</Feature>
-            <Feature>{p.t("proF3")}</Feature>
-            <Feature>{pc.directBrokerSync}</Feature>
             <Feature>{pc.heatmap}</Feature>
             <Feature>{pc.income}</Feature>
             <Feature>{pc.fire}</Feature>

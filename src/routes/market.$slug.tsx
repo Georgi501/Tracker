@@ -21,31 +21,41 @@ export const Route = createFileRoute("/market/$slug")({
 
 const COPY: Record<
   Lang,
-  { back: string; notFound: string; category: Record<"index" | "commodity" | "fx", string> }
+  {
+    back: string;
+    notFound: string;
+    browse: string;
+    category: Record<"index" | "commodity" | "fx", string>;
+  }
 > = {
   en: {
     back: "Dashboard",
     notFound: "This market instrument is not available.",
+    browse: "Browse available markets",
     category: { index: "Index", commodity: "Commodity", fx: "Currency pair" },
   },
   bg: {
     back: "Табло",
     notFound: "Този пазарен инструмент не е наличен.",
+    browse: "Разгледай наличните пазари",
     category: { index: "Индекс", commodity: "Суровина", fx: "Валутна двойка" },
   },
   de: {
     back: "Dashboard",
     notFound: "Dieses Marktinstrument ist nicht verfügbar.",
+    browse: "Verfügbare Märkte ansehen",
     category: { index: "Index", commodity: "Rohstoff", fx: "Währungspaar" },
   },
   es: {
     back: "Panel",
     notFound: "Este instrumento de mercado no está disponible.",
+    browse: "Ver mercados disponibles",
     category: { index: "Índice", commodity: "Materia prima", fx: "Par de divisas" },
   },
   it: {
     back: "Dashboard",
     notFound: "Questo strumento di mercato non è disponibile.",
+    browse: "Vedi i mercati disponibili",
     category: { index: "Indice", commodity: "Materia prima", fx: "Coppia valutaria" },
   },
 };
@@ -73,10 +83,22 @@ function MarketInstrumentPage() {
           kindLabel={copy.category[instrument.category]}
         />
       ) : (
-        <Card>
-          <p role="status" className="text-sm text-muted-foreground">
-            {copy.notFound}
-          </p>
+        <Card className="space-y-4">
+          <h1 className="font-display text-xl font-bold">{copy.notFound}</h1>
+          <p className="text-sm text-muted-foreground">{copy.browse}</p>
+          <ul className="flex flex-wrap gap-2">
+            {MARKET_TICKER_INSTRUMENTS.map((item) => (
+              <li key={item.slug}>
+                <Link
+                  to="/market/$slug"
+                  params={{ slug: item.slug }}
+                  className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-sm font-semibold hover:bg-secondary"
+                >
+                  {item.label[lang]}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Card>
       )}
     </div>
