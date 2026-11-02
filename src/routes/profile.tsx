@@ -7,7 +7,14 @@ import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
 import { usePortfolio } from "@/lib/store";
 import { CommunityUpsell } from "@/components/CommunityGate";
-import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
+import {
+  avatarUrls,
+  cc,
+  levelLabel,
+  PROFILE_COLS,
+  SHARE_LEVELS,
+  type MemberProfile,
+} from "@/lib/community";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -57,6 +64,7 @@ function ProfilePage() {
         avatar_path: null,
         is_public: false,
         share_portfolio: false,
+        share_level: "weights",
       }) as MemberProfile;
       const avatar = prof.avatar_path
         ? (await avatarUrls([prof.avatar_path]))[prof.avatar_path]
@@ -129,6 +137,7 @@ function ProfilePage() {
       avatar_path: f.avatar_path,
       is_public: f.is_public,
       share_portfolio: f.is_public && f.share_portfolio,
+      share_level: f.share_level,
     });
     if (error) toast.error(error.message);
     else toast.success(c.saved);
@@ -201,6 +210,24 @@ function ProfilePage() {
           />
           {c.share}
         </label>
+        {f.is_public && f.share_portfolio && (
+          <fieldset className="space-y-2 rounded-2xl border border-border p-3 text-sm">
+            <legend className="px-1 font-semibold">{c.shareLevel}</legend>
+            {SHARE_LEVELS.map((lv) => (
+              <label key={lv} className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="share-level"
+                  className="mt-1"
+                  checked={f.share_level === lv}
+                  onChange={() => setF({ ...f, share_level: lv })}
+                />
+                {levelLabel(c, lv)}
+              </label>
+            ))}
+            <p className="text-xs text-muted-foreground">{c.lvHint}</p>
+          </fieldset>
+        )}
         <button
           onClick={() => void save()}
           className="press w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground"

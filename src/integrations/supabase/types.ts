@@ -401,6 +401,7 @@ export type Database = {
           lang: string;
           referral_code: string;
           share_portfolio: boolean;
+          share_level: string;
         };
         Insert: {
           avatar_path?: string | null;
@@ -414,6 +415,7 @@ export type Database = {
           lang?: string;
           referral_code?: string;
           share_portfolio?: boolean;
+          share_level?: string;
         };
         Update: {
           avatar_path?: string | null;
@@ -427,6 +429,7 @@ export type Database = {
           lang?: string;
           referral_code?: string;
           share_portfolio?: boolean;
+          share_level?: string;
         };
         Relationships: [];
       };
@@ -674,7 +677,9 @@ export type Database = {
           name: string;
           symbol: string;
           type: string;
-          weight: number;
+          weight: number | null;
+          quantity: number | null;
+          cost_usd: number | null;
         }[];
       };
     };

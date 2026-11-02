@@ -178,7 +178,7 @@ function Pricing() {
         ))}
       </div>
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <Card className="hover-lift-card p-7">
+        <Card className="hover-lift-card cq-card p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("free")}</h2>
           <p className="font-display my-3 text-4xl font-bold">€0</p>
           <ul className="space-y-2">
@@ -204,7 +204,7 @@ function Pricing() {
             )}
           </div>
         </Card>
-        <Card className="hover-lift-card border-primary p-7">
+        <Card className="hover-lift-card cq-card border-primary p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("pro")}</h2>
           <p className="font-display my-3 text-4xl font-bold">
             {yearly ? "€49.99" : "€4.99"}

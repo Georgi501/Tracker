@@ -988,3 +988,117 @@ main summary {
 main a.text-primary:not([class*="rounded"]) {
   padding-block: 0.4rem;
 }
+
+/* Modern platform defaults (progressive enhancement) */
+html {
+  accent-color: var(--color-primary);
+  scroll-padding-top: 6rem;
+  scrollbar-gutter: stable;
+  interpolate-size: allow-keywords;
+}
+body {
+  overscroll-behavior-y: none;
+}
+main p,
+main li {
+  text-wrap: pretty;
+}
+main textarea {
+  field-sizing: content;
+  min-height: 5rem;
+  max-height: 24rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+  @supports (animation-timeline: view()) {
+    main .hover-lift-card {
+      animation: scroll-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.25s ease,
+      content-visibility 0.25s allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
+@keyframes scroll-reveal {
+  from {
+    opacity: 0;
+    translate: 0 1.25rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Entry animation for the custom add-transaction modal */
+.modal-backdrop,
+.modal-panel {
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  @starting-style {
+    opacity: 0;
+  }
+}
+.modal-panel {
+  @starting-style {
+    transform: translateY(0.75rem) scale(0.97);
+  }
+}
+
+/* Cards adapt to the space they are placed in, not just the viewport */
+.cq-card {
+  container-type: inline-size;
+}
+@container (max-width: 22rem) {
+  .cq-card .font-display.text-4xl {
+    font-size: 1.875rem;
+  }
+}
+
+/* Form groups react to the state of the field inside them */
+main label:has(:user-invalid) {
+  color: var(--color-destructive);
+}
+main label:has(:user-invalid) :is(input, select, textarea) {
+  border-color: var(--color-destructive);
+}
+main label:has(:focus-visible) {
+  color: var(--color-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .modal-panel {
+    transition: none;
+  }
+}
+
+/* Chat */
+.chat-input {
+  field-sizing: fixed;
+  min-height: 2.25rem;
+}
+@keyframes chat-bubble-in {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+    scale: 0.97;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chat-bubble-in {
+    animation: chat-bubble-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}

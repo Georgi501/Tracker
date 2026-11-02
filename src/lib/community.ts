@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type ShareLevel = "assets" | "weights" | "shares" | "amounts";
+export const SHARE_LEVELS: ShareLevel[] = ["assets", "weights", "shares", "amounts"];
+
 export interface MemberProfile {
   id: string;
   display_name: string | null;
@@ -8,9 +11,10 @@ export interface MemberProfile {
   avatar_path: string | null;
   is_public: boolean;
   share_portfolio: boolean;
+  share_level: ShareLevel;
 }
 export const PROFILE_COLS =
-  "id, display_name, bio, investing_style, avatar_path, is_public, share_portfolio";
+  "id, display_name, bio, investing_style, avatar_path, is_public, share_portfolio, share_level";
 
 /** Avatars live in a private bucket; members get short-lived signed links. */
 export async function avatarUrls(paths: (string | null)[]) {
@@ -43,7 +47,17 @@ export const communityCopy = {
     stylePh: "напр. дивиденти, дългосрочно, ETF",
     photo: "Смени снимката",
     public: "Покажи профила ми на другите членове",
-    share: "Покажи състава на портфолиото ми (само проценти, без суми)",
+    share: "Покажи състава на портфолиото ми на другите членове",
+    shareLevel: "Какво да се вижда",
+    lvAssets: "Само активите (без числа)",
+    lvWeights: "Активи + проценти",
+    lvShares: "Активи + проценти + брой дялове",
+    lvAmounts: "Всичко, включително парични суми (себестойност в USD)",
+    lvHint:
+      "Можеш да го смениш по всяко време. Публикациите в стената пазят нивото от момента на публикуване.",
+    wall: "Стена",
+    qty: "Дялове",
+    cost: "Себестойност",
     saved: "Запазено",
     members: "Членове",
     none: "Още няма публични профили.",
@@ -71,7 +85,17 @@ export const communityCopy = {
     stylePh: "e.g. dividends, long-term, ETFs",
     photo: "Change photo",
     public: "Show my profile to other members",
-    share: "Show my portfolio composition (percentages only, no amounts)",
+    share: "Show my portfolio composition to other members",
+    shareLevel: "What others can see",
+    lvAssets: "Assets only (no numbers)",
+    lvWeights: "Assets + percentages",
+    lvShares: "Assets + percentages + number of shares",
+    lvAmounts: "Everything, including money amounts (cost basis in USD)",
+    lvHint:
+      "You can change this any time. Wall posts keep the level chosen when they were published.",
+    wall: "Wall",
+    qty: "Shares",
+    cost: "Cost basis",
     saved: "Saved",
     members: "Members",
     none: "No public profiles yet.",
@@ -90,3 +114,5 @@ export const communityCopy = {
   },
 };
 export const cc = (lang: string) => (lang === "bg" ? communityCopy.bg : communityCopy.en);
+export const levelLabel = (c: ReturnType<typeof cc>, lv: ShareLevel) =>
+  ({ assets: c.lvAssets, weights: c.lvWeights, shares: c.lvShares, amounts: c.lvAmounts })[lv];

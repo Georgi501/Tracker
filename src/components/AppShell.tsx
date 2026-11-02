@@ -7,10 +7,8 @@ import { europeCopy } from "@/lib/europe-i18n";
 import { isLang, languageLocale, languages, type Lang } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
 import { feedbackCopy } from "@/lib/feedback-i18n";
-import { FeedbackDialog } from "./FeedbackDialog";
 import { HeaderSearch } from "./HeaderSearch";
 import { CommandMenu } from "./CommandMenu";
-import { AuthForm } from "./AuthForm";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -44,18 +42,42 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import { useOwnAvatar } from "@/lib/own-avatar";
 import type { Currency } from "@/lib/portfolio";
-import { AddTransactionDialog } from "./AddTransactionDialog";
 import { AnalyticsConsent } from "./AnalyticsConsent";
+import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { PriceAlertMonitor } from "./PriceAlertMonitor";
 import { PortfolioReminderMonitor } from "./PortfolioReminderMonitor";
 import { AllocationDriftMonitor } from "./AllocationDriftMonitor";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+
+const FeedbackDialog = lazy(() =>
+  import("./FeedbackDialog").then((m) => ({ default: m.FeedbackDialog })),
+);
+const AuthForm = lazy(() => import("./AuthForm").then((m) => ({ default: m.AuthForm })));
+const AddTransactionDialog = lazy(() =>
+  import("./AddTransactionDialog").then((m) => ({ default: m.AddTransactionDialog })),
+);
+
+// Mounts rarely used dialogs on first use so their code stays out of the initial bundle.
+function useEverOpened(open: boolean) {
+  const [seen, setSeen] = useState(open);
+  if (open && !seen) setSeen(true);
+  return seen;
+}
 
 const SHELL_COPY: Record<
   Lang,
@@ -255,6 +277,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const txEverOpened = useEverOpened(open);
+  const feedbackEverOpened = useEverOpened(feedbackOpen);
   const [navHidden, setNavHidden] = useState(false);
   const ownAvatar = useOwnAvatar(p.user?.id);
   useEffect(() => {
@@ -964,14 +988,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>
-      <AddTransactionDialog open={open} onClose={() => setOpen(false)} />
-      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <Suspense fallback={null}>
+        {txEverOpened && <AddTransactionDialog open={open} onClose={() => setOpen(false)} />}
+        {feedbackEverOpened && (
+          <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+        )}
+      </Suspense>
       <Dialog open={authOpen} onOpenChange={setAuthOpen}>
         <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border-border bg-background p-0 sm:max-w-md">
           <DialogTitle className="sr-only">{p.t("signIn")}</DialogTitle>
-          <AuthForm onSignedIn={() => setAuthOpen(false)} />
+          <Suspense fallback={<div className="h-72" aria-hidden />}>
+            <AuthForm onSignedIn={() => setAuthOpen(false)} />
+          </Suspense>
         </DialogContent>
       </Dialog>
+      <KeyboardShortcuts onAddTx={openTransactionDialog} />
       <AnalyticsConsent />
       <PriceAlertMonitor />
       <PortfolioReminderMonitor />

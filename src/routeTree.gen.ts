@@ -34,6 +34,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as WallRouteImport } from './routes/wall'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
 import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
@@ -176,6 +177,11 @@ const ToolsRoute = ToolsRouteImport.update({
   path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WallRoute = WallRouteImport.update({
+  id: '/wall',
+  path: '/wall',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchlistRoute = WatchlistRouteImport.update({
   id: '/watchlist',
   path: '/watchlist',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
   '/tools': typeof ToolsRoute
+  '/wall': typeof WallRoute
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
@@ -459,6 +469,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
@@ -502,6 +513,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/timeline'
     | '/tools'
+    | '/wall'
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
@@ -546,6 +558,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TimelineRoute: typeof TimelineRoute
   ToolsRoute: typeof ToolsRoute
+  WallRoute: typeof WallRoute
   WatchlistRoute: typeof WatchlistRoute
   AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
   ApiAdminRoute: typeof ApiAdminRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wall': {
+      id: '/wall'
+      path: '/wall'
+      fullPath: '/wall'
+      preLoaderRoute: typeof WallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watchlist': {
       id: '/watchlist'
       path: '/watchlist'
@@ -893,6 +913,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TimelineRoute: TimelineRoute,
   ToolsRoute: ToolsRoute,
+  WallRoute: WallRoute,
   WatchlistRoute: WatchlistRoute,
   AdvisorThreadIdRoute: AdvisorThreadIdRoute,
   ApiAdminRoute: ApiAdminRoute,

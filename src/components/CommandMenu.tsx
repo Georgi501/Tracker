@@ -40,6 +40,15 @@ export function CommandMenu({ onAddTx }: { onAddTx: () => void }) {
     ["/brokers", p.t("brokers")],
     ["/demo", bg ? "Примерно портфолио" : "Sample portfolio"],
     ["/pricing", p.t("pricing")],
+    ["/wall", bg ? "Стена на общността" : "Community wall"],
+    ["/community", bg ? "Общност" : "Community"],
+    ["/messages", bg ? "Съобщения" : "Messages"],
+    ["/alerts", bg ? "Ценови известия" : "Price alerts"],
+    ["/earnings", bg ? "Отчети" : "Earnings"],
+    ["/timeline", bg ? "Хронология" : "Timeline"],
+    ["/compare", bg ? "Сравнение" : "Compare"],
+    ["/advisor", "AI Advisor"],
+    ["/profile", bg ? "Моят профил" : "My profile"],
   ] as const;
   const go = (fn: () => void) => {
     setOpen(false);

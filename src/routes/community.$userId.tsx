@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
+import { PortfolioSnapshot, type SnapshotRow } from "@/components/PortfolioSnapshot";
 import { ChatThread } from "@/components/ChatThread";
 import { usePortfolio } from "@/lib/store";
 import { CommunityUpsell } from "@/components/CommunityGate";
@@ -23,20 +24,13 @@ export const Route = createFileRoute("/community/$userId")({
   component: Member,
 });
 
-interface Weight {
-  symbol: string;
-  name: string;
-  type: string;
-  weight: number;
-}
-
 function Member() {
   const { userId } = Route.useParams();
   const p = usePortfolio();
   const c = cc(p.lang);
   const [m, setM] = useState<MemberProfile | null | undefined>();
   const [url, setUrl] = useState<string>();
-  const [weights, setWeights] = useState<Weight[]>([]);
+  const [weights, setWeights] = useState<SnapshotRow[]>([]);
   useEffect(() => {
     if (!p.user) return;
     void supabase
@@ -50,7 +44,7 @@ function Member() {
         if (prof?.avatar_path) setUrl((await avatarUrls([prof.avatar_path]))[prof.avatar_path]);
         if (prof?.share_portfolio) {
           const r = await supabase.rpc("public_portfolio", { _user_id: userId });
-          setWeights((r.data ?? []) as Weight[]);
+          setWeights((r.data ?? []) as SnapshotRow[]);
         }
       });
   }, [p.user, userId]);
@@ -93,24 +87,7 @@ function Member() {
         {!m.share_portfolio || !weights.length ? (
           <p className="text-sm text-muted-foreground">{c.private}</p>
         ) : (
-          <div className="space-y-2">
-            {weights.map((w) => (
-              <div key={w.symbol}>
-                <div className="flex justify-between text-sm">
-                  <span>
-                    <b>{w.symbol}</b> <span className="text-muted-foreground">{w.name}</span>
-                  </span>
-                  <b>{Number(w.weight).toFixed(1)}%</b>
-                </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className="bg-brand-gradient h-full rounded-full"
-                    style={{ width: `${Math.min(100, Number(w.weight))}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          <PortfolioSnapshot rows={weights} lang={p.lang} />
         )}
       </Card>
       {m.id !== p.user.id && (

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
 import { usePortfolio } from "@/lib/store";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { CommunityUpsell } from "@/components/CommunityGate";
 import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
 
@@ -21,16 +22,28 @@ export const Route = createFileRoute("/messages")({
   component: Messages,
 });
 
+const YOU: Record<string, string> = { en: "You", bg: "Ти", de: "Du", es: "Tú", it: "Tu" };
+
+function formatWhen(iso: string, lang: Lang) {
+  const d = new Date(iso);
+  const locale = languageLocale(lang);
+  return d.toDateString() === new Date().toDateString()
+    ? d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
+
 interface Conv {
   other: string;
   last: string;
   at: string;
+  mine: boolean;
   unread: number;
 }
 
 function Messages() {
   const p = usePortfolio();
   const c = cc(p.lang);
+  const youLabel = YOU[p.lang] ?? "You";
   const [convs, setConvs] = useState<Conv[] | null>(null);
   const [people, setPeople] = useState<Record<string, MemberProfile>>({});
   const [urls, setUrls] = useState<Record<string, string>>({});
@@ -55,7 +68,13 @@ function Messages() {
       const map = new Map<string, Conv>();
       for (const m of data ?? []) {
         const other = m.sender_id === me ? m.recipient_id : m.sender_id;
-        const cv = map.get(other) ?? { other, last: m.body, at: m.created_at, unread: 0 };
+        const cv = map.get(other) ?? {
+          other,
+          last: m.body,
+          at: m.created_at,
+          mine: m.sender_id === me,
+          unread: 0,
+        };
         if (m.recipient_id === me && !m.read_at) cv.unread++;
         map.set(other, cv);
       }
@@ -135,7 +154,7 @@ function Messages() {
                 key={cv.other}
                 to="/community/$userId"
                 params={{ userId: cv.other }}
-                className="card-interactive flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+                className={`card-interactive flex items-center gap-3 rounded-2xl border bg-card p-3 hover:border-primary/40 ${cv.unread > 0 ? "border-primary/50" : "border-border"}`}
               >
                 <Avatar
                   url={who?.avatar_path ? urls[who.avatar_path] : undefined}
@@ -143,7 +162,10 @@ function Messages() {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{who?.display_name || "—"}</p>
-                  <p className="truncate text-xs text-muted-foreground">{cv.last}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {cv.mine && <span className="font-medium">{youLabel}: </span>}
+                    {cv.last}
+                  </p>
                 </div>
                 {cv.unread > 0 && (
                   <span className="bg-brand-gradient rounded-full px-2 py-0.5 text-xs font-bold text-primary-foreground">

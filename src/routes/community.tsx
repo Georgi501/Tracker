@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useMatch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MessageCircle, UserRound } from "lucide-react";
+import { MessageCircle, Newspaper, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
@@ -87,6 +87,13 @@ function Directory() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold">{c.community}</h1>
         <div className="flex gap-2">
+          <Link
+            to="/wall"
+            className="press flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary"
+          >
+            <Newspaper size={16} />
+            {c.wall}
+          </Link>
           <Link
             to="/messages"
             className="press flex items-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-semibold"

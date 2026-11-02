@@ -278,13 +278,13 @@ export function AddTransactionDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md space-y-4 rounded-2xl border border-border bg-popover p-6 shadow-2xl"
+        className="modal-panel w-full max-w-md space-y-4 rounded-2xl border border-border bg-popover p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">{p.t("addTx")}</h2>
