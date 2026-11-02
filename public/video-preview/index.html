@@ -376,13 +376,60 @@
         object-fit: cover;
         object-position: center;
         transition:
-          opacity 260ms ease,
-          transform 6s cubic-bezier(0.2, 0.65, 0.3, 1);
+          opacity 180ms ease,
+          transform 3.6s cubic-bezier(0.2, 0.65, 0.3, 1);
       }
 
       .screen-frame img.is-changing {
         opacity: 0.28;
         transform: scale(0.985);
+      }
+
+      .screen-frame .big-play {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        left: 50%;
+        display: grid;
+        width: 72px;
+        height: 72px;
+        place-items: center;
+        padding: 0 0 0 4px;
+        border: 1px solid rgb(255 255 255 / 48%);
+        border-radius: 50%;
+        background:
+          linear-gradient(145deg, rgb(255 255 255 / 25%), transparent 48%),
+          linear-gradient(150deg, rgb(39 86 76 / 56%), rgb(8 19 23 / 66%));
+        color: #fff;
+        cursor: pointer;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.94);
+        backdrop-filter: blur(12px) saturate(1.5);
+        box-shadow:
+          inset 0 2px 3px rgb(255 255 255 / 38%),
+          inset 0 -8px 12px rgb(0 0 0 / 24%),
+          0 10px 24px rgb(0 0 0 / 42%),
+          0 0 0 7px rgb(255 255 255 / 12%);
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease,
+          background 180ms ease;
+      }
+
+      .screen-frame:hover .big-play,
+      .screen-frame:focus-within .big-play,
+      .screen-frame .big-play:focus-visible {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .screen-frame .big-play:hover {
+        background: rgb(23 67 52 / 94%);
+        transform: translate(-50%, -50%) scale(1.07);
+      }
+
+      .player[data-playing="true"] .screen-frame .big-play {
+        pointer-events: none;
+        opacity: 0;
       }
 
       .player[data-playing="true"] .screen-frame img {
@@ -523,10 +570,26 @@
 
       .player-progress {
         position: relative;
+        display: block;
         height: 4px;
         flex: 1;
+        padding: 0;
+        border: 0;
         overflow: hidden;
         border-radius: 99px;
+        background: rgb(255 255 255 / 17%);
+        cursor: pointer;
+      }
+
+      .player-controls .player-progress {
+        width: auto;
+        height: 4px;
+        border: 0;
+        border-radius: 99px;
+        background: rgb(255 255 255 / 17%);
+      }
+
+      .player-controls .player-progress:hover {
         background: rgb(255 255 255 / 17%);
       }
 
@@ -538,6 +601,11 @@
         background: linear-gradient(90deg, #37bda0, #8ee6bd);
         box-shadow: 0 0 14px rgb(114 223 181 / 45%);
         transition: width 180ms linear;
+      }
+
+      .player-progress:focus-visible {
+        outline: 2px solid var(--mint);
+        outline-offset: 4px;
       }
 
       .player-time {
@@ -867,6 +935,8 @@
       body.embedded {
         min-height: 0;
         overflow: hidden;
+        background: var(--app-background, #101722);
+        color: var(--app-foreground, #f1f3eb);
       }
 
       body.embedded .site-header,
@@ -890,6 +960,332 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
+        background: var(--app-card, #18212d);
+      }
+
+      body.embedded .section-heading {
+        border-color: var(--app-border, rgb(255 255 255 / 14%));
+        background: var(--app-card, #18212d);
+      }
+
+      body.embedded .section-heading strong,
+      body.embedded .scene-copy h2 {
+        color: var(--app-foreground, #f1f3eb);
+      }
+
+      body.embedded .section-heading small,
+      body.embedded .scene-copy p {
+        color: var(--app-muted-foreground, #a5b0bc);
+      }
+
+      body.embedded .mode-switch {
+        border-color: var(--app-border, rgb(255 255 255 / 14%));
+        background: var(--app-background, #101722);
+      }
+
+      body.embedded .mode-switch button[aria-pressed="true"] {
+        background: var(--app-accent, #244338);
+        color: var(--app-accent-foreground, #c8f2df);
+      }
+
+      body.embedded .player-layout {
+        background: var(--app-background, #101722);
+      }
+
+      body.embedded .screen-stage,
+      body.embedded .player-controls,
+      body.embedded .chapters {
+        border-color: var(--app-border, rgb(255 255 255 / 14%));
+      }
+
+      body.embedded .player-controls {
+        background: var(--app-card, #18212d);
+      }
+
+      body.embedded .player-controls button {
+        border-color: var(--app-border, rgb(255 255 255 / 14%));
+        color: var(--app-foreground, #f1f3eb);
+      }
+
+      body.embedded .player-controls button:hover,
+      body.embedded .chapter-button[aria-current="step"] {
+        border-color: color-mix(in oklab, var(--app-primary, #72dfb5) 38%, transparent);
+        background: color-mix(in oklab, var(--app-primary, #72dfb5) 12%, transparent);
+        color: var(--app-primary, #72dfb5);
+      }
+
+      body.embedded .scene-kicker,
+      body.embedded .player-controls button[aria-pressed="true"],
+      body.embedded .chapter-button[aria-current="step"] span {
+        color: var(--app-primary, #72dfb5);
+      }
+
+      body.embedded .scene-number,
+      body.embedded .scene-points li,
+      body.embedded .scene-note {
+        color: var(--app-muted-foreground, #a5b0bc);
+      }
+
+      body.embedded .chapter-button {
+        color: var(--app-muted-foreground, #a5b0bc);
+      }
+
+      body.embedded .player-progress span {
+        background: var(--app-primary, #72dfb5);
+        box-shadow: none;
+      }
+
+      body.embedded .screen-frame {
+        border-color: var(--app-border, rgb(255 255 255 / 14%));
+        box-shadow: 0 16px 42px rgb(0 0 0 / 20%);
+      }
+
+      body.embedded[data-theme="light"] {
+        --app-background: oklch(0.972 0.01 85);
+        --app-foreground: oklch(0.24 0.02 60);
+        --app-card: oklch(0.993 0.005 85);
+        --app-muted-foreground: oklch(0.46 0.02 65);
+        --app-primary: oklch(0.52 0.14 163);
+        --app-accent: oklch(0.94 0.035 163);
+        --app-accent-foreground: oklch(0.32 0.09 163);
+        --app-border: oklch(0.88 0.018 80);
+        color-scheme: light;
+      }
+
+      body.embedded[data-theme="dark"] {
+        --app-background: oklch(0.115 0.018 255);
+        --app-foreground: oklch(0.94 0.012 85);
+        --app-card: oklch(0.17 0.023 253);
+        --app-muted-foreground: oklch(0.74 0.02 250);
+        --app-primary: oklch(0.76 0.13 164);
+        --app-accent: oklch(0.29 0.06 163);
+        --app-accent-foreground: oklch(0.92 0.035 165);
+        --app-border: oklch(1 0 0 / 17%);
+        color-scheme: dark;
+      }
+
+      body.embedded .section-heading {
+        min-height: 64px;
+        padding: 11px 16px;
+      }
+
+      body.embedded .player-layout {
+        min-height: 0;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      body.embedded .screen-stage {
+        padding: 16px;
+      }
+
+      body.embedded .screen-frame {
+        width: min(100%, 340px);
+      }
+
+      body.embedded .scene-copy {
+        padding: clamp(20px, 3vw, 34px);
+      }
+
+      body.embedded .scene-points {
+        gap: 8px;
+        margin-top: 17px;
+      }
+
+      body.embedded .screen-frame .big-play {
+        width: 68px;
+        height: 68px;
+        border-color: color-mix(in oklab, var(--app-primary) 48%, white);
+        background:
+          linear-gradient(145deg, rgb(255 255 255 / 28%), transparent 48%),
+          color-mix(in oklab, var(--app-primary) 38%, rgb(10 19 25 / 72%));
+        transform: translate(-50%, -50%) scale(0.94);
+        box-shadow:
+          inset 0 2px 3px rgb(255 255 255 / 42%),
+          inset 0 -8px 12px rgb(0 0 0 / 25%),
+          0 10px 24px rgb(0 0 0 / 42%),
+          0 0 0 7px color-mix(in oklab, var(--app-primary) 22%, transparent);
+      }
+
+      body.embedded .screen-frame .big-play:hover {
+        background:
+          linear-gradient(145deg, rgb(255 255 255 / 32%), transparent 48%),
+          color-mix(in oklab, var(--app-primary) 48%, rgb(10 19 25 / 68%));
+        transform: translate(-50%, -50%) scale(1.07);
+      }
+
+      body.embedded .clip-controls {
+        position: absolute;
+        z-index: 4;
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        pointer-events: none;
+      }
+
+      body.embedded .clip-controls > * {
+        pointer-events: auto;
+      }
+
+      body.embedded .player-controls {
+        min-height: 44px;
+        gap: 8px;
+        padding: 5px 8px;
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: 14px;
+        background: rgb(10 17 24 / 66%);
+        box-shadow:
+          inset 0 1px rgb(255 255 255 / 13%),
+          0 8px 24px rgb(0 0 0 / 28%);
+        backdrop-filter: blur(18px) saturate(1.4);
+      }
+
+      body.embedded .player-controls #previous-scene,
+      body.embedded .player-controls #next-scene {
+        display: none;
+      }
+
+      body.embedded .player-controls #control-play {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-color: rgb(255 255 255 / 24%);
+        background:
+          linear-gradient(145deg, rgb(255 255 255 / 18%), transparent 55%),
+          color-mix(in oklab, var(--app-primary) 32%, transparent);
+        color: #fff;
+        box-shadow:
+          inset 0 1px 2px rgb(255 255 255 / 28%),
+          0 3px 9px rgb(0 0 0 / 28%);
+      }
+
+      body.embedded .player-controls #sound-toggle {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-color: transparent;
+        background: transparent;
+      }
+
+      body.embedded .player-controls .progress-wrap {
+        gap: 7px;
+      }
+
+      body.embedded .player-controls .player-time {
+        min-width: 54px;
+        font-size: 9px;
+      }
+
+      body.embedded .chapters {
+        justify-content: center;
+        gap: 5px;
+        overflow: visible;
+        padding: 3px 4px 1px;
+        border: 0;
+        scrollbar-width: none;
+      }
+
+      body.embedded .chapter-button {
+        width: 17px;
+        min-width: 17px;
+        min-height: 4px;
+        height: 4px;
+        padding: 0;
+        border: 0;
+        border-radius: 99px;
+        background: rgb(255 255 255 / 55%);
+        opacity: 0.62;
+        transition:
+          width 180ms ease,
+          opacity 180ms ease,
+          background 180ms ease;
+      }
+
+      body.embedded .chapter-button span {
+        display: none;
+      }
+
+      body.embedded .chapter-button:hover,
+      body.embedded .chapter-button[aria-current="step"] {
+        width: 28px;
+        min-width: 28px;
+        border: 0;
+        background: var(--app-primary);
+        opacity: 1;
+      }
+
+      body.embedded .player-controls #control-play:hover,
+      body.embedded .player-controls #sound-toggle:hover {
+        border-color: rgb(255 255 255 / 46%);
+        background-color: color-mix(in oklab, var(--app-primary) 44%, transparent);
+        color: #fff;
+      }
+
+      body.embedded .screen-stage::before,
+      body.embedded .screen-stage::after {
+        display: none;
+      }
+
+      body.embedded .player-time {
+        color: var(--app-muted-foreground, #a5b0bc);
+      }
+
+      body.embedded .player-progress {
+        background: color-mix(in oklab, var(--app-muted-foreground) 25%, transparent);
+      }
+
+      @media (min-width: 521px) and (max-width: 760px) {
+        body.embedded .player-layout {
+          grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+        }
+
+        body.embedded .screen-stage {
+          min-height: 0;
+          padding: 12px;
+          border-right: 1px solid var(--line);
+          border-bottom: 0;
+        }
+
+        body.embedded .screen-frame {
+          width: min(100%, 280px);
+          border-radius: 14px;
+        }
+
+        body.embedded .scene-copy {
+          padding: 20px 16px;
+        }
+
+        body.embedded .scene-copy h2 {
+          font-size: clamp(22px, 3.8vw, 28px);
+        }
+
+        body.embedded .scene-copy p {
+          margin-top: 10px;
+          font-size: 11px;
+          line-height: 1.55;
+        }
+
+        body.embedded .scene-points {
+          gap: 7px;
+          margin-top: 13px;
+        }
+
+        body.embedded .scene-points li {
+          font-size: 10px;
+        }
+
+        body.embedded .scene-note {
+          margin-top: 13px;
+          padding-top: 10px;
+        }
+      }
+
+      @media (max-width: 520px) {
+        body.embedded .player-layout {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -943,7 +1339,7 @@
         <div class="section-heading">
           <div>
             <strong id="preview-title">See the product. Understand the difference.</strong>
-            <small id="preview-duration">A 36-second walkthrough · real Capispot screens</small>
+            <small id="preview-duration">A 24-second walkthrough · real Capispot screens</small>
           </div>
           <div class="mode-switch" role="group" aria-label="Choose a product walkthrough">
             <button type="button" data-mode="visitor" aria-pressed="true">Portfolio tour</button>
@@ -961,6 +1357,11 @@
                   alt="CapiSpot sample portfolio page with its actual navigation and sample-data label"
                   fetchpriority="high"
                 />
+                <button class="big-play" type="button" aria-label="Play walkthrough">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" width="27" height="27" fill="currentColor">
+                    <path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z" />
+                  </svg>
+                </button>
               </div>
             </div>
             <div class="scene-copy" aria-live="polite">
@@ -984,38 +1385,54 @@
             </div>
           </div>
 
-          <div class="player-controls" aria-label="Walkthrough controls">
-            <div class="control-group">
-              <button type="button" id="previous-scene" aria-label="Previous scene">‹</button>
-              <button type="button" id="control-play" aria-label="Play walkthrough">▶</button>
-              <button type="button" id="next-scene" aria-label="Next scene">›</button>
-            </div>
-            <div class="progress-wrap">
-              <div
-                class="player-progress"
-                role="progressbar"
-                aria-label="Walkthrough progress"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-              >
-                <span id="progress"></span>
+          <div class="clip-controls" id="clip-controls">
+            <div class="player-controls" aria-label="Walkthrough controls">
+              <div class="control-group">
+                <button type="button" id="previous-scene" aria-label="Previous scene">‹</button>
+                <button type="button" id="control-play" aria-label="Play walkthrough">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z" />
+                  </svg>
+                </button>
+                <button type="button" id="next-scene" aria-label="Next scene">›</button>
               </div>
-              <span class="player-time" id="player-time">0:00 / 0:36</span>
+              <div class="progress-wrap">
+                <button
+                  class="player-progress"
+                  type="button"
+                  role="slider"
+                  aria-label="Seek walkthrough"
+                  aria-valuemin="0"
+                  aria-valuemax="24"
+                  aria-valuenow="0"
+                  aria-valuetext="0:00"
+                  aria-orientation="horizontal"
+                  tabindex="0"
+                >
+                  <span id="progress"></span>
+                </button>
+                <span class="player-time" id="player-time">0:00 / 0:36</span>
+              </div>
+              <button
+                type="button"
+                id="sound-toggle"
+                aria-label="Mute ambient sound"
+                aria-pressed="true"
+              >
+                ♪
+              </button>
             </div>
-            <button
-              type="button"
-              id="sound-toggle"
-              aria-label="Mute ambient sound"
-              aria-pressed="true"
-            >
-              ♪
-            </button>
+            <div class="chapters" id="chapters" aria-label="Walkthrough chapters"></div>
           </div>
           <span class="player-status" id="player-status" aria-live="polite">
             Ambient sound is enabled when the walkthrough plays.
           </span>
-          <div class="chapters" id="chapters" aria-label="Walkthrough chapters"></div>
         </div>
       </section>
 
@@ -1070,9 +1487,9 @@
           eyebrow: "A clearer view of your investments",
           description:
             "See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools into one calm, connected experience.",
-          duration: 36,
-          sceneDuration: 6,
-          sectionDuration: "A 36-second walkthrough · real Capispot screens",
+          duration: 24,
+          sceneDuration: 4,
+          sectionDuration: "A 24-second walkthrough · real Capispot screens",
           cta: "Create free portfolio",
           ctaUrl: "https://capispot.com/auth",
           secondary: "Explore sample portfolio",
@@ -1171,9 +1588,9 @@
           eyebrow: "For investors ready for more insight",
           description:
             "Explore how Capispot Pro adds research, portfolio analysis and planning to the tracker you already know.",
-          duration: 30,
-          sceneDuration: 6,
-          sectionDuration: "A 30-second Pro walkthrough · real Capispot screens",
+          duration: 20,
+          sceneDuration: 4,
+          sectionDuration: "A 20-second Pro walkthrough · real Capispot screens",
           cta: "Explore Pro plans",
           ctaUrl: "https://capispot.com/pricing",
           secondary: "See all features",
@@ -1267,7 +1684,10 @@
 
       const player = document.querySelector("#player");
       const productImage = document.querySelector("#product-image");
+      const clipControls = document.querySelector("#clip-controls");
+      const screenFrame = document.querySelector(".screen-frame");
       const playButton = document.querySelector("#control-play");
+      const bigPlayButton = document.querySelector(".big-play");
       const previousButton = document.querySelector("#previous-scene");
       const nextButton = document.querySelector("#next-scene");
       const soundToggle = document.querySelector("#sound-toggle");
@@ -1278,7 +1698,13 @@
       const status = document.querySelector("#player-status");
       const params = new URLSearchParams(window.location.search);
       const embedded = params.get("embed") === "1";
-      if (embedded) document.body.classList.add("embedded");
+      if (embedded) {
+        document.body.classList.add("embedded");
+        document.body.dataset.theme = params.get("theme") === "light" ? "light" : "dark";
+        soundEnabled = false;
+        updateSoundButton();
+        screenFrame.append(clipControls);
+      }
 
       function currentMode() {
         return modes[activeMode];
@@ -1401,8 +1827,20 @@
       function renderProgress() {
         const percent = (elapsedSeconds / currentMode().duration) * 100;
         progress.style.width = `${percent}%`;
-        progressBar.setAttribute("aria-valuenow", String(Math.round(percent)));
+        progressBar.setAttribute("aria-valuemax", String(currentMode().duration));
+        progressBar.setAttribute("aria-valuenow", String(Math.floor(elapsedSeconds)));
+        progressBar.setAttribute("aria-valuetext", formatTime(elapsedSeconds));
         time.textContent = `${formatTime(elapsedSeconds)} / ${formatTime(currentMode().duration)}`;
+      }
+
+      function seekTo(seconds) {
+        elapsedSeconds = Math.max(0, Math.min(seconds, currentMode().duration));
+        sceneIndex = Math.min(
+          Math.floor(elapsedSeconds / currentMode().sceneDuration),
+          currentMode().scenes.length - 1,
+        );
+        renderScene();
+        status.textContent = `Scene ${sceneIndex + 1} of ${currentMode().scenes.length}.`;
       }
 
       function renderScene() {
@@ -1439,21 +1877,24 @@
           }
           playing = true;
           player.dataset.playing = "true";
-          playButton.textContent = "Ⅱ";
+          playButton.innerHTML =
+            '<svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M7 5h4v14H7zM15 5h4v14h-4z"/></svg>';
           playButton.setAttribute("aria-label", "Pause walkthrough");
           status.textContent = soundEnabled
             ? "The walkthrough is playing with soft ambient sound."
             : "The walkthrough is playing with sound muted.";
-          try {
-            ensureAudio();
-            void audioContext
-              .resume()
-              .then(() => playSoftNote())
-              .catch(() => {
-                status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
-              });
-          } catch {
-            status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+          if (soundEnabled) {
+            try {
+              ensureAudio();
+              void audioContext
+                .resume()
+                .then(() => playSoftNote())
+                .catch(() => {
+                  status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+                });
+            } catch {
+              status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+            }
           }
           lastTick = performance.now();
           timer = window.setInterval(() => {
@@ -1482,7 +1923,8 @@
 
         playing = false;
         player.dataset.playing = "false";
-        playButton.textContent = "▶";
+        playButton.innerHTML =
+          '<svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z"/></svg>';
         playButton.setAttribute("aria-label", "Play walkthrough");
         window.clearInterval(timer);
         timer = null;
@@ -1541,6 +1983,33 @@
         button.addEventListener("click", () => setMode(button.dataset.mode));
       });
       playButton.addEventListener("click", () => setPlaying(!playing));
+      bigPlayButton.addEventListener("click", () => setPlaying(true));
+      if (embedded) {
+        screenFrame.addEventListener("pointerover", (event) => {
+          if (event.target instanceof Element && event.target.closest("button")) return;
+          setPlaying(true);
+        });
+        screenFrame.addEventListener("pointerleave", () => setPlaying(false));
+      }
+      progressBar.addEventListener("click", (event) => {
+        const bounds = progressBar.getBoundingClientRect();
+        seekTo(((event.clientX - bounds.left) / bounds.width) * currentMode().duration);
+      });
+      progressBar.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          seekTo(elapsedSeconds + 1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          seekTo(elapsedSeconds - 1);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          seekTo(0);
+        } else if (event.key === "End") {
+          event.preventDefault();
+          seekTo(currentMode().duration);
+        }
+      });
       previousButton.addEventListener("click", () => goToScene(sceneIndex - 1));
       nextButton.addEventListener("click", () => goToScene(sceneIndex + 1));
       soundToggle.addEventListener("click", () => {
@@ -1549,6 +2018,19 @@
         status.textContent = soundEnabled
           ? "Ambient sound is enabled."
           : "Walkthrough sound is muted.";
+        if (soundEnabled && playing) {
+          try {
+            ensureAudio();
+            void audioContext
+              .resume()
+              .then(() => playSoftNote())
+              .catch(() => {
+                status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+              });
+          } catch {
+            status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+          }
+        }
       });
       setMode(params.get("mode") === "pro" ? "pro" : "visitor");
 
