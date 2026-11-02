@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/AppShell";
+import { ModerationPanel } from "@/components/ModerationPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import { toast } from "sonner";
@@ -389,6 +390,7 @@ function AdminPage() {
           </div>
         )}
       </Card>
+      <ModerationPanel />
     </div>
   );
 }

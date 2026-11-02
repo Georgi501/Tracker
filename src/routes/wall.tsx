@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Flag, MessageCircle, Pencil, Send, Trash2 } from "lucide-react";
+import { Ban, Flag, MessageCircle, Pencil, Send, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
@@ -16,6 +16,7 @@ import { Avatar } from "@/components/Avatar";
 import { CommunityUpsell } from "@/components/CommunityGate";
 import { PortfolioSnapshot, type SnapshotRow } from "@/components/PortfolioSnapshot";
 import { usePortfolio } from "@/lib/store";
+import { wallCopy, type WallCopy } from "@/lib/wall-i18n";
 import {
   avatarUrls,
   cc,
@@ -89,67 +90,6 @@ interface Comment {
   created_at: string;
 }
 
-const copy = {
-  bg: {
-    title: "Стена на общността",
-    sub: "Похвали се, пооплачи се или попитай — другите Pro членове ще го видят.",
-    placeholder: "Какво се случва в портфолиото ти?",
-    attach: "Прикачи портфолио",
-    attachNone: "Без портфолио",
-    post: "Публикувай",
-    moods: { brag: "Хваля се", vent: "Оплаквам се", question: "Въпрос", chat: "Разговор" },
-    empty: "Още няма публикации. Бъди първият!",
-    comments: "Коментари",
-    commentPh: "Напиши коментар…",
-    needPublic: "Направи профила си публичен, за да публикуваш и коментираш.",
-    report: "Докладвай",
-    reported: "Благодарим, ще го прегледаме.",
-    del: "Изтрий",
-    snapshotNote: "Снимка на портфолиото от момента на публикуване",
-    tagsPh: "Тагове, напр. дивиденти etf крипто (до 5)",
-    all: "Всички",
-    edit: "Редактирай",
-    save: "Запази",
-    cancel: "Отказ",
-    edited: "редактирано",
-    clearTag: "Махни филтъра",
-    noMatch: "Няма публикации за този филтър.",
-    privacy:
-      "Избраното ниво е окончателно за публикацията. Парични суми се виждат само ако изберете „Всичко“.",
-    back: "Общност",
-    unknown: "Член",
-  },
-  en: {
-    title: "Community wall",
-    sub: "Brag, vent or ask — other Pro members will see it.",
-    placeholder: "What's happening in your portfolio?",
-    attach: "Attach portfolio",
-    attachNone: "No portfolio",
-    post: "Post",
-    moods: { brag: "Bragging", vent: "Venting", question: "Question", chat: "Chat" },
-    empty: "No posts yet. Be the first!",
-    comments: "Comments",
-    commentPh: "Write a comment…",
-    needPublic: "Make your profile public to post and comment.",
-    report: "Report",
-    reported: "Thanks, we will review it.",
-    del: "Delete",
-    snapshotNote: "Portfolio snapshot from the time of posting",
-    tagsPh: "Tags, e.g. dividends etf crypto (up to 5)",
-    all: "All",
-    edit: "Edit",
-    save: "Save",
-    cancel: "Cancel",
-    edited: "edited",
-    clearTag: "Clear filter",
-    noMatch: "No posts match this filter.",
-    privacy:
-      "The chosen level is final for that post. Money amounts are only visible if you pick “Everything”.",
-    back: "Community",
-    unknown: "Member",
-  },
-};
-
 function ago(iso: string, lang: string) {
   const s = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
   const rtf = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
@@ -164,7 +104,7 @@ function ago(iso: string, lang: string) {
 function Wall() {
   const p = usePortfolio();
   const c = cc(p.lang);
-  const w = p.lang === "bg" ? copy.bg : copy.en;
+  const w = wallCopy[p.lang];
   const me = p.user?.id;
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [authors, setAuthors] = useState<Record<string, MemberProfile>>({});
@@ -173,6 +113,9 @@ function Wall() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [error, setError] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
+  const [follows, setFollows] = useState<Set<string>>(new Set());
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [followingOnly, setFollowingOnly] = useState(false);
   const [moodFilter, setMoodFilter] = useState<Mood | "all">("all");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const shownPosts = useMemo(
@@ -180,9 +123,10 @@ function Wall() {
       (posts ?? []).filter(
         (x) =>
           (moodFilter === "all" || x.mood === moodFilter) &&
+          (!followingOnly || follows.has(x.user_id)) &&
           (!tagFilter || x.tags.includes(tagFilter)),
       ),
-    [posts, moodFilter, tagFilter],
+    [posts, moodFilter, tagFilter, followingOnly, follows],
   );
   const load = useCallback(async () => {
     if (!me) return;
@@ -194,9 +138,16 @@ function Wall() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (e) throw e;
+      const [fl, bl] = await Promise.all([
+        db.from("wall_follows").select("followee_id").eq("follower_id", me),
+        db.from("wall_blocks").select("blocked_id").eq("blocker_id", me),
+      ]);
+      setFollows(new Set(((fl.data ?? []) as { followee_id: string }[]).map((x) => x.followee_id)));
+      const blockedIds = ((bl.data ?? []) as { blocked_id: string }[]).map((x) => x.blocked_id);
+      setBlocked(blockedIds);
       const rows = (data ?? []) as Post[];
       const ids = rows.map((r) => r.id);
-      const people = [...new Set([...rows.map((r) => r.user_id), me])];
+      const people = [...new Set([...rows.map((r) => r.user_id), me, ...blockedIds])];
       const [rx, cm, pr] = await Promise.all([
         ids.length
           ? db.from("wall_reactions").select("post_id, user_id, emoji").in("post_id", ids)
@@ -278,6 +229,16 @@ function Wall() {
               {m === "all" ? w.all : `${MOOD_EMOJI[m]} ${w.moods[m]}`}
             </button>
           ))}
+          <button
+            type="button"
+            aria-pressed={followingOnly}
+            onClick={() => setFollowingOnly((v) => !v)}
+            className={`press rounded-full px-3 py-1.5 text-xs font-semibold ${
+              followingOnly ? "bg-primary text-primary-foreground" : "bg-secondary"
+            }`}
+          >
+            ★ {w.followingOnly}
+          </button>
           {tagFilter && (
             <button
               type="button"
@@ -288,6 +249,34 @@ function Wall() {
             </button>
           )}
         </div>
+      )}
+      {blocked.length > 0 && (
+        <details className="rounded-2xl border border-border bg-card p-3 text-sm">
+          <summary className="cursor-pointer font-semibold">
+            {w.blockedTitle} ({blocked.length})
+          </summary>
+          <ul className="mt-2 space-y-1">
+            {blocked.map((id) => (
+              <li key={id} className="flex items-center justify-between gap-2">
+                <span className="truncate">{authors[id]?.display_name || w.unknown}</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const { error: e } = await db
+                      .from("wall_blocks")
+                      .delete()
+                      .match({ blocker_id: me, blocked_id: id });
+                    if (e) toast.error(e.message);
+                    else void load();
+                  }}
+                  className="press rounded-full bg-secondary px-3 py-1 text-xs font-semibold"
+                >
+                  {w.unblock}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
       {error ? (
         <div role="alert">
@@ -328,6 +317,9 @@ function Wall() {
               setReactions={setReactions}
               setComments={setComments}
               setPosts={setPosts}
+              following={follows.has(post.user_id)}
+              setFollows={setFollows}
+              onBlocked={() => void load()}
               onTag={setTagFilter}
               reload={() => void load()}
             />
@@ -349,7 +341,7 @@ function parseTags(raw: string) {
   ].slice(0, 5);
 }
 
-type Copy = typeof copy.bg;
+type Copy = WallCopy;
 
 function Composer({
   w,
@@ -467,6 +459,9 @@ function PostCard({
   setReactions,
   setComments,
   setPosts,
+  following,
+  setFollows,
+  onBlocked,
   onTag,
 }: {
   post: Post;
@@ -482,6 +477,9 @@ function PostCard({
   setReactions: Dispatch<SetStateAction<Reaction[]>>;
   setComments: Dispatch<SetStateAction<Comment[]>>;
   setPosts: Dispatch<SetStateAction<Post[] | null>>;
+  following: boolean;
+  setFollows: Dispatch<SetStateAction<Set<string>>>;
+  onBlocked: () => void;
   onTag: (tag: string) => void;
   reload: () => void;
 }) {
@@ -559,6 +557,38 @@ function PostCard({
       ),
     );
   };
+  const toggleFollow = async () => {
+    const key = { follower_id: me, followee_id: post.user_id };
+    setFollows((s) => {
+      const n = new Set(s);
+      if (following) n.delete(post.user_id);
+      else n.add(post.user_id);
+      return n;
+    });
+    const { error } = following
+      ? await db.from("wall_follows").delete().match(key)
+      : await db.from("wall_follows").insert(key);
+    if (error) {
+      toast.error(error.message);
+      setFollows((s) => {
+        const n = new Set(s);
+        if (following) n.add(post.user_id);
+        else n.delete(post.user_id);
+        return n;
+      });
+    }
+  };
+  const blockAuthor = async () => {
+    if (!window.confirm(w.blockConfirm)) return;
+    const { error } = await db
+      .from("wall_blocks")
+      .insert({ blocker_id: me, blocked_id: post.user_id });
+    if (error) toast.error(error.message);
+    else {
+      toast.success(w.blockedDone);
+      onBlocked();
+    }
+  };
   const report = async () => {
     const { error } = await db.from("wall_reports").insert({ post_id: post.id, reporter_id: me });
     if (error && error.code !== "23505") toast.error(error.message);
@@ -612,15 +642,36 @@ function PostCard({
             <Trash2 size={16} />
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => void report()}
-            aria-label={w.report}
-            title={w.report}
-            className="press rounded-full p-2 text-muted-foreground hover:text-foreground"
-          >
-            <Flag size={16} />
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => void toggleFollow()}
+              aria-pressed={following}
+              aria-label={following ? w.unfollow : w.follow}
+              title={following ? w.unfollow : w.follow}
+              className={`press rounded-full p-2 ${following ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {following ? <UserCheck size={16} /> : <UserPlus size={16} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => void blockAuthor()}
+              aria-label={w.block}
+              title={w.block}
+              className="press rounded-full p-2 text-muted-foreground hover:text-destructive"
+            >
+              <Ban size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => void report()}
+              aria-label={w.report}
+              title={w.report}
+              className="press rounded-full p-2 text-muted-foreground hover:text-foreground"
+            >
+              <Flag size={16} />
+            </button>
+          </>
         )}
       </div>
       {editing ? (
