@@ -78,6 +78,17 @@ const C = {
     noMarketData: "This asset type does not have market quotes or company research.",
     cash: "Cash",
     realEstate: "Real estate",
+    valuationTitle: "Dated manual valuations",
+    valuationDescription:
+      "Record a per-unit value in USD. It is not a market quote; historical charts carry the last mark forward for up to 90 days.",
+    valuationDate: "Valuation date",
+    valuationPrice: "Value per unit (USD)",
+    valuationNote: "Source / note (optional)",
+    saveValuation: "Save valuation",
+    savingValuation: "Saving…",
+    valuationSaved: "Valuation saved",
+    valuationHistory: "Recorded valuations",
+    noValuations: "No dated valuations recorded.",
   },
   bg: {
     back: "Позиции",
@@ -109,6 +120,17 @@ const C = {
     noMarketData: "За този тип актив няма пазарни котировки или фирмено проучване.",
     cash: "Парични средства",
     realEstate: "Недвижим имот",
+    valuationTitle: "Ръчни оценки по дата",
+    valuationDescription:
+      "Запиши стойност за единица в USD. Това не е пазарна котировка; в историческата графика последната оценка се пренася до 90 дни.",
+    valuationDate: "Дата на оценката",
+    valuationPrice: "Стойност за единица (USD)",
+    valuationNote: "Източник / бележка (по избор)",
+    saveValuation: "Запази оценката",
+    savingValuation: "Запазване…",
+    valuationSaved: "Оценката е запазена",
+    valuationHistory: "Записани оценки",
+    noValuations: "Няма записани оценки по дата.",
   },
   de: {
     back: "Positionen",
@@ -140,6 +162,17 @@ const C = {
     noMarketData: "Für diesen Anlagetyp sind keine Marktkurse oder Unternehmensanalysen verfügbar.",
     cash: "Bargeld",
     realEstate: "Immobilien",
+    valuationTitle: "Manuelle Bewertungen mit Datum",
+    valuationDescription:
+      "Erfasse einen Wert je Einheit in USD. Dies ist kein Marktkurs; historische Diagramme führen die letzte Bewertung bis zu 90 Tage fort.",
+    valuationDate: "Bewertungsdatum",
+    valuationPrice: "Wert je Einheit (USD)",
+    valuationNote: "Quelle / Notiz (optional)",
+    saveValuation: "Bewertung speichern",
+    savingValuation: "Wird gespeichert…",
+    valuationSaved: "Bewertung gespeichert",
+    valuationHistory: "Erfasste Bewertungen",
+    noValuations: "Keine datierten Bewertungen erfasst.",
   },
   es: {
     back: "Posiciones",
@@ -171,6 +204,17 @@ const C = {
     noMarketData: "Este tipo de activo no dispone de cotizaciones ni análisis de empresas.",
     cash: "Efectivo",
     realEstate: "Inmobiliario",
+    valuationTitle: "Valoraciones manuales con fecha",
+    valuationDescription:
+      "Registra un valor por unidad en USD. No es una cotización de mercado; el gráfico histórico mantiene la última valoración hasta 90 días.",
+    valuationDate: "Fecha de valoración",
+    valuationPrice: "Valor por unidad (USD)",
+    valuationNote: "Fuente / nota (opcional)",
+    saveValuation: "Guardar valoración",
+    savingValuation: "Guardando…",
+    valuationSaved: "Valoración guardada",
+    valuationHistory: "Valoraciones registradas",
+    noValuations: "No hay valoraciones fechadas.",
   },
   it: {
     back: "Posizioni",
@@ -202,6 +246,17 @@ const C = {
     noMarketData: "Questo tipo di asset non dispone di quotazioni o analisi aziendali.",
     cash: "Liquidità",
     realEstate: "Immobili",
+    valuationTitle: "Valutazioni manuali datate",
+    valuationDescription:
+      "Registra un valore per unità in USD. Non è una quotazione di mercato; il grafico storico mantiene l'ultima valutazione fino a 90 giorni.",
+    valuationDate: "Data della valutazione",
+    valuationPrice: "Valore per unità (USD)",
+    valuationNote: "Fonte / nota (facoltativa)",
+    saveValuation: "Salva valutazione",
+    savingValuation: "Salvataggio…",
+    valuationSaved: "Valutazione salvata",
+    valuationHistory: "Valutazioni registrate",
+    noValuations: "Nessuna valutazione datata registrata.",
   },
 };
 
@@ -283,8 +338,13 @@ function AssetPage() {
   const { symbol } = Route.useParams();
   const p = usePortfolio();
   const c = C[p.lang];
+  const today = new Date().toISOString().slice(0, 10);
   const [bondPrice, setBondPrice] = useState("");
   const [savingBondPrice, setSavingBondPrice] = useState(false);
+  const [valuationDate, setValuationDate] = useState(() => today);
+  const [valuationPrice, setValuationPrice] = useState("");
+  const [valuationNote, setValuationNote] = useState("");
+  const [savingValuation, setSavingValuation] = useState(false);
   const [bondCouponDate, setBondCouponDate] = useState("");
   const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
   const catalogAsset = searchCatalog(symbol).find(
@@ -318,6 +378,12 @@ function AssetPage() {
     setBondCouponDate(bondAssetId ? (readBondCouponDates()[bondAssetId] ?? "") : "");
   }, [bondAssetId]);
   const assetId = asset && "id" in asset ? asset.id : null;
+  const assetValuations = assetId
+    ? p.manualValuations
+        .filter((valuation) => valuation.assetId === assetId)
+        .slice()
+        .sort((a, b) => b.date.localeCompare(a.date))
+    : [];
   const txs = assetId
     ? p.transactions
         .filter((t) => t.assetId === assetId)
@@ -505,6 +571,97 @@ function AssetPage() {
               </dd>
             </div>
           </dl>
+        </Card>
+      )}
+      {p.user && assetId && (asset?.type === "bond" || asset?.type === "realEstate") && (
+        <Card>
+          <h2 className="font-display font-semibold">{c.valuationTitle}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{c.valuationDescription}</p>
+          <form
+            className="mt-4 flex flex-wrap items-end gap-3"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (!assetId) return;
+              setSavingValuation(true);
+              try {
+                await p.saveManualValuation(
+                  assetId,
+                  valuationDate,
+                  Number(valuationPrice),
+                  valuationNote,
+                );
+                setValuationPrice("");
+                setValuationNote("");
+                toast.success(c.valuationSaved);
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Error");
+              } finally {
+                setSavingValuation(false);
+              }
+            }}
+          >
+            <label className="grid gap-1 text-sm">
+              {c.valuationDate}
+              <input
+                type="date"
+                required
+                max={today}
+                value={valuationDate}
+                onChange={(event) => setValuationDate(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              {c.valuationPrice}
+              <input
+                type="number"
+                min="0.000001"
+                step="any"
+                required
+                value={valuationPrice}
+                onChange={(event) => setValuationPrice(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </label>
+            <label className="grid min-w-56 flex-1 gap-1 text-sm">
+              {c.valuationNote}
+              <input
+                type="text"
+                maxLength={500}
+                value={valuationNote}
+                onChange={(event) => setValuationNote(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </label>
+            <Button type="submit" disabled={savingValuation || !assetId}>
+              {savingValuation ? c.savingValuation : c.saveValuation}
+            </Button>
+          </form>
+          <div className="mt-5">
+            <h3 className="text-sm font-semibold">{c.valuationHistory}</h3>
+            {assetValuations.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">{c.noValuations}</p>
+            ) : (
+              <ul className="mt-2 divide-y divide-border text-sm">
+                {assetValuations.map((valuation) => (
+                  <li key={valuation.id} className="flex flex-wrap justify-between gap-2 py-2">
+                    <span>
+                      {valuation.date}
+                      {valuation.note && (
+                        <span className="ml-2 text-muted-foreground">{valuation.note}</span>
+                      )}
+                    </span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat(p.lang, {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(valuation.priceUsd)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </Card>
       )}
       {txs.length > 0 && (

@@ -578,12 +578,15 @@ function Dashboard() {
       ),
       cost,
       pnl: total - cost,
-      realized: fifoTaxReport(transactions).reduce((sum, year) => sum + year.realized, 0),
+      realized: fifoTaxReport(transactions, 1, p.corporateActions).reduce(
+        (sum, year) => sum + year.realized,
+        0,
+      ),
       day: holdings.reduce((sum, holding) => sum + holding.dayChange, 0),
       irr:
         holdings.length && Number.isFinite(total) ? portfolioIrr(transactions, total) : Number.NaN,
     };
-  }, [holdings, transactions]);
+  }, [holdings, transactions, p.corporateActions]);
   const { total, portfolioValue, cost, pnl, realized, day, irr: irrV } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
   const history = useQuery({

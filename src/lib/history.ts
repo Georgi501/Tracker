@@ -1,4 +1,9 @@
-import type { Currency, Transaction } from "./portfolio";
+import {
+  normalizeTransactionsForSplits,
+  type CorporateAction,
+  type Currency,
+  type Transaction,
+} from "./portfolio";
 export interface DailyPrice {
   date: string;
   close: number;
@@ -8,6 +13,7 @@ export interface HistoryAsset {
   type: string;
   currency: string;
   prices: DailyPrice[];
+  manualValuation?: boolean;
 }
 export interface PortfolioPoint {
   t: number;
@@ -51,13 +57,13 @@ export function periodStart(period: HistoryPeriod, first: string, now: Date): st
   date.setUTCMonth(date.getUTCMonth() - (HISTORY_MONTHS[period] ?? 12));
   return date.toISOString().slice(0, 10);
 }
-export function closeAt(prices: DailyPrice[], date: string): number | null {
+export function closeAt(prices: DailyPrice[], date: string, maxAgeDays = 7): number | null {
   let result: DailyPrice | undefined;
   for (const p of prices) {
     if (p.date > date) break;
     result = p;
   }
-  if (!result || Date.parse(date) - Date.parse(result.date) > 7 * 86400000) return null;
+  if (!result || Date.parse(date) - Date.parse(result.date) > maxAgeDays * 86400000) return null;
   return result.close > 0 ? result.close : null;
 }
 export function currencyRate(
@@ -91,9 +97,12 @@ export function buildPortfolioHistory(
   base: Currency,
   eurUsd: DailyPrice[],
   gbpUsd: DailyPrice[],
+  splits: CorporateAction[] = [],
 ) {
   const points: PortfolioPoint[] = [];
-  const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
   const qty = new Map<string, number>();
   const contributions = new Map<string, number>();
   let previousValues: Map<string, number> | null = null;
@@ -132,7 +141,8 @@ export function buildPortfolioHistory(
         values.set(asset.id, 0);
         continue;
       }
-      const price = asset.type === "cash" ? 1 : closeAt(asset.prices, date);
+      const price =
+        asset.type === "cash" ? 1 : closeAt(asset.prices, date, asset.manualValuation ? 90 : 7);
       const rate = currencyRate(asset.currency, date, eurUsd, gbpUsd);
       if (price === null || rate === null) {
         available = false;

@@ -66,6 +66,50 @@ export interface Transaction {
   sourceTransactionId?: string;
 }
 
+export interface CorporateAction {
+  assetId: string;
+  date: string;
+  numerator: number;
+  denominator: number;
+}
+
+export function normalizeTransactionsForSplits(
+  transactions: Transaction[],
+  actions: CorporateAction[],
+): Transaction[] {
+  const sortedActions = [...actions].sort((a, b) => a.date.localeCompare(b.date));
+  for (const action of sortedActions) {
+    const dateTimestamp = Date.parse(`${action.date}T00:00:00Z`);
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(action.date) ||
+      !Number.isFinite(dateTimestamp) ||
+      new Date(dateTimestamp).toISOString().slice(0, 10) !== action.date ||
+      !(action.numerator > 0) ||
+      !(action.denominator > 0) ||
+      !Number.isFinite(action.numerator / action.denominator)
+    )
+      throw new Error("Invalid stock split data");
+  }
+  return transactions.map((transaction) => {
+    if (transaction.kind === "dividend") return transaction;
+    const factor = sortedActions.reduce(
+      (total, action) =>
+        action.assetId === transaction.assetId && transaction.date < action.date
+          ? total * (action.numerator / action.denominator)
+          : total,
+      1,
+    );
+    if (!Number.isFinite(factor) || factor <= 0) throw new Error("Invalid stock split factor");
+    return factor === 1
+      ? transaction
+      : {
+          ...transaction,
+          quantity: transaction.quantity * factor,
+          price: transaction.price / factor,
+        };
+  });
+}
+
 export interface Holding {
   asset: Asset;
   quantity: number;
@@ -98,8 +142,14 @@ export function periodReturns(series: { t: number; v: number }[], buckets: numbe
   return out;
 }
 
-export function computeHoldings(assets: Asset[], txs: Transaction[]): Holding[] {
-  const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
+export function computeHoldings(
+  assets: Asset[],
+  txs: Transaction[],
+  splits: CorporateAction[] = [],
+): Holding[] {
+  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
   const map = new Map<string, { qty: number; cost: number }>();
   for (const t of sorted) {
     if (t.kind === "dividend") continue;
@@ -133,6 +183,34 @@ export function computeHoldings(assets: Asset[], txs: Transaction[]): Holding[] 
     });
   }
   return out.sort((a, b) => b.value - a.value);
+}
+
+export function accountValues(
+  assets: Asset[],
+  transactions: Transaction[],
+  brokers: { id: string; name: string }[],
+  splits: CorporateAction[] = [],
+): { id: string; name: string | null; value: number | null; missingQuotes: number }[] {
+  const names = new Map(brokers.map((broker) => [broker.id, broker.name]));
+  const groups = new Map<string, Transaction[]>();
+  for (const transaction of transactions) {
+    const id = transaction.brokerId ?? "manual";
+    const group = groups.get(id) ?? [];
+    group.push(transaction);
+    groups.set(id, group);
+  }
+  return [...groups.entries()]
+    .map(([id, groupTransactions]) => {
+      const holdings = computeHoldings(assets, groupTransactions, splits);
+      const missingQuotes = holdings.filter((holding) => !Number.isFinite(holding.value)).length;
+      return {
+        id,
+        name: names.get(id) ?? null,
+        value: missingQuotes > 0 ? null : holdings.reduce((sum, holding) => sum + holding.value, 0),
+        missingQuotes,
+      };
+    })
+    .sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
 }
 
 export function totalDividends(txs: Transaction[]) {

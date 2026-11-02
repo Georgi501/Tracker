@@ -97,6 +97,31 @@ it("attributes price changes to each asset after excluding dated trade flows", (
       result.points.slice(1).reduce((sum, point) => sum + point.flow, 0),
   );
 });
+it("replays confirmed stock splits in the adjusted unit basis", () => {
+  const result = buildPortfolioHistory(
+    [
+      {
+        id: "a",
+        type: "stock",
+        currency: "USD",
+        prices: Array.from({ length: 32 }, (_, day) => ({
+          date: new Date(Date.UTC(2024, 0, day + 1)).toISOString().slice(0, 10),
+          close: 50,
+        })),
+      },
+    ],
+    [{ id: "buy", assetId: "a", kind: "buy", quantity: 10, price: 100, date: "2024-01-01" }],
+    "2024-01-01",
+    "2024-02-01",
+    "USD",
+    [],
+    [],
+    [{ assetId: "a", date: "2024-02-01", numerator: 2, denominator: 1 }],
+  );
+  expect(result.points).toHaveLength(32);
+  expect(result.points.every((point) => point.v === 1000)).toBe(true);
+  expect(result.assetContributions).toEqual([{ assetId: "a", amount: 0 }]);
+});
 it("adjusts returns for added capital", () => {
   expect(
     historyReturn([

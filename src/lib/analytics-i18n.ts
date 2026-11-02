@@ -28,6 +28,11 @@ const en = {
     "This chart shows current unrealized gain or loss versus cost basis. It is not a measure of return contribution for the selected date range.",
   bySector: "By sector",
   byRegion: "By region",
+  byAccount: "By broker / account",
+  manualAccount: "Manual / unassigned",
+  unknownAccount: "Unknown account",
+  accountQuotesMissing:
+    "Some account totals are unavailable because one or more holdings lack a valid quote.",
   report: "Portfolio report",
   reportDescription:
     "Export the selected period, performance, current holdings, exposures, risk and data-quality notes.",
@@ -62,7 +67,12 @@ const en = {
   currencyNote:
     "Historical FX is included in base-currency valuation; a separate currency-effect attribution is not available.",
   historyScope:
-    "Historical valuation includes recorded holdings and cash positions. Dividend transactions are excluded; record cash separately if you want it included.",
+    "Historical valuation includes recorded holdings and cash positions. Bonds and real estate use dated manual USD marks, carried forward for up to 90 days; missing or older marks suppress the chart. Dividend transactions are excluded; record cash separately if you want it included.",
+  splitReviewTitle: "Stock split review",
+  splitReviewHelp:
+    "The provider found a split affecting recorded holdings. Confirm it to normalize historical share quantities and cost per share; original transactions remain unchanged.",
+  splitConfirm: "Confirm split",
+  splitConfirmed: "Split confirmed; refreshing portfolio history.",
   historyScopeLabel: "Historical valuation scope",
   historyInsufficient: "Not enough historical points for this period.",
   historyStarts:
@@ -107,6 +117,11 @@ const bg: AnalyticsCopy = {
     "Графиката показва текущата нереализирана печалба или загуба спрямо себестойността. Не измерва приноса към доходността за избрания период.",
   bySector: "По сектори",
   byRegion: "По региони",
+  byAccount: "По брокер / сметка",
+  manualAccount: "Ръчно / без сметка",
+  unknownAccount: "Непозната сметка",
+  accountQuotesMissing:
+    "Някои суми по сметки не са налични, защото липсва валидна котировка за позиция.",
   report: "Отчет за портфейла",
   reportDescription:
     "Експортирай избрания период, доходността, текущите позиции, експозициите, риска и бележките за качеството на данните.",
@@ -141,7 +156,12 @@ const bg: AnalyticsCopy = {
   currencyNote:
     "Историческият валутен курс е включен в оценката в базова валута; отделен анализ на валутния ефект не е наличен.",
   historyScope:
-    "Историческата оценка включва записаните позиции и парични активи. Дивидентните сделки не се включват; наличностите трябва да се въведат отделно.",
+    "Историческата оценка включва записаните позиции и парични активи. За облигации и имоти се използва последната ръчна оценка в USD до 90 дни; липсваща или по-стара оценка скрива графиката. Дивидентните сделки не се включват; наличностите трябва да се въведат отделно.",
+  splitReviewTitle: "Преглед на сплит",
+  splitReviewHelp:
+    "Доставчикът открива сплит, който засяга записаните позиции. Потвърди го, за да се нормализират историческите количества и себестойността на акция; оригиналните сделки остават непроменени.",
+  splitConfirm: "Потвърди сплита",
+  splitConfirmed: "Сплитът е потвърден; историята на портфейла се обновява.",
   historyScopeLabel: "Обхват на историческата оценка",
   historyInsufficient: "Няма достатъчно исторически точки за този период.",
   historyStarts:
@@ -185,6 +205,11 @@ const de: AnalyticsCopy = {
     "Zeigt den aktuellen nicht realisierten Gewinn oder Verlust gegenüber den Anschaffungskosten, nicht den Renditebeitrag im gewählten Zeitraum.",
   bySector: "Nach Sektor",
   byRegion: "Nach Region",
+  byAccount: "Nach Broker / Konto",
+  manualAccount: "Manuell / nicht zugeordnet",
+  unknownAccount: "Unbekanntes Konto",
+  accountQuotesMissing:
+    "Einige Kontosummen sind nicht verfügbar, weil für Positionen gültige Kurse fehlen.",
   report: "Portfolio-Bericht",
   reportDescription:
     "Gewählten Zeitraum, Rendite, aktuelle Positionen, Exposures, Risiko und Datenqualität exportieren.",
@@ -219,7 +244,12 @@ const de: AnalyticsCopy = {
   currencyNote:
     "Historische Wechselkurse sind in der Basiswährungsbewertung enthalten; eine separate Währungsbeitragsanalyse ist nicht verfügbar.",
   historyScope:
-    "Die historische Bewertung umfasst erfasste Positionen und Bargeldbestände. Dividendentransaktionen sind ausgeschlossen; Bargeld muss separat erfasst werden.",
+    "Die historische Bewertung umfasst erfasste Positionen und Bargeld. Für Anleihen und Immobilien werden datierte manuelle USD-Bewertungen bis zu 90 Tage fortgeschrieben; fehlende oder ältere Werte blenden das Diagramm aus. Dividendentransaktionen sind ausgeschlossen; Bargeld muss separat erfasst werden.",
+  splitReviewTitle: "Aktien-Split prüfen",
+  splitReviewHelp:
+    "Der Datenanbieter hat einen Split erkannt, der erfasste Positionen betrifft. Bestätige ihn, um historische Stückzahlen und Kosten je Aktie zu normalisieren; ursprüngliche Transaktionen bleiben unverändert.",
+  splitConfirm: "Split bestätigen",
+  splitConfirmed: "Split bestätigt; der Portfolioverlauf wird aktualisiert.",
   historyScopeLabel: "Umfang der historischen Bewertung",
   historyInsufficient: "Nicht genügend historische Punkte für diesen Zeitraum.",
   historyStarts:
@@ -263,6 +293,11 @@ const es: AnalyticsCopy = {
     "Muestra la ganancia o pérdida no realizada actual frente al coste, no la contribución al rendimiento del período seleccionado.",
   bySector: "Por sector",
   byRegion: "Por región",
+  byAccount: "Por bróker / cuenta",
+  manualAccount: "Manual / sin asignar",
+  unknownAccount: "Cuenta desconocida",
+  accountQuotesMissing:
+    "Algunos totales no están disponibles porque faltan cotizaciones válidas para ciertas posiciones.",
   report: "Informe de cartera",
   reportDescription:
     "Exporta el período, rendimiento, posiciones actuales, exposiciones, riesgo y calidad de datos.",
@@ -297,7 +332,12 @@ const es: AnalyticsCopy = {
   currencyNote:
     "El cambio histórico se incluye en la valoración en moneda base; no está disponible una atribución separada del efecto de divisa.",
   historyScope:
-    "La valoración histórica incluye posiciones y efectivo registrados. Se excluyen las transacciones de dividendos; registra el efectivo por separado para incluirlo.",
+    "La valoración histórica incluye posiciones y efectivo registrados. Los bonos y los inmuebles usan valoraciones manuales fechadas en USD durante un máximo de 90 días; si faltan o son antiguas, se oculta el gráfico. Se excluyen los dividendos; registra el efectivo por separado para incluirlo.",
+  splitReviewTitle: "Revisar split",
+  splitReviewHelp:
+    "El proveedor detectó un split que afecta a las posiciones registradas. Confírmalo para normalizar las cantidades históricas y el coste por acción; las operaciones originales no cambian.",
+  splitConfirm: "Confirmar split",
+  splitConfirmed: "Split confirmado; se actualiza el historial de la cartera.",
   historyScopeLabel: "Alcance de la valoración histórica",
   historyInsufficient: "No hay suficientes puntos históricos para este período.",
   historyStarts:
@@ -341,6 +381,11 @@ const it: AnalyticsCopy = {
     "Mostra il profitto o la perdita non realizzati correnti rispetto al costo, non il contributo al rendimento del periodo selezionato.",
   bySector: "Per settore",
   byRegion: "Per regione",
+  byAccount: "Per broker / conto",
+  manualAccount: "Manuale / non assegnato",
+  unknownAccount: "Conto sconosciuto",
+  accountQuotesMissing:
+    "Alcuni totali non sono disponibili perché mancano quotazioni valide per alcune posizioni.",
   report: "Report del portafoglio",
   reportDescription:
     "Esporta periodo selezionato, rendimento, posizioni attuali, esposizioni, rischio e qualità dei dati.",
@@ -375,7 +420,12 @@ const it: AnalyticsCopy = {
   currencyNote:
     "I cambi storici sono inclusi nella valutazione in valuta base; non è disponibile un’attribuzione separata dell’effetto valutario.",
   historyScope:
-    "La valutazione storica include posizioni e liquidità registrate. Le operazioni sui dividendi sono escluse; registra la liquidità separatamente per includerla.",
+    "La valutazione storica include posizioni e liquidità registrate. Obbligazioni e immobili usano valutazioni manuali datate in USD per un massimo di 90 giorni; valori mancanti o più vecchi nascondono il grafico. I dividendi sono esclusi; registra la liquidità separatamente per includerla.",
+  splitReviewTitle: "Revisione del frazionamento",
+  splitReviewHelp:
+    "Il provider ha rilevato un frazionamento che riguarda le posizioni registrate. Confermalo per normalizzare le quantità storiche e il costo per azione; le transazioni originali restano invariate.",
+  splitConfirm: "Conferma frazionamento",
+  splitConfirmed: "Frazionamento confermato; lo storico del portafoglio si aggiorna.",
   historyScopeLabel: "Ambito della valutazione storica",
   historyInsufficient: "Punti storici insufficienti per questo periodo.",
   historyStarts:

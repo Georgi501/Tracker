@@ -84,4 +84,17 @@ describe("tax report export", () => {
     expect(csv).toContain("summary,2025,,,,150.00,100.00,50.00,0.00");
     expect(csv).toContain("sale,2025,2025-03-01,AAPL,1,150.00,100.00,50.00,");
   });
+
+  it("exports the selected fiscal-year label", () => {
+    const years = fifoTaxReport(
+      [
+        { id: "1", assetId: "a", kind: "buy", quantity: 2, price: 100, date: "2024-10-02" },
+        { id: "2", assetId: "a", kind: "sell", quantity: 1, price: 150, date: "2025-03-01" },
+      ] as never,
+      10,
+    );
+    const csv = taxReportCsv(years, [{ id: "a", symbol: "AAPL" }] as never);
+    expect(csv).toContain("summary,2024/25,,,,150.00,100.00,50.00,0.00");
+    expect(csv).toContain("sale,2024/25,2025-03-01,AAPL,1,150.00,100.00,50.00,");
+  });
 });

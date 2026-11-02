@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { parseStockSplits } from "./corporate-actions";
 
 export interface DividendInfo {
   symbol: string;
@@ -47,20 +48,9 @@ export const getCorporateActions = createServerFn({ method: "POST" })
               changePercent: (event.amount / previousAmount - 1) * 100,
             };
           });
-          const splits = (chart.events?.splits ?? [])
-            .filter(
-              (event) =>
-                Number.isFinite(event.numerator) &&
-                Number.isFinite(event.denominator) &&
-                event.numerator > 0 &&
-                event.denominator > 0,
-            )
-            .map((event) => ({
-              date: new Date(event.date).toISOString().slice(0, 10),
-              numerator: event.numerator,
-              denominator: event.denominator,
-            }))
-            .sort((a, b) => b.date.localeCompare(a.date));
+          const splits = parseStockSplits(chart.events?.splits).sort((a, b) =>
+            b.date.localeCompare(a.date),
+          );
           return {
             symbol,
             currency: chart.meta.currency ?? null,

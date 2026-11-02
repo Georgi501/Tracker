@@ -10,6 +10,7 @@ import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPortfolioHistory } from "@/lib/history.functions";
+import { confirmPortfolioSplit } from "@/lib/corporate-actions.functions";
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
 import { riskMetrics } from "@/lib/tools";
@@ -37,7 +38,7 @@ import {
 } from "recharts";
 import { Card } from "@/components/AppShell";
 import { pct, usePortfolio } from "@/lib/store";
-import { assetCurrency, groupBy } from "@/lib/portfolio";
+import { accountValues, assetCurrency, groupBy } from "@/lib/portfolio";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -152,6 +153,8 @@ function Analytics() {
   const c = analyticsCopy[p.lang];
   const empty = EMPTY_COPY[p.lang];
   const historyFn = useServerFn(getPortfolioHistory);
+  const confirmSplitFn = useServerFn(confirmPortfolioSplit);
+  const [confirmingSplit, setConfirmingSplit] = useState<string | null>(null);
   const historyQuery = useQuery({
     queryKey: ["portfolio-history", p.user?.id, p.transactions, "ALL", p.currency],
     queryFn: () => historyFn({ data: { period: "ALL", currency: p.currency } }),
@@ -159,6 +162,28 @@ function Analytics() {
     staleTime: 60000,
   });
   const history: PortfolioPoint[] = historyQuery.data?.points ?? [];
+  const pendingSplits = historyQuery.data?.pendingSplits ?? [];
+  const confirmSplit = async (split: (typeof pendingSplits)[number]) => {
+    const key = `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`;
+    setConfirmingSplit(key);
+    try {
+      await confirmSplitFn({
+        data: {
+          assetId: split.assetId,
+          date: split.date,
+          numerator: split.numerator,
+          denominator: split.denominator,
+        },
+      });
+      await p.reload();
+      await historyQuery.refetch();
+      toast.success(c.splitConfirmed);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : c.unavailable);
+    } finally {
+      setConfirmingSplit(null);
+    }
+  };
   const range =
     period === "CUSTOM"
       ? customRange(startDate, endDate, today)
@@ -309,6 +334,12 @@ function Analytics() {
       ),
     },
   ];
+  const accounts = accountValues(p.assets, p.transactions, p.brokers, p.corporateActions).map(
+    (account) => ({
+      ...account,
+      name: account.name ?? (account.id === "manual" ? c.manualAccount : c.unknownAccount),
+    }),
+  );
   const pricedHoldings = p.holdings.filter(
     (holding) => Number.isFinite(holding.asset.price) && holding.asset.price > 0,
   );
@@ -368,6 +399,17 @@ function Analytics() {
           : "—",
       ]),
     })),
+    {
+      title: c.byAccount,
+      columns: [c.category, c.marketValue, c.weight],
+      rows: accounts.map((account) => [
+        account.name,
+        account.value === null ? c.unavailable : p.money(account.value),
+        account.value !== null && portfolioValuationAvailable && total > 0
+          ? `${((account.value / total) * 100).toFixed(2)}%`
+          : "—",
+      ]),
+    },
     {
       title: c.holdings,
       columns: [c.asset, c.quantity, c.marketValue, c.weight, c.unrealizedPnl, c.return],
@@ -864,6 +906,34 @@ function Analytics() {
           <p className="mt-1 text-xs text-muted-foreground">{c.quoteTimestampMissing}</p>
         )}
       </Card>
+      {pendingSplits.length > 0 && (
+        <Card className="lg:col-span-3 border-warning/40">
+          <h3 className="font-display font-semibold">{c.splitReviewTitle}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{c.splitReviewHelp}</p>
+          <ul className="mt-3 divide-y divide-border">
+            {pendingSplits.map((split) => {
+              const key = `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`;
+              return (
+                <li
+                  key={key}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
+                >
+                  <span className="font-medium">
+                    {split.symbol} · {formatDate(Date.parse(`${split.date}T00:00:00Z`))} ·{" "}
+                    {split.numerator}:{split.denominator}
+                  </span>
+                  <Button
+                    disabled={confirmingSplit !== null}
+                    onClick={() => void confirmSplit(split)}
+                  >
+                    {confirmingSplit === key ? "…" : c.splitConfirm}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
       <ProGate
         className="lg:col-span-3"
         title={p.lang === "bg" ? "Припокриване на ETF-и" : "ETF overlap"}
@@ -1040,6 +1110,17 @@ function Analytics() {
               {c.exposures}
             </h4>
             <div className="grid gap-4 md:grid-cols-2">
+              {accounts.some((account) => account.value !== null) && (
+                <Breakdown
+                  title={c.byAccount}
+                  data={accounts.flatMap((account) =>
+                    account.value === null ? [] : [{ name: account.name, value: account.value }],
+                  )}
+                />
+              )}
+              {accounts.some((account) => account.value === null) && (
+                <p className="text-sm text-muted-foreground">{c.accountQuotesMissing}</p>
+              )}
               {exposures
                 .filter(
                   (exposure) => exposure.title === c.bySector || exposure.title === c.byRegion,

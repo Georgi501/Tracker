@@ -24,6 +24,23 @@ describe("FIFO tax report", () => {
     expect(y.dividends).toBe(25);
   });
 
+  it("groups sales and dividends into a configurable tax year", () => {
+    const years = fifoTaxReport(
+      [
+        { id: "buy", assetId: "a", kind: "buy", quantity: 2, price: 100, date: "2024-09-01" },
+        { id: "div", assetId: "a", kind: "dividend", quantity: 1, price: 10, date: "2024-10-01" },
+        { id: "sale", assetId: "a", kind: "sell", quantity: 1, price: 150, date: "2025-03-01" },
+      ],
+      10,
+    );
+    expect(years).toHaveLength(1);
+    expect(years[0]).toMatchObject({ year: 2024, yearEnd: 2025, realized: 50, dividends: 10 });
+  });
+
+  it("rejects an invalid tax year start month", () => {
+    expect(() => fifoTaxReport([], 13)).toThrow("Tax year start month must be between 1 and 12");
+  });
+
   describe("assetRiskAnalysis", () => {
     it("uses only common real dates and returns contributions summing to portfolio risk", () => {
       const dates = Array.from({ length: 40 }, (_, index) => {

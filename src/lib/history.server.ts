@@ -1,8 +1,16 @@
 import { yahooClient } from "./prices.server";
+import { parseStockSplits } from "./corporate-actions";
 import type { DailyPrice } from "./history";
 const histCache = new Map<
   string,
-  { at: number; v: Promise<{ currency: string; prices: DailyPrice[]; splits: boolean }> }
+  {
+    at: number;
+    v: Promise<{
+      currency: string;
+      prices: DailyPrice[];
+      splits: { date: string; numerator: number; denominator: number }[];
+    }>;
+  }
 >();
 /** Daily closes change at most once a day; cache 6h (failures are evicted so they retry). */
 export function dailyHistory(symbol: string, start: string, end: string, type = "stock") {
@@ -29,5 +37,9 @@ async function dailyHistoryRaw(symbol: string, start: string, end: string, type 
     q.close && q.close > 0 ? [{ date: q.date.toISOString().slice(0, 10), close: q.close }] : [],
   );
   if (!prices.length) throw new Error("History unavailable");
-  return { currency: result.meta.currency, prices, splits: !!result.events?.splits?.length };
+  return {
+    currency: result.meta.currency,
+    prices,
+    splits: parseStockSplits(result.events?.splits),
+  };
 }

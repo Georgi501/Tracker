@@ -8,8 +8,13 @@ import {
   isValidIsoDate,
   mapInBatches,
   periodStart,
+  type HistoryAsset,
 } from "./history";
-import type { Transaction } from "./portfolio";
+import {
+  normalizeTransactionsForSplits,
+  type CorporateAction,
+  type Transaction,
+} from "./portfolio";
 
 const HISTORY_BATCH_SIZE = 5;
 
@@ -24,15 +29,24 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const [a, t] = await Promise.all([
+    const [a, t, actionRows, valuationRows] = await Promise.all([
       context.supabase.from("assets").select("id,symbol,type"),
       context.supabase
         .from("transactions")
         .select("id,asset_id,kind,quantity,price,fee,date")
         .order("date"),
+      context.supabase
+        .from("corporate_actions")
+        .select("asset_id,event_date,numerator,denominator"),
+      context.supabase
+        .from("asset_valuations")
+        .select("asset_id,valuation_date,price_usd")
+        .order("valuation_date"),
     ]);
-    if (a.error || t.error)
-      return { points: [], unavailable: true, assetReturns: [], assetContributions: [] };
+    if (a.error || t.error || actionRows.error || valuationRows.error)
+      throw new Error(
+        `Could not load portfolio history inputs: ${a.error?.message ?? t.error?.message ?? actionRows.error?.message ?? valuationRows.error?.message}`,
+      );
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
       id: r.id,
       assetId: r.asset_id,
@@ -43,7 +57,19 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       date: r.date,
     }));
     if (!txs.length)
-      return { points: [], unavailable: false, assetReturns: [], assetContributions: [] };
+      return {
+        points: [],
+        unavailable: false,
+        assetReturns: [],
+        assetContributions: [],
+        pendingSplits: [],
+      };
+    const approvedActions: CorporateAction[] = (actionRows.data ?? []).map((action) => ({
+      assetId: action.asset_id,
+      date: action.event_date,
+      numerator: Number(action.numerator),
+      denominator: Number(action.denominator),
+    }));
     const now = new Date();
     const end = now.toISOString().slice(0, 10);
     const first = txs[0]?.date ?? end;
@@ -61,20 +87,14 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           .map((transaction) => transaction.assetId),
       );
       const portfolioAssets = (a.data ?? []).filter((asset) => transactedAssetIds.has(asset.id));
-      if (portfolioAssets.some((asset) => asset.type === "bond"))
-        return {
-          points: [],
-          unavailable: true,
-          assetReturns: [],
-          assetContributions: [],
-        };
       const downloadedAssets = await mapInBatches(
-        portfolioAssets.filter((asset) => asset.type !== "cash"),
+        portfolioAssets.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type)),
         HISTORY_BATCH_SIZE,
         async (asset) => {
           const history = await dailyHistory(asset.symbol, fetchStart, end, asset.type);
           return {
             id: asset.id,
+            symbol: asset.symbol,
             type: asset.type,
             currency: history.currency,
             prices: history.prices,
@@ -82,27 +102,79 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           };
         },
       );
-      if (downloadedAssets.some((asset) => asset.splits))
+      const downloadedById = new Map(downloadedAssets.map((asset) => [asset.id, asset]));
+      const valuationsByAsset = new Map<string, { date: string; close: number }[]>();
+      for (const valuation of valuationRows.data ?? []) {
+        const values = valuationsByAsset.get(valuation.asset_id) ?? [];
+        values.push({ date: valuation.valuation_date, close: Number(valuation.price_usd) });
+        valuationsByAsset.set(valuation.asset_id, values);
+      }
+      const assets: HistoryAsset[] = portfolioAssets.map((asset) => {
+        const downloaded = downloadedById.get(asset.id);
+        if (downloaded) return downloaded;
+        if (asset.type === "bond" || asset.type === "realEstate")
+          return {
+            id: asset.id,
+            type: asset.type,
+            currency: "USD",
+            prices: valuationsByAsset.get(asset.id) ?? [],
+            manualValuation: true,
+            splits: [],
+          };
+        return {
+          id: asset.id,
+          type: asset.type,
+          currency: "USD",
+          prices: [],
+          splits: [],
+        };
+      });
+      const hasPositionBefore = (assetId: string, date: string) => {
+        let quantity = 0;
+        for (const transaction of txs) {
+          if (transaction.assetId !== assetId || transaction.date >= date) continue;
+          if (transaction.kind === "buy") quantity += transaction.quantity;
+          else if (transaction.kind === "sell") quantity -= transaction.quantity;
+        }
+        return quantity > 1e-9;
+      };
+      const approvedKeys = new Set(
+        approvedActions.map(
+          (action) => `${action.assetId}|${action.date}|${action.numerator}|${action.denominator}`,
+        ),
+      );
+      const discoveredSplits = downloadedAssets.flatMap((asset) =>
+        asset.splits.map((split) => ({ assetId: asset.id, symbol: asset.symbol, ...split })),
+      );
+      const pendingSplits = discoveredSplits.filter(
+        (split) =>
+          hasPositionBefore(split.assetId, split.date) &&
+          !approvedKeys.has(
+            `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`,
+          ),
+      );
+      if (pendingSplits.length)
         return {
           points: [],
           unavailable: true,
           assetReturns: [],
           assetContributions: [],
+          pendingSplits,
         };
-      const downloadedById = new Map(downloadedAssets.map((asset) => [asset.id, asset]));
-      const assets: {
-        id: string;
-        type: string;
-        currency: string;
-        prices: { date: string; close: number }[];
-      }[] = portfolioAssets.map(
-        (asset) =>
-          downloadedById.get(asset.id) ?? {
-            id: asset.id,
-            type: asset.type,
-            currency: "USD",
-            prices: [],
-          },
+      const confirmedSplits = discoveredSplits.filter(
+        (split) =>
+          hasPositionBefore(split.assetId, split.date) &&
+          approvedKeys.has(
+            `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`,
+          ),
+      );
+      const splitActions: CorporateAction[] = confirmedSplits.map(
+        ({ assetId, date, numerator, denominator }) => ({
+          assetId,
+          date,
+          numerator,
+          denominator,
+        }),
       );
       const history = buildPortfolioHistory(
         assets,
@@ -112,13 +184,14 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         data.currency,
         eur.prices,
         gbp.prices,
+        splitActions,
       );
-      if (history.unavailable) return { ...history, assetReturns: [] };
+      if (history.unavailable) return { ...history, assetReturns: [], pendingSplits: [] };
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
         .toISOString()
         .slice(0, 10);
       const quantities = new Map<string, number>();
-      for (const transaction of txs) {
+      for (const transaction of normalizeTransactionsForSplits(txs, splitActions)) {
         if (transaction.date > end || transaction.kind === "dividend") continue;
         quantities.set(
           transaction.assetId,
@@ -133,8 +206,9 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         data.currency === "USD" ? 1 : currencyRate("EUR", date, eur.prices, gbp.prices);
       const assetReturns = assets.flatMap((asset) => {
         if (asset.type === "cash" || (quantities.get(asset.id) ?? 0) <= 0) return [];
-        const startPrice = closeAt(asset.prices, monthStart);
-        const endPrice = closeAt(asset.prices, end);
+        const maxAge = asset.manualValuation ? 90 : 7;
+        const startPrice = closeAt(asset.prices, monthStart, maxAge);
+        const endPrice = closeAt(asset.prices, end, maxAge);
         const startRate = currencyRate(asset.currency, monthStart, eur.prices, gbp.prices);
         const endRate = currencyRate(asset.currency, end, eur.prices, gbp.prices);
         const startBaseRate = baseRateAt(monthStart);
@@ -154,13 +228,15 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           ? [{ assetId: asset.id, returnPct: (endValue / startValue - 1) * 100 }]
           : [];
       });
-      return { ...history, assetReturns };
-    } catch {
+      return { ...history, assetReturns, pendingSplits: [] };
+    } catch (error) {
+      console.error("Could not build portfolio history", error);
       return {
         points: [],
         unavailable: true,
         assetReturns: [],
         assetContributions: [],
+        pendingSplits: [],
       };
     }
   });

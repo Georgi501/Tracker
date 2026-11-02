@@ -1,4 +1,10 @@
-import type { Asset, Holding, Transaction } from "./portfolio";
+import {
+  normalizeTransactionsForSplits,
+  type Asset,
+  type CorporateAction,
+  type Holding,
+  type Transaction,
+} from "./portfolio";
 import type { PortfolioPoint } from "./history";
 
 export interface RealizedLot {
@@ -11,6 +17,7 @@ export interface RealizedLot {
 }
 export interface TaxYear {
   year: number;
+  yearEnd: number;
   realized: number;
   proceeds: number;
   cost: number;
@@ -186,12 +193,13 @@ export function fifoSalePreview(
   assetId: string,
   quantity: number,
   price: number,
+  splits: CorporateAction[] = [],
 ): FifoSalePreview | null {
   if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0)
     return null;
 
   const lots: { quantity: number; costPerUnit: number }[] = [];
-  for (const transaction of [...txs]
+  for (const transaction of normalizeTransactionsForSplits(txs, splits)
     .filter((item) => item.assetId === assetId && item.kind !== "dividend")
     .sort((a, b) => a.date.localeCompare(b.date))) {
     if (
@@ -236,16 +244,34 @@ export function fifoSalePreview(
   return { quantity, proceeds, cost, gain: proceeds - cost };
 }
 
-/** FIFO realized gains per sale, plus dividends received, grouped by calendar year (USD). */
-export function fifoTaxReport(txs: Transaction[]): TaxYear[] {
-  const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
+/** FIFO realized gains per sale, plus dividends, grouped by a configurable tax-year start month (USD). */
+export function fifoTaxReport(
+  txs: Transaction[],
+  taxYearStartMonth = 1,
+  splits: CorporateAction[] = [],
+): TaxYear[] {
+  if (!Number.isInteger(taxYearStartMonth) || taxYearStartMonth < 1 || taxYearStartMonth > 12)
+    throw new Error("Tax year start month must be between 1 and 12");
+  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
   const lots = new Map<string, { qty: number; costPerUnit: number }[]>();
   const years = new Map<number, TaxYear>();
   const yearOf = (d: string) => {
-    const y = Number(d.slice(0, 4));
+    const calendarYear = Number(d.slice(0, 4));
+    const month = Number(d.slice(5, 7));
+    const y = month < taxYearStartMonth ? calendarYear - 1 : calendarYear;
     let r = years.get(y);
     if (!r) {
-      r = { year: y, realized: 0, proceeds: 0, cost: 0, dividends: 0, sales: [] };
+      r = {
+        year: y,
+        yearEnd: taxYearStartMonth === 1 ? y : y + 1,
+        realized: 0,
+        proceeds: 0,
+        cost: 0,
+        dividends: 0,
+        sales: [],
+      };
       years.set(y, r);
     }
     return r;
@@ -390,16 +416,24 @@ export function taxReportCsv(years: TaxYear[], assets: Asset[]): string {
   const lines = ["section,year,date,symbol,quantity,proceeds_usd,cost_usd,gain_usd,dividends_usd"];
   for (const y of years)
     lines.push(
-      ["summary", y.year, "", "", "", r(y.proceeds), r(y.cost), r(y.realized), r(y.dividends)].join(
-        ",",
-      ),
+      [
+        "summary",
+        y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`,
+        "",
+        "",
+        "",
+        r(y.proceeds),
+        r(y.cost),
+        r(y.realized),
+        r(y.dividends),
+      ].join(","),
     );
   for (const y of years)
     for (const s of y.sales)
       lines.push(
         [
           "sale",
-          y.year,
+          y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`,
           s.date,
           by.get(s.assetId) ?? "",
           s.quantity,

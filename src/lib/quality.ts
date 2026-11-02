@@ -1,4 +1,10 @@
-import { isQuoteStale, type Asset, type Transaction } from "./portfolio";
+import {
+  isQuoteStale,
+  normalizeTransactionsForSplits,
+  type Asset,
+  type CorporateAction,
+  type Transaction,
+} from "./portfolio";
 
 export type IssueKind =
   | "duplicate"
@@ -24,8 +30,10 @@ export function qualityIssues(
   today = new Date().toISOString().slice(0, 10),
   targetReviews: Record<string, string> = {},
   now = Date.now(),
+  splits: CorporateAction[] = [],
 ): Issue[] {
   const out: Issue[] = [];
+  const adjustedTransactions = normalizeTransactionsForSplits(txs, splits);
   const byId = new Map(assets.map((a) => [a.id, a]));
   const sym = (id: string) => byId.get(id)?.symbol ?? "?";
   const seen = new Map<string, number>();
@@ -43,7 +51,7 @@ export function qualityIssues(
       out.push({ kind: "duplicate", symbol: sym(id), date, count: n });
     }
   const pricesByAsset = new Map<string, Transaction[]>();
-  for (const transaction of txs) {
+  for (const transaction of adjustedTransactions) {
     if (
       transaction.kind === "dividend" ||
       !Number.isFinite(transaction.price) ||
@@ -67,7 +75,7 @@ export function qualityIssues(
         out.push({ kind: "priceOutlier", symbol: sym(assetId), date: transaction.date });
   }
   const qty = new Map<string, number>();
-  for (const t of [...txs].sort((a, b) => a.date.localeCompare(b.date))) {
+  for (const t of [...adjustedTransactions].sort((a, b) => a.date.localeCompare(b.date))) {
     if (t.kind === "dividend") continue;
     const q = (qty.get(t.assetId) ?? 0) + (t.kind === "buy" ? t.quantity : -t.quantity);
     qty.set(t.assetId, q);
@@ -91,11 +99,17 @@ export function qualityIssues(
   return out;
 }
 
-export function increasesOversellAmount(before: Transaction[], after: Transaction[]): boolean {
+export function increasesOversellAmount(
+  before: Transaction[],
+  after: Transaction[],
+  splits: CorporateAction[] = [],
+): boolean {
   const totalShortfall = (transactions: Transaction[]) => {
     const quantities = new Map<string, number>();
     let shortfall = 0;
-    for (const transaction of [...transactions].sort((a, b) => a.date.localeCompare(b.date))) {
+    for (const transaction of normalizeTransactionsForSplits(transactions, splits).sort((a, b) =>
+      a.date.localeCompare(b.date),
+    )) {
       if (transaction.kind === "dividend") continue;
       const current = quantities.get(transaction.assetId) ?? 0;
       if (transaction.kind === "sell") {

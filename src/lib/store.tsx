@@ -15,6 +15,7 @@ import {
   computeHoldings,
   type Asset,
   type AssetType,
+  type CorporateAction,
   type Currency,
   type Transaction,
 } from "./portfolio";
@@ -26,11 +27,20 @@ import { convertImport } from "./history.functions";
 import type { ImportedTx } from "./csv-import";
 import { trackAnalyticsEvent } from "./analytics";
 import { increasesOversellAmount } from "./quality";
+import { isValidIsoDate } from "./history";
 
 export interface Broker {
   id: string;
   name: string;
   format: string;
+}
+
+export interface ManualAssetValuation {
+  id: string;
+  assetId: string;
+  date: string;
+  priceUsd: number;
+  note: string;
 }
 
 interface State {
@@ -52,12 +62,20 @@ interface State {
   assets: Asset[];
   transactions: Transaction[];
   brokers: Broker[];
+  corporateActions: CorporateAction[];
+  manualValuations: ManualAssetValuation[];
   dataError: boolean;
   pricesLive: boolean;
   priceNote: string | null;
   eurPerUsd: number | null;
   addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
   updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;
+  saveManualValuation: (
+    assetId: string,
+    date: string,
+    priceUsd: number,
+    note: string,
+  ) => Promise<void>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   restoreTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransactions: (ids: string[]) => Promise<number>;
@@ -121,6 +139,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const transactionsRef = useRef(transactions);
   transactionsRef.current = transactions;
   const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [corporateActions, setCorporateActions] = useState<CorporateAction[]>([]);
+  const [manualValuations, setManualValuations] = useState<ManualAssetValuation[]>([]);
   const [dataError, setDataError] = useState(false);
   const [pricesLive, setPricesLive] = useState(false);
   const [priceNote, setPriceNote] = useState<string | null>(null);
@@ -131,7 +151,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const quoteFn = useServerFn(getQuotes);
   const fxFn = useServerFn(getExchangeRate);
   const convertFn = useServerFn(convertImport);
-  const holdings = useMemo(() => computeHoldings(assets, transactions), [assets, transactions]);
+  const holdings = useMemo(
+    () => computeHoldings(assets, transactions, corporateActions),
+    [assets, transactions, corporateActions],
+  );
 
   useEffect(() => {
     const refresh = () => {
@@ -182,6 +205,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setCorporateActions([]);
+          setManualValuations([]);
           setIsPro(false);
           setIsAdmin(false);
           setDataError(false);
@@ -198,6 +223,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setCorporateActions([]);
+          setManualValuations([]);
           setIsPro(false);
           setIsAdmin(false);
           setDataError(false);
@@ -226,6 +253,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setCorporateActions([]);
+          setManualValuations([]);
           setIsPro(false);
           setIsAdmin(false);
           setDataError(false);
@@ -258,6 +287,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setAssets([]);
       setTx([]);
       setBrokers([]);
+      setCorporateActions([]);
+      setManualValuations([]);
       setIsPro(false);
       setIsAdmin(false);
       setDataError(false);
@@ -272,6 +303,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       supabase.from("assets").select("*"),
       supabase.from("transactions").select("*"),
       supabase.from("brokers").select("id,name,format").order("created_at"),
+      supabase.from("corporate_actions").select("asset_id,event_date,numerator,denominator"),
+      supabase.from("asset_valuations").select("*").order("valuation_date"),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.rpc("is_pro", { _user_id: user.id }),
       supabase.rpc("is_site_admin"),
@@ -283,7 +316,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       return null;
     });
     if (!result) return;
-    const [a, t, b, p, pro, admin] = result;
+    const [a, t, b, ca, mv, p, pro, admin] = result;
     if (userRef.current?.id !== user.id) return;
     if (pro.error) {
       console.error("Unable to verify portfolio access", pro.error);
@@ -293,10 +326,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
     setIsPro(!!pro.data);
     setAccessReady(true);
-    if (a.error || t.error || b.error || p.error || admin.error) {
+    if (a.error || t.error || b.error || ca.error || mv.error || p.error || admin.error) {
       console.error(
         "Unable to reload portfolio data",
-        a.error ?? t.error ?? b.error ?? p.error ?? admin.error,
+        a.error ?? t.error ?? b.error ?? ca.error ?? mv.error ?? p.error ?? admin.error,
       );
       setDataError(true);
       return;
@@ -306,6 +339,23 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setDataUpdatedAt(Date.now());
     setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
+    const actions: CorporateAction[] = (ca.data ?? []).map((action) => ({
+      assetId: action.asset_id,
+      date: action.event_date,
+      numerator: Number(action.numerator),
+      denominator: Number(action.denominator),
+    }));
+    setCorporateActions(actions);
+    const valuationRows = mv.data ?? [];
+    setManualValuations(
+      valuationRows.map((valuation) => ({
+        id: valuation.id,
+        assetId: valuation.asset_id,
+        date: valuation.valuation_date,
+        priceUsd: Number(valuation.price_usd),
+        note: valuation.note,
+      })),
+    );
     if (p.data) {
       setDisplayName(p.data.display_name ?? "");
       if (isLang(p.data.lang)) setLangS(p.data.lang);
@@ -323,9 +373,16 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       ...(r.source_transaction_id ? { sourceTransactionId: r.source_transaction_id } : {}),
     }));
     const rows = (a.data ?? []) as AssetRow[];
+    const latestValuationByAsset = new Map<string, (typeof valuationRows)[number]>();
+    for (const valuation of valuationRows) {
+      const current = latestValuationByAsset.get(valuation.asset_id);
+      if (!current || valuation.valuation_date > current.valuation_date)
+        latestValuationByAsset.set(valuation.asset_id, valuation);
+    }
     const currentById = new Map(assetsRef.current.map((asset) => [asset.id, asset]));
     const base: Asset[] = rows.map((r) => {
       const current = currentById.get(r.id);
+      const manualValuation = latestValuationByAsset.get(r.id);
       return {
         id: r.id,
         symbol: r.symbol,
@@ -336,10 +393,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         price:
           r.type === "cash"
             ? 1
-            : r.type === "bond"
-              ? Number(r.manual_price ?? Number.NaN)
+            : r.type === "bond" || r.type === "realEstate"
+              ? Number(manualValuation?.price_usd ?? r.manual_price ?? Number.NaN)
               : (current?.price ?? Number.NaN),
-        change24h: r.type === "cash" || r.type === "bond" ? 0 : (current?.change24h ?? Number.NaN),
+        change24h:
+          r.type === "cash" || r.type === "bond" || r.type === "realEstate"
+            ? 0
+            : (current?.change24h ?? Number.NaN),
         dividendPerShare: Number(r.dividend_per_share),
         payMonths: r.pay_months ?? [],
         ...(r.bond_coupon_rate !== null ? { bondCouponRate: Number(r.bond_coupon_rate) } : {}),
@@ -451,6 +511,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       assets,
       transactions,
       brokers,
+      corporateActions,
+      manualValuations,
       dataError,
       pricesLive,
       priceNote,
@@ -488,15 +550,49 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         const asset = assetsRef.current.find((item) => item.id === assetId);
         if (!asset || asset.type !== "bond")
           throw new Error(lang === "bg" ? "Облигацията не е намерена." : "Bond not found.");
-        const { data, error } = await supabase
-          .from("assets")
-          .update({ manual_price: priceUsd })
-          .eq("id", assetId)
-          .select("id")
-          .maybeSingle();
+        const { error } = await supabase.from("asset_valuations").upsert(
+          {
+            user_id: user.id,
+            asset_id: assetId,
+            valuation_date: new Date().toISOString().slice(0, 10),
+            price_usd: priceUsd,
+            note: "",
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,asset_id,valuation_date" },
+        );
         if (error) throw error;
-        if (!data)
-          throw new Error(lang === "bg" ? "Облигацията не е намерена." : "Bond not found.");
+        await reload();
+      },
+      saveManualValuation: async (assetId, date, priceUsd, note) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        if (
+          !isValidIsoDate(date) ||
+          date > new Date().toISOString().slice(0, 10) ||
+          !Number.isFinite(priceUsd) ||
+          priceUsd <= 0 ||
+          note.length > 500
+        )
+          throw new Error(
+            lang === "bg"
+              ? "Въведи валидна дата, положителна стойност в USD и бележка до 500 знака."
+              : "Enter a valid date, a positive USD value, and a note of at most 500 characters.",
+          );
+        const asset = assetsRef.current.find((item) => item.id === assetId);
+        if (!asset || (asset.type !== "bond" && asset.type !== "realEstate"))
+          throw new Error(lang === "bg" ? "Активът не е намерен." : "Asset not found.");
+        const { error } = await supabase.from("asset_valuations").upsert(
+          {
+            user_id: user.id,
+            asset_id: assetId,
+            valuation_date: date,
+            price_usd: priceUsd,
+            note: note.trim(),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,asset_id,valuation_date" },
+        );
+        if (error) throw error;
         await reload();
       },
       updateTransaction: async (transaction) => {
@@ -507,7 +603,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         );
         if (nextTransactions.every((item) => item.id !== transaction.id))
           throw new Error(lang === "bg" ? "Сделката не е намерена." : "Transaction not found.");
-        if (increasesOversellAmount(currentTransactions, nextTransactions))
+        if (increasesOversellAmount(currentTransactions, nextTransactions, corporateActions))
           throw new Error(
             lang === "bg"
               ? "Промяната би довела до продажба на повече налични акции."
@@ -533,10 +629,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       restoreTransaction: async (transaction) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
         if (
-          increasesOversellAmount(transactionsRef.current, [
-            ...transactionsRef.current,
-            transaction,
-          ])
+          increasesOversellAmount(
+            transactionsRef.current,
+            [...transactionsRef.current, transaction],
+            corporateActions,
+          )
         )
           throw new Error(
             lang === "bg"
@@ -735,6 +832,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     transactions,
     holdings,
     brokers,
+    corporateActions,
+    manualValuations,
     dataError,
     pricesLive,
     priceNote,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountValues,
   computeHoldings,
   FX,
   irr,
@@ -7,6 +8,7 @@ import {
   isQuoteStale,
   isUsableQuote,
   portfolioIrr,
+  normalizeTransactionsForSplits,
   projectedBondCoupon,
   type Asset,
 } from "@/lib/portfolio";
@@ -66,6 +68,62 @@ describe("portfolio math", () => {
     expect(h.quantity).toBe(1);
     expect(h.costBasis).toBe(12);
     expect(h.avgCost).toBe(12);
+  });
+  it("normalizes pre-split units and per-share cost without changing invested value", () => {
+    const split = [{ assetId: "x", date: "2024-02-01", numerator: 2, denominator: 1 }];
+    const transactions = [
+      {
+        id: "buy",
+        assetId: "x",
+        kind: "buy" as const,
+        quantity: 10,
+        price: 100,
+        date: "2024-01-01",
+      },
+    ];
+    expect(normalizeTransactionsForSplits(transactions, split)[0]).toMatchObject({
+      quantity: 20,
+      price: 50,
+    });
+    const holding = computeHoldings([{ ...a, price: 50 }], transactions, split)[0]!;
+    expect(holding.quantity).toBe(20);
+    expect(holding.costBasis).toBe(1000);
+    expect(holding.avgCost).toBe(50);
+  });
+  it("groups current holdings by broker without allocating unassigned transactions to an account", () => {
+    const accounts = accountValues(
+      [a],
+      [
+        {
+          id: "one",
+          assetId: "x",
+          brokerId: "broker-1",
+          kind: "buy",
+          quantity: 3,
+          price: 10,
+          date: "2024-01-01",
+        },
+        {
+          id: "two",
+          assetId: "x",
+          brokerId: "broker-2",
+          kind: "buy",
+          quantity: 2,
+          price: 15,
+          date: "2024-01-01",
+        },
+        { id: "manual", assetId: "x", kind: "buy", quantity: 1, price: 20, date: "2024-01-01" },
+      ],
+      [
+        { id: "broker-1", name: "Broker One" },
+        { id: "broker-2", name: "Broker Two" },
+      ],
+    );
+    expect(accounts).toEqual([
+      { id: "broker-1", name: "Broker One", value: 60, missingQuotes: 0 },
+      { id: "broker-2", name: "Broker Two", value: 40, missingQuotes: 0 },
+      { id: "manual", name: null, value: 20, missingQuotes: 0 },
+    ]);
   });
   it("supports only EUR and USD (no BGN)", () => {
     expect(Object.keys(FX).sort()).toEqual(["EUR", "USD"]);

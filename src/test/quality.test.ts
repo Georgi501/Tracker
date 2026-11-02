@@ -95,4 +95,13 @@ describe("qualityIssues", () => {
       increasesOversellAmount(before, [t("1", "x", "buy", 0.5, "2024-01-01"), before[1]!]),
     ).toBe(true);
   });
+  it("does not flag post-split quantities as oversold", () => {
+    const transactions = [
+      t("1", "x", "buy", 10, "2024-01-01", 100),
+      t("2", "x", "sell", 15, "2024-03-01", 50),
+    ];
+    const splits = [{ assetId: "x", date: "2024-02-01", numerator: 2, denominator: 1 }];
+    expect(increasesOversellAmount(transactions, transactions, splits)).toBe(false);
+    expect(qualityIssues([a("x")], transactions, "2025-01-01", {}, Date.now(), splits)).toEqual([]);
+  });
 });

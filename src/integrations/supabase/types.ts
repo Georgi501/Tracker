@@ -186,6 +186,88 @@ export type Database = {
           },
         ];
       };
+      corporate_actions: {
+        Row: {
+          asset_id: string;
+          created_at: string;
+          denominator: number;
+          event_date: string;
+          id: string;
+          numerator: number;
+          source: string;
+          user_id: string;
+        };
+        Insert: {
+          asset_id: string;
+          created_at?: string;
+          denominator: number;
+          event_date: string;
+          id?: string;
+          numerator: number;
+          source?: string;
+          user_id: string;
+        };
+        Update: {
+          asset_id?: string;
+          created_at?: string;
+          denominator?: number;
+          event_date?: string;
+          id?: string;
+          numerator?: number;
+          source?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "corporate_actions_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      asset_valuations: {
+        Row: {
+          asset_id: string;
+          created_at: string;
+          id: string;
+          note: string;
+          price_usd: number;
+          updated_at: string;
+          user_id: string;
+          valuation_date: string;
+        };
+        Insert: {
+          asset_id: string;
+          created_at?: string;
+          id?: string;
+          note?: string;
+          price_usd: number;
+          updated_at?: string;
+          user_id: string;
+          valuation_date: string;
+        };
+        Update: {
+          asset_id?: string;
+          created_at?: string;
+          id?: string;
+          note?: string;
+          price_usd?: number;
+          updated_at?: string;
+          user_id?: string;
+          valuation_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "asset_valuations_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       direct_messages: {
         Row: {
           body: string;

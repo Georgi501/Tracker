@@ -12,7 +12,7 @@ import { proCopy } from "@/lib/pro-i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Card, Delta } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ import {
   splitDuplicates,
   type ImportedTx,
 } from "@/lib/csv-import";
-import { type Lang } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { toast } from "sonner";
 import { notifyImportWithUndo } from "@/lib/import-undo";
 const CRYPTO_SYMBOLS = MARKET_ASSETS.filter((a) => a.type === "crypto").map((a) => a.symbol);
@@ -494,6 +494,7 @@ function Rebalance() {
             holding.asset.id,
             quantity,
             holding.asset.price,
+            p.corporateActions,
           );
           return [{ holding, quantity, preview }];
         })
@@ -622,10 +623,50 @@ function Metric({ label, value }: { label: string; value: string }) {
 function Tax() {
   const p = usePortfolio();
   const c = toolsCopy[p.lang];
-  const years = useMemo(() => fifoTaxReport(p.transactions), [p.transactions]);
+  const [taxYearStartMonth, setTaxYearStartMonth] = useState(1);
+  const [taxSettingsLoaded, setTaxSettingsLoaded] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem("folio-tax-year-start-month"));
+      if (Number.isInteger(saved) && saved >= 1 && saved <= 12) setTaxYearStartMonth(saved);
+    } catch (error) {
+      console.error("Unable to read tax-year preference", error);
+    }
+    setTaxSettingsLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (!taxSettingsLoaded) return;
+    try {
+      localStorage.setItem("folio-tax-year-start-month", String(taxYearStartMonth));
+    } catch (error) {
+      console.error("Unable to save tax-year preference", error);
+    }
+  }, [taxSettingsLoaded, taxYearStartMonth]);
+  const years = useMemo(
+    () => fifoTaxReport(p.transactions, taxYearStartMonth, p.corporateActions),
+    [p.transactions, p.corporateActions, taxYearStartMonth],
+  );
+  const monthName = (month: number) =>
+    new Intl.DateTimeFormat(languageLocale(p.lang), { month: "long", timeZone: "UTC" }).format(
+      new Date(Date.UTC(2026, month - 1, 1)),
+    );
   return (
     <Card>
       <h3 className="font-display mb-3 font-semibold">{c.tax}</h3>
+      <label className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        <span>{c.taxYearStartsIn}</span>
+        <select
+          value={taxYearStartMonth}
+          onChange={(event) => setTaxYearStartMonth(Number(event.target.value))}
+          className="h-10 rounded-md border border-input bg-background px-3"
+        >
+          {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
+            <option key={month} value={month}>
+              {monthName(month)}
+            </option>
+          ))}
+        </select>
+      </label>
       {!years.length ? (
         <p className="text-sm text-muted-foreground">{c.noSales}</p>
       ) : (
@@ -643,7 +684,9 @@ function Tax() {
             <tbody>
               {years.map((y) => (
                 <tr key={y.year} className="border-t border-border">
-                  <td className="py-2 font-semibold">{y.year}</td>
+                  <td className="py-2 font-semibold">
+                    {y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`}
+                  </td>
                   <td className="text-right">{p.money(y.proceeds)}</td>
                   <td className="text-right">{p.money(y.cost)}</td>
                   <td className="text-right">

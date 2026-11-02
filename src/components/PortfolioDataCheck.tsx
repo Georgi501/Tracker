@@ -126,7 +126,14 @@ const COPY: Record<Lang, Copy> = {
 export function PortfolioDataCheck() {
   const p = usePortfolio();
   const c = COPY[p.lang];
-  const issues = qualityIssues(p.assets, p.transactions);
+  const issues = qualityIssues(
+    p.assets,
+    p.transactions,
+    undefined,
+    {},
+    Date.now(),
+    p.corporateActions,
+  );
 
   if (!p.user || !p.transactions.length) return null;
 

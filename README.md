@@ -50,6 +50,8 @@ Apply `drizzle/migrations/0014_onboarding_analytics_funnel.sql` before enabling 
 
 Apply `drizzle/migrations/0016_direct_broker_connections.sql` before enabling direct IBKR or Trading 212 connections. Set a unique `BROKER_CREDENTIALS_ENCRYPTION_KEY` as a local `.dev.vars` value and Cloudflare Worker secret; generate it from 32 random bytes and base64-encode it. The app stores only AES-GCM-encrypted broker credentials in a service-role-only table. Trading 212 connections use the official API and require a read-only key with portfolio, order-history, and dividend-history permissions. IBKR connections use Flex Web Service; users need a Flex Query with Trades and dividend cash transactions. IBKR report tokens expire and must be renewed by the user. Broker sync is read-only and imports executions/dividends, never orders or deposits/withdrawals.
 
+Apply `drizzle/migrations/0017_reviewable_splits_and_asset_valuations.sql` before deploying split reconciliation or dated manual valuations for bonds and real estate. Apply all database migrations to the intended Supabase project before deploying code that depends on them.
+
 ### Owner console setup
 
 After applying `0013_owner_admin_access.sql`, provision the existing owner account once in the Supabase SQL Editor. Replace the placeholder with the email of the owner account that already exists in `auth.users`; this inserts only that account as a site admin and grants permanent Pro access. The console exposes aggregate account/subscription counts and Pro status by email, but never other users' portfolios or messages.

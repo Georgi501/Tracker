@@ -200,7 +200,14 @@ export function DataQuality() {
       .filter((symbol) => targetReviews[symbol])
       .map((symbol) => [symbol, targetReviews[symbol]!]),
   );
-  const issues = qualityIssues(p.assets, p.transactions, undefined, activeReviews);
+  const issues = qualityIssues(
+    p.assets,
+    p.transactions,
+    undefined,
+    activeReviews,
+    Date.now(),
+    p.corporateActions,
+  );
   if (!issues.length)
     return (
       <p className="flex items-center gap-2 text-sm text-success">
