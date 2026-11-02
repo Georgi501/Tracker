@@ -4,10 +4,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePortfolio } from "@/lib/store";
-import { marketDcf, searchMarket } from "@/lib/market.functions";
+import { marketDcf, searchMarket, type DcfData } from "@/lib/market.functions";
 import { marketSearchSchema, searchCatalog } from "@/lib/market-search";
-import { dcfValue, scenario, valuationGap, type DcfCase } from "@/lib/dcf";
+import {
+  dcfAnalysis,
+  dcfValue,
+  hasUsableDcfFundamentals,
+  scenario,
+  valuationGap,
+  type DcfCase,
+} from "@/lib/dcf";
 import type { Lang } from "@/lib/i18n";
+import { isQuoteFresh, isUsableQuote } from "@/lib/portfolio";
 
 type Copy = {
   ticker: string;
@@ -28,6 +36,32 @@ type Copy = {
   sliderHelp: Record<"growth" | "discount" | "terminal", string>;
   gateDescription: string;
   disclaimer: string;
+  providerError: string;
+  noData: string;
+  incompleteData: string;
+  currencyMismatch: string;
+  assumptions: string;
+  dataSource: string;
+  fetchedAt: string;
+  priceAsOf: string;
+  unknownDate: string;
+  terminalShare: string;
+  sensitivity: string;
+  growthAxis: string;
+  discountAxis: string;
+  revenueProxy: string;
+  defaultGrowth: string;
+  noPositiveValue: string;
+  retry: string;
+  invalidTicker: string;
+  stalePrice: string;
+  missingPriceTime: string;
+  terminalWarning: string;
+  fcfLabel: string;
+  cashLabel: string;
+  debtLabel: string;
+  sharesLabel: string;
+  equityOnly: string;
 };
 export const dcfCopy: Record<Lang, Copy> = {
   en: {
@@ -36,17 +70,17 @@ export const dcfCopy: Record<Lang, Copy> = {
     bear: "Bear case",
     base: "Base case",
     bull: "Bull case",
-    intrinsic: "Intrinsic value",
+    intrinsic: "DCF estimate",
     price: "Price",
     under: "Undervalued by",
     over: "Overvalued by",
     growth: "FCF growth / yr",
-    discount: "Discount rate (WACC)",
+    discount: "Discount rate (assumption)",
     terminal: "Terminal growth",
     na: "DCF is not applicable: positive free cash flow or share data is missing.",
     loading: "Loading real financials…",
     explain: (g, n) =>
-      `Discounted cash flow model: ${n}'s free cash flow grows ${g} a year for 5 years, then at the terminal rate.`,
+      `Simplified year-end DCF: ${n}'s free cash flow grows ${g} annually for five years, then at the terminal rate. Cash is added and debt subtracted.`,
     sliderHelp: {
       growth: "Your assumed annual free-cash-flow growth for the next five years.",
       discount:
@@ -55,7 +89,42 @@ export const dcfCopy: Record<Lang, Copy> = {
     },
     gateDescription:
       "Build bear, base and bull DCF scenarios from real company financials and assumptions you control.",
-    disclaimer: "Estimate based on your assumptions, not investment advice.",
+    disclaimer:
+      "Simplified year-end model; it does not forecast dilution or company-specific risks. Not a forecast or investment advice.",
+    providerError: "Financial data could not be loaded. Please try again.",
+    noData: "No usable DCF fundamentals are available for this symbol.",
+    incompleteData:
+      "A valuation is withheld because required financial inputs are missing or invalid.",
+    currencyMismatch:
+      "Financials and share price use different or unknown currencies; valuation is withheld.",
+    assumptions: "Model assumptions",
+    dataSource: "Source: Yahoo Finance; latest reported fundamentals available to the provider.",
+    fetchedAt: "Data retrieved",
+    priceAsOf: "Market price timestamp",
+    unknownDate: "Timestamp unavailable",
+    terminalShare: "Terminal value share of operating value",
+    sensitivity: "Sensitivity analysis · value per share",
+    growthAxis: "FCF growth",
+    discountAxis: "Discount rate",
+    revenueProxy:
+      "Starting growth assumption uses reported revenue growth as a proxy, not historical FCF growth.",
+    defaultGrowth:
+      "No revenue-growth input is available; a 5% starting assumption is used. Adjust it before relying on the result.",
+    noPositiveValue:
+      "The assumptions imply no positive equity value per share; the market comparison is omitted.",
+    retry: "Try again",
+    invalidTicker: "Enter a valid ticker symbol.",
+    stalePrice:
+      "The market quote is older than four days; comparison is hidden until a fresh quote is available.",
+    missingPriceTime: "No usable timestamped market quote is available; comparison is hidden.",
+    terminalWarning:
+      "A large share of this estimate comes from the terminal value, so it is especially sensitive to long-term assumptions.",
+    fcfLabel: "Reported free cash flow",
+    cashLabel: "Cash",
+    debtLabel: "Debt",
+    sharesLabel: "Shares outstanding",
+    equityOnly:
+      "This simplified DCF model is for individual listed companies, not ETFs or other instruments.",
   },
   bg: {
     ticker: "Тикер, напр. ADBE",
@@ -63,17 +132,17 @@ export const dcfCopy: Record<Lang, Copy> = {
     bear: "Песимистичен",
     base: "Базов",
     bull: "Оптимистичен",
-    intrinsic: "Справедлива стойност",
+    intrinsic: "DCF оценка",
     price: "Цена",
     under: "Подценена с",
     over: "Надценена с",
     growth: "Ръст на FCF / год.",
-    discount: "Дисконтов процент (WACC)",
+    discount: "Дисконтов процент (допускане)",
     terminal: "Терминален ръст",
     na: "DCF не е приложим: липсва положителен свободен паричен поток или данни за акциите.",
     loading: "Зареждане на реални финансови данни…",
     explain: (g, n) =>
-      `Модел на дисконтираните парични потоци: свободният паричен поток на ${n} расте с ${g} годишно за 5 години, след това с терминалния темп.`,
+      `Опростен DCF с потоци в края на годината: свободният паричен поток на ${n} расте с ${g} годишно за пет години, после с терминалния темп. Кешът се добавя, а дългът се приспада.`,
     sliderHelp: {
       growth: "Предполагаемият годишен ръст на свободния паричен поток през следващите пет години.",
       discount:
@@ -83,7 +152,43 @@ export const dcfCopy: Record<Lang, Copy> = {
     },
     gateDescription:
       "Изгради песимистичен, базов и оптимистичен DCF сценарий по реални финансови данни и твои допускания.",
-    disclaimer: "Оценка по твоите допускания, не е инвестиционен съвет.",
+    disclaimer:
+      "Опростен модел с потоци в края на годината; не прогнозира разводняване на акциите или специфичните рискове на компанията. Не е прогноза или инвестиционен съвет.",
+    providerError: "Финансовите данни не се заредиха. Опитай отново.",
+    noData: "Няма използваеми DCF финансови данни за този символ.",
+    incompleteData:
+      "Оценка не се показва, защото липсват задължителни или валидни финансови данни.",
+    currencyMismatch:
+      "Финансовите данни и цената са в различни или неизвестни валути; оценката е скрита.",
+    assumptions: "Допускания на модела",
+    dataSource:
+      "Източник: Yahoo Finance; последните налични за доставчика отчетни финансови данни.",
+    fetchedAt: "Данните са получени",
+    priceAsOf: "Час на пазарната цена",
+    unknownDate: "Няма наличен час",
+    terminalShare: "Дял на терминалната стойност от оперативната стойност",
+    sensitivity: "Анализ на чувствителността · стойност на акция",
+    growthAxis: "Ръст на FCF",
+    discountAxis: "Дисконтов процент",
+    revenueProxy:
+      "Началното допускане за ръст използва отчетения ръст на приходите като ориентир, не исторически ръст на FCF.",
+    defaultGrowth:
+      "Няма данни за ръста на приходите; използва се начално допускане 5%. Промени го, преди да разчиташ на резултата.",
+    noPositiveValue:
+      "Допусканията не дават положителна стойност на акция; сравнението с пазара е скрито.",
+    retry: "Опитай отново",
+    invalidTicker: "Въведи валиден борсов тикер.",
+    stalePrice:
+      "Пазарната котировка е по-стара от четири дни; сравнението е скрито до получаване на актуална цена.",
+    missingPriceTime: "Няма валидна пазарна котировка с времеви печат; сравнението е скрито.",
+    terminalWarning:
+      "Голяма част от оценката идва от терминалната стойност и затова е особено чувствителна към дългосрочните допускания.",
+    fcfLabel: "Отчетен свободен паричен поток",
+    cashLabel: "Парични средства",
+    debtLabel: "Дълг",
+    sharesLabel: "Акции в обращение",
+    equityOnly:
+      "Опростеният DCF модел е за отделни публични компании, не за ETF-и или други инструменти.",
   },
   de: {
     ticker: "Ticker, z. B. ADBE",
@@ -91,17 +196,17 @@ export const dcfCopy: Record<Lang, Copy> = {
     bear: "Bär-Szenario",
     base: "Basis",
     bull: "Bullen-Szenario",
-    intrinsic: "Innerer Wert",
+    intrinsic: "DCF-Schätzung",
     price: "Kurs",
     under: "Unterbewertet um",
     over: "Überbewertet um",
     growth: "FCF-Wachstum / J.",
-    discount: "Diskontsatz (WACC)",
+    discount: "Diskontsatz (Annahme)",
     terminal: "Ewiges Wachstum",
     na: "DCF nicht anwendbar: positiver Free Cashflow oder Aktienanzahl fehlt.",
     loading: "Lade echte Finanzdaten…",
     explain: (g, n) =>
-      `DCF-Modell: Der Free Cashflow von ${n} wächst 5 Jahre lang um ${g} pro Jahr, danach mit der Endrate.`,
+      `Vereinfachtes DCF mit Jahresendwerten: Der Free Cashflow von ${n} wächst fünf Jahre lang jährlich um ${g}, danach mit der Endrate. Barmittel werden addiert und Schulden abgezogen.`,
     sliderHelp: {
       growth: "Angenommenes jährliches Free-Cashflow-Wachstum in den nächsten fünf Jahren.",
       discount:
@@ -111,7 +216,43 @@ export const dcfCopy: Record<Lang, Copy> = {
     },
     gateDescription:
       "Erstelle Bären-, Basis- und Bullen-DCF-Szenarien mit echten Unternehmensdaten und eigenen Annahmen.",
-    disclaimer: "Schätzung nach deinen Annahmen, keine Anlageberatung.",
+    disclaimer:
+      "Vereinfachtes Jahresendmodell; Verwässerung und unternehmensspezifische Risiken werden nicht prognostiziert. Keine Prognose oder Anlageberatung.",
+    providerError: "Finanzdaten konnten nicht geladen werden. Bitte erneut versuchen.",
+    noData: "Für dieses Symbol sind keine verwendbaren DCF-Daten verfügbar.",
+    incompleteData:
+      "Die Bewertung wird ausgeblendet, da erforderliche Finanzdaten fehlen oder ungültig sind.",
+    currencyMismatch:
+      "Finanzdaten und Aktienkurs haben unterschiedliche oder unbekannte Währungen; Bewertung ausgeblendet.",
+    assumptions: "Modellannahmen",
+    dataSource: "Quelle: Yahoo Finance; zuletzt verfügbare gemeldete Fundamentaldaten.",
+    fetchedAt: "Daten abgerufen",
+    priceAsOf: "Zeitstempel des Marktpreises",
+    unknownDate: "Zeitstempel nicht verfügbar",
+    terminalShare: "Anteil des Endwerts am operativen Wert",
+    sensitivity: "Sensitivitätsanalyse · Wert je Aktie",
+    growthAxis: "FCF-Wachstum",
+    discountAxis: "Diskontsatz",
+    revenueProxy:
+      "Die anfängliche Wachstumsannahme nutzt das gemeldete Umsatzwachstum als Näherung, nicht das historische FCF-Wachstum.",
+    defaultGrowth:
+      "Kein Umsatzwachstum verfügbar; anfängliche Annahme: 5 %. Vor der Verwendung anpassen.",
+    noPositiveValue:
+      "Die Annahmen ergeben keinen positiven Eigenkapitalwert je Aktie; der Marktvergleich entfällt.",
+    retry: "Erneut versuchen",
+    invalidTicker: "Bitte ein gültiges Tickersymbol eingeben.",
+    stalePrice:
+      "Der Marktkurs ist älter als vier Tage; der Vergleich bleibt bis zu einem aktuellen Kurs ausgeblendet.",
+    missingPriceTime:
+      "Kein gültiger zeitgestempelter Marktkurs verfügbar; der Vergleich bleibt ausgeblendet.",
+    terminalWarning:
+      "Ein großer Teil der Schätzung stammt aus dem Endwert und reagiert daher besonders empfindlich auf langfristige Annahmen.",
+    fcfLabel: "Gemeldeter freier Cashflow",
+    cashLabel: "Barmittel",
+    debtLabel: "Schulden",
+    sharesLabel: "Ausstehende Aktien",
+    equityOnly:
+      "Dieses vereinfachte DCF-Modell ist für einzelne börsennotierte Unternehmen gedacht, nicht für ETFs oder andere Instrumente.",
   },
   es: {
     ticker: "Ticker, p. ej. ADBE",
@@ -119,17 +260,17 @@ export const dcfCopy: Record<Lang, Copy> = {
     bear: "Pesimista",
     base: "Base",
     bull: "Optimista",
-    intrinsic: "Valor intrínseco",
+    intrinsic: "Estimación DCF",
     price: "Precio",
     under: "Infravalorada un",
     over: "Sobrevalorada un",
     growth: "Crecimiento FCF / año",
-    discount: "Tasa de descuento (WACC)",
+    discount: "Tasa de descuento (supuesto)",
     terminal: "Crecimiento terminal",
     na: "DCF no aplicable: falta flujo de caja libre positivo o datos de acciones.",
     loading: "Cargando datos financieros reales…",
     explain: (g, n) =>
-      `Modelo DCF: el flujo de caja libre de ${n} crece un ${g} anual durante 5 años y luego a la tasa terminal.`,
+      `DCF simplificado con flujos al cierre del año: el flujo de caja libre de ${n} crece un ${g} anual durante cinco años y luego a la tasa terminal. Se suma el efectivo y se resta la deuda.`,
     sliderHelp: {
       growth: "Crecimiento anual supuesto del flujo de caja libre durante los próximos cinco años.",
       discount:
@@ -139,7 +280,43 @@ export const dcfCopy: Record<Lang, Copy> = {
     },
     gateDescription:
       "Crea escenarios DCF pesimistas, base y optimistas con datos financieros reales y tus propios supuestos.",
-    disclaimer: "Estimación según tus supuestos, no es asesoramiento.",
+    disclaimer:
+      "Modelo simplificado con flujos al cierre del año; no proyecta dilución ni riesgos específicos de la empresa. No es una previsión ni asesoramiento financiero.",
+    providerError: "No se pudieron cargar los datos financieros. Inténtalo de nuevo.",
+    noData: "No hay datos fundamentales DCF utilizables para este símbolo.",
+    incompleteData:
+      "Se oculta la valoración porque faltan datos financieros necesarios o no son válidos.",
+    currencyMismatch:
+      "Los datos financieros y el precio usan divisas distintas o desconocidas; se oculta la valoración.",
+    assumptions: "Supuestos del modelo",
+    dataSource: "Fuente: Yahoo Finance; últimos datos fundamentales publicados disponibles.",
+    fetchedAt: "Datos obtenidos",
+    priceAsOf: "Fecha y hora del precio de mercado",
+    unknownDate: "Fecha y hora no disponibles",
+    terminalShare: "Porcentaje del valor terminal sobre el valor operativo",
+    sensitivity: "Análisis de sensibilidad · valor por acción",
+    growthAxis: "Crecimiento FCF",
+    discountAxis: "Tasa de descuento",
+    revenueProxy:
+      "El supuesto inicial de crecimiento usa el crecimiento de ingresos publicado como referencia, no el crecimiento histórico del FCF.",
+    defaultGrowth:
+      "No hay datos de crecimiento de ingresos; se usa un supuesto inicial del 5 %. Ajústalo antes de usar el resultado.",
+    noPositiveValue:
+      "Los supuestos no producen un valor positivo por acción; se omite la comparación de mercado.",
+    retry: "Reintentar",
+    invalidTicker: "Introduce un símbolo bursátil válido.",
+    stalePrice:
+      "La cotización tiene más de cuatro días; se oculta la comparación hasta disponer de un precio actualizado.",
+    missingPriceTime:
+      "No hay una cotización de mercado válida con fecha y hora; se oculta la comparación.",
+    terminalWarning:
+      "Una parte importante de la estimación procede del valor terminal y es especialmente sensible a los supuestos a largo plazo.",
+    fcfLabel: "Flujo de caja libre declarado",
+    cashLabel: "Efectivo",
+    debtLabel: "Deuda",
+    sharesLabel: "Acciones en circulación",
+    equityOnly:
+      "Este modelo DCF simplificado es para empresas cotizadas individuales, no para ETF u otros instrumentos.",
   },
   it: {
     ticker: "Ticker, es. ADBE",
@@ -147,17 +324,17 @@ export const dcfCopy: Record<Lang, Copy> = {
     bear: "Pessimista",
     base: "Base",
     bull: "Ottimista",
-    intrinsic: "Valore intrinseco",
+    intrinsic: "Stima DCF",
     price: "Prezzo",
     under: "Sottovalutata del",
     over: "Sopravvalutata del",
     growth: "Crescita FCF / anno",
-    discount: "Tasso di sconto (WACC)",
+    discount: "Tasso di sconto (ipotesi)",
     terminal: "Crescita terminale",
     na: "DCF non applicabile: mancano flusso di cassa libero positivo o dati sulle azioni.",
     loading: "Caricamento dati finanziari reali…",
     explain: (g, n) =>
-      `Modello DCF: il free cash flow di ${n} cresce del ${g} annuo per 5 anni, poi al tasso terminale.`,
+      `DCF semplificato con flussi a fine anno: il free cash flow di ${n} cresce del ${g} annuo per cinque anni, poi al tasso terminale. Si aggiunge la liquidità e si sottrae il debito.`,
     sliderHelp: {
       growth: "Crescita annua ipotizzata del free cash flow nei prossimi cinque anni.",
       discount:
@@ -167,11 +344,61 @@ export const dcfCopy: Record<Lang, Copy> = {
     },
     gateDescription:
       "Crea scenari DCF ribassista, base e rialzista con dati finanziari reali e ipotesi personalizzate.",
-    disclaimer: "Stima basata sulle tue ipotesi, non è consulenza.",
+    disclaimer:
+      "Modello semplificato con flussi a fine anno; non prevede diluizione né rischi specifici dell'azienda. Non è una previsione né consulenza finanziaria.",
+    providerError: "Impossibile caricare i dati finanziari. Riprova.",
+    noData: "Non sono disponibili dati fondamentali DCF utilizzabili per questo simbolo.",
+    incompleteData:
+      "La valutazione è nascosta perché mancano dati finanziari necessari o non sono validi.",
+    currencyMismatch:
+      "Dati finanziari e prezzo usano valute diverse o sconosciute; valutazione nascosta.",
+    assumptions: "Ipotesi del modello",
+    dataSource: "Fonte: Yahoo Finance; ultimi dati fondamentali riportati disponibili.",
+    fetchedAt: "Dati recuperati",
+    priceAsOf: "Data e ora del prezzo di mercato",
+    unknownDate: "Data e ora non disponibili",
+    terminalShare: "Quota del valore terminale sul valore operativo",
+    sensitivity: "Analisi di sensibilità · valore per azione",
+    growthAxis: "Crescita FCF",
+    discountAxis: "Tasso di sconto",
+    revenueProxy:
+      "L'ipotesi iniziale di crescita usa la crescita dei ricavi dichiarata come riferimento, non la crescita storica del FCF.",
+    defaultGrowth:
+      "Crescita dei ricavi non disponibile; ipotesi iniziale del 5%. Modificala prima di usare il risultato.",
+    noPositiveValue:
+      "Le ipotesi non producono un valore positivo per azione; il confronto di mercato è omesso.",
+    retry: "Riprova",
+    invalidTicker: "Inserisci un simbolo ticker valido.",
+    stalePrice:
+      "La quotazione è più vecchia di quattro giorni; il confronto è nascosto finché non è disponibile un prezzo aggiornato.",
+    missingPriceTime:
+      "Non è disponibile una quotazione di mercato valida con data e ora; il confronto è nascosto.",
+    terminalWarning:
+      "Una parte consistente della stima deriva dal valore terminale, quindi è particolarmente sensibile alle ipotesi di lungo periodo.",
+    fcfLabel: "Free cash flow dichiarato",
+    cashLabel: "Liquidità",
+    debtLabel: "Debito",
+    sharesLabel: "Azioni in circolazione",
+    equityOnly:
+      "Questo modello DCF semplificato è per singole società quotate, non per ETF o altri strumenti.",
   },
 };
 
 const pctFmt = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+function hasValidQuote(data: DcfData | null | undefined): data is DcfData & { price: number } {
+  return !!data && typeof data.price === "number" && Number.isFinite(data.price) && data.price > 0;
+}
+
+function sensitivityRange(center: number, min: number, max: number, step: number) {
+  if (center - step < min) {
+    return [center, Math.min(max, center + step), Math.min(max, center + step * 2)];
+  }
+  if (center + step > max) {
+    return [Math.max(min, center - step * 2), Math.max(min, center - step), center];
+  }
+  return [center - step, center, center + step];
+}
 
 export function DcfCalculator() {
   const p = usePortfolio();
@@ -180,6 +407,7 @@ export function DcfCalculator() {
   const [input, setInput] = useState(firstStock);
   const [symbol, setSymbol] = useState(firstStock);
   const [mode, setMode] = useState<DcfCase>("base");
+  const [symbolError, setSymbolError] = useState(false);
   const [custom, setCustom] = useState<{
     growth: number;
     discount: number;
@@ -191,30 +419,71 @@ export function DcfCalculator() {
     queryKey: ["dcf", symbol],
     queryFn: () => fn({ data: { symbol } }),
     enabled: !!symbol,
-    staleTime: 3600_000,
+    staleTime: 15 * 60_000,
   });
   const d = q.data;
-  const baseG = d?.revenueGrowth ?? d?.earningsGrowth ?? 0.05;
-  const a = custom ?? scenario(mode, baseG);
-  const sameCcy = !d?.finCurrency || d.finCurrency === d.currency;
-  const iv =
-    d && sameCcy
-      ? dcfValue({
-          fcf: d.fcf ?? NaN,
-          cash: d.cash ?? 0,
-          debt: d.debt ?? 0,
-          shares: d.shares ?? NaN,
+  const revenueGrowth = d?.revenueGrowth;
+  const hasRevenueGrowth = typeof revenueGrowth === "number" && Number.isFinite(revenueGrowth);
+  const baseGrowth = hasRevenueGrowth ? revenueGrowth : 0.05;
+  const a = custom ?? scenario(mode, baseGrowth);
+  const currencyIsValid = (value: string | null | undefined) =>
+    typeof value === "string" && /^[A-Za-z]{3}$/.test(value);
+  const sameCurrency =
+    !!d?.currency &&
+    !!d.finCurrency &&
+    d.currency.toUpperCase() === d.finCurrency.toUpperCase() &&
+    currencyIsValid(d.currency);
+  const analysis =
+    d && hasUsableDcfFundamentals(d) && sameCurrency
+      ? dcfAnalysis({
+          fcf: d.fcf,
+          cash: d.cash,
+          debt: d.debt,
+          shares: d.shares,
           ...a,
         })
       : null;
-  const money = (v: number) =>
+  const money = (value: number) =>
     new Intl.NumberFormat(p.lang, {
       style: "currency",
-      currency: d?.currency ?? "USD",
+      currency: d?.currency?.toUpperCase() ?? "USD",
       maximumFractionDigits: 2,
-    }).format(v);
-  const gap = iv && d?.price ? valuationGap(iv, d.price) : null;
-  const max = iv && d?.price ? Math.max(iv, d.price) : 1;
+    }).format(value);
+  const compactMoney = (value: number) =>
+    new Intl.NumberFormat(p.lang, {
+      style: "currency",
+      currency: d?.currency?.toUpperCase() ?? "USD",
+      notation: "compact",
+      maximumFractionDigits: 2,
+    }).format(value);
+  const compactNumber = (value: number) =>
+    new Intl.NumberFormat(p.lang, {
+      notation: "compact",
+      maximumFractionDigits: 2,
+    }).format(value);
+  const gap = analysis && hasValidQuote(d) ? valuationGap(analysis.valuePerShare, d.price) : null;
+  const max = analysis && hasValidQuote(d) ? Math.max(analysis.valuePerShare, d.price, 1) : 1;
+  const hasQuoteTimestamp = !!d?.priceAsOf && Number.isFinite(Date.parse(d.priceAsOf));
+  const isFreshTimestamp = hasQuoteTimestamp && isQuoteFresh(d?.priceAsOf);
+  const hasFreshQuote = isUsableQuote(d?.price, d?.priceAsOf);
+  const hasStaleQuote = hasQuoteTimestamp && !isFreshTimestamp;
+  const growthValues = sensitivityRange(a.growth, -0.05, 0.3, 0.05);
+  const discountValues = sensitivityRange(
+    a.discount,
+    Math.max(0.05, a.terminal + 0.005),
+    0.15,
+    0.01,
+  );
+  const dateLabel = (value: string | null, fallback: string) => {
+    if (!value) return fallback;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? fallback
+      : new Intl.DateTimeFormat(p.lang, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(date);
+  };
 
   return (
     <div className="grid gap-4">
@@ -223,14 +492,21 @@ export function DcfCalculator() {
         onSubmit={async (e) => {
           e.preventDefault();
           const raw = input.trim();
-          if (!raw) return;
+          setSymbol("");
+          setCustom(null);
+          setSymbolError(false);
+          if (!raw) {
+            setSymbolError(true);
+            return;
+          }
           const pick = (list: { symbol: string; type: string }[]) =>
-            list.find((a) => a.type === "stock" || a.type === "etf")?.symbol;
+            list.find((asset) => asset.type === "stock")?.symbol;
           let s = pick(
             searchCatalog(raw).filter(
               (a) =>
-                a.symbol.toUpperCase() === raw.toUpperCase() ||
-                a.name.toLowerCase().startsWith(raw.toLowerCase()),
+                a.type === "stock" &&
+                (a.symbol.toUpperCase() === raw.toUpperCase() ||
+                  a.name.toLowerCase().startsWith(raw.toLowerCase())),
             ),
           );
           if (!s) {
@@ -238,13 +514,14 @@ export function DcfCalculator() {
               const r = await searchFn({ data: marketSearchSchema.parse({ query: raw }) });
               s = pick(r.assets);
             } catch {
-              /* fall back to ticker */
+              s = undefined;
             }
           }
           if (!s && /^[A-Za-z0-9.^=_-]{1,20}$/.test(raw)) s = raw.toUpperCase();
           if (s) {
             setSymbol(s);
-            setCustom(null);
+          } else {
+            setSymbolError(true);
           }
         }}
       >
@@ -258,9 +535,40 @@ export function DcfCalculator() {
           {c.calc}
         </Button>
       </form>
+      {symbolError && (
+        <p role="alert" className="text-sm text-destructive">
+          {c.invalidTicker}
+        </p>
+      )}
       {!symbol ? null : q.isLoading ? (
         <p className="text-sm text-muted-foreground">{c.loading}</p>
-      ) : !d || iv == null || !d.price ? (
+      ) : q.isError ? (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 text-sm text-destructive"
+        >
+          <span>{c.providerError}</span>
+          <Button type="button" onClick={() => void q.refetch()}>
+            {c.retry}
+          </Button>
+        </div>
+      ) : !d ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {c.noData}
+        </p>
+      ) : d.quoteType?.toUpperCase() !== "EQUITY" ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {c.equityOnly}
+        </p>
+      ) : !sameCurrency ? (
+        <p role="alert" className="text-sm text-destructive">
+          {c.currencyMismatch}
+        </p>
+      ) : !hasUsableDcfFundamentals(d) ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {c.incompleteData}
+        </p>
+      ) : !analysis ? (
         <p className="text-sm text-muted-foreground">{c.na}</p>
       ) : (
         <>
@@ -268,8 +576,15 @@ export function DcfCalculator() {
             <div className="text-sm text-muted-foreground">
               {d.name} · {c.intrinsic}
             </div>
-            <div className="numeric-display text-4xl font-bold">{money(iv)}</div>
-            {gap != null && (
+            <div className="numeric-display text-4xl font-bold">
+              {analysis.valuePerShare > 0 ? money(analysis.valuePerShare) : "—"}
+            </div>
+            {analysis.valuePerShare <= 0 ? (
+              <p role="status" className="mt-1 text-sm text-muted-foreground">
+                {c.noPositiveValue}
+              </p>
+            ) : null}
+            {gap != null && hasFreshQuote && analysis.valuePerShare > 0 && (
               <div
                 className={`mt-1 text-sm font-semibold ${gap >= 0 ? "text-success" : "text-destructive"}`}
               >
@@ -277,22 +592,32 @@ export function DcfCalculator() {
               </div>
             )}
           </div>
-          <div className="grid gap-2 text-sm">
-            <div
-              className="flex h-9 items-center justify-between rounded-md bg-primary px-3 text-primary-foreground"
-              style={{ width: `${Math.max(30, (iv / max) * 100)}%` }}
-            >
-              <span>{c.intrinsic}</span>
-              <span>{money(iv)}</span>
+          {hasFreshQuote && hasValidQuote(d) && analysis.valuePerShare > 0 ? (
+            <div className="grid gap-2 text-sm">
+              <div
+                className="flex h-9 items-center justify-between rounded-md bg-primary px-3 text-primary-foreground"
+                style={{ width: `${Math.max(30, (analysis.valuePerShare / max) * 100)}%` }}
+              >
+                <span>{c.intrinsic}</span>
+                <span>{money(analysis.valuePerShare)}</span>
+              </div>
+              <div
+                className="flex h-9 items-center justify-between rounded-md bg-muted px-3"
+                style={{ width: `${Math.max(30, (d.price / max) * 100)}%` }}
+              >
+                <span>{c.price}</span>
+                <span>{money(d.price)}</span>
+              </div>
             </div>
-            <div
-              className="flex h-9 items-center justify-between rounded-md bg-muted px-3"
-              style={{ width: `${Math.max(30, (d.price / max) * 100)}%` }}
-            >
-              <span>{c.price}</span>
-              <span>{money(d.price)}</span>
-            </div>
-          </div>
+          ) : hasStaleQuote ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              {c.stalePrice}
+            </p>
+          ) : (
+            <p role="status" className="text-sm text-muted-foreground">
+              {c.missingPriceTime}
+            </p>
+          )}
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
             {(["bear", "base", "bull"] as const).map((m) => (
               <button
@@ -328,12 +653,95 @@ export function DcfCalculator() {
                 value={a[k]}
                 className="h-6 accent-primary"
                 onChange={(e) => setCustom({ ...a, [k]: Number(e.target.value) })}
+                aria-label={c[k]}
               />
               <span className="text-xs leading-relaxed text-muted-foreground">
                 {c.sliderHelp[k]}
               </span>
             </label>
           ))}
+          <div className="grid gap-1 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+            <strong className="text-sm text-foreground">{c.assumptions}</strong>
+            <span>{hasRevenueGrowth ? c.revenueProxy : c.defaultGrowth}</span>
+            <span>{c.dataSource}</span>
+            <span>
+              {c.priceAsOf}: {dateLabel(d.priceAsOf, c.unknownDate)}
+            </span>
+            <span>
+              {c.fetchedAt}: {dateLabel(d.fetchedAt, c.unknownDate)}
+            </span>
+            <span>
+              {c.fcfLabel}: {compactMoney(d.fcf)}
+            </span>
+            <span>
+              {c.cashLabel}: {compactMoney(d.cash)}
+            </span>
+            <span>
+              {c.debtLabel}: {compactMoney(d.debt)}
+            </span>
+            <span>
+              {c.sharesLabel}: {compactNumber(d.shares)}
+            </span>
+            <span>
+              {c.terminalShare}: {pctFmt(analysis.terminalValueShare)}
+            </span>
+            {analysis.terminalValueShare > 0.75 && <span role="status">{c.terminalWarning}</span>}
+          </div>
+          <section aria-label={c.sensitivity} className="grid gap-2">
+            <h3 className="text-sm font-semibold">{c.sensitivity}</h3>
+            <p className="text-xs text-muted-foreground">
+              {c.discountAxis}: {discountValues.map(pctFmt).join(" · ")}
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] border-collapse text-right text-xs">
+                <caption className="sr-only">{c.sensitivity}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" className="p-2 text-left">
+                      {c.growthAxis}
+                    </th>
+                    {discountValues.map((discount) => (
+                      <th scope="col" key={discount} className="p-2">
+                        {pctFmt(discount)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {growthValues.map((growth) => (
+                    <tr key={growth} className="border-t border-border">
+                      <th scope="row" className="p-2 text-left font-medium">
+                        {pctFmt(growth)}
+                      </th>
+                      {discountValues.map((discount) => {
+                        const result = dcfValue({
+                          fcf: d.fcf,
+                          cash: d.cash,
+                          debt: d.debt,
+                          shares: d.shares,
+                          growth,
+                          discount,
+                          terminal: a.terminal,
+                        });
+                        return (
+                          <td
+                            key={discount}
+                            className={`p-2 tabular-nums ${
+                              growth === a.growth && discount === a.discount
+                                ? "bg-primary/10 font-semibold text-foreground"
+                                : ""
+                            }`}
+                          >
+                            {result != null && result > 0 ? money(result) : "—"}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
           <p className="text-sm text-muted-foreground">{c.explain(pctFmt(a.growth), d.name)}</p>
           <p className="text-xs text-muted-foreground">{c.disclaimer}</p>
         </>

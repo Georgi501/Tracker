@@ -26,8 +26,14 @@ describe("CSV import", () => {
       "date,type,symbol,quantity,price,currency\n" +
       "2024-01-15,buy,AAPL,2,100,USD\n" +
       "not-a-date,buy,MSFT,1,200,USD\n" +
+      "2024-02-31,buy,TSLA,1,200,USD\n" +
       "2024-02-01,sell,AAPL,1,110,USD\n";
     expect(parseBrokerCsv("generic", csv).map((row) => row.symbol)).toEqual(["AAPL", "AAPL"]);
+    expect(rejectedCsvRows("generic", csv)).toContainEqual({
+      row: 4,
+      raw: '"2024-02-31","buy","TSLA","1","200","USD"',
+      reason: "invalid_transaction",
+    });
   });
   it("reports rejected transaction rows with a row number and actionable reason", () => {
     const csv =

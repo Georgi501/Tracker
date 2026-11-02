@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   computeHoldings,
   FX,
+  irr,
+  isQuoteFresh,
   isQuoteStale,
+  isUsableQuote,
+  portfolioIrr,
   projectedBondCoupon,
   type Asset,
 } from "@/lib/portfolio";
@@ -71,6 +75,19 @@ describe("portfolio math", () => {
     expect(isQuoteStale("2026-10-27T12:00:00Z", now)).toBe(false);
     expect(isQuoteStale("2026-10-27T11:59:59Z", now)).toBe(true);
     expect(isQuoteStale(undefined, now)).toBe(false);
+    expect(isQuoteFresh("2026-10-27T12:00:00Z", now)).toBe(true);
+    expect(isQuoteFresh("2026-10-27T11:59:59Z", now)).toBe(false);
+    expect(isQuoteFresh(undefined, now)).toBe(false);
+    expect(isQuoteFresh("invalid", now)).toBe(false);
+  });
+  it("only considers a positive, finite, fresh quote usable", () => {
+    const now = Date.parse("2026-10-31T12:00:00Z");
+    const fresh = "2026-10-31T11:00:00Z";
+    expect(isUsableQuote(10, fresh, now)).toBe(true);
+    expect(isUsableQuote(null, fresh, now)).toBe(false);
+    expect(isUsableQuote(0, fresh, now)).toBe(false);
+    expect(isUsableQuote(Number.NaN, fresh, now)).toBe(false);
+    expect(isUsableQuote(10, "2026-10-20T11:00:00Z", now)).toBe(false);
   });
   it("does not project annual bond coupons after maturity", () => {
     const bond = { bondCouponRate: 4, bondFaceValue: 1000, bondMaturityDate: "2025-01-01" };
@@ -86,6 +103,45 @@ it("missing market prices are not replaced by the purchase price", () => {
   );
   expect(result[0]?.costBasis).toBe(20);
   expect(Number.isNaN(result[0]?.value)).toBe(true);
+});
+
+describe("money-weighted return", () => {
+  const start = new Date("2024-01-01T00:00:00Z");
+  const oneYearLater = new Date(start.getTime() + 31557600000);
+
+  it("calculates IRR when a root is bracketed", () => {
+    expect(
+      irr([
+        { date: start, amount: -100 },
+        { date: oneYearLater, amount: 110 },
+      ]),
+    ).toBeCloseTo(10);
+  });
+
+  it("returns unavailable rather than zero when the rate is outside its supported range", () => {
+    expect(
+      irr([
+        { date: start, amount: -100 },
+        { date: oneYearLater, amount: 2000 },
+      ]),
+    ).toBeNull();
+  });
+
+  it("returns unavailable for invalid dates or flows without both signs", () => {
+    expect(
+      irr([
+        { date: start, amount: -100 },
+        { date: oneYearLater, amount: -10 },
+      ]),
+    ).toBeNull();
+    expect(
+      irr([
+        { date: new Date(Number.NaN), amount: -100 },
+        { date: oneYearLater, amount: 110 },
+      ]),
+    ).toBeNull();
+    expect(portfolioIrr([], Number.NaN)).toBeNull();
+  });
 });
 
 import { brokerLimit } from "@/lib/csv-import";

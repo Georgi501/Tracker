@@ -3,6 +3,7 @@ import {
   buildPortfolioHistory,
   currencyRate,
   historyReturn,
+  isValidIsoDate,
   mapInBatches,
   periodStart,
 } from "@/lib/history";
@@ -23,6 +24,12 @@ it("converts GBX as one hundredth GBP", () => {
 });
 it("does not fabricate a missing dated exchange rate", () => {
   expect(currencyRate("EUR", "2023-01-01", eur, gbp)).toBeNull();
+});
+it("validates real calendar dates instead of only their string shape", () => {
+  expect(isValidIsoDate("2024-02-29")).toBe(true);
+  expect(isValidIsoDate("2025-02-29")).toBe(false);
+  expect(isValidIsoDate("2024-13-01")).toBe(false);
+  expect(isValidIsoDate("2024-04-31")).toBe(false);
 });
 it.each([
   ["1M", "2026-09-19"],

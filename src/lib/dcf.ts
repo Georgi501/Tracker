@@ -8,30 +8,150 @@ export interface DcfInputs {
   shares: number;
   years?: number;
 }
+
+export interface DcfAnalysis {
+  valuePerShare: number;
+  presentValueOfCashFlows: number;
+  presentValueOfTerminalValue: number;
+  terminalValueShare: number;
+}
+
 export type DcfCase = "bear" | "base" | "bull";
 
-/** Two-stage DCF: explicit FCF growth for N years, Gordon terminal value, net cash added. Returns per-share value or null when not applicable. */
-export function dcfValue(i: DcfInputs): number | null {
-  const n = i.years ?? 5;
-  if (!(i.fcf > 0) || !(i.shares > 0) || i.discount <= i.terminal) return null;
-  let pv = 0;
-  let f = i.fcf;
-  for (let t = 1; t <= n; t++) {
-    f *= 1 + i.growth;
-    pv += f / (1 + i.discount) ** t;
+export interface DcfFundamentals {
+  quoteType: string | null;
+  currency: string | null;
+  finCurrency: string | null;
+  fcf: number | null;
+  cash: number | null;
+  debt: number | null;
+  shares: number | null;
+}
+
+const isFiniteNumber = (value: number) => Number.isFinite(value);
+const isValidCurrency = (value: string | null): value is string =>
+  typeof value === "string" && /^[A-Za-z]{3}$/.test(value);
+
+export function hasUsableDcfFundamentals(
+  data: DcfFundamentals,
+): data is DcfFundamentals & { fcf: number; cash: number; debt: number; shares: number } {
+  return (
+    data.quoteType?.toUpperCase() === "EQUITY" &&
+    isValidCurrency(data.currency) &&
+    isValidCurrency(data.finCurrency) &&
+    data.currency.toUpperCase() === data.finCurrency.toUpperCase() &&
+    typeof data.fcf === "number" &&
+    Number.isFinite(data.fcf) &&
+    data.fcf > 0 &&
+    typeof data.cash === "number" &&
+    Number.isFinite(data.cash) &&
+    data.cash >= 0 &&
+    typeof data.debt === "number" &&
+    Number.isFinite(data.debt) &&
+    data.debt >= 0 &&
+    typeof data.shares === "number" &&
+    Number.isFinite(data.shares) &&
+    data.shares > 0
+  );
+}
+
+export function dcfValueFromFundamentals(
+  data: DcfFundamentals,
+  assumptions: Pick<DcfInputs, "growth" | "discount" | "terminal">,
+): number | null {
+  if (!hasUsableDcfFundamentals(data)) return null;
+  return dcfValue({
+    fcf: data.fcf,
+    cash: data.cash,
+    debt: data.debt,
+    shares: data.shares,
+    ...assumptions,
+  });
+}
+
+/** Two-stage year-end DCF. Returns null when inputs are missing, invalid, or unstable. */
+export function dcfAnalysis(i: DcfInputs): DcfAnalysis | null {
+  const years = i.years ?? 5;
+  if (
+    ![i.fcf, i.growth, i.discount, i.terminal, i.cash, i.debt, i.shares, years].every(
+      isFiniteNumber,
+    ) ||
+    i.fcf <= 0 ||
+    i.growth < -0.5 ||
+    i.growth > 0.5 ||
+    i.discount <= 0 ||
+    i.discount > 0.5 ||
+    i.terminal < -0.05 ||
+    i.terminal > 0.1 ||
+    i.discount <= i.terminal ||
+    i.cash < 0 ||
+    i.debt < 0 ||
+    i.shares <= 0 ||
+    !Number.isInteger(years) ||
+    years < 1 ||
+    years > 10
+  ) {
+    return null;
   }
-  const tv = (f * (1 + i.terminal)) / (i.discount - i.terminal);
-  pv += tv / (1 + i.discount) ** n;
-  return (pv + i.cash - i.debt) / i.shares;
+
+  let presentValueOfCashFlows = 0;
+  let projectedFcf = i.fcf;
+  for (let year = 1; year <= years; year++) {
+    projectedFcf *= 1 + i.growth;
+    presentValueOfCashFlows += projectedFcf / (1 + i.discount) ** year;
+  }
+
+  const terminalValue = (projectedFcf * (1 + i.terminal)) / (i.discount - i.terminal);
+  const presentValueOfTerminalValue = terminalValue / (1 + i.discount) ** years;
+  const operatingValue = presentValueOfCashFlows + presentValueOfTerminalValue;
+  const equityValue = operatingValue + i.cash - i.debt;
+  const valuePerShare = equityValue / i.shares;
+  if (
+    ![
+      presentValueOfCashFlows,
+      presentValueOfTerminalValue,
+      operatingValue,
+      equityValue,
+      valuePerShare,
+    ].every(Number.isFinite) ||
+    operatingValue <= 0
+  ) {
+    return null;
+  }
+
+  return {
+    valuePerShare,
+    presentValueOfCashFlows,
+    presentValueOfTerminalValue,
+    terminalValueShare: presentValueOfTerminalValue / operatingValue,
+  };
 }
 
-/** Scenario assumptions derived from a base growth rate (fractions). */
+/** Compatibility helper for callers that only need the per-share result. */
+export function dcfValue(i: DcfInputs): number | null {
+  return dcfAnalysis(i)?.valuePerShare ?? null;
+}
+
+/** Scenario assumptions derived from a bounded baseline growth assumption. */
 export function scenario(c: DcfCase, baseGrowth: number) {
-  const g = Math.max(-0.05, Math.min(0.25, baseGrowth));
-  if (c === "bear") return { growth: g * 0.5, discount: 0.105, terminal: 0.02 };
-  if (c === "bull") return { growth: Math.min(0.3, g * 1.5), discount: 0.08, terminal: 0.03 };
-  return { growth: g, discount: 0.09, terminal: 0.025 };
+  const growth = Number.isFinite(baseGrowth) ? Math.max(-0.05, Math.min(0.3, baseGrowth)) : 0.05;
+  if (c === "bear") {
+    return { growth: Math.max(-0.05, growth - 0.05), discount: 0.105, terminal: 0.02 };
+  }
+  if (c === "bull") {
+    return { growth: Math.min(0.3, growth + 0.05), discount: 0.08, terminal: 0.03 };
+  }
+  return { growth, discount: 0.09, terminal: 0.025 };
 }
 
-/** Positive = undervalued by that fraction of intrinsic value. */
-export const valuationGap = (intrinsic: number, price: number) => (intrinsic - price) / intrinsic;
+/** Positive = price is below intrinsic value, expressed as a share of intrinsic value. */
+export const valuationGap = (intrinsic: number, price: number) =>
+  Number.isFinite(intrinsic) && Number.isFinite(price) && intrinsic > 0 && price >= 0
+    ? (intrinsic - price) / intrinsic
+    : null;
+
+/** Expected return to the modeled value, expressed relative to the current share price. */
+export const potentialUpside = (intrinsic: number, price: number) =>
+  Number.isFinite(intrinsic) && Number.isFinite(price) && intrinsic > 0 && price > 0
+    ? intrinsic / price - 1
+    : null;

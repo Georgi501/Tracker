@@ -7,9 +7,10 @@ import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { Input } from "@/components/ui/input";
 import { marketStats, marketDcf, searchMarket } from "@/lib/market.functions";
-import { dcfValue, scenario, valuationGap } from "@/lib/dcf";
+import { dcfValueFromFundamentals, potentialUpside, scenario } from "@/lib/dcf";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
+import { isUsableQuote } from "@/lib/portfolio";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({
@@ -62,30 +63,21 @@ function useAsset(symbol: string | null | undefined) {
     enabled: !!symbol,
     staleTime: 300_000,
     queryFn: async () => {
-      const [s, d] = await Promise.all([
+      const [s, dcfResult] = await Promise.all([
         stats({ data: { symbol: symbol! } }),
-        dcf({ data: { symbol: symbol! } }).catch(() => null),
+        dcf({ data: { symbol: symbol! } })
+          .then((data) => ({ data, failed: false }))
+          .catch(() => ({ data: null, failed: true })),
       ]);
-      let fair: number | null = null;
-      if (
-        d &&
-        d.fcf &&
-        d.shares &&
-        d.price &&
-        d.fcf > 0 &&
-        (!d.finCurrency || d.finCurrency === d.currency)
-      ) {
-        const g = d.revenueGrowth ?? d.earningsGrowth;
-        if (g != null)
-          fair = dcfValue({
-            fcf: d.fcf,
-            ...scenario("base", g),
-            cash: d.cash ?? 0,
-            debt: d.debt ?? 0,
-            shares: d.shares,
-          });
-      }
-      return { s, d, fair };
+      const d = dcfResult.data;
+      const fair = d
+        ? dcfValueFromFundamentals(d, scenario("base", d.revenueGrowth ?? 0.05))
+        : null;
+      const upside =
+        fair != null && d && isUsableQuote(d.price, d.priceAsOf)
+          ? potentialUpside(fair, d.price)
+          : null;
+      return { s, d, fair, upside, dcfFailed: dcfResult.failed };
     },
   });
 }
@@ -112,15 +104,22 @@ function Compare() {
       : new Intl.NumberFormat(loc, { notation: "compact", maximumFractionDigits: 2 }).format(v);
   const pct = (v: number | null | undefined) => (v == null ? "—" : `${num(v * 100, 1)}%`);
   type R = typeof qa.data;
+  const marketPrice = (x: R) => {
+    const data = x?.d;
+    if (
+      !data ||
+      data.price == null ||
+      !data.currency ||
+      !/^[A-Za-z]{3}$/.test(data.currency) ||
+      !isUsableQuote(data.price, data.priceAsOf)
+    )
+      return "—";
+    return `${num(data.price)} ${data.currency.toUpperCase()}`;
+  };
   const rows: [string, (x: R) => string, ((x: R) => number | null)?, boolean?][] = [
-    [c.price, (x) => `${num(x?.d?.price ?? x?.s?.previousClose)} ${x?.s?.currency ?? ""}`],
+    [c.price, marketPrice],
     [c.fairValue, (x) => num(x?.fair)],
-    [
-      c.upside,
-      (x) => (x?.fair && x?.d?.price ? pct(valuationGap(x.fair, x.d.price)) : "—"),
-      (x) => (x?.fair && x?.d?.price ? valuationGap(x.fair, x.d.price) : null),
-      true,
-    ],
+    [c.upside, (x) => pct(x?.upside), (x) => x?.upside ?? null, true],
     [c.marketCap, (x) => cap(x?.s?.marketCap)],
     ["P/E (TTM)", (x) => num(x?.s?.pe), (x) => x?.s?.pe ?? null, false],
     ["EPS (TTM)", (x) => num(x?.s?.eps)],
@@ -217,6 +216,20 @@ function Compare() {
             </p>
           ) : null,
         )}
+        {([qa, qb] as const).map((query, side) =>
+          query.isSuccess && query.data.dcfFailed ? (
+            <p key={`dcf-${side}`} role="status" className="mt-2 text-sm text-muted-foreground">
+              {c.dcfLoadError}{" "}
+              <button
+                type="button"
+                onClick={() => void query.refetch()}
+                className="font-semibold underline"
+              >
+                {c.retry}
+              </button>
+            </p>
+          ) : null,
+        )}
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -288,6 +301,7 @@ const COPY: Record<
     searchError: string;
     notFound: string;
     statsUnavailable: string;
+    dcfLoadError: string;
     loadError: string;
     retry: string;
     footnote: string;
@@ -298,13 +312,13 @@ const COPY: Record<
     subtitle: "Enter a ticker or name for two companies or ETFs.",
     gateTitle: "Compare assets",
     gateDescription:
-      "Compare market cap, P/E, EPS, dividend yield, revenue growth, beta, 52-week range and analyst targets. DCF fair value and upside appear when supported by available real market data.",
+      "Compare market cap, P/E, EPS, dividend yield, revenue growth, beta, 52-week range and analyst targets. Simplified DCF estimates are shown for supported stocks when fundamentals are complete.",
     assetA: "Asset A",
     assetB: "Asset B",
     placeholderA: "Apple / AAPL",
     placeholderB: "Microsoft / MSFT",
     price: "Price",
-    fairValue: "Fair value (DCF, base)",
+    fairValue: "DCF estimate (base)",
     upside: "Upside to fair value",
     marketCap: "Market cap",
     dividendYield: "Dividend yield",
@@ -315,23 +329,24 @@ const COPY: Record<
     searchError: "Unable to search the market.",
     notFound: "No matching asset found.",
     statsUnavailable: "Statistics are unavailable for this asset.",
+    dcfLoadError: "DCF financial data could not be loaded.",
     loadError: "Some market data could not be loaded.",
     retry: "Try again",
     footnote:
-      "Data from Yahoo Finance; “—” means the figure is unavailable. DCF is a simplified model (9% discount, 2.5% terminal growth) — not investment advice.",
+      "Data from Yahoo Finance; “—” means unavailable or not comparable. DCF uses a simplified five-year model; upside is shown only with a fresh quote and matching currencies. Not investment advice.",
   },
   bg: {
     title: "Сравнение активи",
     subtitle: "Въведи тикер или име на две компании или ETF-а.",
     gateTitle: "Сравни активи",
     gateDescription:
-      "Сравни пазарна капитализация, P/E, EPS, дивидентна доходност, ръст на приходите, бета, 52-седмичен диапазон и цели на анализаторите. DCF оценка и потенциален ръст се показват при налични реални пазарни данни.",
+      "Сравни пазарна капитализация, P/E, EPS, дивидентна доходност, ръст на приходите, бета, 52-седмичен диапазон и цели на анализаторите. Опростена DCF оценка се показва за поддържани акции при пълни финансови данни.",
     assetA: "Актив A",
     assetB: "Актив B",
     placeholderA: "Apple / AAPL",
     placeholderB: "Microsoft / MSFT",
     price: "Цена",
-    fairValue: "Справедлива цена (DCF, базов)",
+    fairValue: "DCF оценка (базова)",
     upside: "Потенциал до справедливата цена",
     marketCap: "Пазарна капитализация",
     dividendYield: "Дивидентна доходност",
@@ -342,23 +357,24 @@ const COPY: Record<
     searchError: "Търсенето на пазара не е достъпно.",
     notFound: "Няма намерен съвпадащ актив.",
     statsUnavailable: "Няма налични показатели за този актив.",
+    dcfLoadError: "DCF финансовите данни не можаха да се заредят.",
     loadError: "Част от пазарните данни не можаха да се заредят.",
     retry: "Опитай отново",
     footnote:
-      "Данни от Yahoo Finance; „—“ означава, че показателят липсва. DCF е опростен модел (9% дисконтов процент, 2,5% терминален ръст) — не е инвестиционен съвет.",
+      "Данни от Yahoo Finance; „—“ означава липсваща или несъпоставима стойност. DCF използва опростен петгодишен модел; потенциалът се показва само при актуална котировка и еднакви валути. Не е инвестиционен съвет.",
   },
   de: {
     title: "Direkter Vergleich",
     subtitle: "Gib ein Symbol oder einen Namen für zwei Unternehmen oder ETFs ein.",
     gateTitle: "Werte vergleichen",
     gateDescription:
-      "Vergleiche Marktkapitalisierung, KGV, EPS, Dividendenrendite, Umsatzwachstum, Beta, 52-Wochen-Spanne und Analystenziele. DCF-Fair-Value und Aufwärtspotenzial erscheinen nur bei verfügbaren realen Marktdaten.",
+      "Vergleiche Marktkapitalisierung, KGV, EPS, Dividendenrendite, Umsatzwachstum, Beta, 52-Wochen-Spanne und Analystenziele. Vereinfachte DCF-Schätzungen erscheinen für unterstützte Aktien bei vollständigen Fundamentaldaten.",
     assetA: "Wert A",
     assetB: "Wert B",
     placeholderA: "Apple / AAPL",
     placeholderB: "Microsoft / MSFT",
     price: "Kurs",
-    fairValue: "Fairer Wert (DCF, Basis)",
+    fairValue: "DCF-Schätzung (Basis)",
     upside: "Potenzial zum fairen Wert",
     marketCap: "Marktkapitalisierung",
     dividendYield: "Dividendenrendite",
@@ -369,23 +385,24 @@ const COPY: Record<
     searchError: "Die Marktsuche ist nicht verfügbar.",
     notFound: "Kein passender Wert gefunden.",
     statsUnavailable: "Für diesen Wert sind keine Kennzahlen verfügbar.",
+    dcfLoadError: "DCF-Finanzdaten konnten nicht geladen werden.",
     loadError: "Einige Marktdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     footnote:
-      "Daten von Yahoo Finance; „—“ bedeutet, dass der Wert nicht verfügbar ist. DCF ist ein vereinfachtes Modell (9 % Diskontsatz, 2,5 % Terminalwachstum) — keine Anlageberatung.",
+      "Daten von Yahoo Finance; „—“ bedeutet nicht verfügbar oder nicht vergleichbar. DCF nutzt ein vereinfachtes Fünfjahresmodell; Potenzial wird nur bei aktuellem Kurs und übereinstimmenden Währungen angezeigt. Keine Anlageberatung.",
   },
   es: {
     title: "Comparación directa",
     subtitle: "Introduce el ticker o nombre de dos empresas o ETF.",
     gateTitle: "Comparar activos",
     gateDescription:
-      "Compara capitalización, PER, BPA, rentabilidad por dividendo, crecimiento de ingresos, beta, rango de 52 semanas y objetivos de analistas. El valor razonable DCF y su potencial solo aparecen cuando hay datos reales disponibles.",
+      "Compara capitalización, PER, BPA, rentabilidad por dividendo, crecimiento de ingresos, beta, rango de 52 semanas y objetivos de analistas. Las estimaciones DCF simplificadas aparecen para acciones compatibles cuando los datos fundamentales están completos.",
     assetA: "Activo A",
     assetB: "Activo B",
     placeholderA: "Apple / AAPL",
     placeholderB: "Microsoft / MSFT",
     price: "Precio",
-    fairValue: "Valor razonable (DCF, base)",
+    fairValue: "Estimación DCF (base)",
     upside: "Potencial hasta el valor razonable",
     marketCap: "Capitalización bursátil",
     dividendYield: "Rentabilidad por dividendo",
@@ -396,23 +413,24 @@ const COPY: Record<
     searchError: "La búsqueda de mercado no está disponible.",
     notFound: "No se encontró ningún activo coincidente.",
     statsUnavailable: "No hay estadísticas disponibles para este activo.",
+    dcfLoadError: "No se pudieron cargar los datos financieros DCF.",
     loadError: "No se pudieron cargar algunos datos de mercado.",
     retry: "Reintentar",
     footnote:
-      "Datos de Yahoo Finance; «—» significa que el dato no está disponible. El DCF es un modelo simplificado (9 % de descuento, 2,5 % de crecimiento terminal), no asesoramiento financiero.",
+      "Datos de Yahoo Finance; «—» significa que no está disponible o no es comparable. El DCF usa un modelo simplificado de cinco años; el potencial solo aparece con una cotización reciente y divisas coincidentes. No es asesoramiento financiero.",
   },
   it: {
     title: "Confronto diretto",
     subtitle: "Inserisci il ticker o il nome di due società o ETF.",
     gateTitle: "Confronta asset",
     gateDescription:
-      "Confronta capitalizzazione, P/E, EPS, rendimento da dividendo, crescita dei ricavi, beta, intervallo a 52 settimane e obiettivi degli analisti. Il fair value DCF e il potenziale sono mostrati solo con dati di mercato reali disponibili.",
+      "Confronta capitalizzazione, P/E, EPS, rendimento da dividendo, crescita dei ricavi, beta, intervallo a 52 settimane e obiettivi degli analisti. Le stime DCF semplificate sono mostrate per azioni supportate con dati fondamentali completi.",
     assetA: "Asset A",
     assetB: "Asset B",
     placeholderA: "Apple / AAPL",
     placeholderB: "Microsoft / MSFT",
     price: "Prezzo",
-    fairValue: "Fair value (DCF, base)",
+    fairValue: "Stima DCF (base)",
     upside: "Potenziale rispetto al fair value",
     marketCap: "Capitalizzazione",
     dividendYield: "Rendimento da dividendo",
@@ -423,9 +441,10 @@ const COPY: Record<
     searchError: "La ricerca di mercato non è disponibile.",
     notFound: "Nessun asset corrispondente trovato.",
     statsUnavailable: "Statistiche non disponibili per questo asset.",
+    dcfLoadError: "Impossibile caricare i dati finanziari DCF.",
     loadError: "Impossibile caricare alcuni dati di mercato.",
     retry: "Riprova",
     footnote:
-      "Dati di Yahoo Finance; “—” indica un dato non disponibile. Il DCF è un modello semplificato (sconto 9%, crescita terminale 2,5%), non è consulenza finanziaria.",
+      "Dati di Yahoo Finance; “—” indica un dato non disponibile o non confrontabile. Il DCF usa un modello semplificato a cinque anni; il potenziale appare solo con quotazione recente e valute coincidenti. Non è consulenza finanziaria.",
   },
 };

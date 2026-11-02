@@ -766,7 +766,9 @@ export const marketEarningsCalendar = createServerFn({ method: "POST" })
 export interface DcfData {
   symbol: string;
   name: string;
+  quoteType: string | null;
   price: number | null;
+  priceAsOf: string | null;
   currency: string | null;
   finCurrency: string | null;
   fcf: number | null;
@@ -775,6 +777,7 @@ export interface DcfData {
   shares: number | null;
   revenueGrowth: number | null;
   earningsGrowth: number | null;
+  fetchedAt: string;
 }
 
 /** Real Yahoo fundamentals for a DCF; missing figures stay null so the UI can say the model is not applicable. */
@@ -792,10 +795,20 @@ export const marketDcf = createServerFn({ method: "POST" })
       const f = s.financialData;
       const k = s.defaultKeyStatistics;
       const p = s.price;
+      const marketTime = (p as { regularMarketTime?: unknown } | undefined)?.regularMarketTime;
+      const marketDate =
+        marketTime instanceof Date
+          ? marketTime
+          : typeof marketTime === "number" && Number.isFinite(marketTime)
+            ? new Date(marketTime < 1_000_000_000_000 ? marketTime * 1000 : marketTime)
+            : null;
       return {
         symbol: data.symbol.toUpperCase(),
         name: p?.longName ?? p?.shortName ?? data.symbol,
+        quoteType: p?.quoteType ?? null,
         price: n(f?.currentPrice ?? p?.regularMarketPrice),
+        priceAsOf:
+          marketDate && Number.isFinite(marketDate.getTime()) ? marketDate.toISOString() : null,
         currency: p?.currency ?? null,
         finCurrency: f?.financialCurrency ?? null,
         fcf: n(f?.freeCashflow),
@@ -804,9 +817,10 @@ export const marketDcf = createServerFn({ method: "POST" })
         shares: n(k?.sharesOutstanding),
         revenueGrowth: n(f?.revenueGrowth),
         earningsGrowth: n(f?.earningsGrowth),
+        fetchedAt: new Date().toISOString(),
       };
     } catch {
-      return null;
+      throw new Error("Financial data is temporarily unavailable. Please try again.");
     }
   });
 

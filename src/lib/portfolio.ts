@@ -3,6 +3,20 @@ export type TxKind = "buy" | "sell" | "dividend";
 export type Currency = "USD" | "EUR";
 export const QUOTE_STALE_AFTER_MS = 4 * 86400000;
 
+export function isQuoteFresh(at: string | null | undefined, now = Date.now()): boolean {
+  const timestamp = at ? Date.parse(at) : Number.NaN;
+  const age = now - timestamp;
+  return Number.isFinite(timestamp) && age >= -5 * 60_000 && age <= QUOTE_STALE_AFTER_MS;
+}
+
+export function isUsableQuote(
+  price: number | null | undefined,
+  at: string | null | undefined,
+  now = Date.now(),
+): price is number {
+  return typeof price === "number" && Number.isFinite(price) && price > 0 && isQuoteFresh(at, now);
+}
+
 export function isQuoteStale(at: string | undefined, now = Date.now()): boolean {
   const timestamp = at ? Date.parse(at) : Number.NaN;
   return Number.isFinite(timestamp) && now - timestamp > QUOTE_STALE_AFTER_MS;
@@ -128,26 +142,49 @@ export function totalDividends(txs: Transaction[]) {
 }
 
 /** Money-weighted return (annualised IRR) via bisection. Flows: negative = invested. */
-export function irr(flows: { date: Date; amount: number }[]): number {
-  if (flows.length < 2) return 0;
-  const t0 = flows[0]!.date.getTime();
+export function irr(flows: { date: Date; amount: number }[]): number | null {
+  if (
+    flows.length < 2 ||
+    flows.some((flow) => !Number.isFinite(flow.date.getTime()) || !Number.isFinite(flow.amount)) ||
+    !flows.some((flow) => flow.amount < 0) ||
+    !flows.some((flow) => flow.amount > 0)
+  )
+    return null;
+  const sorted = [...flows].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const t0 = sorted[0]!.date.getTime();
   const npv = (r: number) =>
-    flows.reduce(
+    sorted.reduce(
       (s, f) => s + f.amount / Math.pow(1 + r, (f.date.getTime() - t0) / 31557600000),
       0,
     );
   let lo = -0.99,
     hi = 10;
-  if (npv(lo) * npv(hi) > 0) return 0;
+  let loValue = npv(lo);
+  const hiValue = npv(hi);
+  if (!Number.isFinite(loValue) || !Number.isFinite(hiValue)) return null;
+  if (loValue === 0) return lo * 100;
+  if (hiValue === 0) return hi * 100;
+  if (Math.sign(loValue) === Math.sign(hiValue)) return null;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
-    if (npv(lo) * npv(mid) <= 0) hi = mid;
-    else lo = mid;
+    const midValue = npv(mid);
+    if (!Number.isFinite(midValue)) return null;
+    if (midValue === 0) return mid * 100;
+    if (Math.sign(loValue) !== Math.sign(midValue)) hi = mid;
+    else {
+      lo = mid;
+      loValue = midValue;
+    }
   }
   return ((lo + hi) / 2) * 100;
 }
 
-export function portfolioIrr(txs: Transaction[], currentValue: number, now = new Date()) {
+export function portfolioIrr(
+  txs: Transaction[],
+  currentValue: number,
+  now = new Date(),
+): number | null {
+  if (!Number.isFinite(currentValue) || !Number.isFinite(now.getTime())) return null;
   const flows = [...txs]
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((t) => ({

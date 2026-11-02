@@ -1,5 +1,6 @@
 import type { AssetType, TxKind } from "./portfolio";
 import { CRYPTO_SYMBOLS } from "./crypto-assets";
+import { isValidIsoDate } from "./history";
 
 export type BrokerFormat = "generic" | "trading212" | "ibkr" | "revolut";
 export const BROKER_FORMATS: { id: BrokerFormat; label: string }[] = [
@@ -163,9 +164,15 @@ const num = (s: string) => {
 };
 const day = (s: string) => {
   const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  if (m) {
+    const value = `${m[1]}-${m[2]}-${m[3]}`;
+    if (isValidIsoDate(value)) return value;
+  }
   const d = s.match(/(\d{2})[./](\d{2})[./](\d{4})/);
-  if (d) return `${d[3]}-${d[2]}-${d[1]}`;
+  if (d) {
+    const value = `${d[3]}-${d[2]}-${d[1]}`;
+    if (isValidIsoDate(value)) return value;
+  }
   throw new Error(`Invalid transaction date: ${s}`);
 };
 const CRYPTO = new Set([...CRYPTO_SYMBOLS, "MATIC"]);

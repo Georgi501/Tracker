@@ -1152,8 +1152,8 @@ function Dashboard() {
                 <Metric
                   label={p.t("irr")}
                   help={METRIC_HELP[p.lang].irr}
-                  value={pct(irrV)}
-                  n={irrV}
+                  value={irrV == null ? "—" : pct(irrV)}
+                  {...(irrV != null ? { n: irrV } : {})}
                 />
               </div>
               <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">

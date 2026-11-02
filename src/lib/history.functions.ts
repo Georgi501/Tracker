@@ -1,7 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buildPortfolioHistory, closeAt, currencyRate, mapInBatches, periodStart } from "./history";
+import {
+  buildPortfolioHistory,
+  closeAt,
+  currencyRate,
+  isValidIsoDate,
+  mapInBatches,
+  periodStart,
+} from "./history";
 import type { Transaction } from "./portfolio";
 
 const HISTORY_BATCH_SIZE = 5;
@@ -173,13 +180,13 @@ export const convertImport = createServerFn({ method: "POST" })
               quantity: z.number().positive(),
               price: z.number().positive(),
               fee: z.number().nonnegative().default(0),
-              date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+              date: z.string().refine(isValidIsoDate, "Invalid transaction date"),
               currency: z.enum(["USD", "EUR", "BGN", "GBX", "GBP"]).default("USD"),
               feeCurrency: z.enum(["USD", "EUR", "BGN", "GBX", "GBP"]).optional(),
               bondCouponRate: z.number().nonnegative().optional(),
               bondMaturityDate: z
                 .string()
-                .regex(/^\d{4}-\d{2}-\d{2}$/)
+                .refine(isValidIsoDate, "Invalid bond maturity date")
                 .optional(),
               bondFaceValue: z.number().positive().optional(),
               bondManualPrice: z.number().positive().optional(),

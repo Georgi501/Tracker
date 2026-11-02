@@ -12,7 +12,8 @@ import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDcf, marketDetails, marketQuote, type ChartRange } from "@/lib/market.functions";
-import { dcfValue, scenario, valuationGap } from "@/lib/dcf";
+import { dcfValueFromFundamentals, scenario, valuationGap } from "@/lib/dcf";
+import { isQuoteFresh } from "@/lib/portfolio";
 import {
   clearTargetReview,
   inBuyZone,
@@ -78,6 +79,8 @@ type K =
   | "under"
   | "over"
   | "na"
+  | "comparisonUnavailable"
+  | "dcfLoadError"
   | "noData"
   | "remove"
   | "browse"
@@ -107,19 +110,21 @@ const COPY: Record<Lang, Record<K, string>> = {
     graph: "Price graph",
     last: "Last price",
     buy: "Buy price",
-    iv: "Intrinsic value",
+    iv: "DCF estimate",
     set: "Set",
     under: "Undervalued",
     over: "Overvalued",
     na: "n/a",
+    comparisonUnavailable: "Current-price comparison is unavailable.",
+    dcfLoadError: "DCF data could not be loaded.",
     noData: "No data for this period.",
     remove: "Remove",
     browse: "Search markets",
     addMore: "Add more",
     analysis: "Watchlist analysis",
     analysisDesc: "Top movers and buy-zone analysis are part of Pro.",
-    fairValue: "Fair value estimates",
-    fairValueDesc: "DCF fair value estimates and valuation comparisons are part of Pro.",
+    fairValue: "DCF estimates",
+    fairValueDesc: "Simplified DCF estimates and price comparisons are part of Pro.",
     loadError: "Could not load market data.",
     retry: "Retry",
     unavailable: "Unavailable",
@@ -141,19 +146,21 @@ const COPY: Record<Lang, Record<K, string>> = {
     graph: "Графика",
     last: "Последна цена",
     buy: "Цена за покупка",
-    iv: "Справедлива стойност",
+    iv: "DCF оценка",
     set: "Задай",
     under: "Подценена",
     over: "Надценена",
     na: "няма",
+    comparisonUnavailable: "Сравнението с текущата цена не е налично.",
+    dcfLoadError: "DCF данните не можаха да се заредят.",
     noData: "Няма данни за периода.",
     remove: "Премахни",
     browse: "Търси на пазара",
     addMore: "Добави още",
     analysis: "Анализ на Watchlist-а",
     analysisDesc: "Класациите и анализът на зоните за покупка са част от Pro.",
-    fairValue: "Оценка на справедливата стойност",
-    fairValueDesc: "DCF оценките и сравнението със справедливата стойност са част от Pro.",
+    fairValue: "DCF оценки",
+    fairValueDesc: "Опростените DCF оценки и сравненията с цената са част от Pro.",
     loadError: "Пазарните данни не можаха да се заредят.",
     retry: "Опитай отново",
     unavailable: "Недостъпно",
@@ -175,19 +182,21 @@ const COPY: Record<Lang, Record<K, string>> = {
     graph: "Kursgrafik",
     last: "Letzter Kurs",
     buy: "Kaufpreis",
-    iv: "Innerer Wert",
+    iv: "DCF-Schätzung",
     set: "Setzen",
     under: "Unterbewertet",
     over: "Überbewertet",
     na: "k. A.",
+    comparisonUnavailable: "Vergleich mit dem aktuellen Kurs nicht verfügbar.",
+    dcfLoadError: "DCF-Daten konnten nicht geladen werden.",
     noData: "Keine Daten für den Zeitraum.",
     remove: "Entfernen",
     browse: "Märkte durchsuchen",
     addMore: "Weitere hinzufügen",
     analysis: "Watchlist-Analyse",
     analysisDesc: "Top-Bewegungen und Kaufzonen-Analysen sind Teil von Pro.",
-    fairValue: "Fair-Value-Schätzungen",
-    fairValueDesc: "DCF-Fair-Value-Schätzungen und Bewertungsvergleiche sind Teil von Pro.",
+    fairValue: "DCF-Schätzungen",
+    fairValueDesc: "Vereinfachte DCF-Schätzungen und Kursvergleiche sind Teil von Pro.",
     loadError: "Marktdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     unavailable: "Nicht verfügbar",
@@ -209,19 +218,22 @@ const COPY: Record<Lang, Record<K, string>> = {
     graph: "Gráfico",
     last: "Último precio",
     buy: "Precio de compra",
-    iv: "Valor intrínseco",
+    iv: "Estimación DCF",
     set: "Fijar",
     under: "Infravalorada",
     over: "Sobrevalorada",
     na: "n/d",
+    comparisonUnavailable: "Comparación con el precio actual no disponible.",
+    dcfLoadError: "No se pudieron cargar los datos DCF.",
     noData: "Sin datos para el periodo.",
     remove: "Quitar",
     browse: "Buscar mercados",
     addMore: "Añadir más",
     analysis: "Análisis de watchlist",
     analysisDesc: "Los principales movimientos y el análisis de zonas de compra son parte de Pro.",
-    fairValue: "Estimaciones de valor razonable",
-    fairValueDesc: "Las estimaciones DCF y las comparaciones de valoración son parte de Pro.",
+    fairValue: "Estimaciones DCF",
+    fairValueDesc:
+      "Las estimaciones DCF simplificadas y las comparaciones de precios son parte de Pro.",
     loadError: "No se pudieron cargar los datos de mercado.",
     retry: "Reintentar",
     unavailable: "No disponible",
@@ -243,19 +255,21 @@ const COPY: Record<Lang, Record<K, string>> = {
     graph: "Grafico",
     last: "Ultimo prezzo",
     buy: "Prezzo d'acquisto",
-    iv: "Valore intrinseco",
+    iv: "Stima DCF",
     set: "Imposta",
     under: "Sottovalutata",
     over: "Sopravvalutata",
     na: "n/d",
+    comparisonUnavailable: "Confronto con il prezzo attuale non disponibile.",
+    dcfLoadError: "Impossibile caricare i dati DCF.",
     noData: "Nessun dato per il periodo.",
     remove: "Rimuovi",
     browse: "Cerca mercati",
     addMore: "Aggiungi altri",
     analysis: "Analisi watchlist",
     analysisDesc: "I migliori movimenti e l'analisi delle zone d'acquisto fanno parte di Pro.",
-    fairValue: "Stime del fair value",
-    fairValueDesc: "Le stime DCF e i confronti di valutazione fanno parte di Pro.",
+    fairValue: "Stime DCF",
+    fairValueDesc: "Le stime DCF semplificate e i confronti con il prezzo fanno parte di Pro.",
     loadError: "Impossibile caricare i dati di mercato.",
     retry: "Riprova",
     unavailable: "Non disponibile",
@@ -392,7 +406,7 @@ function Watchlist() {
       queryKey: ["market-dcf", a.symbol],
       queryFn: () =>
         a.type === "stock" ? dcfFn({ data: { symbol: a.symbol } }) : Promise.resolve(null),
-      staleTime: 86_400_000,
+      staleTime: 15 * 60_000,
       enabled: p.isPro && visibleSymbols.has(a.symbol),
     })),
   });
@@ -402,23 +416,14 @@ function Watchlist() {
     const ret = closes.length > 1 ? (closes.at(-1)!.c / closes[0]!.c - 1) * 100 : null;
     const q = quotes[i]?.data?.quote ?? null;
     const d = dcfs[i]?.data;
-    let iv: number | null = null;
-    // Only real fundamentals with matching currencies and a confirmed growth figure produce a fair value.
-    const g = d?.revenueGrowth ?? d?.earningsGrowth;
-    if (d && g != null && d.fcf && d.shares && d.currency && d.currency === d.finCurrency)
-      iv = dcfValue({
-        fcf: d.fcf,
-        cash: d.cash ?? 0,
-        debt: d.debt ?? 0,
-        shares: d.shares,
-        ...scenario("base", g),
-      });
+    const iv = d ? dcfValueFromFundamentals(d, scenario("base", d.revenueGrowth ?? 0.05)) : null;
     return {
       a,
       closes,
       ret,
       q,
       iv,
+      dcfCurrency: d?.currency ?? null,
       loading: !!charts[i]?.isLoading,
       chartError: !!charts[i]?.isError,
       chartUnavailable: !!charts[i]?.data?.unavailable,
@@ -427,9 +432,11 @@ function Watchlist() {
       quoteLoading: !!quotes[i]?.isLoading,
       dcfLoading: !!dcfs[i]?.isLoading,
       dcfFetched: !!dcfs[i]?.isFetched,
+      dcfError: !!dcfs[i]?.isError,
       visible: visibleSymbols.has(a.symbol),
       retryChart: () => void charts[i]?.refetch(),
       retryQuote: () => void quotes[i]?.refetch(),
+      retryDcf: () => void dcfs[i]?.refetch(),
       quoteAt: quotes[i]?.data?.quote?.at,
     };
   });
@@ -568,7 +575,14 @@ function Watchlist() {
             <ul className="divide-y divide-border">
               {rows.map((r) => {
                 const t = targets[r.a.symbol];
-                const gap = r.iv != null && r.iv > 0 && r.q ? valuationGap(r.iv, r.q.price) : null;
+                const quoteCurrencyMatches =
+                  !!r.q?.currency &&
+                  !!r.dcfCurrency &&
+                  r.q.currency.toUpperCase() === r.dcfCurrency.toUpperCase();
+                const gap =
+                  r.iv != null && r.iv > 0 && r.q && quoteCurrencyMatches && isQuoteFresh(r.quoteAt)
+                    ? valuationGap(r.iv, r.q.price)
+                    : null;
                 return (
                   <li
                     key={r.a.symbol}
@@ -692,15 +706,29 @@ function Watchlist() {
                         <span className="text-xs text-muted-foreground md:hidden">{c.iv}: </span>
                         {(!r.visible && !r.dcfFetched) || r.dcfLoading ? (
                           <span role="status">…</span>
-                        ) : r.iv != null && r.iv > 0 && gap != null ? (
+                        ) : r.dcfError ? (
+                          <button
+                            type="button"
+                            onClick={r.retryDcf}
+                            className="text-xs text-destructive underline"
+                          >
+                            {c.dcfLoadError} {c.retry}
+                          </button>
+                        ) : r.iv != null && r.iv > 0 ? (
                           <span>
-                            <b>{fmt(r.iv, r.q?.currency)}</b>{" "}
-                            <span
-                              className={`ml-1 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${gap >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
-                            >
-                              {gap >= 0 ? <Check size={11} /> : <X size={11} />}
-                              {gap >= 0 ? c.under : c.over} {Math.abs(gap * 100).toFixed(0)}%
-                            </span>
+                            <b>{fmt(r.iv, r.dcfCurrency)}</b>{" "}
+                            {gap != null ? (
+                              <span
+                                className={`ml-1 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${gap >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
+                              >
+                                {gap >= 0 ? <Check size={11} /> : <X size={11} />}
+                                {gap >= 0 ? c.under : c.over} {Math.abs(gap * 100).toFixed(0)}%
+                              </span>
+                            ) : (
+                              <span className="block text-xs text-muted-foreground">
+                                {c.comparisonUnavailable}
+                              </span>
+                            )}
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">{c.na}</span>
