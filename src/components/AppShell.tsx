@@ -30,6 +30,7 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
+  Facebook,
   MessageSquare,
   Moon,
   PieChart,
@@ -900,6 +901,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {feedbackCopy[p.lang].title}
               </button>
             )}
+            <a
+              href="https://www.facebook.com/profile.php?id=61595996617839"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 text-sm"
+            >
+              <Facebook size={16} />
+              Facebook
+            </a>
           </div>
         </div>
         <div className="footer-bottom">
