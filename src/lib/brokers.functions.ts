@@ -8,9 +8,7 @@ const brokerInput = z.object({ brokerId: z.string().uuid() });
 
 export const brokerConnectionStates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({ brokerIds: z.array(z.string().uuid()).max(5) }).parse(input),
-  )
+  .validator((input) => z.object({ brokerIds: z.array(z.string().uuid()).max(5) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: connections, error } = await supabaseAdmin
@@ -28,7 +26,7 @@ export const brokerConnectionStates = createServerFn({ method: "POST" })
 
 export const connectDirectBroker = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         brokerId: z.string().uuid(),
@@ -75,7 +73,7 @@ export const connectDirectBroker = createServerFn({ method: "POST" })
 
 export const syncDirectBroker = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => brokerInput.parse(input))
+  .validator((input) => brokerInput.parse(input))
   .handler(async ({ data, context }) => {
     const { data: isPro, error: proError } = await context.supabase.rpc("is_pro", {
       _user_id: context.userId,
@@ -114,7 +112,7 @@ export const syncDirectBroker = createServerFn({ method: "POST" })
 
 export const disconnectDirectBroker = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => brokerInput.parse(input))
+  .validator((input) => brokerInput.parse(input))
   .handler(async ({ data, context }) => {
     const { data: broker, error: brokerError } = await context.supabase
       .from("brokers")

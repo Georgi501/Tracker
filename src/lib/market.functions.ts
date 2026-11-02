@@ -28,7 +28,7 @@ function thumb(n: Thumb): string | null {
 }
 
 export const searchMarket = createServerFn({ method: "POST" })
-  .inputValidator((input) => marketSearchSchema.parse(input))
+  .validator((input) => marketSearchSchema.parse(input))
   .handler(
     async ({
       data,
@@ -68,7 +68,7 @@ export const searchMarket = createServerFn({ method: "POST" })
   );
 
 export const marketQuote = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
@@ -92,7 +92,7 @@ export interface ExtendedQuote {
 const extCache = new Map<string, { at: number; v: ExtendedQuote | null }>();
 /** Pre-market / after-hours price for US listings; null while the regular session is open or when the provider has none. */
 export const marketExtended = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
   )
   .handler(async ({ data }): Promise<{ ext: ExtendedQuote | null }> => {
@@ -128,7 +128,7 @@ export const getExchangeRate = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const getAssetRiskHistory = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         assets: z
@@ -219,7 +219,7 @@ const RANGE_CFG: Record<
 
 /** Real provider closes for the chosen range plus 52-week range; failures are flagged, never synthesized. */
 export const marketDetails = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
@@ -380,7 +380,7 @@ export interface FinancialSeries {
 
 /** Reported company financials; missing provider values remain null. */
 export const marketFinancialSeries = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
@@ -464,7 +464,7 @@ export const marketFinancialSeries = createServerFn({ method: "POST" })
 
 /** Yahoo key statistics for stocks/ETFs; every missing figure stays null (never estimated). */
 export const marketStats = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
   )
   .handler(async ({ data }): Promise<KeyStats | null> => {
@@ -589,7 +589,7 @@ export interface CompanyResearchData {
 
 /** Real analyst estimates and reported ownership data; missing provider fields remain null. */
 export const marketCompanyResearch = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
   )
   .handler(async ({ data }): Promise<CompanyResearchData> => {
@@ -682,7 +682,7 @@ export const marketCompanyResearch = createServerFn({ method: "POST" })
   });
 
 export const marketEarningsCalendar = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbols: z
@@ -779,7 +779,7 @@ export interface DcfData {
 
 /** Real Yahoo fundamentals for a DCF; missing figures stay null so the UI can say the model is not applicable. */
 export const marketDcf = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z.object({ symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/) }).parse(input),
   )
   .handler(async ({ data }): Promise<DcfData | null> => {
@@ -824,7 +824,7 @@ export interface CompanyOverview {
 
 /** Real Yahoo company profile and symbol-related news; missing fields stay null. */
 export const marketOverview = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
@@ -870,7 +870,7 @@ export const marketOverview = createServerFn({ method: "POST" })
   });
 
 export const marketEtfHoldings = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbols: z

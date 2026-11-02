@@ -1,8 +1,67 @@
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { Lang } from "@/lib/i18n";
 
 type VideoMode = "visitor" | "pro";
 type AppTheme = "light" | "dark";
+
+const COPY: Record<
+  Lang,
+  {
+    label: string;
+    title: string;
+    description: string;
+    fullWalkthrough: string;
+    visitorFrame: string;
+    proFrame: string;
+  }
+> = {
+  en: {
+    label: "PRODUCT WALKTHROUGH",
+    title: "See Capispot in action.",
+    description:
+      "Explore real screens, from portfolio tracking to market context and Pro insights.",
+    fullWalkthrough: "Open the full walkthrough",
+    visitorFrame: "Capispot portfolio walkthrough",
+    proFrame: "Capispot Pro tools walkthrough",
+  },
+  bg: {
+    label: "РАЗГЛЕДАЙ ПРОДУКТА",
+    title: "Виж Capispot в действие.",
+    description:
+      "Разгледай реални екрани — от проследяването на портфейл до пазарния контекст и Pro анализите.",
+    fullWalkthrough: "Отвори пълното представяне",
+    visitorFrame: "Представяне на портфейла в Capispot",
+    proFrame: "Представяне на Pro инструментите в Capispot",
+  },
+  de: {
+    label: "PRODUKTEINBLICK",
+    title: "Capispot in Aktion erleben.",
+    description:
+      "Entdecke echte Ansichten – von der Portfolioübersicht bis zu Marktdaten und Pro-Analysen.",
+    fullWalkthrough: "Vollständigen Rundgang öffnen",
+    visitorFrame: "Capispot-Portfolio-Rundgang",
+    proFrame: "Rundgang durch die Capispot-Pro-Tools",
+  },
+  es: {
+    label: "RECORRIDO DEL PRODUCTO",
+    title: "Descubre Capispot en acción.",
+    description:
+      "Explora pantallas reales, desde el seguimiento de cartera hasta el contexto de mercado y los análisis Pro.",
+    fullWalkthrough: "Abrir el recorrido completo",
+    visitorFrame: "Recorrido por la cartera de Capispot",
+    proFrame: "Recorrido por las herramientas Pro de Capispot",
+  },
+  it: {
+    label: "PANORAMICA DEL PRODOTTO",
+    title: "Scopri Capispot in azione.",
+    description:
+      "Esplora schermate reali, dal monitoraggio del portafoglio al contesto di mercato e alle analisi Pro.",
+    fullWalkthrough: "Apri la panoramica completa",
+    visitorFrame: "Panoramica del portafoglio Capispot",
+    proFrame: "Panoramica degli strumenti Pro di Capispot",
+  },
+};
 
 function isHeightMessage(value: unknown): value is { type: string; height: number } {
   if (typeof value !== "object" || value === null || !("type" in value) || !("height" in value)) {
@@ -15,9 +74,18 @@ function isHeightMessage(value: unknown): value is { type: string; height: numbe
   );
 }
 
-export function VideoPresentation({ mode, theme }: { mode: VideoMode; theme: AppTheme }) {
+export function VideoPresentation({
+  mode,
+  theme,
+  lang,
+}: {
+  mode: VideoMode;
+  theme: AppTheme;
+  lang: Lang;
+}) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(560);
+  const c = COPY[lang];
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
@@ -37,24 +105,24 @@ export function VideoPresentation({ mode, theme }: { mode: VideoMode; theme: App
 
   return (
     <section
-      aria-label="Capispot product walkthrough"
+      aria-label={c.title}
       className="grid overflow-hidden rounded-3xl border border-border bg-card lg:col-span-3 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)]"
     >
       <div className="flex flex-col items-start justify-center gap-2 border-b border-border p-4 sm:gap-4 sm:p-8 lg:border-b-0 lg:border-r">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-xs">
-          PRODUCT WALKTHROUGH
+          {c.label}
         </p>
         <h2 className="max-w-md text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-          See Capispot in action.
+          {c.title}
         </h2>
         <p className="max-w-md text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
-          Explore real screens, from portfolio tracking to market context and Pro insights.
+          {c.description}
         </p>
         <a
           href="/video-preview/"
           className="inline-flex items-center gap-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 sm:text-sm"
         >
-          Open the full walkthrough
+          {c.fullWalkthrough}
           <ArrowUpRight size={16} aria-hidden />
         </a>
       </div>
@@ -62,10 +130,8 @@ export function VideoPresentation({ mode, theme }: { mode: VideoMode; theme: App
         <iframe
           key={mode}
           ref={frame}
-          title={
-            mode === "pro" ? "Capispot Pro tools walkthrough" : "Capispot portfolio walkthrough"
-          }
-          src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}`}
+          title={mode === "pro" ? c.proFrame : c.visitorFrame}
+          src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}&lang=${lang}`}
           className="block w-full border-0"
           style={{ height }}
           loading="lazy"

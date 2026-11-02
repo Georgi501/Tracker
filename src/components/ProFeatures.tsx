@@ -4,7 +4,13 @@ import { Lock, Sparkles } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { pct, usePortfolio } from "@/lib/store";
 import { proCopy } from "@/lib/pro-i18n";
-import { fireProjection } from "@/lib/pro";
+import {
+  fireProjection,
+  isValidFireAssumptions,
+  MAX_FIRE_CURRENCY_AMOUNT,
+  MAX_FIRE_RETURN_PCT,
+  MIN_FIRE_RETURN_PCT,
+} from "@/lib/pro";
 import { planCopy } from "@/lib/plan-i18n";
 
 export function ProBadge() {
@@ -156,24 +162,33 @@ export function FireCalculator() {
   useEffect(() => {
     if (Number.isFinite(portfolio) && current === "") setCurrent(String(Math.round(portfolio)));
   }, [current, portfolio]);
-  const r = fireProjection({
+  const assumptions = {
     current: Number(current) || 0,
     monthly: Number(monthly) || 0,
     annualReturnPct: Number(ret) || 0,
     annualSpend: Number(spend) || 0,
-  });
+  };
+  const complete = [current, monthly, ret, spend].every((value) => value.trim() !== "");
+  const valid = complete && isValidFireAssumptions(assumptions);
+  const r = valid ? fireProjection(assumptions) : null;
   const fmt = (v: number) =>
     new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: p.currency,
       maximumFractionDigits: 0,
     }).format(v);
-  const field = (label: string, v: string, set: (s: string) => void) => (
+  const field = (label: string, v: string, set: (s: string) => void, min: number, max: number) => (
     <label className="text-xs text-muted-foreground">
       {label}
       <input
         type="number"
         inputMode="decimal"
+        min={min}
+        max={max}
+        step="any"
+        aria-invalid={
+          v !== "" && (!Number.isFinite(Number(v)) || Number(v) < min || Number(v) > max)
+        }
         value={v}
         onChange={(e) => set(e.target.value)}
         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
@@ -183,20 +198,25 @@ export function FireCalculator() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        {field(`${c.current} (${p.currency})`, current, setCurrent)}
-        {field(`${c.monthly} (${p.currency})`, monthly, setMonthly)}
-        {field(c.returnPct, ret, setRet)}
-        {field(`${c.spend} (${p.currency})`, spend, setSpend)}
+        {field(`${c.current} (${p.currency})`, current, setCurrent, 0, MAX_FIRE_CURRENCY_AMOUNT)}
+        {field(`${c.monthly} (${p.currency})`, monthly, setMonthly, 0, MAX_FIRE_CURRENCY_AMOUNT)}
+        {field(c.returnPct, ret, setRet, MIN_FIRE_RETURN_PCT, MAX_FIRE_RETURN_PCT)}
+        {field(`${c.spend} (${p.currency})`, spend, setSpend, 0, MAX_FIRE_CURRENCY_AMOUNT)}
       </div>
+      {complete && !valid && (
+        <p role="alert" className="text-xs text-destructive">
+          {c.invalidInputs}
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-secondary p-3">
           <p className="text-xs text-muted-foreground">{c.fireNumber}</p>
-          <p className="font-display text-xl font-bold">{fmt(r.target)}</p>
+          <p className="font-display text-xl font-bold">{r ? fmt(r.target) : "—"}</p>
         </div>
         <div className="rounded-xl bg-primary/10 p-3">
           <p className="text-xs text-muted-foreground">{c.fireIn}</p>
           <p className="font-display text-xl font-bold text-primary">
-            {r.years === null ? c.never : `${r.years.toFixed(1)} ${c.years}`}
+            {!r ? "—" : r.years === null ? c.never : `${r.years.toFixed(1)} ${c.years}`}
           </p>
         </div>
       </div>

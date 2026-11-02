@@ -398,8 +398,7 @@
         border: 1px solid rgb(255 255 255 / 34%);
         border-radius: 50%;
         background:
-          linear-gradient(145deg, rgb(255 255 255 / 20%), transparent 52%),
-          rgb(255 255 255 / 12%);
+          linear-gradient(145deg, rgb(255 255 255 / 20%), transparent 52%), rgb(255 255 255 / 12%);
         color: #fff;
         cursor: pointer;
         font-size: 27px;
@@ -425,8 +424,7 @@
 
       .screen-frame .big-play:hover {
         background:
-          linear-gradient(145deg, rgb(255 255 255 / 28%), transparent 52%),
-          rgb(255 255 255 / 20%);
+          linear-gradient(145deg, rgb(255 255 255 / 28%), transparent 52%), rgb(255 255 255 / 20%);
         transform: translate(-50%, -50%) scale(1.07);
       }
 
@@ -1098,8 +1096,7 @@
         height: 68px;
         border-color: rgb(255 255 255 / 38%);
         background:
-          linear-gradient(145deg, rgb(255 255 255 / 22%), transparent 52%),
-          rgb(255 255 255 / 13%);
+          linear-gradient(145deg, rgb(255 255 255 / 22%), transparent 52%), rgb(255 255 255 / 13%);
         transform: translate(-50%, -50%) scale(0.94);
         backdrop-filter: blur(16px) saturate(0.65);
         box-shadow:
@@ -1111,8 +1108,7 @@
 
       body.embedded .screen-frame .big-play:hover {
         background:
-          linear-gradient(145deg, rgb(255 255 255 / 28%), transparent 52%),
-          rgb(255 255 255 / 22%);
+          linear-gradient(145deg, rgb(255 255 255 / 28%), transparent 52%), rgb(255 255 255 / 22%);
         transform: translate(-50%, -50%) scale(1.07);
       }
 
@@ -1362,8 +1358,16 @@
                   fetchpriority="high"
                 />
                 <button class="big-play" type="button" aria-label="Play walkthrough">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" width="27" height="27" fill="currentColor">
-                    <path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z" />
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="27"
+                    height="27"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1401,7 +1405,9 @@
                     height="15"
                     fill="currentColor"
                   >
-                    <path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z" />
+                    <path
+                      d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z"
+                    />
                   </svg>
                 </button>
                 <button type="button" id="next-scene" aria-label="Next scene">›</button>
@@ -1498,6 +1504,12 @@
           ctaUrl: "https://capispot.com/auth",
           secondary: "Explore sample portfolio",
           secondaryUrl: "https://capispot.com/demo",
+          closingTitle: "A clearer picture starts with your portfolio.",
+          closingCopy:
+            "Start with the core tracker for free. Explore Pro when you want more depth—not because you have to.",
+          closingCta: "Start your free portfolio →",
+          disclosure:
+            "Screens are captured from Capispot's public site. Portfolio values and holdings shown in the sample are fictional and illustrative, not live quotes or a recommendation. Capispot is tracking and analytics software, not investment advice. Investing involves risk.",
           scenes: [
             {
               image: "./ui-overview.png",
@@ -1599,6 +1611,12 @@
           ctaUrl: "https://capispot.com/pricing",
           secondary: "See all features",
           secondaryUrl: "https://capispot.com/features",
+          closingTitle: "More depth. Your call.",
+          closingCopy:
+            "Explore the analysis and planning tools, compare plans, and choose Pro only if it fits your workflow.",
+          closingCta: "Explore Pro plans →",
+          disclosure:
+            "Screens are captured from Capispot's public site. Portfolio examples use fictional sample data. Pro analysis, scenarios and AI outputs are informational, not personalized investment advice or a guarantee of results.",
           scenes: [
             {
               image: "./ui-pro-preview.png",
@@ -1675,6 +1693,951 @@
         },
       };
 
+      const translations = {
+        en: {
+          pageTitle: "See Capispot in action",
+          features: "Features",
+          pricing: "Pricing",
+          headerCta: "Create free portfolio",
+          previewTitle: "See the product. Understand the difference.",
+          tour: "Portfolio tour",
+          proTools: "Pro tools",
+          controls: "Walkthrough controls",
+          previous: "Previous scene",
+          play: "Play walkthrough",
+          pause: "Pause walkthrough",
+          next: "Next scene",
+          seek: "Seek walkthrough",
+          mute: "Mute ambient sound",
+          enableSound: "Enable ambient sound",
+          chapters: "Walkthrough chapters",
+          soundEnabled: "Ambient sound is enabled when the walkthrough plays.",
+          soundMuted: "Walkthrough sound is muted.",
+          soundPlaying: "The walkthrough is playing with soft ambient sound.",
+          soundPlayingMuted: "The walkthrough is playing with sound muted.",
+          soundEnabledStatus: "Ambient sound is enabled.",
+          soundUnavailable: "Ambient sound is unavailable; the walkthrough will continue.",
+          screenUnavailable: "The Capispot screen could not be loaded.",
+          sceneStatus: (index, total) => `Scene ${index} of ${total}.`,
+          pausedStatus: "Walkthrough paused.",
+          finishedStatus: "Walkthrough finished. Press play to watch it again.",
+          modes: {
+            visitor: {
+              title: "Your investments, clearly in view.",
+              eyebrow: "A clearer view of your investments",
+              description:
+                "See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools into one calm, connected experience.",
+              sectionDuration: "A 24-second walkthrough · real Capispot screens",
+              cta: "Create free portfolio",
+              secondary: "Explore sample portfolio",
+              closingTitle: "A clearer picture starts with your portfolio.",
+              closingCopy:
+                "Start with the core tracker for free. Explore Pro when you want more depth—not because you have to.",
+              closingCta: "Start your free portfolio →",
+              disclosure:
+                "Screens are captured from Capispot's public site. Portfolio values and holdings shown in the sample are fictional and illustrative, not live quotes or a recommendation. Capispot is tracking and analytics software, not investment advice. Investing involves risk.",
+            },
+            pro: {
+              title: "Go deeper with Pro.",
+              eyebrow: "For investors ready for more insight",
+              description:
+                "Explore how Capispot Pro adds research, portfolio analysis and planning to the tracker you already know.",
+              sectionDuration: "A 20-second Pro walkthrough · real Capispot screens",
+              cta: "Explore Pro plans",
+              secondary: "See all features",
+              closingTitle: "More depth. Your call.",
+              closingCopy:
+                "Explore the analysis and planning tools, compare plans, and choose Pro only if it fits your workflow.",
+              closingCta: "Explore Pro plans →",
+              disclosure:
+                "Screens are captured from Capispot's public site. Portfolio examples use fictional sample data. Pro analysis, scenarios and AI outputs are informational, not personalized investment advice or a guarantee of results.",
+            },
+          },
+        },
+        bg: {
+          pageTitle: "Виж Capispot в действие",
+          features: "Функции",
+          pricing: "Цени",
+          headerCta: "Създай безплатно портфолио",
+          previewTitle: "Виж продукта и разликата",
+          tour: "Преглед на портфейла",
+          proTools: "Pro инструменти",
+          controls: "Контроли на представянето",
+          previous: "Предишна сцена",
+          play: "Пусни представянето",
+          pause: "Постави на пауза",
+          next: "Следваща сцена",
+          seek: "Позиция в представянето",
+          mute: "Изключи фоновия звук",
+          enableSound: "Включи фоновия звук",
+          chapters: "Сцени от представянето",
+          soundEnabled: "Фоновият звук е включен при възпроизвеждане.",
+          soundMuted: "Звукът на представянето е изключен.",
+          soundPlaying: "Представянето се възпроизвежда с тих фонов звук.",
+          soundPlayingMuted: "Представянето се възпроизвежда без звук.",
+          soundEnabledStatus: "Фоновият звук е включен.",
+          soundUnavailable: "Фоновият звук не е наличен; представянето ще продължи.",
+          screenUnavailable: "Екранът на Capispot не може да бъде зареден.",
+          sceneStatus: (index, total) => `Сцена ${index} от ${total}.`,
+          pausedStatus: "Представянето е на пауза.",
+          finishedStatus: "Представянето завърши. Натисни за възпроизвеждане отново.",
+          modes: {
+            visitor: {
+              title: "Инвестициите ти — ясно пред теб.",
+              eyebrow: "По-ясен поглед към инвестициите ти",
+              description:
+                "Виж как Capispot събира проследяването на портфейла, пазарния контекст и Pro инструментите в едно спокойно и свързано изживяване.",
+              sectionDuration: "24-секундно представяне · реални екрани на Capispot",
+              cta: "Създай безплатно портфолио",
+              secondary: "Разгледай примерен портфейл",
+              closingTitle: "По-ясната картина започва с портфейла ти.",
+              closingCopy:
+                "Започни безплатно с основните функции. Разгледай Pro, когато поискаш повече детайли — не защото си длъжен.",
+              closingCta: "Създай безплатно портфолио →",
+              disclosure:
+                "Екраните са заснети от публичния сайт на Capispot. Стойностите и позициите в примера са измислени и илюстративни, не са текущи котировки или препоръка. Capispot е софтуер за проследяване и анализ, а не инвестиционен съвет. Инвестирането носи риск.",
+            },
+            pro: {
+              title: "Разгледай повече с Pro.",
+              eyebrow: "За инвеститори, които търсят повече яснота",
+              description:
+                "Виж как Capispot Pro добавя проучвания, анализ на портфейла и планиране към познатия ти тракер.",
+              sectionDuration: "20-секундно Pro представяне · реални екрани на Capispot",
+              cta: "Разгледай Pro плановете",
+              secondary: "Виж всички функции",
+              closingTitle: "Повече детайли. Ти решаваш.",
+              closingCopy:
+                "Разгледай инструментите за анализ и планиране, сравни плановете и избери Pro само ако пасва на начина ти на работа.",
+              closingCta: "Разгледай Pro плановете →",
+              disclosure:
+                "Екраните са заснети от публичния сайт на Capispot. Примерите за портфейл използват измислени данни. Pro анализите, сценариите и AI резултатите са информативни, не са персонален инвестиционен съвет или гаранция за резултати.",
+            },
+          },
+        },
+        de: {
+          pageTitle: "Capispot in Aktion erleben",
+          features: "Funktionen",
+          pricing: "Preise",
+          headerCta: "Kostenloses Portfolio erstellen",
+          previewTitle: "Das Produkt sehen. Den Unterschied verstehen.",
+          tour: "Portfolio-Rundgang",
+          proTools: "Pro-Tools",
+          controls: "Rundgang-Steuerung",
+          previous: "Vorherige Szene",
+          play: "Rundgang starten",
+          pause: "Rundgang pausieren",
+          next: "Nächste Szene",
+          seek: "Rundgang durchsuchen",
+          mute: "Umgebungston ausschalten",
+          enableSound: "Umgebungston einschalten",
+          chapters: "Kapitel des Rundgangs",
+          soundEnabled: "Umgebungston wird während der Wiedergabe abgespielt.",
+          soundMuted: "Der Ton des Rundgangs ist stummgeschaltet.",
+          soundPlaying: "Der Rundgang wird mit leisem Umgebungston abgespielt.",
+          soundPlayingMuted: "Der Rundgang wird ohne Ton abgespielt.",
+          soundEnabledStatus: "Umgebungston ist eingeschaltet.",
+          soundUnavailable: "Umgebungston nicht verfügbar; der Rundgang wird fortgesetzt.",
+          screenUnavailable: "Der Capispot-Bildschirm konnte nicht geladen werden.",
+          sceneStatus: (index, total) => `Szene ${index} von ${total}.`,
+          pausedStatus: "Rundgang pausiert.",
+          finishedStatus: "Rundgang beendet. Zum erneuten Ansehen auf Wiedergabe klicken.",
+          modes: {
+            visitor: {
+              title: "Deine Anlagen klar im Blick.",
+              eyebrow: "Ein klarerer Blick auf deine Anlagen",
+              description:
+                "Erlebe, wie Capispot Portfolio-Tracking, echten Marktkontext und durchdachte Pro-Tools in einer ruhigen, vernetzten Erfahrung vereint.",
+              sectionDuration: "Ein 24-Sekunden-Rundgang · echte Capispot-Bildschirme",
+              cta: "Kostenloses Portfolio erstellen",
+              secondary: "Beispielportfolio ansehen",
+              closingTitle: "Ein klareres Bild beginnt mit deinem Portfolio.",
+              closingCopy:
+                "Starte kostenlos mit dem Tracker. Entdecke Pro, wenn du mehr Tiefe möchtest – nicht, weil du musst.",
+              closingCta: "Kostenloses Portfolio starten →",
+              disclosure:
+                "Die Bildschirme stammen von der öffentlichen Capispot-Website. Die gezeigten Portfolio-Werte und Positionen sind fiktive Beispiele, keine Live-Kurse oder Empfehlungen. Capispot ist Tracking- und Analysesoftware, keine Anlageberatung. Investitionen sind mit Risiken verbunden.",
+            },
+            pro: {
+              title: "Mit Pro tiefer einsteigen.",
+              eyebrow: "Für Anleger, die mehr Einblicke möchten",
+              description:
+                "Entdecke, wie Capispot Pro den bekannten Tracker um Research, Portfolioanalysen und Planung erweitert.",
+              sectionDuration: "Ein 20-Sekunden-Pro-Rundgang · echte Capispot-Bildschirme",
+              cta: "Pro-Tarife ansehen",
+              secondary: "Alle Funktionen ansehen",
+              closingTitle: "Mehr Einblicke. Du entscheidest.",
+              closingCopy:
+                "Entdecke Analyse- und Planungstools, vergleiche Tarife und wähle Pro nur, wenn es zu deinem Ablauf passt.",
+              closingCta: "Pro-Tarife ansehen →",
+              disclosure:
+                "Die Bildschirme stammen von der öffentlichen Capispot-Website. Portfolio-Beispiele verwenden fiktive Daten. Pro-Analysen, Szenarien und KI-Ausgaben dienen nur der Information und sind weder persönliche Anlageberatung noch eine Erfolgsgarantie.",
+            },
+          },
+        },
+        es: {
+          pageTitle: "Descubre Capispot en acción",
+          features: "Funciones",
+          pricing: "Precios",
+          headerCta: "Crear cartera gratis",
+          previewTitle: "Descubre el producto y entiende la diferencia.",
+          tour: "Recorrido por la cartera",
+          proTools: "Herramientas Pro",
+          controls: "Controles del recorrido",
+          previous: "Escena anterior",
+          play: "Reproducir recorrido",
+          pause: "Pausar recorrido",
+          next: "Escena siguiente",
+          seek: "Buscar en el recorrido",
+          mute: "Silenciar sonido ambiental",
+          enableSound: "Activar sonido ambiental",
+          chapters: "Capítulos del recorrido",
+          soundEnabled: "El sonido ambiental se activa al reproducir el recorrido.",
+          soundMuted: "El sonido del recorrido está silenciado.",
+          soundPlaying: "El recorrido se está reproduciendo con sonido ambiental suave.",
+          soundPlayingMuted: "El recorrido se está reproduciendo sin sonido.",
+          soundEnabledStatus: "El sonido ambiental está activado.",
+          soundUnavailable: "El sonido ambiental no está disponible; el recorrido continuará.",
+          screenUnavailable: "No se pudo cargar la pantalla de Capispot.",
+          sceneStatus: (index, total) => `Escena ${index} de ${total}.`,
+          pausedStatus: "Recorrido en pausa.",
+          finishedStatus: "Recorrido terminado. Pulsa reproducir para verlo de nuevo.",
+          modes: {
+            visitor: {
+              title: "Tus inversiones, siempre claras.",
+              eyebrow: "Una visión más clara de tus inversiones",
+              description:
+                "Descubre cómo Capispot reúne el seguimiento de cartera, el contexto real del mercado y herramientas Pro en una experiencia conectada y sencilla.",
+              sectionDuration: "Recorrido de 24 segundos · pantallas reales de Capispot",
+              cta: "Crear cartera gratis",
+              secondary: "Explorar cartera de ejemplo",
+              closingTitle: "Una visión más clara empieza con tu cartera.",
+              closingCopy:
+                "Empieza gratis con el seguimiento esencial. Explora Pro cuando quieras más profundidad, no porque tengas que hacerlo.",
+              closingCta: "Crear cartera gratis →",
+              disclosure:
+                "Las pantallas se capturaron del sitio público de Capispot. Los valores y posiciones del ejemplo son ficticios e ilustrativos, no son cotizaciones en tiempo real ni recomendaciones. Capispot es un software de seguimiento y análisis, no asesoramiento financiero. Invertir conlleva riesgos.",
+            },
+            pro: {
+              title: "Profundiza con Pro.",
+              eyebrow: "Para inversores que buscan más información",
+              description:
+                "Descubre cómo Capispot Pro añade investigación, análisis de cartera y planificación al seguimiento que ya conoces.",
+              sectionDuration: "Recorrido Pro de 20 segundos · pantallas reales de Capispot",
+              cta: "Explorar planes Pro",
+              secondary: "Ver todas las funciones",
+              closingTitle: "Más profundidad. Tú decides.",
+              closingCopy:
+                "Explora las herramientas de análisis y planificación, compara planes y elige Pro solo si encaja con tu forma de trabajar.",
+              closingCta: "Explorar planes Pro →",
+              disclosure:
+                "Las pantallas se capturaron del sitio público de Capispot. Los ejemplos de cartera usan datos ficticios. Los análisis, escenarios y resultados de IA de Pro son informativos, no asesoramiento financiero personalizado ni una garantía de resultados.",
+            },
+          },
+        },
+        it: {
+          pageTitle: "Scopri Capispot in azione",
+          features: "Funzionalità",
+          pricing: "Prezzi",
+          headerCta: "Crea un portafoglio gratuito",
+          previewTitle: "Scopri il prodotto e capisci la differenza.",
+          tour: "Panoramica del portafoglio",
+          proTools: "Strumenti Pro",
+          controls: "Controlli della panoramica",
+          previous: "Scena precedente",
+          play: "Riproduci panoramica",
+          pause: "Metti in pausa",
+          next: "Scena successiva",
+          seek: "Cerca nella panoramica",
+          mute: "Disattiva l'audio ambientale",
+          enableSound: "Attiva l'audio ambientale",
+          chapters: "Capitoli della panoramica",
+          soundEnabled: "L'audio ambientale è attivo durante la riproduzione.",
+          soundMuted: "L'audio della panoramica è disattivato.",
+          soundPlaying: "La panoramica è in riproduzione con audio ambientale discreto.",
+          soundPlayingMuted: "La panoramica è in riproduzione senza audio.",
+          soundEnabledStatus: "L'audio ambientale è attivo.",
+          soundUnavailable: "Audio ambientale non disponibile; la panoramica continuerà.",
+          screenUnavailable: "Impossibile caricare la schermata di Capispot.",
+          sceneStatus: (index, total) => `Scena ${index} di ${total}.`,
+          pausedStatus: "Panoramica in pausa.",
+          finishedStatus: "Panoramica terminata. Premi play per guardarla di nuovo.",
+          modes: {
+            visitor: {
+              title: "I tuoi investimenti, sempre chiari.",
+              eyebrow: "Una visione più chiara dei tuoi investimenti",
+              description:
+                "Scopri come Capispot riunisce monitoraggio del portafoglio, contesto di mercato reale e strumenti Pro in un'esperienza semplice e connessa.",
+              sectionDuration: "Panoramica di 24 secondi · schermate reali di Capispot",
+              cta: "Crea un portafoglio gratuito",
+              secondary: "Esplora il portafoglio di esempio",
+              closingTitle: "Una visione più chiara inizia dal tuo portafoglio.",
+              closingCopy:
+                "Inizia gratis con il monitoraggio essenziale. Scopri Pro quando vuoi più dettagli, non perché sei obbligato.",
+              closingCta: "Crea il tuo portafoglio gratuito →",
+              disclosure:
+                "Le schermate provengono dal sito pubblico di Capispot. Valori e posizioni del portafoglio sono esempi fittizi, non quotazioni in tempo reale né raccomandazioni. Capispot è un software di monitoraggio e analisi, non consulenza finanziaria. Investire comporta dei rischi.",
+            },
+            pro: {
+              title: "Approfondisci con Pro.",
+              eyebrow: "Per chi desidera analisi più approfondite",
+              description:
+                "Scopri come Capispot Pro aggiunge ricerca, analisi del portafoglio e pianificazione al tracker che già conosci.",
+              sectionDuration: "Panoramica Pro di 20 secondi · schermate reali di Capispot",
+              cta: "Scopri i piani Pro",
+              secondary: "Vedi tutte le funzionalità",
+              closingTitle: "Più approfondimenti. Decidi tu.",
+              closingCopy:
+                "Esplora gli strumenti di analisi e pianificazione, confronta i piani e scegli Pro solo se si adatta al tuo modo di lavorare.",
+              closingCta: "Scopri i piani Pro →",
+              disclosure:
+                "Le schermate provengono dal sito pubblico di Capispot. Gli esempi di portafoglio usano dati fittizi. Analisi, scenari e risultati AI di Pro sono informativi, non consulenza finanziaria personalizzata né garanzia di risultati.",
+            },
+          },
+        },
+      };
+
+      const standaloneTranslations = {
+        en: {
+          brand: "Capispot home",
+          supportedTypes: "Supported portfolio asset types",
+          asideTitle: "One portfolio. More perspective.",
+          assets: ["Stocks", "ETFs", "Crypto", "Bonds", "Cash", "Real estate"],
+          captured: "Captured from Capispot's real public interface. No personal portfolio data.",
+          proofLabel: "Why investors choose Capispot",
+          proof: [
+            [
+              "01 / CLARITY",
+              "See the whole portfolio",
+              "Positions, asset mix and market discovery in one place, with a clear sample to explore.",
+            ],
+            [
+              "02 / CONTEXT",
+              "Trust the story behind the numbers",
+              "Dated market history and cash-flow-aware returns. Gaps stay visible instead of guessed.",
+            ],
+            [
+              "03 / PRO",
+              "Go deeper when you are ready",
+              "Research, concentration, risk and planning tools build on the free portfolio tracker.",
+            ],
+          ],
+        },
+        bg: {
+          brand: "Начална страница на Capispot",
+          supportedTypes: "Поддържани видове активи в портфейла",
+          asideTitle: "Един портфейл. Повече перспектива.",
+          assets: ["Акции", "ETF-и", "Крипто", "Облигации", "Кеш", "Имоти"],
+          captured: "Кадри от реалния публичен интерфейс на Capispot. Без лични данни за портфейл.",
+          proofLabel: "Защо инвеститорите избират Capispot",
+          proof: [
+            [
+              "01 / ЯСНОТА",
+              "Виж целия портфейл",
+              "Позиции, разпределение на активите и пазарно търсене на едно място, с пример за разглеждане.",
+            ],
+            [
+              "02 / КОНТЕКСТ",
+              "Разбирай историята зад числата",
+              "Датирана пазарна история и доходност, съобразена с паричните потоци. Липсите се показват, а не се гадаят.",
+            ],
+            [
+              "03 / PRO",
+              "Навлез в детайлите, когато си готов",
+              "Проучвания, концентрация, риск и планиране надграждат безплатния тракер.",
+            ],
+          ],
+        },
+        de: {
+          brand: "Capispot-Startseite",
+          supportedTypes: "Unterstützte Anlageklassen im Portfolio",
+          asideTitle: "Ein Portfolio. Mehr Perspektive.",
+          assets: ["Aktien", "ETFs", "Krypto", "Anleihen", "Bargeld", "Immobilien"],
+          captured:
+            "Aufnahmen aus der echten öffentlichen Capispot-Oberfläche. Keine persönlichen Portfoliodaten.",
+          proofLabel: "Warum Anleger Capispot wählen",
+          proof: [
+            [
+              "01 / KLARHEIT",
+              "Das gesamte Portfolio im Blick",
+              "Positionen, Anlageklassen und Marktsuche an einem Ort – mit einem klar gekennzeichneten Beispiel.",
+            ],
+            [
+              "02 / KONTEXT",
+              "Die Geschichte hinter den Zahlen verstehen",
+              "Datierte Markthistorie und um Zahlungsströme bereinigte Renditen. Lücken werden gezeigt, nicht geschätzt.",
+            ],
+            [
+              "03 / PRO",
+              "Bei Bedarf tiefer einsteigen",
+              "Research, Konzentration, Risiko und Planung bauen auf dem kostenlosen Tracker auf.",
+            ],
+          ],
+        },
+        es: {
+          brand: "Inicio de Capispot",
+          supportedTypes: "Tipos de activos compatibles con la cartera",
+          asideTitle: "Una cartera. Más perspectiva.",
+          assets: ["Acciones", "ETF", "Cripto", "Bonos", "Efectivo", "Inmuebles"],
+          captured:
+            "Capturas de la interfaz pública real de Capispot. Sin datos personales de cartera.",
+          proofLabel: "Por qué los inversores eligen Capispot",
+          proof: [
+            [
+              "01 / CLARIDAD",
+              "Consulta toda tu cartera",
+              "Posiciones, distribución de activos y búsqueda de mercado en un solo lugar, con un ejemplo claro.",
+            ],
+            [
+              "02 / CONTEXTO",
+              "Entiende la historia detrás de los números",
+              "Historial de mercado fechado y rendimientos ajustados por flujos de efectivo. Las lagunas se muestran, no se estiman.",
+            ],
+            [
+              "03 / PRO",
+              "Profundiza cuando quieras",
+              "Investigación, concentración, riesgo y planificación amplían el seguimiento gratuito.",
+            ],
+          ],
+        },
+        it: {
+          brand: "Homepage Capispot",
+          supportedTypes: "Tipi di asset supportati nel portafoglio",
+          asideTitle: "Un portafoglio. Più prospettive.",
+          assets: ["Azioni", "ETF", "Cripto", "Obbligazioni", "Liquidità", "Immobili"],
+          captured:
+            "Immagini dall'interfaccia pubblica reale di Capispot. Nessun dato personale del portafoglio.",
+          proofLabel: "Perché gli investitori scelgono Capispot",
+          proof: [
+            [
+              "01 / CHIAREZZA",
+              "Tieni sotto controllo l'intero portafoglio",
+              "Posizioni, asset allocation e ricerca di mercato in un unico posto, con un esempio chiaro.",
+            ],
+            [
+              "02 / CONTESTO",
+              "Comprendi la storia dietro i numeri",
+              "Storico di mercato datato e rendimenti corretti per i flussi di cassa. Le lacune sono visibili, non stimate.",
+            ],
+            [
+              "03 / PRO",
+              "Approfondisci quando vuoi",
+              "Ricerca, concentrazione, rischio e pianificazione ampliano il tracker gratuito.",
+            ],
+          ],
+        },
+      };
+
+      const sceneTranslations = {
+        bg: {
+          visitor: [
+            [
+              "ОСНОВЕН ПОРТФЕЙЛ",
+              "Инвестициите ти — ясно пред теб.",
+              "Събери инвестиционната си активност на едно място и виж какво притежаваш с един поглед.",
+              [
+                "Акции, ETF-и, крипто, облигации, кеш и недвижими имоти",
+                "Импортирай съвместими CSV файлове или добавяй сделки ръчно",
+                "Разгледай ясно обозначения пример преди регистрация",
+              ],
+              "Публичният портфейл тук използва примерни илюстративни данни.",
+            ],
+            [
+              "ЯСНИ ПОЗИЦИИ",
+              "Виж приноса на всяка позиция.",
+              "Прегледай количеството, средната цена, текущата стойност и печалбата или загубата едно до друго.",
+              [
+                "Позициите се преглеждат лесно",
+                "Себестойността е до текущата стойност",
+                "Примерните стойности са ясно обозначени",
+              ],
+              "Стойностите и доходността в примера са измислени, не са реално пазарно представяне.",
+            ],
+            [
+              "ПАЗАРНО ОТКРИВАНЕ",
+              "Намирай активи, без да губиш контекста.",
+              "Търси пазарни активи от същото работно пространство, в което следиш портфейла си.",
+              [
+                "Търси по компания, име на актив или тикер",
+                "Разглеждай акции, ETF-и и крипто",
+                "Пазарните котировки може да са забавени",
+              ],
+              "Търсенето и котировките зависят от наличността на доставчика на пазарни данни.",
+            ],
+            [
+              "РЕАЛНА ИСТОРИЯ",
+              "Представяне, основано на реални данни.",
+              "Следи датирани стойности и доходност на портфейла, съобразени с отчетените парични потоци.",
+              [
+                "Датирани цени на затваряне и валутни курсове",
+                "Доходност на портфейла, коригирана за паричните потоци",
+                "Липсващата история не се замества с оценки",
+              ],
+              "Линиите на бенчмарка показват ценова доходност на индекса, без дивиденти.",
+            ],
+            [
+              "PRO АНАЛИЗ",
+              "Виж разпределението, не само списъка.",
+              "Разгледай карта на портфейла или разбивка по класове активи, за да разбереш как са разпределени позициите.",
+              [
+                "Виж теглата в портфейла с един поглед",
+                "Превключвай между карта и разпределение",
+                "Pro анализът надгражда портфейла ти",
+              ],
+              "Реалният продуктов преглед използва измислени примерни позиции.",
+            ],
+            [
+              "ПОВЕЧЕ С PRO",
+              "Започни безплатно. Надгради, когато си готов.",
+              "Безплатният тракер покрива основното. Pro добавя разширен анализ, проучвания и инструменти за планиране.",
+              [
+                "Карта на портфейла, бенчмарк и анализ на риска",
+                "AI преглед, проучване на компании и ETF припокриване",
+                "Избери план, когато допълнителните възможности са полезни",
+              ],
+              "Инструментите са информативни, не извършват сделки и не обещават инвестиционни резултати.",
+            ],
+          ],
+          pro: [
+            [
+              "АНАЛИЗ НА ПОРТФЕЙЛА",
+              "Виж отвъд водещото число.",
+              "Превърни позициите си в по-ясна картина на теглата и концентрацията в портфейла.",
+              [
+                "Карта и разпределение по класове активи",
+                "Разбери къде е концентриран портфейлът",
+                "Използвай своя портфейл, не общи съвети",
+              ],
+              "Примерните стойности са илюстративни. Анализът не е инвестиционен съвет.",
+            ],
+            [
+              "ПРОУЧВАНИЯ И РИСК",
+              "Проучвай компании. Разбирай експозицията.",
+              "Разгледай проучвания за компании, финансови отчети, припокриване на ETF-и и инструменти за риск.",
+              [
+                "Сравни анализа на портфейла между плановете",
+                "AI преглед и инструменти за ETF експозиция",
+                "Поддържана синхронизация само за четене с IBKR и Trading 212",
+              ],
+              "Инструментите подпомагат анализа ти; не са препоръки за покупка или продажба.",
+            ],
+            [
+              "ПЛАНИРАЙ С КОНТЕКСТ",
+              "Отдели място за важните въпроси.",
+              "Използвай цели, преглед на риска и сценарии, за да разгледаш възможности според избраните от теб допускания.",
+              [
+                "Планирай с ясни допускания",
+                "Разгледай данъчни и buy-only ребалансиращи сценарии",
+                "Прогнозите са възможности, не обещания",
+              ],
+              "Инструментите не търгуват и не представляват персонален инвестиционен съвет.",
+            ],
+            [
+              "ИЗГРАДЕНО ВЪРХУ ТВОЯ ПОРТФЕЙЛ",
+              "Запази връзката между детайлите.",
+              "Pro инструментите използват активите и сделките, които следиш в личния си портфейл.",
+              [
+                "Портфейлът ти е свързан с твоя акаунт",
+                "Брокерски импорти и ръчни сделки",
+                "Публичният пример не използва лични данни",
+              ],
+              "Брокерските лимити и наличността зависят от плана и поддържаните доставчици.",
+            ],
+            [
+              "ТИ ИЗБИРАШ",
+              "Надгради за повече дълбочина, не под натиск.",
+              "Започни с безплатния тракер и избери Pro, ако допълнителните инструменти пасват на начина ти на работа.",
+              [
+                "Сравни функциите на Free и Pro",
+                "Разгледай Pro анализи, проучвания и инструменти за портфейла",
+                "Реши кога допълнителните възможности са полезни",
+              ],
+              "Провери страницата с цени за актуалните планове и условията на пробния период.",
+            ],
+          ],
+        },
+        de: {
+          visitor: [
+            [
+              "PORTFOLIO",
+              "Deine Anlagen klar im Blick.",
+              "Führe deine Anlageaktivitäten in einem Portfolio zusammen und sieh auf einen Blick, was du besitzt.",
+              [
+                "Aktien, ETFs, Krypto, Anleihen, Bargeld und Immobilien",
+                "Kompatible CSV-Dateien importieren oder Transaktionen manuell erfassen",
+                "Vor der Anmeldung ein klar gekennzeichnetes Beispiel ansehen",
+              ],
+              "Das öffentliche Portfolio hier verwendet illustrative Beispieldaten.",
+            ],
+            [
+              "PORTFOLIOÜBERSICHT",
+              "Erkenne den Beitrag jeder Position.",
+              "Vergleiche Menge, durchschnittliche Kosten, aktuellen Wert und Gewinn oder Verlust nebeneinander.",
+              [
+                "Positionen lassen sich leicht überblicken",
+                "Einstandskosten neben dem aktuellen Wert",
+                "Beispielwerte sind klar gekennzeichnet",
+              ],
+              "Werte und Renditen im Beispiel sind fiktiv und keine reale Marktentwicklung.",
+            ],
+            [
+              "MARKTENTDECKUNG",
+              "Finde Anlagen, ohne den Überblick zu verlieren.",
+              "Suche nach Marktanlagen in derselben Umgebung, in der du dein Portfolio verfolgst.",
+              [
+                "Nach Unternehmen, Anlagename oder Ticker suchen",
+                "Aktien, ETFs und Krypto entdecken",
+                "Marktkurse können verzögert sein",
+              ],
+              "Suche und Kurse hängen von der Verfügbarkeit des Marktdatenanbieters ab.",
+            ],
+            [
+              "ECHTE HISTORIE",
+              "Performance auf Basis realer Historie.",
+              "Verfolge datierte Portfoliowerte und Renditen unter Berücksichtigung deiner erfassten Zahlungsströme.",
+              [
+                "Datierten Schlusskurse und Wechselkurse",
+                "Um Zahlungsströme bereinigte Portfoliorendite",
+                "Fehlende Historie wird nicht geschätzt",
+              ],
+              "Benchmark-Linien zeigen die Kursrendite des Index ohne Dividenden.",
+            ],
+            [
+              "PRO-EINBLICK",
+              "Sieh die Verteilung, nicht nur eine Liste.",
+              "Erkunde eine Portfolio-Heatmap oder eine Aufteilung nach Anlageklassen, um die Verteilung deiner Positionen zu verstehen.",
+              [
+                "Portfolioanteile auf einen Blick",
+                "Zwischen Heatmap und Aufteilung wechseln",
+                "Pro-Analysen bauen auf deinem Portfolio auf",
+              ],
+              "Diese echte Produktvorschau enthält fiktive Beispielpositionen.",
+            ],
+            [
+              "MEHR MIT PRO",
+              "Kostenlos starten. Bei Bedarf vertiefen.",
+              "Der kostenlose Tracker deckt das Wesentliche ab. Pro ergänzt erweiterte Analysen, Research und Planungstools.",
+              [
+                "Portfolio-Heatmap, Benchmark und Risikoeinblicke",
+                "KI-Review, Unternehmensresearch und ETF-Überschneidungen",
+                "Tarif wählen, wenn die zusätzlichen Einblicke nützlich sind",
+              ],
+              "Die Tools dienen der Information, führen keine Trades aus und versprechen keine Anlageergebnisse.",
+            ],
+          ],
+          pro: [
+            [
+              "PORTFOLIOANALYSE",
+              "Sieh über die große Zahl hinaus.",
+              "Mach aus deinen Positionen ein klareres Bild von Portfolioanteilen und Konzentrationen.",
+              [
+                "Heatmap und Aufteilung nach Anlageklassen",
+                "Konzentrationen im Portfolio erkennen",
+                "Dein Portfolio statt allgemeiner Empfehlungen",
+              ],
+              "Beispielwerte sind illustrativ. Die Analyse ist keine Anlageberatung.",
+            ],
+            [
+              "RESEARCH & RISIKO",
+              "Unternehmen recherchieren. Risiken verstehen.",
+              "Nutze Unternehmensresearch, Finanzberichte, ETF-Überschneidungen und Risikowerkzeuge.",
+              [
+                "Portfolioanalysen der Tarife vergleichen",
+                "KI-Portfolio-Review und ETF-Exposure-Tools",
+                "Unterstützte schreibgeschützte IBKR- und Trading-212-Synchronisierung",
+              ],
+              "Research und Risikowerkzeuge unterstützen deine Analyse, sind aber keine Kauf- oder Verkaufsempfehlungen.",
+            ],
+            [
+              "MIT KONTEXT PLANEN",
+              "Raum für die wichtigen Fragen schaffen.",
+              "Nutze Ziele, Risikoansichten und Szenarien für Möglichkeiten auf Basis deiner Annahmen.",
+              [
+                "Mit klaren Annahmen planen",
+                "Steuer- und Buy-only-Rebalancing-Vorschauen erkunden",
+                "Projektionen sind Möglichkeiten, keine Versprechen",
+              ],
+              "Vorschauen handeln nicht und sind keine persönliche Anlageberatung.",
+            ],
+            [
+              "AUF DEINEM PORTFOLIO AUFGEBAUT",
+              "Details miteinander verbinden.",
+              "Pro-Tools nutzen die Positionen und Transaktionen in deinem privaten Portfolio.",
+              [
+                "Dein Portfolio bleibt deinem Konto zugeordnet",
+                "Brokerimporte und manuelle Transaktionen",
+                "Das öffentliche Beispiel verwendet keine persönlichen Daten",
+              ],
+              "Brokerlimits und Verfügbarkeit hängen von Tarif und unterstützten Anbietern ab.",
+            ],
+            [
+              "DU ENTSCHEIDEST",
+              "Mehr Tiefe statt Druck.",
+              "Beginne mit dem kostenlosen Tracker und wähle Pro, wenn die zusätzlichen Tools zu deinem Ablauf passen.",
+              [
+                "Free- und Pro-Funktionen vergleichen",
+                "Pro-Analysen, Research und Portfolio-Tools ansehen",
+                "Entscheiden, wann die zusätzliche Tiefe passt",
+              ],
+              "Aktuelle Tarife und Testbedingungen findest du auf der Preisseite.",
+            ],
+          ],
+        },
+        es: {
+          visitor: [
+            [
+              "CARTERA",
+              "Tus inversiones, siempre claras.",
+              "Reúne tu actividad de inversión en una cartera organizada y descubre de un vistazo lo que tienes.",
+              [
+                "Acciones, ETF, criptomonedas, bonos, efectivo e inmuebles",
+                "Importa CSV compatibles o añade transacciones manualmente",
+                "Explora un ejemplo identificado antes de registrarte",
+              ],
+              "La cartera pública usa datos de ejemplo ilustrativos.",
+            ],
+            [
+              "CLARIDAD DE CARTERA",
+              "Descubre qué aporta cada posición.",
+              "Consulta la cantidad, el coste medio, el valor actual y las ganancias o pérdidas en paralelo.",
+              [
+                "Posiciones fáciles de revisar",
+                "Coste junto al valor actual",
+                "Los datos de ejemplo están claramente identificados",
+              ],
+              "Los valores y rendimientos del ejemplo son ficticios, no representan resultados reales del mercado.",
+            ],
+            [
+              "DESCUBRIMIENTO DE MERCADO",
+              "Encuentra activos sin perder el contexto.",
+              "Busca activos de mercado desde el mismo espacio donde sigues tu cartera.",
+              [
+                "Busca por empresa, nombre del activo o ticker",
+                "Explora acciones, ETF y criptomonedas",
+                "Las cotizaciones pueden tener retraso",
+              ],
+              "La búsqueda y las cotizaciones dependen de la disponibilidad del proveedor de datos.",
+            ],
+            [
+              "HISTORIAL REAL",
+              "Rendimiento basado en datos reales.",
+              "Consulta valores y rendimientos históricos de la cartera teniendo en cuenta los flujos de efectivo registrados.",
+              [
+                "Precios de cierre y divisas con fecha",
+                "Rendimiento ajustado por flujos de efectivo",
+                "El historial ausente no se sustituye por estimaciones",
+              ],
+              "Las líneas de referencia muestran el rendimiento del precio del índice, sin dividendos.",
+            ],
+            [
+              "ANÁLISIS PRO",
+              "Descubre la distribución, no solo una lista.",
+              "Explora un mapa de cartera o un desglose por clases de activos para entender cómo se distribuyen tus posiciones.",
+              [
+                "Consulta el peso de la cartera de un vistazo",
+                "Alterna entre mapa y distribución",
+                "El análisis Pro parte de tu cartera",
+              ],
+              "Esta vista previa real del producto contiene posiciones ficticias de ejemplo.",
+            ],
+            [
+              "MÁS CON PRO",
+              "Empieza gratis. Profundiza cuando quieras.",
+              "El seguimiento gratuito cubre lo esencial. Pro añade análisis avanzados, investigación y planificación.",
+              [
+                "Mapa de cartera, referencia e información de riesgo",
+                "Revisión con IA, investigación de empresas y solapamiento de ETF",
+                "Elige un plan cuando te resulte útil",
+              ],
+              "Las herramientas son informativas, no ejecutan operaciones ni prometen resultados.",
+            ],
+          ],
+          pro: [
+            [
+              "ANÁLISIS DE CARTERA",
+              "Mira más allá de la cifra principal.",
+              "Convierte tus posiciones en una imagen más clara del peso y la concentración de la cartera.",
+              [
+                "Mapa y distribución por clases de activos",
+                "Entiende dónde se concentra la cartera",
+                "Usa tu cartera, no consejos genéricos",
+              ],
+              "Los datos de ejemplo son ilustrativos. El análisis no es asesoramiento financiero.",
+            ],
+            [
+              "INVESTIGACIÓN Y RIESGO",
+              "Investiga empresas. Entiende la exposición.",
+              "Profundiza con investigación de empresas, estados financieros, solapamiento de ETF y herramientas de riesgo.",
+              [
+                "Compara el análisis de cartera entre planes",
+                "Revisión con IA y herramientas de exposición a ETF",
+                "Sincronización de solo lectura compatible con IBKR y Trading 212",
+              ],
+              "Las herramientas ayudan en el análisis; no son recomendaciones de compra o venta.",
+            ],
+            [
+              "PLANIFICA CON CONTEXTO",
+              "Haz espacio para las preguntas importantes.",
+              "Usa objetivos, análisis de riesgo y escenarios según las hipótesis que elijas.",
+              [
+                "Planifica con hipótesis explícitas",
+                "Explora vistas previas fiscales y de rebalanceo solo de compra",
+                "Las proyecciones son posibilidades, no promesas",
+              ],
+              "Las vistas previas no ejecutan operaciones ni son asesoramiento personalizado.",
+            ],
+            [
+              "BASADO EN TU CARTERA",
+              "Mantén conectados todos los detalles.",
+              "Las herramientas Pro se basan en las posiciones y transacciones de tu cartera privada.",
+              [
+                "Tu cartera está vinculada a tu cuenta",
+                "Importaciones de bróker y transacciones manuales",
+                "El ejemplo público nunca usa datos personales",
+              ],
+              "Los límites y la disponibilidad de brókeres dependen del plan y los proveedores compatibles.",
+            ],
+            [
+              "TÚ ELIGES",
+              "Más profundidad, sin presión.",
+              "Empieza con el seguimiento gratuito y elige Pro si sus herramientas encajan con tu forma de trabajar.",
+              [
+                "Compara las funciones Free y Pro",
+                "Consulta los análisis, investigación y herramientas Pro",
+                "Decide cuándo te conviene profundizar",
+              ],
+              "Consulta la página de precios para conocer los planes y las condiciones de prueba actuales.",
+            ],
+          ],
+        },
+        it: {
+          visitor: [
+            [
+              "PORTAFOGLIO",
+              "I tuoi investimenti, sempre chiari.",
+              "Riunisci le tue attività di investimento in un portafoglio organizzato e scopri subito cosa possiedi.",
+              [
+                "Azioni, ETF, criptovalute, obbligazioni, liquidità e immobili",
+                "Importa CSV compatibili o aggiungi transazioni manualmente",
+                "Esplora un esempio chiaramente indicato prima di registrarti",
+              ],
+              "Il portafoglio pubblico mostrato usa dati esemplificativi.",
+            ],
+            [
+              "CHIAREZZA DEL PORTAFOGLIO",
+              "Scopri il contributo di ogni posizione.",
+              "Confronta quantità, costo medio, valore attuale e profitti o perdite.",
+              [
+                "Posizioni facili da consultare",
+                "Costo a fianco del valore",
+                "I dati di esempio sono chiaramente indicati",
+              ],
+              "Valori e rendimenti dell'esempio sono fittizi e non rappresentano risultati reali di mercato.",
+            ],
+            [
+              "SCOPERTA DEL MERCATO",
+              "Trova asset senza perdere il filo.",
+              "Cerca asset di mercato nello stesso spazio in cui segui il tuo portafoglio.",
+              [
+                "Cerca per azienda, nome dell'asset o ticker",
+                "Esplora azioni, ETF e criptovalute",
+                "Le quotazioni potrebbero essere in ritardo",
+              ],
+              "Ricerca e quotazioni dipendono dalla disponibilità del fornitore di dati.",
+            ],
+            [
+              "STORICO REALE",
+              "Rendimenti basati su dati reali.",
+              "Segui valori e rendimenti storici del portafoglio considerando i flussi di cassa registrati.",
+              [
+                "Prezzi di chiusura e cambi con data",
+                "Rendimenti corretti per i flussi di cassa",
+                "I dati storici mancanti non vengono stimati",
+              ],
+              "Le linee di benchmark mostrano il rendimento del prezzo dell'indice, senza dividendi.",
+            ],
+            [
+              "ANALISI PRO",
+              "Scopri l'allocazione, non solo un elenco.",
+              "Esplora una mappa del portafoglio o la ripartizione per classi di asset per capire come sono distribuite le posizioni.",
+              [
+                "Pesi del portafoglio a colpo d'occhio",
+                "Passa dalla mappa alla ripartizione",
+                "L'analisi Pro si basa sul tuo portafoglio",
+              ],
+              "Questa anteprima reale mostra posizioni di esempio fittizie.",
+            ],
+            [
+              "PIÙ CON PRO",
+              "Inizia gratis. Approfondisci quando vuoi.",
+              "Il tracker gratuito copre l'essenziale. Pro aggiunge analisi avanzate, ricerca e strumenti di pianificazione.",
+              [
+                "Mappa del portafoglio, benchmark e analisi del rischio",
+                "Revisione AI, ricerca aziendale e sovrapposizione ETF",
+                "Scegli un piano quando ti è utile",
+              ],
+              "Gli strumenti sono informativi, non eseguono operazioni né promettono risultati.",
+            ],
+          ],
+          pro: [
+            [
+              "ANALISI DEL PORTAFOGLIO",
+              "Vai oltre il numero principale.",
+              "Trasforma le posizioni in un quadro più chiaro dei pesi e delle concentrazioni.",
+              [
+                "Mappa e ripartizione per classi di asset",
+                "Capisci dove si concentra il portafoglio",
+                "Usa il tuo portafoglio, non consigli generici",
+              ],
+              "I dati di esempio sono illustrativi. L'analisi non è consulenza finanziaria.",
+            ],
+            [
+              "RICERCA E RISCHIO",
+              "Analizza le aziende. Comprendi l'esposizione.",
+              "Approfondisci con ricerca aziendale, bilanci, sovrapposizione ETF e strumenti di rischio.",
+              [
+                "Confronta l'analisi del portafoglio tra i piani",
+                "Revisione AI e strumenti di esposizione agli ETF",
+                "Sincronizzazione supportata in sola lettura con IBKR e Trading 212",
+              ],
+              "Ricerca e strumenti di rischio supportano l'analisi, ma non sono consigli di acquisto o vendita.",
+            ],
+            [
+              "PIANIFICA CON CONTESTO",
+              "Dai spazio alle domande importanti.",
+              "Usa obiettivi, analisi del rischio e scenari in base alle ipotesi che scegli.",
+              [
+                "Pianifica con ipotesi esplicite",
+                "Esplora anteprime fiscali e di ribilanciamento solo acquisti",
+                "Le proiezioni sono possibilità, non promesse",
+              ],
+              "Le anteprime non eseguono operazioni e non sono consulenza personalizzata.",
+            ],
+            [
+              "BASATO SUL TUO PORTAFOGLIO",
+              "Tieni collegati tutti i dettagli.",
+              "Gli strumenti Pro si basano sulle posizioni e transazioni del tuo portafoglio privato.",
+              [
+                "Il portafoglio resta associato al tuo account",
+                "Importazioni del broker e transazioni manuali",
+                "L'esempio pubblico non usa dati personali",
+              ],
+              "Limiti e disponibilità dei broker dipendono dal piano e dai provider supportati.",
+            ],
+            [
+              "SCEGLI TU",
+              "Più approfondimenti, senza pressioni.",
+              "Inizia con il tracker gratuito e scegli Pro se gli strumenti aggiuntivi si adattano al tuo modo di lavorare.",
+              [
+                "Confronta le funzionalità Free e Pro",
+                "Esplora analisi, ricerca e strumenti Pro",
+                "Decidi quando vuoi più approfondimenti",
+              ],
+              "Consulta la pagina dei prezzi per piani e condizioni di prova aggiornati.",
+            ],
+          ],
+        },
+      };
+
       let activeMode = "visitor";
       let sceneIndex = 0;
       let elapsedSeconds = 0;
@@ -1704,6 +2667,75 @@
       const status = document.querySelector("#player-status");
       const params = new URLSearchParams(window.location.search);
       const embedded = params.get("embed") === "1";
+      let savedLanguage = "";
+      try {
+        savedLanguage = JSON.parse(localStorage.getItem("folio-state-v2") || "null")?.lang || "";
+      } catch {
+        savedLanguage = "";
+      }
+      const requestedLanguage =
+        params.get("lang") || savedLanguage || navigator.language.slice(0, 2);
+      const language = Object.hasOwn(translations, requestedLanguage) ? requestedLanguage : "en";
+      const copy = translations[language];
+      const pageCopy = standaloneTranslations[language];
+      ["visitor", "pro"].forEach((modeName) => {
+        const localizedMode = copy.modes?.[modeName];
+        if (!localizedMode) return;
+        const mode = modes[modeName];
+        const sceneCopy = localizedMode.scenes || sceneTranslations[language]?.[modeName];
+        const baseScenes = mode.scenes;
+        Object.assign(mode, localizedMode);
+        mode.scenes = baseScenes.map((scene, index) => ({
+          ...scene,
+          ...(sceneCopy?.[index]
+            ? {
+                imageAlt: `${sceneCopy[index][1]}. ${sceneCopy[index][2]}`,
+                kicker: sceneCopy[index][0],
+                title: sceneCopy[index][1],
+                caption: sceneCopy[index][2],
+                points: sceneCopy[index][3],
+                note: sceneCopy[index][4],
+              }
+            : {}),
+        }));
+      });
+      document.documentElement.lang = language;
+      document.title = copy.pageTitle;
+      document.querySelector('meta[name="description"]').content =
+        language === "en"
+          ? "See the real Capispot interface, portfolio tracking, market discovery and Pro tools in a short product walkthrough."
+          : copy.previewTitle;
+      document.querySelector(".brand").setAttribute("aria-label", pageCopy.brand);
+      document.querySelector(".header-nav").setAttribute("aria-label", copy.features);
+      document.querySelector(".header-nav a:first-child").textContent = copy.features;
+      document.querySelector(".header-nav a:nth-child(2)").textContent = copy.pricing;
+      document.querySelector(".header-cta").textContent = copy.headerCta;
+      document.querySelector("#preview-title").textContent = copy.previewTitle;
+      document.querySelector(".mode-switch").setAttribute("aria-label", copy.previewTitle);
+      document.querySelector('[data-mode="visitor"]').textContent = copy.tour;
+      document.querySelector('[data-mode="pro"]').textContent = copy.proTools;
+      document.querySelector(".player-controls").setAttribute("aria-label", copy.controls);
+      document.querySelector("#previous-scene").setAttribute("aria-label", copy.previous);
+      document.querySelector("#next-scene").setAttribute("aria-label", copy.next);
+      document.querySelector("#control-play").setAttribute("aria-label", copy.play);
+      document.querySelector(".big-play").setAttribute("aria-label", copy.play);
+      document.querySelector(".player-progress").setAttribute("aria-label", copy.seek);
+      document.querySelector("#chapters").setAttribute("aria-label", copy.chapters);
+      document.querySelector("#sound-toggle").setAttribute("aria-label", copy.mute);
+      document.querySelector(".hero-aside").setAttribute("aria-label", pageCopy.supportedTypes);
+      document.querySelector(".hero-aside strong").textContent = pageCopy.asideTitle;
+      document.querySelectorAll(".asset-tags span").forEach((tag, index) => {
+        tag.textContent = pageCopy.assets[index];
+      });
+      document.querySelector(".hero-aside small").textContent = pageCopy.captured;
+      const proof = document.querySelector(".proof");
+      proof.setAttribute("aria-label", pageCopy.proofLabel);
+      proof.querySelectorAll(".proof-card").forEach((card, index) => {
+        const [label, title, description] = pageCopy.proof[index];
+        card.querySelector(".proof-number").textContent = label;
+        card.querySelector("strong").textContent = title;
+        card.querySelector("p").textContent = description;
+      });
       if (embedded) {
         document.body.classList.add("embedded");
         document.body.dataset.theme = params.get("theme") === "light" ? "light" : "dark";
@@ -1773,10 +2805,7 @@
 
       function updateSoundButton() {
         soundToggle.setAttribute("aria-pressed", String(soundEnabled));
-        soundToggle.setAttribute(
-          "aria-label",
-          soundEnabled ? "Mute ambient sound" : "Enable ambient sound",
-        );
+        soundToggle.setAttribute("aria-label", soundEnabled ? copy.mute : copy.enableSound);
         soundToggle.textContent = soundEnabled ? "♪" : "♫̸";
         if (masterGain && audioContext) {
           masterGain.gain.setTargetAtTime(soundEnabled ? 0.04 : 0, audioContext.currentTime, 0.12);
@@ -1804,13 +2833,13 @@
         preload.onerror = () => {
           if (request !== imageRequest) return;
           productImage.classList.remove("is-changing");
-          status.textContent = `The product screen could not be loaded: ${scene.image}`;
+          status.textContent = copy.screenUnavailable;
         };
         preload.src = scene.image;
       }
 
       productImage.addEventListener("error", () => {
-        status.textContent = "The Capispot screen could not be loaded.";
+        status.textContent = copy.screenUnavailable;
       });
 
       function renderChapters() {
@@ -1818,7 +2847,10 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "chapter-button";
-          button.setAttribute("aria-label", `Show scene ${index + 1}: ${scene.title}`);
+          button.setAttribute(
+            "aria-label",
+            `${copy.sceneStatus(index + 1, currentMode().scenes.length)} ${scene.title}`,
+          );
           button.addEventListener("click", () => goToScene(index));
           const number = document.createElement("span");
           number.textContent = String(index + 1).padStart(2, "0");
@@ -1846,7 +2878,7 @@
           currentMode().scenes.length - 1,
         );
         renderScene();
-        status.textContent = `Scene ${sceneIndex + 1} of ${currentMode().scenes.length}.`;
+        status.textContent = copy.sceneStatus(sceneIndex + 1, currentMode().scenes.length);
       }
 
       function renderScene() {
@@ -1877,7 +2909,7 @@
         const icon = playing
           ? '<svg aria-hidden="true" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M7 5h4v14H7zM15 5h4v14h-4z"/></svg>'
           : '<svg aria-hidden="true" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z"/></svg>';
-        const label = playing ? "Pause walkthrough" : "Play walkthrough";
+        const label = playing ? copy.pause : copy.play;
         playButton.innerHTML = icon;
         bigPlayButton.innerHTML = icon;
         playButton.setAttribute("aria-label", label);
@@ -1895,9 +2927,7 @@
           playing = true;
           player.dataset.playing = "true";
           updatePlayButtons();
-          status.textContent = soundEnabled
-            ? "The walkthrough is playing with soft ambient sound."
-            : "The walkthrough is playing with sound muted.";
+          status.textContent = soundEnabled ? copy.soundPlaying : copy.soundPlayingMuted;
           if (soundEnabled) {
             try {
               ensureAudio();
@@ -1905,10 +2935,10 @@
                 .resume()
                 .then(() => playSoftNote())
                 .catch(() => {
-                  status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+                  status.textContent = copy.soundUnavailable;
                 });
             } catch {
-              status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+              status.textContent = copy.soundUnavailable;
             }
           }
           lastTick = performance.now();
@@ -1921,7 +2951,7 @@
               sceneIndex = currentMode().scenes.length - 1;
               renderScene();
               setPlaying(false);
-              status.textContent = "Walkthrough finished. Press play to watch it again.";
+              status.textContent = copy.finishedStatus;
               return;
             }
             const nextScene = Math.floor(elapsedSeconds / currentMode().sceneDuration);
@@ -1942,7 +2972,7 @@
         window.clearInterval(timer);
         timer = null;
         if (audioContext?.state === "running") void audioContext.suspend();
-        if (elapsedSeconds < currentMode().duration) status.textContent = "Walkthrough paused.";
+        if (elapsedSeconds < currentMode().duration) status.textContent = copy.pausedStatus;
       }
 
       function goToScene(index) {
@@ -1952,7 +2982,7 @@
         sceneIndex = (index + currentMode().scenes.length) % currentMode().scenes.length;
         elapsedSeconds = sceneIndex * currentMode().sceneDuration;
         renderScene();
-        status.textContent = `Scene ${sceneIndex + 1} of ${currentMode().scenes.length}.`;
+        status.textContent = copy.sceneStatus(sceneIndex + 1, currentMode().scenes.length);
       }
 
       function setMode(modeName) {
@@ -1974,26 +3004,14 @@
         document.querySelector("#hero-cta").href = mode.ctaUrl;
         document.querySelector("#hero-secondary").textContent = mode.secondary;
         document.querySelector("#hero-secondary").href = mode.secondaryUrl;
-        document.querySelector("#closing-title").textContent =
-          modeName === "visitor"
-            ? "A clearer picture starts with your portfolio."
-            : "More depth. Your call.";
-        document.querySelector("#closing-copy").textContent =
-          modeName === "visitor"
-            ? "Start with the core tracker for free. Explore Pro when you want more depth—not because you have to."
-            : "Explore the analysis and planning tools, compare plans, and choose Pro only if it fits your workflow.";
-        document.querySelector("#closing-cta").textContent =
-          modeName === "visitor" ? "Start your free portfolio →" : "Explore Pro plans →";
+        document.querySelector("#closing-title").textContent = mode.closingTitle;
+        document.querySelector("#closing-copy").textContent = mode.closingCopy;
+        document.querySelector("#closing-cta").textContent = mode.closingCta;
         document.querySelector("#closing-cta").href = mode.ctaUrl;
-        document.querySelector("#disclosure").textContent =
-          modeName === "visitor"
-            ? "Screens are captured from Capispot's public site. Portfolio values and holdings shown in the sample are fictional and illustrative, not live quotes or a recommendation. Capispot is tracking and analytics software, not investment advice. Investing involves risk."
-            : "Screens are captured from Capispot's public site. Portfolio examples use fictional sample data. Pro analysis, scenarios and AI outputs are informational, not personalized investment advice or a guarantee of results.";
+        document.querySelector("#disclosure").textContent = mode.disclosure;
         renderChapters();
         renderScene();
-        status.textContent = soundEnabled
-          ? "Ambient sound is enabled when the walkthrough plays."
-          : "Walkthrough sound is muted.";
+        status.textContent = soundEnabled ? copy.soundEnabled : copy.soundMuted;
       }
 
       document.querySelectorAll("[data-mode]").forEach((button) => {
@@ -2053,9 +3071,7 @@
       soundToggle.addEventListener("click", () => {
         soundEnabled = !soundEnabled;
         updateSoundButton();
-        status.textContent = soundEnabled
-          ? "Ambient sound is enabled."
-          : "Walkthrough sound is muted.";
+        status.textContent = soundEnabled ? copy.soundEnabledStatus : copy.soundMuted;
         if (soundEnabled && playing) {
           try {
             ensureAudio();
@@ -2063,10 +3079,10 @@
               .resume()
               .then(() => playSoftNote())
               .catch(() => {
-                status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+                status.textContent = copy.soundUnavailable;
               });
           } catch {
-            status.textContent = "Ambient sound is unavailable; the walkthrough will continue.";
+            status.textContent = copy.soundUnavailable;
           }
         }
       });

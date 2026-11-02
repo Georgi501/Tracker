@@ -1,5 +1,6 @@
 import { Clock3 } from "lucide-react";
 import { languageLocale, type Lang } from "@/lib/i18n";
+import { isQuoteStale } from "@/lib/portfolio";
 
 const COPY: Record<
   Lang,
@@ -7,6 +8,7 @@ const COPY: Record<
     asOf: string;
     source: string;
     mayBeDelayed: string;
+    stale: string;
     market: Record<"REGULAR" | "PRE" | "POST" | "CLOSED" | "ALWAYS", string>;
   }
 > = {
@@ -14,6 +16,7 @@ const COPY: Record<
     asOf: "Quote as of",
     source: "Yahoo Finance",
     mayBeDelayed: "Provider data may be delayed",
+    stale: "Quote is older than 96 hours",
     market: {
       REGULAR: "market open",
       PRE: "pre-market",
@@ -26,6 +29,7 @@ const COPY: Record<
     asOf: "Котировка към",
     source: "Yahoo Finance",
     mayBeDelayed: "Данните от доставчика може да са забавени",
+    stale: "Котировката е по-стара от 96 часа",
     market: {
       REGULAR: "пазарът е отворен",
       PRE: "преди отваряне",
@@ -38,6 +42,7 @@ const COPY: Record<
     asOf: "Kurs vom",
     source: "Yahoo Finance",
     mayBeDelayed: "Anbieterdaten können verzögert sein",
+    stale: "Kurs ist älter als 96 Stunden",
     market: {
       REGULAR: "Markt geöffnet",
       PRE: "vorbörslich",
@@ -50,6 +55,7 @@ const COPY: Record<
     asOf: "Cotización a las",
     source: "Yahoo Finance",
     mayBeDelayed: "Los datos del proveedor pueden tener retraso",
+    stale: "La cotización tiene más de 96 horas",
     market: {
       REGULAR: "mercado abierto",
       PRE: "premercado",
@@ -62,6 +68,7 @@ const COPY: Record<
     asOf: "Quotazione alle",
     source: "Yahoo Finance",
     mayBeDelayed: "I dati del fornitore potrebbero essere ritardati",
+    stale: "La quotazione ha più di 96 ore",
     market: {
       REGULAR: "mercato aperto",
       PRE: "pre-market",
@@ -103,6 +110,7 @@ export function QuoteFreshness({
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(at));
+  const stale = isQuoteStale(at);
   if (compact)
     return (
       <p
@@ -113,6 +121,12 @@ export function QuoteFreshness({
         <span>{copy.source}</span>
         <span aria-hidden>·</span>
         <time dateTime={at}>{timestamp}</time>
+        {stale && (
+          <>
+            <span aria-hidden>·</span>
+            <span className="font-medium text-amber-700 dark:text-amber-300">{copy.stale}</span>
+          </>
+        )}
       </p>
     );
   return (
@@ -129,6 +143,12 @@ export function QuoteFreshness({
       )}
       <span aria-hidden>·</span>
       <span>{copy.mayBeDelayed}</span>
+      {stale && (
+        <>
+          <span aria-hidden>·</span>
+          <span className="font-medium text-amber-700 dark:text-amber-300">{copy.stale}</span>
+        </>
+      )}
     </p>
   );
 }

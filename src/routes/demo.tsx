@@ -46,6 +46,7 @@ const COPY: Record<
     cta: string;
     explore: string;
     samplePreview: string;
+    openPortfolio: string;
   }
 > = {
   en: {
@@ -65,6 +66,7 @@ const COPY: Record<
     cta: "Create your free portfolio",
     explore: "Explore markets",
     samplePreview: "Explore the Pro preview",
+    openPortfolio: "Open your portfolio",
   },
   bg: {
     badge: "Примерни данни",
@@ -83,6 +85,7 @@ const COPY: Record<
     cta: "Създай безплатно портфолио",
     explore: "Разгледай пазарите",
     samplePreview: "Разгледай Pro прегледа",
+    openPortfolio: "Отвори портфейла си",
   },
   de: {
     badge: "Beispieldaten",
@@ -101,6 +104,7 @@ const COPY: Record<
     cta: "Kostenloses Portfolio erstellen",
     explore: "Märkte entdecken",
     samplePreview: "Pro-Vorschau entdecken",
+    openPortfolio: "Portfolio öffnen",
   },
   es: {
     badge: "Datos de ejemplo",
@@ -119,6 +123,7 @@ const COPY: Record<
     cta: "Crea tu cartera gratis",
     explore: "Explorar mercados",
     samplePreview: "Explora la vista previa Pro",
+    openPortfolio: "Abrir tu cartera",
   },
   it: {
     badge: "Dati di esempio",
@@ -137,6 +142,7 @@ const COPY: Record<
     cta: "Crea il tuo portafoglio gratuito",
     explore: "Esplora i mercati",
     samplePreview: "Scopri l'anteprima Pro",
+    openPortfolio: "Apri il tuo portafoglio",
   },
 };
 
@@ -182,10 +188,10 @@ function DemoPage() {
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{c.note}</p>
         <div className="mt-4 flex flex-wrap gap-2.5">
           <Link
-            to="/auth"
+            to={p.user ? "/holdings" : "/auth"}
             className="press inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground"
           >
-            {c.cta}
+            {p.user ? c.openPortfolio : c.cta}
             <ArrowRight className="size-4" />
           </Link>
           <Link

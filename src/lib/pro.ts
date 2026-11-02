@@ -1,5 +1,27 @@
 // Pure helpers for Pro features. Inputs are real data or user-entered assumptions only.
 
+export const MAX_FIRE_CURRENCY_AMOUNT = 1_000_000_000_000;
+export const MIN_FIRE_RETURN_PCT = -100;
+export const MAX_FIRE_RETURN_PCT = 100;
+
+export interface FireAssumptions {
+  current: number;
+  monthly: number;
+  annualReturnPct: number;
+  annualSpend: number;
+}
+
+export function isValidFireAssumptions(o: FireAssumptions): boolean {
+  return (
+    [o.current, o.monthly, o.annualSpend].every(
+      (value) => Number.isFinite(value) && value >= 0 && value <= MAX_FIRE_CURRENCY_AMOUNT,
+    ) &&
+    Number.isFinite(o.annualReturnPct) &&
+    o.annualReturnPct >= MIN_FIRE_RETURN_PCT &&
+    o.annualReturnPct <= MAX_FIRE_RETURN_PCT
+  );
+}
+
 /** Years until portfolio reaches the FIRE number (annual spend / withdrawal rate). */
 export function fireProjection(o: {
   current: number;

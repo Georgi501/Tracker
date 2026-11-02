@@ -3,7 +3,7 @@ import { z } from "zod";
 
 /** Last ~30 days of real provider closes per symbol; symbols without data are omitted, never faked. */
 export const getSparklines = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         items: z

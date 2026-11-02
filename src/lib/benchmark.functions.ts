@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 export const getBenchmarkHistory = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         symbol: z.enum(["^GSPC", "^NDX", "URTH", "^STOXX", "^RUT", "^N225"]),

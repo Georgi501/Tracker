@@ -44,7 +44,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { Fragment, useCallback, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -245,6 +245,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const shellCopy = SHELL_COPY[p.lang];
+  type MenuId = "desktop-more" | "language" | "settings" | "account" | "mobile-more";
+  const [activeMenu, setActiveMenuState] = useState<MenuId | null>(null);
+  const activeMenuRef = useRef<MenuId | null>(null);
+  const setActiveMenu = (menu: MenuId | null) => {
+    activeMenuRef.current = menu;
+    setActiveMenuState(menu);
+  };
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -262,6 +269,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    const closeMenuOnWheel = () => {
+      const menu = activeMenuRef.current;
+      if (menu && menu !== "mobile-more") {
+        activeMenuRef.current = null;
+        setActiveMenuState(null);
+      }
+    };
+    window.addEventListener("wheel", closeMenuOnWheel, { capture: true, passive: true });
+    return () => window.removeEventListener("wheel", closeMenuOnWheel, true);
   }, []);
   const openTransactionDialog = useCallback(() => {
     if (!open) trackAnalyticsEvent("manual_entry_started");
@@ -425,7 +443,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {n.label}
               </Link>
             ))}
-            <DropdownMenu>
+            <DropdownMenu
+              modal={false}
+              open={activeMenu === "desktop-more"}
+              onOpenChange={(isOpen) => setActiveMenu(isOpen ? "desktop-more" : null)}
+            >
               <DropdownMenuTrigger asChild>
                 <button className="as-link flex items-center gap-1">
                   {shellCopy.more}
@@ -490,7 +512,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Plus size={17} />
             </button>
-            <DropdownMenu>
+            <DropdownMenu
+              modal={false}
+              open={activeMenu === "language"}
+              onOpenChange={(isOpen) => setActiveMenu(isOpen ? "language" : null)}
+            >
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label={p.t("language")}
@@ -522,7 +548,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
+            <DropdownMenu
+              modal={false}
+              open={activeMenu === "settings"}
+              onOpenChange={(isOpen) => setActiveMenu(isOpen ? "settings" : null)}
+            >
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label={europeCopy[p.lang].base}
@@ -563,7 +593,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="ml-1 size-9 animate-pulse rounded-full bg-secondary"
               />
             ) : p.user ? (
-              <DropdownMenu>
+              <DropdownMenu
+                modal={false}
+                open={activeMenu === "account"}
+                onOpenChange={(isOpen) => setActiveMenu(isOpen ? "account" : null)}
+              >
                 <DropdownMenuTrigger asChild>
                   <button
                     aria-label={p.displayName || p.user.email || "account"}
@@ -864,7 +898,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Search size={20} />
           <span className="max-w-16 truncate">{marketCopy[p.lang].markets}</span>
         </Link>
-        <DropdownMenu>
+        <DropdownMenu
+          modal={false}
+          open={activeMenu === "mobile-more"}
+          onOpenChange={(isOpen) => setActiveMenu(isOpen ? "mobile-more" : null)}
+        >
           <DropdownMenuTrigger asChild>
             <button
               aria-label={shellCopy.more}

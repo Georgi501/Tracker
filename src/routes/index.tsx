@@ -695,7 +695,7 @@ function Dashboard() {
       <div className="lg:col-span-3">
         <WelcomeHero />
       </div>
-      {!p.user && <VideoPresentation mode="visitor" theme={p.theme} />}
+      {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
       <MarketTicker />
       {!p.user && <LandingSections />}
       {p.user && p.holdings.length > 0 && (
@@ -1405,7 +1405,7 @@ function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {p.user && <VideoPresentation mode="pro" theme={p.theme} />}
+      {p.user && <VideoPresentation mode="pro" theme={p.theme} lang={p.lang} />}
     </div>
   );
 }

@@ -44,6 +44,8 @@ const en = {
   years: "years",
   never: "Not reached within 60 years",
   assumption: "Projection based on your own assumptions — not a forecast.",
+  invalidInputs:
+    "Enter non-negative amounts up to 1 trillion and an annual return between -100% and 100%.",
 };
 type Copy = typeof en;
 export const proCopy: Record<Lang, Copy> = {
@@ -94,6 +96,7 @@ export const proCopy: Record<Lang, Copy> = {
     years: "години",
     never: "Не се достига в рамките на 60 години",
     assumption: "Прогноза по твоите допускания — не е предсказание.",
+    invalidInputs: "Въведи неотрицателни суми до 1 трилион и годишна доходност между -100% и 100%.",
   },
   de: {
     proBadge: "Pro",
@@ -141,6 +144,8 @@ export const proCopy: Record<Lang, Copy> = {
     years: "Jahren",
     never: "Nicht innerhalb von 60 Jahren erreicht",
     assumption: "Hochrechnung auf Basis deiner Annahmen — keine Prognose.",
+    invalidInputs:
+      "Gib nicht negative Beträge bis 1 Billion und eine Jahresrendite zwischen -100 % und 100 % ein.",
   },
   es: {
     proBadge: "Pro",
@@ -189,6 +194,8 @@ export const proCopy: Record<Lang, Copy> = {
     years: "años",
     never: "No se alcanza en 60 años",
     assumption: "Proyección según tus supuestos — no es una predicción.",
+    invalidInputs:
+      "Introduce importes no negativos de hasta 1 billón y una rentabilidad anual entre -100 % y 100 %.",
   },
   it: {
     proBadge: "Pro",
@@ -238,5 +245,7 @@ export const proCopy: Record<Lang, Copy> = {
     years: "anni",
     never: "Non raggiunta entro 60 anni",
     assumption: "Proiezione basata sulle tue ipotesi — non è una previsione.",
+    invalidInputs:
+      "Inserisci importi non negativi fino a 1.000 miliardi e un rendimento annuo tra -100% e 100%.",
   },
 };

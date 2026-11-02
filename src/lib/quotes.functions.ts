@@ -11,7 +11,7 @@ export type Quote = {
 };
 export const getQuotes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({
         items: z.array(z.object({ symbol: z.string().max(20), type: z.string().max(20) })).max(60),

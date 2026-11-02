@@ -8,7 +8,7 @@ const HISTORY_BATCH_SIZE = 5;
 
 export const getPortfolioHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         period: z.enum(["1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL"]),
@@ -160,7 +160,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
 
 export const convertImport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         rows: z

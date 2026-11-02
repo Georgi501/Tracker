@@ -19,7 +19,7 @@ export interface CorporateActions {
 
 /** Public read-only confirmed dividend and split events; dividend changes compare adjacent payouts only. */
 export const getCorporateActions = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({ symbols: z.array(z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/)).max(40) })
       .parse(input),
@@ -77,7 +77,7 @@ export const getCorporateActions = createServerFn({ method: "POST" })
 
 /** Public read-only: confirmed dividend events from Yahoo Finance; nothing is estimated. */
 export const getDividendEvents = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z.object({ symbols: z.array(z.string().min(1).max(20)).max(40) }).parse(input),
   )
   .handler(async ({ data }): Promise<DividendInfo[]> => {
