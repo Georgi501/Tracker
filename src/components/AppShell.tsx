@@ -730,7 +730,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6">
+      <main
+        className={`page-enter mx-auto max-w-7xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6 ${
+          pathname === "/" ? "min-h-[calc(100svh-3.5rem)] lg:min-h-[calc(100svh-4rem)]" : ""
+        }`}
+      >
         {p.user && p.dataError && !p.authError && (
           <div
             role="alert"
