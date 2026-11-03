@@ -400,7 +400,7 @@ function sensitivityRange(center: number, min: number, max: number, step: number
   return [center - step, center, center + step];
 }
 
-export function DcfCalculator() {
+export function DcfCalculator({ fixedSymbol }: { fixedSymbol?: string } = {}) {
   const p = usePortfolio();
   const c = dcfCopy[p.lang];
   const firstStock = p.holdings.find((h) => h.asset.type === "stock")?.asset.symbol ?? "";
@@ -413,12 +413,13 @@ export function DcfCalculator() {
     discount: number;
     terminal: number;
   } | null>(null);
+  const activeSymbol = fixedSymbol ?? symbol;
   const fn = useServerFn(marketDcf);
   const searchFn = useServerFn(searchMarket);
   const q = useQuery({
-    queryKey: ["dcf", symbol],
-    queryFn: () => fn({ data: { symbol } }),
-    enabled: !!symbol,
+    queryKey: ["dcf", activeSymbol],
+    queryFn: () => fn({ data: { symbol: activeSymbol } }),
+    enabled: !!activeSymbol,
     staleTime: 15 * 60_000,
   });
   const d = q.data;
@@ -487,60 +488,62 @@ export function DcfCalculator() {
 
   return (
     <div className="grid gap-4">
-      <form
-        className="flex gap-2"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const raw = input.trim();
-          setSymbol("");
-          setCustom(null);
-          setSymbolError(false);
-          if (!raw) {
-            setSymbolError(true);
-            return;
-          }
-          const pick = (list: { symbol: string; type: string }[]) =>
-            list.find((asset) => asset.type === "stock")?.symbol;
-          let s = pick(
-            searchCatalog(raw).filter(
-              (a) =>
-                a.type === "stock" &&
-                (a.symbol.toUpperCase() === raw.toUpperCase() ||
-                  a.name.toLowerCase().startsWith(raw.toLowerCase())),
-            ),
-          );
-          if (!s) {
-            try {
-              const r = await searchFn({ data: marketSearchSchema.parse({ query: raw }) });
-              s = pick(r.assets);
-            } catch {
-              s = undefined;
+      {!fixedSymbol && (
+        <form
+          className="flex gap-2"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const raw = input.trim();
+            setSymbol("");
+            setCustom(null);
+            setSymbolError(false);
+            if (!raw) {
+              setSymbolError(true);
+              return;
             }
-          }
-          if (!s && /^[A-Za-z0-9.^=_-]{1,20}$/.test(raw)) s = raw.toUpperCase();
-          if (s) {
-            setSymbol(s);
-          } else {
-            setSymbolError(true);
-          }
-        }}
-      >
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={c.ticker}
-          className="h-11"
-        />
-        <Button type="submit" className="h-11">
-          {c.calc}
-        </Button>
-      </form>
+            const pick = (list: { symbol: string; type: string }[]) =>
+              list.find((asset) => asset.type === "stock")?.symbol;
+            let s = pick(
+              searchCatalog(raw).filter(
+                (a) =>
+                  a.type === "stock" &&
+                  (a.symbol.toUpperCase() === raw.toUpperCase() ||
+                    a.name.toLowerCase().startsWith(raw.toLowerCase())),
+              ),
+            );
+            if (!s) {
+              try {
+                const r = await searchFn({ data: marketSearchSchema.parse({ query: raw }) });
+                s = pick(r.assets);
+              } catch {
+                s = undefined;
+              }
+            }
+            if (!s && /^[A-Za-z0-9.^=_-]{1,20}$/.test(raw)) s = raw.toUpperCase();
+            if (s) {
+              setSymbol(s);
+            } else {
+              setSymbolError(true);
+            }
+          }}
+        >
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={c.ticker}
+            className="h-11"
+          />
+          <Button type="submit" className="h-11">
+            {c.calc}
+          </Button>
+        </form>
+      )}
       {symbolError && (
         <p role="alert" className="text-sm text-destructive">
           {c.invalidTicker}
         </p>
       )}
-      {!symbol ? null : q.isLoading ? (
+      {!activeSymbol ? null : q.isLoading ? (
         <p className="text-sm text-muted-foreground">{c.loading}</p>
       ) : q.isError ? (
         <div

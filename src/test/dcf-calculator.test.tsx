@@ -65,6 +65,12 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("DCF calculator data safeguards", () => {
+  it("can be pinned to a company without showing the ticker search", () => {
+    render(<DcfCalculator fixedSymbol="AAPL" />);
+
+    expect(screen.queryByPlaceholderText("Ticker, e.g. AAPL")).not.toBeInTheDocument();
+  });
+
   it("shows a transparent estimate and sensitivity table for complete matching-currency data", () => {
     render(<DcfCalculator />);
 

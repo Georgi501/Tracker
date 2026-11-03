@@ -24,12 +24,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Free plan with 1 broker, Pro for €4.99/month or €49.99/year including VAT, with up to 5 brokers.",
+          "Explore full company profiles for 2 companies per calendar week with a free account; each includes that company's DCF calculator in the same view, without using an extra view. The standalone DCF tool is Pro. Pro is €4.99/month or €49.99/year including VAT.",
       },
       { property: "og:title", content: "Pricing — Capispot" },
       {
         property: "og:description",
-        content: "Pro: €4.99/month or €49.99/year including VAT, up to 5 broker connections.",
+        content:
+          "Free accounts get 2 full company profiles per calendar week, with each company's DCF calculator included in the same view. The standalone DCF tool and unlimited company profiles are Pro.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -216,6 +217,7 @@ function Pricing() {
           <ul className="space-y-2">
             <Feature>{p.t("proF1")}</Feature>
             <Feature>{p.t("proF2")}</Feature>
+            <Feature>{planCopy[p.lang].groups[4]?.pro ?? ""}</Feature>
             <Feature>{pc.heatmap}</Feature>
             <Feature>{pc.income}</Feature>
             <Feature>{pc.fire}</Feature>

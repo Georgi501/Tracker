@@ -53,8 +53,8 @@ const en: PlanCopy = {
     },
     {
       title: "Research",
-      free: "Search, news, key stats & financial statements",
-      pro: "Earnings calendar, forecasts & revisions, earnings surprises, holders, DCF, deep research & AI thesis check",
+      free: "Full company profiles for 2 companies per calendar week; each includes that company's DCF calculator in the same view, with no extra view used, plus search & news. Standalone DCF in Tools is Pro.",
+      pro: "Unlimited full company profiles with DCF calculators, plus standalone DCF in Tools, earnings calendar, forecasts & revisions, earnings surprises, holders, deep research & AI thesis check",
     },
     {
       title: "Watchlist",
@@ -127,8 +127,8 @@ const bg: PlanCopy = {
     },
     {
       title: "Проучване",
-      free: "Търсене, новини, ключови показатели и финансови отчети",
-      pro: "Календар на отчетите, прогнози и промени, изненади в печалбата, акционери, DCF, задълбочено проучване и AI проверка на теза",
+      free: "Пълни профили на 2 компании за календарна седмица; DCF калкулаторът за съответната компания е включен в същия преглед и не изразходва допълнителен преглед, плюс търсене и новини. Самостоятелният DCF в Инструменти е Pro.",
+      pro: "Неограничени пълни фирмени профили с DCF калкулатори, както и самостоятелен DCF в Инструменти, календар на отчетите, прогнози и промени, изненади в печалбата, акционери, задълбочено проучване и AI проверка на теза",
     },
     {
       title: "Watchlist",
@@ -202,8 +202,8 @@ const de: PlanCopy = {
     },
     {
       title: "Research",
-      free: "Suche, News, Kennzahlen & Finanzberichte",
-      pro: "Berichtskalender, Prognosen & Revisionen, Gewinnüberraschungen, Anteilseigner, DCF, Deep Research & KI-Theseprüfung",
+      free: "Vollständige Unternehmensprofile für 2 Unternehmen pro Kalenderwoche; der DCF-Rechner für das jeweilige Unternehmen ist in derselben Ansicht enthalten und verbraucht keinen zusätzlichen Aufruf, plus Suche & News. Der eigenständige DCF-Rechner unter Tools ist Pro.",
+      pro: "Unbegrenzte vollständige Unternehmensprofile mit DCF-Rechnern sowie eigenständiger DCF-Rechner unter Tools, Berichtskalender, Prognosen & Revisionen, Gewinnüberraschungen, Anteilseigner, Deep Research & KI-Theseprüfung",
     },
     {
       title: "Watchlist",
@@ -278,8 +278,8 @@ const es: PlanCopy = {
     },
     {
       title: "Investigación",
-      free: "Búsqueda, noticias, datos clave y estados financieros",
-      pro: "Calendario de resultados, previsiones y revisiones, sorpresas, accionistas, DCF, investigación profunda y análisis de tesis con IA",
+      free: "Perfiles completos de 2 empresas por semana natural; la calculadora DCF de cada empresa está incluida en esa misma vista y no consume otra, además de búsqueda y noticias. El DCF independiente en Herramientas es Pro.",
+      pro: "Perfiles completos ilimitados con calculadoras DCF, además del DCF independiente en Herramientas, calendario de resultados, previsiones y revisiones, sorpresas, accionistas, investigación profunda y análisis de tesis con IA",
     },
     {
       title: "Watchlist",
@@ -350,8 +350,8 @@ const it: PlanCopy = {
     },
     {
       title: "Ricerca",
-      free: "Ricerca, notizie, dati chiave e bilanci",
-      pro: "Calendario degli utili, stime e revisioni, sorprese sugli utili, azionisti, DCF, ricerca approfondita e verifica della tesi con IA",
+      free: "Profili completi per 2 aziende a settimana; il calcolatore DCF della singola azienda è incluso nella stessa visita e non ne consuma un'altra, oltre a ricerca e notizie. Il DCF autonomo in Strumenti è Pro.",
+      pro: "Profili aziendali completi illimitati con calcolatori DCF e DCF autonomo in Strumenti, oltre a calendario degli utili, stime e revisioni, sorprese sugli utili, azionisti, ricerca approfondita e verifica della tesi con IA",
     },
     {
       title: "Watchlist",

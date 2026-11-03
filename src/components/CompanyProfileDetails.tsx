@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Lock, Sparkles } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { CompanyOverview } from "@/components/CompanyOverview";
+import { DcfCalculator, dcfCopy } from "@/components/DcfCalculator";
 import { KeyStats } from "@/components/KeyStats";
 import { ProCompanyResearch } from "@/components/ProCompanyResearch";
 import { ProFinancials } from "@/components/ProFinancials";
@@ -27,6 +28,7 @@ const COPY: Record<
     failed: string;
     retry: string;
     proUnlimited: string;
+    dcfIncluded: string;
   }
 > = {
   en: {
@@ -43,6 +45,8 @@ const COPY: Record<
       "We couldn't check your weekly company views. Company data stays locked until this is resolved.",
     retry: "Try again",
     proUnlimited: "Pro includes unlimited company profiles.",
+    dcfIncluded:
+      "The DCF calculator is included in this company's weekly profile view and does not use another company view. Estimates appear only when usable provider data is available.",
   },
   bg: {
     title: "Пълен профил на компанията",
@@ -60,6 +64,8 @@ const COPY: Record<
       "Не успяхме да проверим седмичните прегледи. Данните остават заключени, докато проблемът не бъде разрешен.",
     retry: "Опитай отново",
     proUnlimited: "Pro включва неограничени профили на компании.",
+    dcfIncluded:
+      "DCF калкулаторът е включен в седмичния преглед на тази компания и не заема отделен преглед. Оценка се показва само при налични подходящи данни от доставчика.",
   },
   de: {
     title: "Vollständiges Unternehmensprofil",
@@ -78,6 +84,8 @@ const COPY: Record<
       "Deine wöchentlichen Ansichten konnten nicht geprüft werden. Unternehmensdaten bleiben bis zur Klärung gesperrt.",
     retry: "Erneut versuchen",
     proUnlimited: "Pro bietet unbegrenzte Unternehmensprofile.",
+    dcfIncluded:
+      "Der DCF-Rechner ist in der wöchentlichen Profilansicht dieses Unternehmens enthalten und verbraucht keinen zusätzlichen Unternehmensaufruf. Eine Bewertung erscheint nur, wenn geeignete Anbieterdaten verfügbar sind.",
   },
   es: {
     title: "Perfil completo de la empresa",
@@ -96,6 +104,8 @@ const COPY: Record<
       "No se pudieron comprobar tus vistas semanales. Los datos seguirán bloqueados hasta resolverlo.",
     retry: "Reintentar",
     proUnlimited: "Pro incluye perfiles de empresa ilimitados.",
+    dcfIncluded:
+      "La calculadora DCF está incluida en la vista semanal del perfil de esta empresa y no consume otra vista. La valoración solo aparece si hay datos adecuados del proveedor.",
   },
   it: {
     title: "Profilo aziendale completo",
@@ -114,6 +124,8 @@ const COPY: Record<
       "Impossibile verificare le visite settimanali. I dati aziendali restano bloccati fino alla risoluzione.",
     retry: "Riprova",
     proUnlimited: "Pro include profili aziendali illimitati.",
+    dcfIncluded:
+      "Il calcolatore DCF è incluso nella visualizzazione settimanale del profilo aziendale e non consuma un'altra visita. La valutazione appare solo se sono disponibili dati adeguati del fornitore.",
   },
 };
 
@@ -226,6 +238,15 @@ export function CompanyProfileDetails({
       <div id="financials" className="scroll-mt-24">
         <ProFinancials symbol={symbol} lang={lang} />
       </div>
+      <div id="valuation" className="scroll-mt-24">
+        <Card>
+          <h2 className="mb-4 font-display text-lg font-semibold">
+            {dcfCopy[lang].intrinsic} (DCF)
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">{c.dcfIncluded}</p>
+          <DcfCalculator key={symbol} fixedSymbol={symbol} />
+        </Card>
+      </div>
       <div id="research" className="scroll-mt-24">
         <ProCompanyResearch symbol={symbol} lang={lang} unlocked />
       </div>
@@ -286,7 +307,9 @@ function ProfileSectionAnchors({ children }: { children: ReactNode }) {
     <div id="financials" className="scroll-mt-24">
       <div id="research" className="scroll-mt-24">
         <div id="news" className="scroll-mt-24">
-          {children}
+          <div id="valuation" className="scroll-mt-24">
+            {children}
+          </div>
         </div>
       </div>
     </div>

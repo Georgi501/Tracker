@@ -10,7 +10,7 @@ import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
 import type { Lang } from "@/lib/i18n";
 
-type FeaturePath = "/features" | "/dividends" | "/tools";
+type FeaturePath = "/features" | "/dividends" | "/tools" | "/pricing";
 type LandingCopy = {
   stepsTitle: string;
   stepsIntro: string;
@@ -73,6 +73,12 @@ const COPY: Record<Lang, LandingCopy> = {
         href: "/features",
         hash: "methodology",
         link: "Read the methodology",
+      },
+      {
+        title: "Full company analysis",
+        body: "Explore full company profiles for 2 companies per calendar week with a free account. Each includes that company's DCF calculator in the same view, with no extra view used. The standalone DCF tool is Pro.",
+        href: "/pricing",
+        link: "Compare plans",
       },
     ],
     trustTitle: "Built to be clear about data and privacy",
@@ -137,6 +143,12 @@ const COPY: Record<Lang, LandingCopy> = {
         hash: "methodology",
         link: "Прочети методологията",
       },
+      {
+        title: "Пълен анализ на компании",
+        body: "С безплатен профил разглеждай пълни профили на 2 компании за календарна седмица. DCF калкулаторът за компанията е в същия преглед и не изразходва отделен преглед. Самостоятелният DCF инструмент е Pro.",
+        href: "/pricing",
+        link: "Сравни плановете",
+      },
     ],
     trustTitle: "Яснота за данните и поверителността",
     trust: [
@@ -199,6 +211,12 @@ const COPY: Record<Lang, LandingCopy> = {
         href: "/features",
         hash: "methodology",
         link: "Methodik lesen",
+      },
+      {
+        title: "Vollständige Unternehmensanalysen",
+        body: "Mit einem kostenlosen Konto kannst du vollständige Unternehmensprofile für 2 Unternehmen pro Kalenderwoche ansehen. Der DCF-Rechner für das jeweilige Unternehmen ist in derselben Ansicht enthalten und verbraucht keinen zusätzlichen Aufruf. Der eigenständige DCF-Rechner ist Pro.",
+        href: "/pricing",
+        link: "Tarife vergleichen",
       },
     ],
     trustTitle: "Klarheit bei Daten und Datenschutz",
@@ -266,6 +284,12 @@ const COPY: Record<Lang, LandingCopy> = {
         hash: "methodology",
         link: "Leer metodología",
       },
+      {
+        title: "Análisis completos de empresas",
+        body: "Con una cuenta gratuita, consulta perfiles completos de 2 empresas por semana natural. La calculadora DCF de cada empresa está incluida en esa misma vista y no consume otra. La herramienta DCF independiente es Pro.",
+        href: "/pricing",
+        link: "Comparar planes",
+      },
     ],
     trustTitle: "Claridad sobre datos y privacidad",
     trust: [
@@ -331,6 +355,12 @@ const COPY: Record<Lang, LandingCopy> = {
         href: "/features",
         hash: "methodology",
         link: "Leggi la metodologia",
+      },
+      {
+        title: "Analisi aziendali complete",
+        body: "Con un account gratuito, consulta profili completi di 2 aziende a settimana. Il calcolatore DCF della singola azienda è incluso nella stessa visita e non ne consuma un'altra. Lo strumento DCF autonomo è Pro.",
+        href: "/pricing",
+        link: "Confronta i piani",
       },
     ],
     trustTitle: "Chiarezza su dati e privacy",

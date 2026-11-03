@@ -20,13 +20,13 @@ export const Route = createFileRoute("/features")({
       {
         name: "description",
         content:
-          "Explore Capispot portfolio tracking, real market data, historical performance, goals and private account security.",
+          "Explore full company profiles for 2 companies per calendar week with a free account; each includes that company's DCF calculator in the same view, without using an extra view. The standalone DCF tool is Pro.",
       },
       { property: "og:title", content: "Portfolio tracking features — Capispot" },
       {
         property: "og:description",
         content:
-          "Track investments with real market prices, dated portfolio history and privacy-first controls.",
+          "Free accounts get 2 full company profiles per calendar week, with each company's DCF calculator included in the same view. The standalone DCF tool and unlimited company profiles are Pro.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -68,8 +68,8 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Set goals, review allocation and risk, compare disclosed ETF top holdings, follow price alerts while the app is open and explore scenarios.",
       },
       {
-        title: "Useful free plan, deeper Pro tools",
-        body: "Start with the core portfolio tracker for free. Pro adds advanced analysis and planning tools, with transparent monthly and annual billing.",
+        title: "Full company analysis, free and Pro",
+        body: "With a free account, explore full company profiles for 2 companies per calendar week. Each includes that company's DCF calculator in the same view, with no extra view used. The standalone DCF tool is Pro.",
       },
     ],
     methodTitle: "How the numbers are calculated",
@@ -125,8 +125,8 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Задавай цели, преглеждай разпределение и риск, сравнявай отчетените водещи позиции на ETF-и и следи ценови известия, докато приложението е отворено.",
       },
       {
-        title: "Полезен безплатен план и повече в Pro",
-        body: "Започни безплатно с основното следене на портфейл. Pro добавя разширени анализи и планиране с ясно месечно или годишно таксуване.",
+        title: "Пълен фирмен анализ с Free и Pro",
+        body: "С безплатен профил разглеждай пълни профили на 2 компании за календарна седмица. DCF калкулаторът за компанията е в същия преглед и не изразходва отделен преглед. Самостоятелният DCF инструмент е Pro.",
       },
     ],
     methodTitle: "Как се изчисляват стойностите",
@@ -182,8 +182,8 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Ziele, Allokation und Risiko prüfen, gemeldete ETF-Top-Positionen vergleichen und Kursalarme nutzen, solange die App geöffnet ist.",
       },
       {
-        title: "Kostenlos starten, mehr mit Pro",
-        body: "Beginne kostenlos mit dem Portfolio-Tracker. Pro ergänzt Analysen und Planung mit transparenter monatlicher oder jährlicher Abrechnung.",
+        title: "Vollständige Unternehmensanalysen mit Free und Pro",
+        body: "Mit einem kostenlosen Konto kannst du vollständige Unternehmensprofile für 2 Unternehmen pro Kalenderwoche ansehen. Der DCF-Rechner für das jeweilige Unternehmen ist in derselben Ansicht enthalten und verbraucht keinen zusätzlichen Aufruf. Der eigenständige DCF-Rechner ist Pro.",
       },
     ],
     methodTitle: "So werden die Werte berechnet",
@@ -239,8 +239,8 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Define objetivos, revisa asignación y riesgo, compara las principales posiciones publicadas de ETF y gestiona alertas mientras la aplicación está abierta.",
       },
       {
-        title: "Empieza gratis y amplía con Pro",
-        body: "Comienza con el seguimiento esencial gratis. Pro añade análisis y planificación con facturación mensual o anual transparente.",
+        title: "Análisis completos con Free y Pro",
+        body: "Con una cuenta gratuita, consulta perfiles completos de 2 empresas por semana natural. La calculadora DCF de cada empresa está incluida en esa misma vista y no consume otra. La herramienta DCF independiente es Pro.",
       },
     ],
     methodTitle: "Cómo se calculan las cifras",
@@ -296,8 +296,8 @@ const COPY: Record<Lang, FeatureCopy> = {
         body: "Imposta obiettivi, controlla allocazione e rischio, confronta le principali partecipazioni ETF pubblicate e gestisci avvisi mentre l'app è aperta.",
       },
       {
-        title: "Inizia gratis, passa a Pro",
-        body: "Inizia con il tracker essenziale gratuito. Pro aggiunge analisi e pianificazione con fatturazione mensile o annuale trasparente.",
+        title: "Analisi complete con Free e Pro",
+        body: "Con un account gratuito, consulta profili completi di 2 aziende a settimana. Il calcolatore DCF della singola azienda è incluso nella stessa visita e non ne consuma un'altra. Lo strumento DCF autonomo è Pro.",
       },
     ],
     methodTitle: "Come vengono calcolati i valori",

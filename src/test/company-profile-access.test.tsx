@@ -48,6 +48,11 @@ vi.mock("@/components/CompanyOverview", () => ({
   CompanyOverview: () => <div>Company news</div>,
 }));
 
+vi.mock("@/components/DcfCalculator", () => ({
+  DcfCalculator: ({ fixedSymbol }: { fixedSymbol: string }) => <div>DCF for {fixedSymbol}</div>,
+  dcfCopy: { en: { intrinsic: "DCF estimate" } },
+}));
+
 afterEach(cleanup);
 beforeEach(() => {
   state.rpc.mockReset();
@@ -94,6 +99,13 @@ describe("company profile access", () => {
 
     expect(await screen.findByText("Statistics for AAPL")).toBeInTheDocument();
     expect(screen.getByText("Financial statements")).toBeInTheDocument();
+    expect(screen.getByText("DCF estimate (DCF)")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /included in this company's weekly profile view and does not use another company view/i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("DCF for AAPL")).toBeInTheDocument();
     expect(screen.getByText("Company research")).toBeInTheDocument();
     expect(screen.getByText("Company news")).toBeInTheDocument();
     expect(screen.getByText("1 of 2 free company profiles used this week")).toBeInTheDocument();
@@ -120,7 +132,9 @@ describe("company profile access", () => {
     expect(document.getElementById("financials")).toBeInTheDocument();
     expect(document.getElementById("research")).toBeInTheDocument();
     expect(document.getElementById("news")).toBeInTheDocument();
+    expect(document.getElementById("valuation")).toBeInTheDocument();
     expect(screen.queryByText("Statistics for AAPL")).not.toBeInTheDocument();
+    expect(screen.queryByText("DCF for AAPL")).not.toBeInTheDocument();
   });
 
   it("gives Pro accounts unlimited access without claiming a free view", () => {
