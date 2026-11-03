@@ -40,6 +40,8 @@ describe("App routing", () => {
     "/ibkr-import",
     "/dividend-tracker",
     "/average-cost",
+    "/etf-vs-stocks",
+    "/portfolio-in-eur",
     "/admin",
   ])("matches %s instead of falling back to not found", (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });

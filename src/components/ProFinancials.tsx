@@ -571,11 +571,17 @@ function RevenueBreakdown({
   const nodes: FlowNode[] = [
     { name: copy.revenue, color: "var(--chart-2)" },
     { name: copy.costOfRevenue, color: "var(--chart-4)" },
-    { name: copy.grossProfit, color: "var(--chart-2)" },
+    { name: copy.grossProfit, color: "var(--chart-1)" },
     { name: copy.operatingExpenseLabel, color: "var(--chart-4)" },
     { name: copy.operatingIncome, color: "var(--success)" },
     { name: copy.otherTaxes, color: "var(--chart-4)" },
     { name: copy.netIncome, color: "var(--success)" },
+  ];
+  const highlights = [
+    { name: copy.revenue, value: revenue, color: "var(--chart-2)" },
+    { name: copy.grossProfit, value: grossProfit, color: "var(--chart-1)" },
+    { name: copy.operatingIncome, value: operatingIncome, color: "var(--success)" },
+    { name: copy.netIncome, value: netIncome, color: "var(--success)" },
   ];
   const flow: FlowData = {
     nodes,
@@ -609,8 +615,10 @@ function RevenueBreakdown({
           y={y}
           width={width}
           height={height}
-          rx={3}
+          rx={5}
           fill={props.payload?.color ?? "var(--primary)"}
+          stroke="var(--background)"
+          strokeWidth={1.5}
         />
         <text
           x={right ? x + width + 6 : x - 6}
@@ -618,6 +626,7 @@ function RevenueBreakdown({
           textAnchor={right ? "start" : "end"}
           fill="var(--foreground)"
           fontSize={11}
+          fontWeight={500}
         >
           {name}
         </text>
@@ -626,34 +635,68 @@ function RevenueBreakdown({
   };
 
   return (
-    <section className="rounded-xl border border-border bg-background/70 p-4">
-      <h4 className="font-display font-semibold">{copy.breakdown}</h4>
+    <section className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="font-display font-semibold">{copy.breakdown}</h4>
+        {row?.date && (
+          <span className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            {row.date}
+          </span>
+        )}
+      </div>
       {valid ? (
-        <div className="mt-2 overflow-x-auto">
-          <div className="h-[340px] min-w-[640px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <Sankey
-                data={flow}
-                node={renderNode}
-                link={{ fill: "none", stroke: "var(--primary)", strokeOpacity: 0.2 }}
-                nodeWidth={12}
-                nodePadding={22}
-                margin={{ top: 12, right: 105, bottom: 12, left: 105 }}
-                iterations={24}
+        <>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+            {highlights.map((item) => (
+              <div
+                key={item.name}
+                className="min-w-0 rounded-xl border border-border/60 bg-background/55 px-3 py-2.5"
               >
-                <Tooltip
-                  formatter={(value) => format(Number(value))}
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-              </Sankey>
-            </ResponsiveContainer>
+                <p className="flex items-center gap-2 truncate text-xs text-muted-foreground">
+                  <span
+                    aria-hidden
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  {item.name}
+                </p>
+                <p className="mt-1 truncate font-display text-base font-semibold tabular-nums tracking-tight sm:text-lg">
+                  {item.value == null ? "—" : format(item.value)}
+                </p>
+              </div>
+            ))}
           </div>
-        </div>
+          <div className="mt-3 overflow-hidden rounded-xl border border-border/50 bg-background/35 px-1 py-2 sm:px-2">
+            <div className="h-[300px] w-full sm:h-[320px]" role="img" aria-label={copy.breakdown}>
+              <ResponsiveContainer width="100%" height="100%">
+                <Sankey
+                  data={flow}
+                  node={renderNode}
+                  link={{
+                    fill: "var(--chart-1)",
+                    fillOpacity: 0.13,
+                    stroke: "var(--chart-1)",
+                    strokeOpacity: 0.24,
+                  }}
+                  nodeWidth={14}
+                  nodePadding={22}
+                  margin={{ top: 16, right: 104, bottom: 16, left: 104 }}
+                  iterations={24}
+                >
+                  <Tooltip
+                    formatter={(value) => format(Number(value))}
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
+                </Sankey>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
       ) : (
         <p className="py-6 text-sm text-muted-foreground">{copy.breakdownUnavailable}</p>
       )}

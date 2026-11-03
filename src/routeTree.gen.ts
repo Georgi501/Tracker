@@ -24,12 +24,14 @@ import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendTrackerRouteImport } from './routes/dividend-tracker'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as EarningsRouteImport } from './routes/earnings'
+import { Route as EtfVsStocksRouteImport } from './routes/etf-vs-stocks'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FifoGuideRouteImport } from './routes/fifo-guide'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as IbkrImportRouteImport } from './routes/ibkr-import'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as PortfolioInEurRouteImport } from './routes/portfolio-in-eur'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -134,6 +136,11 @@ const EarningsRoute = EarningsRouteImport.update({
   path: '/earnings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EtfVsStocksRoute = EtfVsStocksRouteImport.update({
+  id: '/etf-vs-stocks',
+  path: '/etf-vs-stocks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
@@ -162,6 +169,11 @@ const MarketsRoute = MarketsRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioInEurRoute = PortfolioInEurRouteImport.update({
+  id: '/portfolio-in-eur',
+  path: '/portfolio-in-eur',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -322,12 +334,14 @@ export interface FileRoutesByFullPath {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
+  '/portfolio-in-eur': typeof PortfolioInEurRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -373,12 +387,14 @@ export interface FileRoutesByTo {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
+  '/portfolio-in-eur': typeof PortfolioInEurRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -425,12 +441,14 @@ export interface FileRoutesById {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
+  '/portfolio-in-eur': typeof PortfolioInEurRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -478,12 +496,14 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
     | '/markets'
     | '/messages'
+    | '/portfolio-in-eur'
     | '/pricing'
     | '/privacy'
     | '/profile'
@@ -529,12 +549,14 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
     | '/markets'
     | '/messages'
+    | '/portfolio-in-eur'
     | '/pricing'
     | '/privacy'
     | '/profile'
@@ -580,12 +602,14 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
     | '/markets'
     | '/messages'
+    | '/portfolio-in-eur'
     | '/pricing'
     | '/privacy'
     | '/profile'
@@ -632,12 +656,14 @@ export interface RootRouteChildren {
   DividendTrackerRoute: typeof DividendTrackerRoute
   DividendsRoute: typeof DividendsRoute
   EarningsRoute: typeof EarningsRoute
+  EtfVsStocksRoute: typeof EtfVsStocksRoute
   FeaturesRoute: typeof FeaturesRoute
   FifoGuideRoute: typeof FifoGuideRoute
   HoldingsRoute: typeof HoldingsRoute
   IbkrImportRoute: typeof IbkrImportRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
+  PortfolioInEurRoute: typeof PortfolioInEurRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -774,6 +800,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EarningsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/etf-vs-stocks': {
+      id: '/etf-vs-stocks'
+      path: '/etf-vs-stocks'
+      fullPath: '/etf-vs-stocks'
+      preLoaderRoute: typeof EtfVsStocksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
@@ -814,6 +847,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio-in-eur': {
+      id: '/portfolio-in-eur'
+      path: '/portfolio-in-eur'
+      fullPath: '/portfolio-in-eur'
+      preLoaderRoute: typeof PortfolioInEurRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1043,12 +1083,14 @@ const rootRouteChildren: RootRouteChildren = {
   DividendTrackerRoute: DividendTrackerRoute,
   DividendsRoute: DividendsRoute,
   EarningsRoute: EarningsRoute,
+  EtfVsStocksRoute: EtfVsStocksRoute,
   FeaturesRoute: FeaturesRoute,
   FifoGuideRoute: FifoGuideRoute,
   HoldingsRoute: HoldingsRoute,
   IbkrImportRoute: IbkrImportRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,
+  PortfolioInEurRoute: PortfolioInEurRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,

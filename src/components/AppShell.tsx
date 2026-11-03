@@ -878,24 +878,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {p.lang === "bg" ? "Импорт от Trading 212" : "Trading 212 import"}
                 </Link>
               </li>
-                                <li>
-                                  <Link to="/stock-tax-bg">
-                                    {p.lang === "bg" ? "Данък върху печалба" : "Stock gains tax (BG)"}
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link to="/ibkr-import">{p.lang === "bg" ? "Импорт от IBKR" : "IBKR import"}</Link>
-                                </li>
-                                <li>
-                                  <Link to="/dividend-tracker">
-                                    {p.lang === "bg" ? "Следене на дивиденти" : "Dividend tracker"}
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link to="/average-cost">
-                                    {p.lang === "bg" ? "Средна цена на покупка" : "Average buy price"}
-                                  </Link>
-                                </li>
+              <li>
+                <Link to="/stock-tax-bg">
+                  {p.lang === "bg" ? "Данък върху печалба" : "Stock gains tax (BG)"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/ibkr-import">{p.lang === "bg" ? "Импорт от IBKR" : "IBKR import"}</Link>
+              </li>
+              <li>
+                <Link to="/dividend-tracker">
+                  {p.lang === "bg" ? "Следене на дивиденти" : "Dividend tracker"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/average-cost">
+                  {p.lang === "bg" ? "Средна цена на покупка" : "Average buy price"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/etf-vs-stocks">
+                  {p.lang === "bg" ? "ETF или акции" : "ETFs vs stocks"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/portfolio-in-eur">
+                  {p.lang === "bg" ? "Портфолио в EUR" : "Portfolio in EUR"}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
