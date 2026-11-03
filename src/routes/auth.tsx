@@ -7,7 +7,8 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in — Capispot Portfolio Tracker" },
       {
         name: "description",
-        content: "Create a free Capispot account or sign in to track your portfolio",
+        content:
+          "Create a free CapiSpot account or sign in to track stocks, ETFs and crypto, import broker CSV files and follow dividends in one place.",
       },
       { property: "og:title", content: "Sign in — Capispot" },
       {

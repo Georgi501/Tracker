@@ -14,7 +14,8 @@ export const Route = createFileRoute("/demo")({
       { title: "Sample portfolio — CapiSpot" },
       {
         name: "description",
-        content: "See how a CapiSpot portfolio looks, using clearly labeled sample data.",
+        content:
+          "See how a CapiSpot portfolio looks, with clearly labeled sample data: allocation, performance, dividends and holdings across brokers. No account needed.",
       },
     ],
   }),

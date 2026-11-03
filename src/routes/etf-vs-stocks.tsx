@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
+import { articleJsonLd } from "@/lib/seo";
+import { RelatedGuides } from "@/components/RelatedGuides";
 
 type Guide = {
   title: string;
@@ -85,6 +87,7 @@ export const Route = createFileRoute("/etf-vs-stocks")({
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
     ],
+    scripts: [articleJsonLd(TITLE, DESCRIPTION, "/etf-vs-stocks")],
   }),
   component: EtfVsStocks,
 });
@@ -115,6 +118,7 @@ function EtfVsStocks() {
         </Link>
         <p className="text-xs text-muted-foreground">{g.note}</p>
       </div>
+      <RelatedGuides current="/etf-vs-stocks" />
     </div>
   );
 }

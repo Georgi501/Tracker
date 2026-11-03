@@ -6,11 +6,17 @@
   <url><loc>https://capispot.com/demo</loc></url>
   <url><loc>https://capispot.com/markets</loc></url>
   <url><loc>https://capispot.com/compare</loc></url>
-  <url><loc>https://capispot.com/policies/terms.html</loc></url>
-  <url><loc>https://capispot.com/policies/privacy.html</loc></url>
-  <url><loc>https://capispot.com/policies/refund.html</loc></url>
+  <url><loc>https://capispot.com/terms</loc></url>
+  <url><loc>https://capispot.com/privacy</loc></url>
+  <url><loc>https://capispot.com/refund</loc></url>
   <url><loc>https://capispot.com/policies/ai-acceptable-use.html</loc></url>
   <url><loc>https://capispot.com/disclaimer</loc></url>
+  <url><loc>https://capispot.com/market/sp500</loc></url>
+  <url><loc>https://capispot.com/market/nasdaq-100</loc></url>
+  <url><loc>https://capispot.com/market/dow-jones</loc></url>
+  <url><loc>https://capispot.com/market/gold</loc></url>
+  <url><loc>https://capispot.com/market/silver</loc></url>
+  <url><loc>https://capispot.com/market/eur-usd</loc></url>
   <url><loc>https://capispot.com/fifo-guide</loc></url>
   <url><loc>https://capispot.com/trading212-import</loc></url>
   <url><loc>https://capispot.com/stock-tax-bg</loc></url>

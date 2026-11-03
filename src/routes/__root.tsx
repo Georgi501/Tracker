@@ -32,6 +32,24 @@ function NotFoundComponent() {
             {c.home}
           </Link>
         </div>
+        <nav aria-label={c.explore} className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+          {(
+            [
+              ["/markets", c.markets],
+              ["/demo", c.demo],
+              ["/features", c.features],
+              ["/pricing", c.pricing],
+            ] as const
+          ).map(([to, label]) => (
+            <Link
+              key={to}
+              to={to}
+              className="rounded-full border border-border px-3 py-1.5 text-muted-foreground hover:text-foreground"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );
@@ -119,6 +137,11 @@ const ERROR_COPY: Record<
     home: string;
     updateAvailable: string;
     reload: string;
+    explore: string;
+    markets: string;
+    demo: string;
+    features: string;
+    pricing: string;
   }
 > = {
   en: {
@@ -130,6 +153,11 @@ const ERROR_COPY: Record<
     home: "Go home",
     updateAvailable: "A new version is available. Reload to continue.",
     reload: "Reload",
+    explore: "Explore Capispot",
+    markets: "Markets",
+    demo: "Sample portfolio",
+    features: "Features",
+    pricing: "Pricing",
   },
   bg: {
     notFound: "Страницата не е намерена",
@@ -140,6 +168,11 @@ const ERROR_COPY: Record<
     home: "Към началото",
     updateAvailable: "Има нова версия. Презареди страницата, за да продължиш.",
     reload: "Презареди",
+    explore: "Разгледай Capispot",
+    markets: "Пазари",
+    demo: "Примерно портфолио",
+    features: "Функции",
+    pricing: "Цени",
   },
   de: {
     notFound: "Seite nicht gefunden",
@@ -151,6 +184,11 @@ const ERROR_COPY: Record<
     home: "Startseite",
     updateAvailable: "Eine neue Version ist verfügbar. Lade die Seite neu, um fortzufahren.",
     reload: "Neu laden",
+    explore: "Capispot entdecken",
+    markets: "Märkte",
+    demo: "Beispielportfolio",
+    features: "Funktionen",
+    pricing: "Preise",
   },
   es: {
     notFound: "Página no encontrada",
@@ -161,6 +199,11 @@ const ERROR_COPY: Record<
     home: "Ir al inicio",
     updateAvailable: "Hay una nueva versión. Recarga la página para continuar.",
     reload: "Recargar",
+    explore: "Explorar Capispot",
+    markets: "Mercados",
+    demo: "Cartera de ejemplo",
+    features: "Funciones",
+    pricing: "Precios",
   },
   it: {
     notFound: "Pagina non trovata",
@@ -171,6 +214,11 @@ const ERROR_COPY: Record<
     home: "Vai alla home",
     updateAvailable: "È disponibile una nuova versione. Ricarica la pagina per continuare.",
     reload: "Ricarica",
+    explore: "Esplora Capispot",
+    markets: "Mercati",
+    demo: "Portafoglio di esempio",
+    features: "Funzionalità",
+    pricing: "Prezzi",
   },
 };
 

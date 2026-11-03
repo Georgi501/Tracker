@@ -21,6 +21,7 @@ import {
 } from "./portfolio";
 import { dictionaries, isLang, languageLocale, translateLabel, type Lang, type TKey } from "./i18n";
 import { useServerFn } from "@tanstack/react-start";
+import { useRouterState } from "@tanstack/react-router";
 import { getExchangeRate } from "./market.functions";
 import { getQuotes } from "./quotes.functions";
 import { convertImport } from "./history.functions";
@@ -117,7 +118,29 @@ type AssetRow = {
   bond_face_value: number | null;
 };
 
+// Static public pages that must be present in the server HTML for search engines.
+export const PRERENDERED_PATHS: ReadonlySet<string> = new Set([
+  "/features",
+  "/fifo-guide",
+  "/trading212-import",
+  "/stock-tax-bg",
+  "/ibkr-import",
+  "/dividend-tracker",
+  "/average-cost",
+  "/etf-vs-stocks",
+  "/portfolio-in-eur",
+  "/terms",
+  "/privacy",
+  "/refund",
+  "/disclaimer",
+]);
+
+export const isPrerenderedPath = (pathname: string) =>
+  PRERENDERED_PATHS.has(pathname.replace(/\/+$/, "") || "/");
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const prerendered = isPrerenderedPath(pathname);
   const [lang, setLangS] = useState<Lang>("en");
   const [currency, setCurrencyS] = useState<Currency>("EUR");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -844,7 +867,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={value}>
-      {loaded ? children : <div className="min-h-screen bg-background" />}
+      {loaded || prerendered ? children : <div className="min-h-screen bg-background" />}
     </Ctx.Provider>
   );
 }

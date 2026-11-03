@@ -3,6 +3,7 @@ import { usePortfolio } from "@/lib/store";
 import { groupBy } from "@/lib/portfolio";
 import { AllocationBreakdown } from "./AllocationBreakdown";
 import { Card } from "./AppShell";
+import { ShareAllocationButton } from "./ShareAllocationButton";
 
 export function AllocationCard() {
   const p = usePortfolio();
@@ -35,6 +36,9 @@ export function AllocationCard() {
         totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}
         formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
       />
+      <div className="mt-4 flex justify-end">
+        <ShareAllocationButton data={data} lang={p.lang} />
+      </div>
     </Card>
   );
 }

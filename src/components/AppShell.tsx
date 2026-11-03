@@ -56,7 +56,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { usePortfolio } from "@/lib/store";
+import { isPrerenderedPath, usePortfolio } from "@/lib/store";
 import { useOwnAvatar } from "@/lib/own-avatar";
 import type { Currency } from "@/lib/portfolio";
 import { AnalyticsConsent } from "./AnalyticsConsent";
@@ -790,7 +790,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               {DATA_ERROR_COPY[p.lang].retry}
             </button>
           </div>
-        ) : !p.authReady || (p.user && (!p.accessReady || !p.portfolioReady)) ? (
+        ) : !isPrerenderedPath(pathname) &&
+          (!p.authReady || (p.user && (!p.accessReady || !p.portfolioReady))) ? (
           !p.dataError && (
             <div role="status" className="mx-auto max-w-xl py-16 text-center">
               {p.authReady ? (

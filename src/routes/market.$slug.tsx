@@ -7,15 +7,22 @@ import { MARKET_TICKER_INSTRUMENTS } from "@/lib/market-ticker";
 import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/market/$slug")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} market data — Capispot` },
-      {
-        name: "description",
-        content: `Market quote and price history for ${params.slug}.`,
-      },
-    ],
-  }),
+  head: ({ params }) => {
+    const instrument = MARKET_TICKER_INSTRUMENTS.find((item) => item.slug === params.slug);
+    const name = instrument?.name.en ?? params.slug;
+    return {
+      meta: [
+        { title: `${name} live quote and price chart — Capispot` },
+        {
+          name: "description",
+          content: instrument
+            ? `Follow the ${name} quote, daily change and price history from Yahoo Finance, and compare it with your own portfolio on Capispot.`
+            : `Market quote and price history for ${name}.`,
+        },
+        ...(instrument ? [] : [{ name: "robots", content: "noindex" }]),
+      ],
+    };
+  },
   component: MarketInstrumentPage,
 });
 
