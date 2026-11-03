@@ -161,12 +161,14 @@ export function QuoteHero({
   type,
   lang,
   kindLabel,
+  showStats = type !== "crypto",
 }: {
   symbol: string;
   name: string;
   type: T;
   lang: Lang;
   kindLabel?: string;
+  showStats?: boolean;
 }) {
   const c = L[lang];
   const loc = languageLocale(lang);
@@ -197,7 +199,7 @@ export function QuoteHero({
   const stats = useQuery({
     queryKey: ["market-stats", symbol],
     queryFn: () => statsFn({ data: { symbol } }),
-    enabled: type !== "crypto",
+    enabled: type !== "crypto" && showStats,
     staleTime: 300_000,
   });
   const ext = e.data?.ext ?? null;
@@ -313,148 +315,156 @@ export function QuoteHero({
           </div>
         )}
       </div>
-      <div className="mt-4 rounded-xl border border-border p-3">
-        <div role="group" className="mb-2 flex flex-wrap items-center gap-1">
-          {CHART_RANGES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              aria-pressed={r === range}
-              onClick={() => setRange(r)}
-              className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${r === range ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
-            >
-              {r === "MAX" ? "Max" : r}
-            </button>
-          ))}
-          {periodPct != null && (
-            <span
-              className={`ml-auto text-sm font-semibold tabular-nums ${up ? "text-success" : "text-destructive"}`}
-            >
-              {up ? "+" : ""}
-              {num(periodPct)}% {c.period}
-            </span>
+      <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,0.85fr)]">
+        <div className="min-w-0">
+          <div className="rounded-xl border border-border p-3">
+            <div role="group" className="mb-2 flex flex-wrap items-center gap-1">
+              {CHART_RANGES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  aria-pressed={r === range}
+                  onClick={() => setRange(r)}
+                  className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${r === range ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                >
+                  {r === "MAX" ? "Max" : r}
+                </button>
+              ))}
+              {periodPct != null && (
+                <span
+                  className={`ml-auto text-sm font-semibold tabular-nums ${up ? "text-success" : "text-destructive"}`}
+                >
+                  {up ? "+" : ""}
+                  {num(periodPct)}% {c.period}
+                </span>
+              )}
+            </div>
+            {ch.isFetching && !ch.data ? (
+              <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
+            ) : ch.isError || ch.data?.unavailable ? (
+              <p role="alert" className="py-16 text-center text-sm text-destructive">
+                {c.chartError}{" "}
+                <button
+                  type="button"
+                  onClick={() => void ch.refetch()}
+                  className="font-semibold underline"
+                >
+                  {c.retry}
+                </button>
+              </p>
+            ) : closes.length > 1 ? (
+              <div
+                role="img"
+                aria-label={c.chart(
+                  name,
+                  range,
+                  closes.length,
+                  money(first!),
+                  money(last!),
+                  periodPct == null ? "" : `${periodPct >= 0 ? "+" : ""}${num(periodPct)}%`,
+                )}
+                className="h-48 w-full sm:h-56"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={closes} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="qh-fill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                    <XAxis
+                      dataKey="t"
+                      type="number"
+                      domain={["dataMin", "dataMax"]}
+                      tickFormatter={fmtT}
+                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                      minTickGap={40}
+                    />
+                    <YAxis
+                      orientation="right"
+                      domain={["auto", "auto"]}
+                      tickFormatter={(v: number) => num(v)}
+                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={64}
+                    />
+                    {first != null && (
+                      <ReferenceLine
+                        y={first}
+                        stroke="var(--muted-foreground)"
+                        strokeDasharray="4 4"
+                        strokeOpacity={0.6}
+                      />
+                    )}
+                    <Tooltip
+                      content={(props) => {
+                        const point = props.payload?.[0]?.payload as MarketCandle | undefined;
+                        if (!props.active || !point) return null;
+                        const rows: [string, number | null][] = [
+                          [c.close, point.c],
+                          [c.open, point.o],
+                          [c.high, point.h],
+                          [c.low, point.l],
+                        ];
+                        return (
+                          <div className="rounded-lg border border-border/80 bg-popover/90 p-3 text-xs shadow-xl backdrop-blur-md">
+                            <p className="mb-2 font-semibold">
+                              {c.date}:{" "}
+                              {new Date(point.t).toLocaleString(loc, {
+                                dateStyle: "medium",
+                                timeStyle: intraday ? "short" : undefined,
+                              })}
+                            </p>
+                            <dl className="space-y-1">
+                              {rows.map(([label, value]) => (
+                                <div key={label} className="flex justify-between gap-6">
+                                  <dt className="text-muted-foreground">{label}</dt>
+                                  <dd className="font-medium tabular-nums">
+                                    {value == null ? "—" : money(value)}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </div>
+                        );
+                      }}
+                      cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="c"
+                      stroke={color}
+                      strokeWidth={2}
+                      fill="url(#qh-fill)"
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
+            )}
+          </div>
+          {closes.length > 1 && (
+            <ChartDataTable
+              summary={c.viewData}
+              caption={c.chart(name, range, closes.length, money(first!), money(last!), "")}
+              headers={[c.date, c.close]}
+              rows={closes.map((point) => [fmtT(point.t), money(point.c)])}
+            />
           )}
         </div>
-        {ch.isFetching && !ch.data ? (
-          <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
-        ) : ch.isError || ch.data?.unavailable ? (
-          <p role="alert" className="py-16 text-center text-sm text-destructive">
-            {c.chartError}{" "}
-            <button
-              type="button"
-              onClick={() => void ch.refetch()}
-              className="font-semibold underline"
-            >
-              {c.retry}
-            </button>
-          </p>
-        ) : closes.length > 1 ? (
-          <div
-            role="img"
-            aria-label={c.chart(
-              name,
-              range,
-              closes.length,
-              money(first!),
-              money(last!),
-              periodPct == null ? "" : `${periodPct >= 0 ? "+" : ""}${num(periodPct)}%`,
-            )}
-            className="h-48 w-full sm:h-56"
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={closes} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="qh-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={color} stopOpacity={0.35} />
-                    <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                <XAxis
-                  dataKey="t"
-                  type="number"
-                  domain={["dataMin", "dataMax"]}
-                  tickFormatter={fmtT}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={40}
-                />
-                <YAxis
-                  orientation="right"
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => num(v)}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={64}
-                />
-                {first != null && (
-                  <ReferenceLine
-                    y={first}
-                    stroke="var(--muted-foreground)"
-                    strokeDasharray="4 4"
-                    strokeOpacity={0.6}
-                  />
-                )}
-                <Tooltip
-                  content={(props) => {
-                    const point = props.payload?.[0]?.payload as MarketCandle | undefined;
-                    if (!props.active || !point) return null;
-                    const rows: [string, number | null][] = [
-                      [c.close, point.c],
-                      [c.open, point.o],
-                      [c.high, point.h],
-                      [c.low, point.l],
-                    ];
-                    return (
-                      <div className="rounded-lg border border-border/80 bg-popover/90 p-3 text-xs shadow-xl backdrop-blur-md">
-                        <p className="mb-2 font-semibold">
-                          {c.date}:{" "}
-                          {new Date(point.t).toLocaleString(loc, {
-                            dateStyle: "medium",
-                            timeStyle: intraday ? "short" : undefined,
-                          })}
-                        </p>
-                        <dl className="space-y-1">
-                          {rows.map(([label, value]) => (
-                            <div key={label} className="flex justify-between gap-6">
-                              <dt className="text-muted-foreground">{label}</dt>
-                              <dd className="font-medium tabular-nums">
-                                {value == null ? "—" : money(value)}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
-                    );
-                  }}
-                  cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="c"
-                  stroke={color}
-                  strokeWidth={2}
-                  fill="url(#qh-fill)"
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+        {showStats && type !== "crypto" && (
+          <div className="min-w-0 rounded-xl border border-border bg-background/45 p-3 sm:p-4">
+            <KeyStats symbol={symbol} lang={lang} />
           </div>
-        ) : (
-          <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
         )}
       </div>
-      {closes.length > 1 && (
-        <ChartDataTable
-          summary={c.viewData}
-          caption={c.chart(name, range, closes.length, money(first!), money(last!), "")}
-          headers={[c.date, c.close]}
-          rows={closes.map((point) => [fmtT(point.t), money(point.c)])}
-        />
-      )}
-      {type !== "crypto" && <KeyStats symbol={symbol} lang={lang} />}
     </section>
   );
 }

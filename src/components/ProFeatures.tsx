@@ -29,12 +29,14 @@ export function ProGate({
   preview,
   children,
   className = "",
+  unlocked = false,
 }: {
   title: string;
   desc: string;
   preview: ReactNode;
   children: ReactNode;
   className?: string;
+  unlocked?: boolean;
 }) {
   const p = usePortfolio();
   const c = proCopy[p.lang];
@@ -42,9 +44,9 @@ export function ProGate({
     <Card className={className}>
       <div className="mb-3 flex items-center gap-2">
         <h3 className="font-display font-semibold">{title}</h3>
-        <ProBadge />
+        {!unlocked && <ProBadge />}
       </div>
-      {p.isPro ? (
+      {p.isPro || unlocked ? (
         children
       ) : (
         <div className="relative overflow-hidden rounded-xl">

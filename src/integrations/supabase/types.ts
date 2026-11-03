@@ -639,6 +639,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_company_profile_view: {
+        Args: { _symbol: string };
+        Returns: { allowed: boolean; resets_on: string; used: number }[];
+      };
       is_pro: { Args: { _user_id: string }; Returns: boolean };
       is_site_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       admin_dashboard_stats: {

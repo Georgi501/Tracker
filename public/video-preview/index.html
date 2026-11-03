@@ -1252,7 +1252,7 @@
 
       @media (min-width: 521px) and (max-width: 760px) {
         body.embedded .player-layout {
-          grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
 
         body.embedded .screen-stage {
@@ -1263,7 +1263,7 @@
         }
 
         body.embedded .screen-frame {
-          width: min(100%, 280px);
+          width: min(100%, 340px);
           border-radius: 14px;
         }
 
@@ -3166,12 +3166,12 @@
           window.parent.postMessage(
             {
               type: "capispot-video-preview:resize",
-              height: document.documentElement.scrollHeight,
+              height: document.body.scrollHeight,
             },
             window.location.origin,
           );
         };
-        new ResizeObserver(sendHeight).observe(document.documentElement);
+        new ResizeObserver(sendHeight).observe(document.body);
         window.addEventListener("load", sendHeight, { once: true });
         sendHeight();
       }

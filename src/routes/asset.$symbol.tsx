@@ -15,8 +15,7 @@ import { toast } from "sonner";
 import { Card } from "@/components/AppShell";
 import { QuoteHero } from "@/components/QuoteHero";
 import { CompanyOverview } from "@/components/CompanyOverview";
-import { ProCompanyResearch } from "@/components/ProCompanyResearch";
-import { ProFinancials } from "@/components/ProFinancials";
+import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
 import { Button } from "@/components/ui/button";
 import { pct, usePortfolio } from "@/lib/store";
 import { assetSummary, reviewDue } from "@/lib/journey";
@@ -344,6 +343,7 @@ function AssetPage() {
   const p = usePortfolio();
   const c = C[p.lang];
   const today = new Date().toISOString().slice(0, 10);
+  const [activeResearchSection, setActiveResearchSection] = useState("overview");
   const [bondPrice, setBondPrice] = useState("");
   const [savingBondPrice, setSavingBondPrice] = useState(false);
   const [valuationDate, setValuationDate] = useState(() => today);
@@ -417,6 +417,7 @@ function AssetPage() {
             name={asset?.name ?? symbol.toUpperCase()}
             type={type}
             lang={p.lang}
+            showStats={type !== "stock"}
           />
         ) : (
           <Card>
@@ -444,19 +445,30 @@ function AssetPage() {
       {type === "stock" && (
         <nav
           aria-label={p.lang === "bg" ? "Раздели за проучване" : "Research sections"}
-          className="sticky top-16 z-10 -mx-1 overflow-x-auto rounded-xl border border-border bg-background/90 p-1 shadow-sm backdrop-blur"
+          className="sticky top-16 z-20 -mx-1 overflow-x-auto rounded-2xl border border-border/80 bg-card/90 p-1.5 shadow-lg shadow-black/5 backdrop-blur-xl"
         >
           <div className="flex min-w-max gap-1">
-            {RESEARCH_NAV[p.lang].map(([id, label, Icon]) => (
-              <a
-                key={id}
-                href={`#${!p.isPro && ["statistics", "analysis", "holders"].includes(id) ? "research" : id}`}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-              >
-                <Icon size={15} />
-                {label}
-              </a>
-            ))}
+            {RESEARCH_NAV[p.lang].map(([id, label, Icon]) => {
+              const target =
+                !p.isPro && ["statistics", "analysis", "holders"].includes(id) ? "research" : id;
+              const active = activeResearchSection === id;
+              return (
+                <a
+                  key={id}
+                  href={`#${target}`}
+                  aria-current={active ? "location" : undefined}
+                  onClick={() => setActiveResearchSection(id)}
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+                    active
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary/75 hover:text-foreground"
+                  }`}
+                >
+                  <Icon size={16} aria-hidden />
+                  {label}
+                </a>
+              );
+            })}
           </div>
         </nav>
       )}
@@ -694,17 +706,16 @@ function AssetPage() {
         </Card>
       )}
       {asset && <Journal symbol={symbol.toUpperCase()} c={c} />}
-      {type === "stock" && (
-        <div id="financials" className="scroll-mt-24">
-          <ProFinancials symbol={symbol.toUpperCase()} lang={p.lang} />
-        </div>
+      {type === "stock" && asset && (
+        <CompanyProfileDetails
+          symbol={symbol.toUpperCase()}
+          name={asset.name ?? symbol.toUpperCase()}
+          lang={p.lang}
+          userId={p.user?.id ?? null}
+          isPro={p.isPro}
+        />
       )}
-      {type === "stock" && (
-        <div id="research" className="scroll-mt-24">
-          <ProCompanyResearch symbol={symbol.toUpperCase()} lang={p.lang} />
-        </div>
-      )}
-      {type && (
+      {type && type !== "stock" && (
         <div id="news" className="scroll-mt-24">
           <CompanyOverview
             asset={{ symbol: symbol.toUpperCase(), name: asset?.name ?? symbol, type }}

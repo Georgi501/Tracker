@@ -483,10 +483,18 @@ const COPY = {
   },
 } as const satisfies Record<Lang, Record<string, unknown>>;
 
-export function ProCompanyResearch({ symbol, lang }: { symbol: string; lang: Lang }) {
+export function ProCompanyResearch({
+  symbol,
+  lang,
+  unlocked = false,
+}: {
+  symbol: string;
+  lang: Lang;
+  unlocked?: boolean;
+}) {
   const c = COPY[lang];
   return (
-    <ProGate title={c.title} desc={c.desc} preview={<BarsSilhouette />}>
+    <ProGate title={c.title} desc={c.desc} preview={<BarsSilhouette />} unlocked={unlocked}>
       <ResearchPanels symbol={symbol} lang={lang} />
     </ProGate>
   );

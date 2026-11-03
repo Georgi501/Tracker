@@ -39,12 +39,13 @@ beforeEach(() => {
   state.isPro = false;
 });
 
-function renderGate() {
+function renderGate(unlocked = false) {
   return render(
     <ProGate
       title="Advanced analysis"
       desc="A Pro feature description"
       preview={<div>Abstract preview</div>}
+      unlocked={unlocked}
     >
       <p>Private portfolio metrics</p>
     </ProGate>,
@@ -70,5 +71,13 @@ describe("Pro feature access by account tier", () => {
     expect(screen.getByText("Private portfolio metrics")).toBeInTheDocument();
     expect(screen.queryByText("Abstract preview")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Unlock with Pro" })).not.toBeInTheDocument();
+  });
+
+  it("shows feature content when access is explicitly unlocked", () => {
+    renderGate(true);
+
+    expect(screen.getByText("Private portfolio metrics")).toBeInTheDocument();
+    expect(screen.queryByText("Abstract preview")).not.toBeInTheDocument();
+    expect(screen.queryByText("PRO")).not.toBeInTheDocument();
   });
 });
