@@ -44,6 +44,8 @@ const COPY = {
     loadFailed: "Could not load financial data.",
     retry: "Try again",
     breakdown: "Revenue & expense breakdown",
+    breakdownSubtitle: "Follow reported revenue through costs to operating and net income.",
+    breakdownPeriod: "Breakdown period",
     costOfRevenue: "Cost of revenue",
     grossProfit: "Gross profit",
     operatingExpenseLabel: "Operating expenses",
@@ -76,6 +78,9 @@ const COPY = {
     loadFailed: "Финансовите данни не се заредиха.",
     retry: "Опитай отново",
     breakdown: "Разбивка на приходите и разходите",
+    breakdownSubtitle:
+      "Виж как отчетените приходи преминават през разходите до оперативната и нетната печалба.",
+    breakdownPeriod: "Период на разбивката",
     costOfRevenue: "Себестойност на приходите",
     grossProfit: "Брутна печалба",
     operatingExpenseLabel: "Оперативни разходи",
@@ -109,6 +114,9 @@ const COPY = {
     loadFailed: "Finanzdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     breakdown: "Umsatz- und Kostenaufteilung",
+    breakdownSubtitle:
+      "Verfolge den gemeldeten Umsatz über die Kosten bis zum Betriebs- und Nettogewinn.",
+    breakdownPeriod: "Zeitraum der Aufteilung",
     costOfRevenue: "Umsatzkosten",
     grossProfit: "Bruttogewinn",
     operatingExpenseLabel: "Betriebskosten",
@@ -142,6 +150,9 @@ const COPY = {
     loadFailed: "No se pudieron cargar los datos financieros.",
     retry: "Intentar de nuevo",
     breakdown: "Desglose de ingresos y gastos",
+    breakdownSubtitle:
+      "Sigue los ingresos declarados a través de los gastos hasta el beneficio operativo y neto.",
+    breakdownPeriod: "Período del desglose",
     costOfRevenue: "Coste de ingresos",
     grossProfit: "Beneficio bruto",
     operatingExpenseLabel: "Gastos operativos",
@@ -175,6 +186,9 @@ const COPY = {
     loadFailed: "Impossibile caricare i dati finanziari.",
     retry: "Riprova",
     breakdown: "Ripartizione di ricavi e spese",
+    breakdownSubtitle:
+      "Segui i ricavi dichiarati attraverso i costi fino al reddito operativo e netto.",
+    breakdownPeriod: "Periodo della ripartizione",
     costOfRevenue: "Costo dei ricavi",
     grossProfit: "Utile lordo",
     operatingExpenseLabel: "Spese operative",
@@ -339,6 +353,7 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
             currency={query.data?.currency ?? null}
             locale={locale}
             copy={c}
+            period={period}
           />
           <p className="text-xs text-muted-foreground">{c.source}</p>
         </>
@@ -530,37 +545,46 @@ function RevenueBreakdown({
   currency,
   locale,
   copy,
+  period,
 }: {
   rows: FinancialSeriesRow[];
   currency: string | null;
   locale: string;
   copy: FinancialCopy;
+  period: Period;
 }) {
-  const row = [...rows]
-    .reverse()
-    .find(
-      (item) =>
-        item.revenue != null &&
-        item.grossProfit != null &&
-        item.operatingIncome != null &&
-        item.netIncome != null,
-    );
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const periods = [...rows].reverse().filter(
+    (
+      item,
+    ): item is FinancialSeriesRow & {
+      revenue: number;
+      grossProfit: number;
+      operatingIncome: number;
+      netIncome: number;
+    } => {
+      const { revenue, grossProfit, operatingIncome, netIncome } = item;
+      return (
+        revenue != null &&
+        grossProfit != null &&
+        operatingIncome != null &&
+        netIncome != null &&
+        revenue > 0 &&
+        grossProfit >= 0 &&
+        grossProfit <= revenue &&
+        operatingIncome >= 0 &&
+        operatingIncome <= grossProfit &&
+        netIncome >= 0 &&
+        netIncome <= operatingIncome
+      );
+    },
+  );
+  const row = periods.find((item) => item.date === selectedDate) ?? periods[0];
   const revenue = row?.revenue;
   const grossProfit = row?.grossProfit;
   const operatingIncome = row?.operatingIncome;
   const netIncome = row?.netIncome;
-  const valid =
-    revenue != null &&
-    grossProfit != null &&
-    operatingIncome != null &&
-    netIncome != null &&
-    revenue > 0 &&
-    grossProfit >= 0 &&
-    grossProfit <= revenue &&
-    operatingIncome >= 0 &&
-    operatingIncome <= grossProfit &&
-    netIncome >= 0 &&
-    netIncome <= operatingIncome;
+  const valid = row != null;
 
   const format = (value: number) =>
     new Intl.NumberFormat(locale, {
@@ -568,6 +592,13 @@ function RevenueBreakdown({
       maximumFractionDigits: 1,
       ...(currency ? { style: "currency" as const, currency } : {}),
     }).format(value);
+  const formatPeriod = (date: string) => {
+    if (period === "annual") return date.slice(0, 4);
+    const parsed = new Date(`${date}T12:00:00`);
+    return Number.isNaN(parsed.getTime())
+      ? date
+      : new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(parsed);
+  };
   const nodes: FlowNode[] = [
     { name: copy.revenue, color: "var(--chart-2)" },
     { name: copy.costOfRevenue, color: "var(--chart-4)" },
@@ -585,14 +616,14 @@ function RevenueBreakdown({
   ];
   const flow: FlowData = {
     nodes,
-    links: valid
+    links: row
       ? [
-          { source: 0, target: 1, value: revenue - grossProfit },
-          { source: 0, target: 2, value: grossProfit },
-          { source: 2, target: 3, value: grossProfit - operatingIncome },
-          { source: 2, target: 4, value: operatingIncome },
-          { source: 4, target: 5, value: operatingIncome - netIncome },
-          { source: 4, target: 6, value: netIncome },
+          { source: 0, target: 1, value: row.revenue - row.grossProfit },
+          { source: 0, target: 2, value: row.grossProfit },
+          { source: 2, target: 3, value: row.grossProfit - row.operatingIncome },
+          { source: 2, target: 4, value: row.operatingIncome },
+          { source: 4, target: 5, value: row.operatingIncome - row.netIncome },
+          { source: 4, target: 6, value: row.netIncome },
         ].filter((link) => link.value > 0)
       : [],
   };
@@ -635,17 +666,56 @@ function RevenueBreakdown({
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 shadow-sm sm:p-5">
+    <section className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[0.06] p-4 shadow-md shadow-primary/[0.04] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-display font-semibold">{copy.breakdown}</h4>
+        <div>
+          <h4 className="font-display font-semibold">{copy.breakdown}</h4>
+          <p className="mt-1 text-xs text-muted-foreground">{copy.breakdownSubtitle}</p>
+        </div>
         {row?.date && (
-          <span className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {row.date}
+          <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+            {formatPeriod(row.date)}
           </span>
         )}
       </div>
       {valid ? (
         <>
+          <div
+            role="group"
+            aria-label={copy.breakdownPeriod}
+            className="relative mt-5 flex gap-3 overflow-x-auto pb-2 pt-0.5 before:absolute before:left-2 before:right-2 before:top-[7px] before:h-px before:bg-border/80"
+          >
+            {periods.map((item) => {
+              const active = row.date === item.date;
+              return (
+                <button
+                  key={item.date}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setSelectedDate(item.date)}
+                  className="relative z-10 inline-flex min-w-14 shrink-0 flex-col items-center gap-1.5"
+                >
+                  <span
+                    aria-hidden
+                    className={`size-3 rounded-full border-2 border-background transition-all ${
+                      active
+                        ? "bg-primary ring-4 ring-primary/15"
+                        : "bg-muted-foreground/50 hover:bg-primary/60"
+                    }`}
+                  />
+                  <span
+                    className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold tabular-nums transition-colors ${
+                      active
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {formatPeriod(item.date)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
             {highlights.map((item) => (
               <div
@@ -666,21 +736,25 @@ function RevenueBreakdown({
               </div>
             ))}
           </div>
-          <div className="mt-3 overflow-hidden rounded-xl border border-border/50 bg-background/35 px-1 py-2 sm:px-2">
-            <div className="h-[300px] w-full sm:h-[320px]" role="img" aria-label={copy.breakdown}>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-border/50 bg-background/45 p-2 sm:p-3">
+            <div
+              className="h-[300px] min-w-[620px] sm:h-[330px] sm:min-w-0"
+              role="img"
+              aria-label={`${copy.breakdown} · ${row.date}`}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <Sankey
                   data={flow}
                   node={renderNode}
                   link={{
-                    fill: "var(--chart-1)",
-                    fillOpacity: 0.13,
-                    stroke: "var(--chart-1)",
-                    strokeOpacity: 0.24,
+                    fill: "var(--primary)",
+                    fillOpacity: 0.16,
+                    stroke: "var(--primary)",
+                    strokeOpacity: 0.28,
                   }}
                   nodeWidth={14}
-                  nodePadding={22}
-                  margin={{ top: 16, right: 104, bottom: 16, left: 104 }}
+                  nodePadding={26}
+                  margin={{ top: 18, right: 118, bottom: 18, left: 118 }}
                   iterations={24}
                 >
                   <Tooltip

@@ -1,12 +1,20 @@
 import type { ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BarChart3, Building2, ChartNoAxesCombined, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
-import { marketCompanyResearch, marketStats } from "@/lib/market.functions";
+import {
+  marketCompanyResearch,
+  marketDetails,
+  marketStats,
+  searchMarket,
+} from "@/lib/market.functions";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
+import type { MarketAsset } from "@/lib/market-search";
 
 const COPY = {
   en: {
@@ -42,6 +50,24 @@ const COPY = {
     analysts: "Analyst outlook",
     consensus: "Recommendation trend",
     target: "12-month price target",
+    historicalPrice: "Share price · past year",
+    analystRange: "Analyst target range · next 12 months",
+    analystMean: "Average target",
+    targetChartLoading: "Loading price history…",
+    targetChartUnavailable: "Price history or analyst target range is unavailable.",
+    peerTitle: "P/E ratio vs selected peers",
+    peerDescription:
+      "Choose listed companies yourself. The peer average excludes the company being viewed and peers without a positive P/E.",
+    peerSearch: "Search company or ticker",
+    peerAdd: "Search",
+    peerAddCompany: "Add",
+    peerRemove: "Remove",
+    peerTtm: "P/E (TTM)",
+    peerForward: "Forward P/E",
+    peerAverage: "Peer average",
+    peerEmpty: "Search for and add companies to compare their reported P/E ratios.",
+    peerNoData: "No positive P/E data is available for the selected companies.",
+    peerSearchUnavailable: "Company search is temporarily unavailable.",
     currentPrice: "Current price",
     low: "Low",
     average: "Average",
@@ -134,6 +160,24 @@ const COPY = {
     analysts: "Перспектива на анализаторите",
     consensus: "Промяна в препоръките",
     target: "Целева цена за 12 месеца",
+    historicalPrice: "Цена на акцията · последната година",
+    analystRange: "Целеви диапазон на анализаторите · следващите 12 месеца",
+    analystMean: "Средна целева цена",
+    targetChartLoading: "Зареждане на историята на цената…",
+    targetChartUnavailable: "Историята на цената или целевият диапазон не са налични.",
+    peerTitle: "P/E спрямо избрани компании",
+    peerDescription:
+      "Избери сам публичните компании за сравнение. Средната стойност не включва разглежданата компания и дружества без положителен P/E.",
+    peerSearch: "Търси компания или тикер",
+    peerAdd: "Търси",
+    peerAddCompany: "Добави",
+    peerRemove: "Премахни",
+    peerTtm: "P/E (TTM)",
+    peerForward: "Прогнозен P/E",
+    peerAverage: "Средно за сравняваните",
+    peerEmpty: "Потърси и добави компании, за да сравниш отчетените им P/E коефициенти.",
+    peerNoData: "Няма налични положителни P/E стойности за избраните компании.",
+    peerSearchUnavailable: "Търсенето на компании временно не е налично.",
     currentPrice: "Текуща цена",
     low: "Минимум",
     average: "Средна",
@@ -229,6 +273,24 @@ const COPY = {
     analysts: "Analystenausblick",
     consensus: "Empfehlungstrend",
     target: "Kursziel für 12 Monate",
+    historicalPrice: "Aktienkurs · letztes Jahr",
+    analystRange: "Analystenzielspanne · nächste 12 Monate",
+    analystMean: "Durchschnittliches Kursziel",
+    targetChartLoading: "Kursverlauf wird geladen…",
+    targetChartUnavailable: "Kursverlauf oder Analystenzielspanne nicht verfügbar.",
+    peerTitle: "KGV im Vergleich zu ausgewählten Unternehmen",
+    peerDescription:
+      "Wähle börsennotierte Unternehmen selbst aus. Der Peer-Durchschnitt schließt das aktuelle Unternehmen und Unternehmen ohne positives KGV aus.",
+    peerSearch: "Unternehmen oder Ticker suchen",
+    peerAdd: "Suchen",
+    peerAddCompany: "Hinzufügen",
+    peerRemove: "Entfernen",
+    peerTtm: "KGV (TTM)",
+    peerForward: "Forward-KGV",
+    peerAverage: "Peer-Durchschnitt",
+    peerEmpty: "Suche und füge Unternehmen hinzu, um ihre gemeldeten KGVs zu vergleichen.",
+    peerNoData: "Für die ausgewählten Unternehmen sind keine positiven KGV-Daten verfügbar.",
+    peerSearchUnavailable: "Die Unternehmenssuche ist vorübergehend nicht verfügbar.",
     currentPrice: "Aktueller Kurs",
     low: "Tief",
     average: "Durchschnitt",
@@ -324,6 +386,24 @@ const COPY = {
     analysts: "Perspectiva de analistas",
     consensus: "Tendencia de recomendaciones",
     target: "Precio objetivo a 12 meses",
+    historicalPrice: "Precio de la acción · último año",
+    analystRange: "Rango objetivo de analistas · próximos 12 meses",
+    analystMean: "Objetivo medio",
+    targetChartLoading: "Cargando historial de precios…",
+    targetChartUnavailable: "No hay historial de precios o rango objetivo disponible.",
+    peerTitle: "PER frente a empresas seleccionadas",
+    peerDescription:
+      "Elige tú las empresas cotizadas. La media excluye la empresa actual y las empresas sin un PER positivo.",
+    peerSearch: "Buscar empresa o ticker",
+    peerAdd: "Buscar",
+    peerAddCompany: "Añadir",
+    peerRemove: "Quitar",
+    peerTtm: "PER (TTM)",
+    peerForward: "PER futuro",
+    peerAverage: "Media de comparables",
+    peerEmpty: "Busca y añade empresas para comparar sus PER publicados.",
+    peerNoData: "No hay datos de PER positivo para las empresas seleccionadas.",
+    peerSearchUnavailable: "La búsqueda de empresas no está disponible temporalmente.",
     currentPrice: "Precio actual",
     low: "Mínimo",
     average: "Media",
@@ -421,6 +501,24 @@ const COPY = {
     analysts: "Prospettive degli analisti",
     consensus: "Andamento delle raccomandazioni",
     target: "Obiettivo di prezzo a 12 mesi",
+    historicalPrice: "Prezzo dell'azione · ultimo anno",
+    analystRange: "Intervallo obiettivo degli analisti · prossimi 12 mesi",
+    analystMean: "Obiettivo medio",
+    targetChartLoading: "Caricamento dello storico dei prezzi…",
+    targetChartUnavailable: "Storico dei prezzi o intervallo obiettivo non disponibile.",
+    peerTitle: "P/E rispetto alle aziende selezionate",
+    peerDescription:
+      "Scegli tu le società quotate. La media esclude l'azienda visualizzata e quelle senza un P/E positivo.",
+    peerSearch: "Cerca azienda o ticker",
+    peerAdd: "Cerca",
+    peerAddCompany: "Aggiungi",
+    peerRemove: "Rimuovi",
+    peerTtm: "P/E (TTM)",
+    peerForward: "P/E forward",
+    peerAverage: "Media dei comparabili",
+    peerEmpty: "Cerca e aggiungi aziende per confrontare i loro P/E dichiarati.",
+    peerNoData: "Non sono disponibili dati P/E positivi per le aziende selezionate.",
+    peerSearchUnavailable: "La ricerca delle aziende è temporaneamente non disponibile.",
     currentPrice: "Prezzo attuale",
     low: "Minimo",
     average: "Media",
@@ -504,6 +602,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
   const c = COPY[lang];
   const fetchStats = useServerFn(marketStats);
   const fetchResearch = useServerFn(marketCompanyResearch);
+  const fetchDetails = useServerFn(marketDetails);
   const statsQuery = useQuery({
     queryKey: ["market-stats", symbol],
     queryFn: () => fetchStats({ data: { symbol } }),
@@ -512,6 +611,11 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
   const researchQuery = useQuery({
     queryKey: ["market-company-research", symbol],
     queryFn: () => fetchResearch({ data: { symbol } }),
+    staleTime: 300_000,
+  });
+  const historyQuery = useQuery({
+    queryKey: ["analyst-target-history", symbol],
+    queryFn: () => fetchDetails({ data: { symbol, type: "stock", range: "1Y" } }),
     staleTime: 300_000,
   });
   const loc = languageLocale(lang);
@@ -684,6 +788,24 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         <QuoteFreshness at={stats?.quoteAt} lang={lang} marketState={stats?.marketState} />
         <p className="text-xs text-muted-foreground">{c.ratioNote}</p>
         <div className="grid gap-3 lg:grid-cols-2">{statGroups}</div>
+        <PeerComparison
+          symbol={symbol}
+          lang={lang}
+          copy={{
+            title: c.peerTitle,
+            description: c.peerDescription,
+            search: c.peerSearch,
+            add: c.peerAdd,
+            addCompany: c.peerAddCompany,
+            remove: c.peerRemove,
+            ttm: c.peerTtm,
+            forward: c.peerForward,
+            average: c.peerAverage,
+            empty: c.peerEmpty,
+            noData: c.peerNoData,
+            searchUnavailable: c.peerSearchUnavailable,
+          }}
+        />
       </section>
 
       <section id="analysis" className="scroll-mt-24 space-y-3">
@@ -694,6 +816,24 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
             <p className="mb-3 text-xs text-muted-foreground">{c.targetNote}</p>
             {targetRangeValid ? (
               <>
+                <AnalystTargetChart
+                  closes={historyQuery.data?.closes ?? []}
+                  loading={historyQuery.isLoading}
+                  currency={stats?.currency ?? historyQuery.data?.currency ?? null}
+                  locale={loc}
+                  currentPrice={currentPrice!}
+                  targetLow={targetLow!}
+                  targetMean={targetMean!}
+                  targetHigh={targetHigh!}
+                  labels={{
+                    historical: c.historicalPrice,
+                    range: c.analystRange,
+                    mean: c.analystMean,
+                    loading: c.targetChartLoading,
+                    unavailable: c.targetChartUnavailable,
+                  }}
+                  unavailable={historyQuery.isError || historyQuery.data?.unavailable === true}
+                />
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">{c.currentPrice}</p>
@@ -962,6 +1102,485 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         {c.source}
         {retrievedAt ? ` ${c.retrieved}: ${retrievedAt}.` : ""}
       </p>
+    </div>
+  );
+}
+
+function PeerComparison({
+  symbol,
+  lang,
+  copy,
+}: {
+  symbol: string;
+  lang: Lang;
+  copy: {
+    title: string;
+    description: string;
+    search: string;
+    add: string;
+    addCompany: string;
+    remove: string;
+    ttm: string;
+    forward: string;
+    average: string;
+    empty: string;
+    noData: string;
+    searchUnavailable: string;
+  };
+}) {
+  const [term, setTerm] = useState("");
+  const [submitted, setSubmitted] = useState("");
+  const [peers, setPeers] = useState<MarketAsset[]>([]);
+  const [metric, setMetric] = useState<"trailingPe" | "forwardPe">("trailingPe");
+  const search = useServerFn(searchMarket);
+  const fetchStats = useServerFn(marketStats);
+  const searchQuery = useQuery({
+    queryKey: ["company-peer-search", submitted],
+    queryFn: () => search({ data: { query: submitted } }),
+    enabled: !!submitted,
+    staleTime: 300_000,
+  });
+  const peerQueries = useQueries({
+    queries: peers.map((peer) => ({
+      queryKey: ["market-stats", peer.symbol],
+      queryFn: () => fetchStats({ data: { symbol: peer.symbol } }),
+      staleTime: 300_000,
+    })),
+  });
+  const candidates = (searchQuery.data?.assets ?? []).filter(
+    (asset) =>
+      asset.type === "stock" &&
+      asset.symbol.toUpperCase() !== symbol.toUpperCase() &&
+      !peers.some((peer) => peer.symbol.toUpperCase() === asset.symbol.toUpperCase()),
+  );
+  const values = peers.map((peer, index) => ({
+    ...peer,
+    value: peerQueries[index]?.data?.[metric] ?? null,
+    loading: peerQueries[index]?.isLoading ?? false,
+  }));
+  const peerValues = values.flatMap((peer) =>
+    peer.value != null && Number.isFinite(peer.value) && peer.value > 0 ? [peer.value] : [],
+  );
+  const peerAverage =
+    peerValues.length > 0
+      ? peerValues.reduce((sum, value) => sum + value, 0) / peerValues.length
+      : null;
+  const companyQuery = useQuery({
+    queryKey: ["market-stats", symbol],
+    queryFn: () => fetchStats({ data: { symbol } }),
+    staleTime: 300_000,
+  });
+  const companyValue = companyQuery.data?.[metric] ?? null;
+  const rows = [
+    { symbol, name: symbol, value: companyValue, current: true, loading: companyQuery.isLoading },
+    ...values.map((peer) => ({ ...peer, current: false })),
+  ];
+  const maxValue = Math.max(0, ...rows.map((row) => row.value ?? 0), peerAverage ?? 0);
+  const max = maxValue * 1.1;
+  const loc = languageLocale(lang);
+
+  const addPeer = (asset: MarketAsset) => {
+    if (peers.length >= 5) return;
+    setPeers((current) => [...current, asset]);
+    setTerm("");
+    setSubmitted("");
+  };
+
+  return (
+    <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h4 className="font-display font-semibold">{copy.title}</h4>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+            {copy.description}
+          </p>
+        </div>
+        <div role="group" aria-label={copy.title} className="flex rounded-lg bg-secondary p-1">
+          {(["trailingPe", "forwardPe"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={metric === key}
+              onClick={() => setMetric(key)}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
+                metric === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              {key === "trailingPe" ? copy.ttm : copy.forward}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form
+        className="mt-4 flex max-w-xl gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSubmitted(term.trim());
+        }}
+      >
+        <Input
+          value={term}
+          onChange={(event) => setTerm(event.target.value)}
+          placeholder={copy.search}
+          aria-label={copy.search}
+          maxLength={60}
+        />
+        <Button type="submit" variant="secondary" disabled={!term.trim()}>
+          {copy.add}
+        </Button>
+      </form>
+
+      {searchQuery.isError && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {copy.searchUnavailable}
+        </p>
+      )}
+      {searchQuery.data?.unavailable && (
+        <p role="status" className="mt-2 text-xs text-muted-foreground">
+          {copy.searchUnavailable}
+        </p>
+      )}
+      {candidates.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {candidates.slice(0, 6).map((asset) => (
+            <button
+              key={asset.symbol}
+              type="button"
+              onClick={() => addPeer(asset)}
+              disabled={peers.length >= 5}
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
+            >
+              <span className="font-semibold">{asset.symbol}</span>
+              <span className="max-w-40 truncate text-muted-foreground">{asset.name}</span>
+              <span aria-hidden className="text-primary">
+                +
+              </span>
+              <span className="sr-only">
+                {copy.addCompany} {asset.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {peers.length === 0 ? (
+        <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+          {copy.empty}
+        </p>
+      ) : (
+        <>
+          {peerAverage != null && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary/[0.07] px-3 py-2 text-sm">
+              <span className="font-medium text-muted-foreground">{copy.average}</span>
+              <strong className="tabular-nums text-primary">
+                {new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(peerAverage)}×
+              </strong>
+            </div>
+          )}
+          {max > 0 ? (
+            <div className="mt-3 space-y-3">
+              {rows.map((row, index) => (
+                <div
+                  key={row.symbol}
+                  className="grid grid-cols-[minmax(90px,1fr)_2fr_auto] items-center gap-3"
+                >
+                  <div className="min-w-0">
+                    <p
+                      className={`truncate text-sm font-semibold ${row.current ? "text-primary" : ""}`}
+                    >
+                      {row.symbol}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground">{row.name}</p>
+                  </div>
+                  <div className="relative h-8 overflow-hidden rounded-r-md bg-secondary/60">
+                    {peerAverage != null && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-0 z-10 border-l border-dashed border-foreground/60"
+                        style={{ left: `${(peerAverage / max) * 100}%` }}
+                      />
+                    )}
+                    {row.value != null && row.value > 0 && (
+                      <div
+                        className={`flex h-full min-w-1 items-center px-2 text-xs font-semibold text-primary-foreground ${
+                          row.current ? "bg-primary" : "bg-success"
+                        }`}
+                        style={{ width: `${Math.max(1, (row.value / max) * 100)}%` }}
+                      >
+                        {row.value > max * 0.2
+                          ? `${new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(row.value)}×`
+                          : ""}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-12 text-right text-sm font-semibold tabular-nums">
+                      {row.loading
+                        ? "…"
+                        : row.value != null && row.value > 0
+                          ? `${new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(row.value)}×`
+                          : "—"}
+                    </span>
+                    {!row.current && (
+                      <button
+                        type="button"
+                        aria-label={`${copy.remove} ${row.symbol}`}
+                        onClick={() =>
+                          setPeers((current) =>
+                            current.filter((peer) => peer.symbol !== row.symbol),
+                          )
+                        }
+                        className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">{copy.noData}</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function AnalystTargetChart({
+  closes,
+  loading,
+  unavailable,
+  currency,
+  locale,
+  currentPrice,
+  targetLow,
+  targetMean,
+  targetHigh,
+  labels,
+}: {
+  closes: { t: number; c: number }[];
+  loading: boolean;
+  unavailable: boolean;
+  currency: string | null;
+  locale: string;
+  currentPrice: number;
+  targetLow: number;
+  targetMean: number;
+  targetHigh: number;
+  labels: {
+    historical: string;
+    range: string;
+    mean: string;
+    loading: string;
+    unavailable: string;
+  };
+}) {
+  const data = closes.filter(
+    (point) => Number.isFinite(point.t) && Number.isFinite(point.c) && point.c > 0,
+  );
+  const validTargets =
+    Number.isFinite(targetLow) &&
+    Number.isFinite(targetMean) &&
+    Number.isFinite(targetHigh) &&
+    targetLow > 0 &&
+    targetLow <= targetMean &&
+    targetMean <= targetHigh;
+  const validCurrency = currency && /^[A-Za-z]{3}$/.test(currency);
+  const formatMoney = (value: number) =>
+    new Intl.NumberFormat(locale, {
+      ...(validCurrency ? { style: "currency" as const, currency: currency! } : {}),
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
+
+  if (loading) return <p className="mb-3 text-sm text-muted-foreground">{labels.loading}</p>;
+  if (unavailable || data.length < 2 || !validTargets)
+    return (
+      <p role="status" className="mb-3 text-sm text-muted-foreground">
+        {labels.unavailable}
+      </p>
+    );
+  const firstPoint = data[0];
+  const lastPoint = data.at(-1);
+  if (!firstPoint || !lastPoint)
+    return (
+      <p role="status" className="mb-3 text-sm text-muted-foreground">
+        {labels.unavailable}
+      </p>
+    );
+
+  const width = 760;
+  const height = 250;
+  const left = 78;
+  const right = 42;
+  const top = 24;
+  const bottom = 38;
+  const plotBottom = height - bottom;
+  const actualEnd = width - right - 130;
+  const targetX = width - right - 30;
+  const prices = [...data.map((point) => point.c), targetLow, targetHigh, currentPrice];
+  const rawMin = Math.min(...prices);
+  const rawMax = Math.max(...prices);
+  const padding = Math.max((rawMax - rawMin) * 0.1, rawMax * 0.03);
+  const min = Math.max(0, rawMin - padding);
+  const max = rawMax + padding;
+  const y = (value: number) => plotBottom - ((value - min) / (max - min || 1)) * (plotBottom - top);
+  const firstTime = firstPoint.t;
+  const lastTime = lastPoint.t;
+  const x = (time: number) =>
+    left + ((time - firstTime) / (lastTime - firstTime || 1)) * (actualEnd - left);
+  const line = data
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${x(point.t).toFixed(1)},${y(point.c).toFixed(1)}`,
+    )
+    .join(" ");
+  const area = `${line} L${actualEnd},${plotBottom} L${left},${plotBottom} Z`;
+  const bandTop = y(targetHigh);
+  const bandBottom = y(targetLow);
+  const bandHeight = Math.max(3, bandBottom - bandTop);
+  const targetDate = new Date(Date.now() + 365 * 86400000);
+  const dateLabel = (time: number) =>
+    new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(time));
+
+  return (
+    <div className="mb-4 overflow-x-auto rounded-xl border border-border/60 bg-background/50 p-2">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-[250px] min-w-[560px] w-full"
+        role="img"
+        aria-label={`${labels.historical}. ${labels.range}: ${formatMoney(targetLow)}–${formatMoney(targetHigh)}. ${labels.mean}: ${formatMoney(targetMean)}.`}
+      >
+        {[0, 1, 2, 3].map((step) => {
+          const value = min + ((max - min) * step) / 3;
+          const position = y(value);
+          return (
+            <g key={step}>
+              <line
+                x1={left}
+                x2={width - right}
+                y1={position}
+                y2={position}
+                stroke="var(--border)"
+                strokeDasharray="3 5"
+              />
+              <text
+                x={left - 8}
+                y={position + 4}
+                textAnchor="end"
+                fill="var(--muted-foreground)"
+                fontSize="10"
+              >
+                {formatMoney(value)}
+              </text>
+            </g>
+          );
+        })}
+        <path d={area} fill="var(--chart-5)" fillOpacity="0.13" />
+        <path
+          d={line}
+          fill="none"
+          stroke="var(--chart-5)"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <circle
+          cx={actualEnd}
+          cy={y(lastPoint.c)}
+          r="4"
+          fill="var(--chart-5)"
+          stroke="var(--background)"
+          strokeWidth="2"
+        />
+        <line
+          x1={targetX}
+          x2={targetX}
+          y1={bandTop}
+          y2={bandBottom}
+          stroke="var(--primary)"
+          strokeWidth="2"
+        />
+        <rect
+          x={targetX - 18}
+          y={bandTop}
+          width="36"
+          height={bandHeight}
+          rx="6"
+          fill="var(--primary)"
+          fillOpacity="0.22"
+          stroke="var(--primary)"
+          strokeOpacity="0.65"
+        />
+        <line
+          x1={targetX - 10}
+          x2={targetX + 10}
+          y1={y(targetMean)}
+          y2={y(targetMean)}
+          stroke="var(--primary)"
+          strokeWidth="3"
+        />
+        <circle
+          cx={targetX}
+          cy={y(targetMean)}
+          r="4"
+          fill="var(--primary)"
+          stroke="var(--background)"
+          strokeWidth="2"
+        />
+        <line
+          x1={actualEnd + 8}
+          x2={targetX - 22}
+          y1={plotBottom}
+          y2={plotBottom}
+          stroke="var(--muted-foreground)"
+          strokeDasharray="3 5"
+        />
+        <text x={left} y={height - 10} fill="var(--muted-foreground)" fontSize="10">
+          {dateLabel(firstTime)}
+        </text>
+        <text
+          x={actualEnd}
+          y={height - 10}
+          textAnchor="middle"
+          fill="var(--muted-foreground)"
+          fontSize="10"
+        >
+          {dateLabel(lastTime)}
+        </text>
+        <text
+          x={targetX}
+          y={height - 10}
+          textAnchor="middle"
+          fill="var(--muted-foreground)"
+          fontSize="10"
+        >
+          {dateLabel(targetDate.getTime())}
+        </text>
+        <text
+          x={targetX}
+          y={Math.max(top + 10, bandTop - 8)}
+          textAnchor="middle"
+          fill="var(--primary)"
+          fontSize="10"
+          fontWeight="600"
+        >
+          {formatMoney(targetLow)}–{formatMoney(targetHigh)}
+        </text>
+      </svg>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 pb-1 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-[var(--chart-5)]" />
+          {labels.historical}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-primary" />
+          {labels.range} · {labels.mean}: {formatMoney(targetMean)}
+        </span>
+      </div>
     </div>
   );
 }
