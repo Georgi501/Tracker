@@ -7,7 +7,7 @@ interface Slice {
   value: number;
 }
 
-const COLORS = ["#34d399", "#60a5fa", "#fbbf24", "#f472b6", "#a78bfa", "#fb923c", "#94a3b8"];
+const COLORS = ["#818cf8", "#fbbf24", "#f472b6", "#2dd4bf", "#60a5fa", "#fb923c", "#94a3b8"];
 
 const COPY = {
   en: {
@@ -61,7 +61,7 @@ function render(slices: Slice[], copy: (typeof COPY)[keyof typeof COPY]) {
     ctx.font = "700 28px system-ui, sans-serif";
     ctx.fillText(`${share.toFixed(share < 10 ? 1 : 0)}%`, 990, y + 30);
   });
-  ctx.fillStyle = "#34d399";
+  ctx.fillStyle = "#818cf8";
   ctx.font = "700 30px system-ui, sans-serif";
   ctx.fillText("CapiSpot", 60, 590);
   ctx.fillStyle = "#94a3b8";
