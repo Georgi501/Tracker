@@ -261,6 +261,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: canonicalUrl(matches.at(-1)?.pathname),
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+      { rel: "icon", href: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
