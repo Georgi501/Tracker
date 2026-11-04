@@ -581,6 +581,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
+            <button
+              type="button"
+              onClick={() => p.toggleTheme()}
+              aria-label={p.t("toggleTheme")}
+              title={p.t("toggleTheme")}
+              className="press grid size-9 place-items-center rounded-full border border-border bg-secondary/60 text-foreground               hover:bg-secondary"
+            >
+              {p.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
             <DropdownMenu
               modal={false}
               open={activeMenu === "settings"}

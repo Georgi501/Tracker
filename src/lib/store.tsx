@@ -200,7 +200,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       if (s) {
         if (isLang(s.lang)) setLangS(s.lang);
         if (s.currency in FX) setCurrencyS(s.currency);
-        if (s.theme) setTheme(s.theme);
+        if (s.theme === "light" || s.theme === "dark") setTheme(s.theme);
+        else if (window.matchMedia?.("(prefers-color-scheme: light)").matches) setTheme("light");
+      } else if (window.matchMedia?.("(prefers-color-scheme: light)").matches) {
+        setTheme("light");
       }
     } catch {
       /* ignore */
