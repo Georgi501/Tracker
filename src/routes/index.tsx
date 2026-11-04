@@ -891,7 +891,7 @@ function Dashboard() {
                 !performanceSeries.length ? (
                   <div className="py-8 text-sm text-muted-foreground">
                     <HistoryChartStatus
-                      fetching={history.isFetching}
+                      fetching={history.isFetching && !history.data}
                       error={history.isError}
                       noData={
                         history.data?.unavailable
@@ -965,7 +965,7 @@ function Dashboard() {
               ) : !series.length ? (
                 <div className="py-8 text-sm text-muted-foreground">
                   <HistoryChartStatus
-                    fetching={history.isFetching}
+                    fetching={history.isFetching && !history.data}
                     error={history.isError}
                     noData={
                       history.data?.unavailable
@@ -1200,13 +1200,13 @@ function Dashboard() {
           <div className="order-3 lg:contents">
             <MonthlyOverview
               data={history.data}
-              isLoading={history.isFetching}
+              isLoading={history.isLoading}
               isError={history.isError}
               onRetry={() => void history.refetch()}
             />
           </div>
           <div className="order-3 lg:contents">
-            <PortfolioContributors data={history.data} isLoading={history.isFetching} />
+            <PortfolioContributors data={history.data} isLoading={history.isLoading} />
           </div>
           <div className="order-3 lg:contents">
             <PortfolioHealth />

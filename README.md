@@ -27,6 +27,8 @@ The app uses Supabase Auth directly for email/password and OAuth sign-in, OpenAI
 
 Configure Supabase OAuth providers and redirect URLs in the Supabase dashboard. Confirm that you own or control the current Supabase project before changing it; this code change does not move user accounts, portfolio rows, or avatar files.
 
+Keep email confirmations enabled for email/password sign-ups. The local Supabase setting is `auth.email.enable_confirmations = true` in `supabase/config.toml`; verify **Authentication → Sign In / Providers → Email → Confirm email** is enabled separately in the hosted Supabase project.
+
 Copy `.env.example` to `.env` for public build-time values, and `.dev.vars.example` to `.dev.vars` for local server secrets. Never commit populated env files. Set the same values as Worker secrets or variables in Cloudflare:
 
 - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`

@@ -48,9 +48,8 @@
 - [x] Pro shareable snapshot (percentages only)
 - [ ] ETF look-through (country/sector/holdings overlap) — needs a reliable ETF holdings data source
 - [x] Header in AlphaSpread navy-charcoal with modern hover/active interactions
-- [ ] Legal pages (Terms, Privacy, Refund 30 days, Disclaimer) + footer with support email — blocked on Georgi: support email + final site name
 - [x] Dark footer + Terms, Privacy, Refund (30 days), Financial Disclaimer pages
 - [x] Pro head-to-head asset comparison (/compare)
-- [ ] Support email in footer/legal pages — waiting for Georgi (remind him)
-- [ ] Final brand name — waiting for Georgi
+- [ ] Verify that support@capispot.com is monitored
+- [x] Final brand and domain: Capispot (capispot.com)
 - [ ] One-click sample portfolio — skipped: conflicts with real-data-only rule

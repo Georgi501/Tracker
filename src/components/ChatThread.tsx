@@ -192,7 +192,13 @@ export function ChatThread({ me, other, lang }: { me: string; other: string; lan
 
   useEffect(() => {
     const el = scroller.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: loaded ? "smooth" : "auto" });
+    if (el) {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: loaded && !reduceMotion ? "smooth" : "auto",
+      });
+    }
   }, [msgs.length, loaded]);
 
   useEffect(() => {
