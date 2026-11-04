@@ -306,8 +306,11 @@ nav a {
   color: transparent;
 }
 .brand-wordmark .b2 {
-  background-image: linear-gradient(100deg, var(--violet), var(--primary));
+  background-image: linear-gradient(100deg, var(--violet), oklch(0.52 0.14 163));
   color: transparent;
+}
+.dark .brand-wordmark .b2 {
+  background-image: linear-gradient(100deg, var(--violet), oklch(0.76 0.13 164));
 }
 .dark .brand-wordmark {
   filter: drop-shadow(0 0 10px color-mix(in oklab, var(--blossom) 35%, transparent));
