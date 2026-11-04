@@ -564,7 +564,7 @@ main select {
   --secondary: oklch(1 0 0 / 10%);
   --border: var(--chrome-border);
   --primary: oklch(0.74 0.12 265);
-  --primary-foreground: oklch(0.99 0 0);
+  --primary-foreground: oklch(0.16 0.03 265);
   color: var(--foreground);
   border-bottom: 1px solid var(--chrome-border);
   box-shadow: 0 6px 20px -12px oklch(0.04 0.02 255 / 85%);
@@ -1100,5 +1100,67 @@ main label:has(:focus-visible) {
 @media (prefers-reduced-motion: no-preference) {
   .chat-bubble-in {
     animation: chat-bubble-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+/* Modern polish: gradient actions, light-catching cards, :has() focus, scroll-driven progress */
+header .bg-primary:not(.bg-brand-gradient) {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--primary) 100%, white 8%),
+    color-mix(in oklab, var(--primary) 78%, var(--violet))
+  );
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 22%),
+    0 8px 20px -10px color-mix(in oklab, var(--primary) 75%, transparent);
+}
+main .card-interactive,
+main [class*="rounded-2xl"][class*="border"][class*="bg-card"] {
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 7%, transparent),
+    var(--shadow-card);
+}
+.dark main .card-interactive:not(.dashboard-primary-card) {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, white 2.5%, transparent),
+    transparent 45%
+  );
+}
+.card-interactive:has(:focus-visible) {
+  outline: 2px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  outline-offset: 2px;
+}
+main :is(h1, h2, h3) {
+  letter-spacing: -0.02em;
+}
+@supports (animation-timeline: scroll()) {
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 2px;
+    z-index: 70;
+    pointer-events: none;
+    background: var(--gradient-brand);
+    transform-origin: 0 50%;
+    scale: 0 1;
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root);
+  }
+  @keyframes scroll-progress {
+    to {
+      scale: 1 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::after {
+      display: none;
+    }
+  }
+}
+@media print {
+  body::after {
+    display: none;
   }
 }
