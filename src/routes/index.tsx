@@ -663,6 +663,9 @@ function Dashboard() {
         : Number.NaN,
     [series],
   );
+  const valueTrend = Number.isFinite(chg) && chg < 0 ? "var(--destructive)" : "var(--success)";
+  const performanceTrend =
+    (performanceSeries.at(-1)?.v ?? 0) < 0 ? "var(--destructive)" : "var(--success)";
   const locale = languageLocale(p.lang);
   const dashboardCopy = DASHBOARD_COPY[p.lang];
   const largestHolding = useMemo(
@@ -940,7 +943,7 @@ function Dashboard() {
                         type="linear"
                         dataKey="v"
                         name={c.portfolio}
-                        stroke="var(--primary)"
+                        stroke={performanceTrend}
                         strokeWidth={2.5}
                         dot={false}
                         isAnimationActive={false}
@@ -981,8 +984,8 @@ function Dashboard() {
                   <AreaChart data={series.map((d) => ({ t: d.t, v: d.v }))}>
                     <defs>
                       <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                        <stop offset="0%" stopColor={valueTrend} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={valueTrend} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -1017,8 +1020,8 @@ function Dashboard() {
                     <Area
                       type="monotone"
                       dataKey="v"
-                      stroke="var(--primary)"
-                      strokeWidth={2.5}
+                      stroke={valueTrend}
+                      strokeWidth={2.25}
                       fill="url(#g)"
                     />
                   </AreaChart>
@@ -1027,7 +1030,10 @@ function Dashboard() {
               {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
                 <div className="absolute left-11 right-0 top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] leading-tight sm:gap-x-4 sm:text-xs">
                   <span className="flex items-center gap-1.5">
-                    <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+                    <span
+                      className="size-1.5 shrink-0 rounded-full"
+                      style={{ background: performanceTrend }}
+                    />
                     {c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b>
                   </span>
                   <span className="flex items-center gap-1.5">

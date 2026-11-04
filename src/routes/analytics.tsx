@@ -242,6 +242,8 @@ function Analytics() {
       ]
     : [];
   const currentReturn = range ? rangeReturn(history, range) : null;
+  const trendColor =
+    currentReturn !== null && currentReturn < 0 ? "var(--destructive)" : "var(--success)";
   const previousReturn = range ? rangeReturn(history, previousRange(range)) : null;
   const activeHistory = range
     ? history.filter((point) => point.t >= range.start && point.t < range.end)
@@ -671,8 +673,8 @@ function Analytics() {
               >
                 <defs>
                   <linearGradient id={`${gradientId}-portfolio-fill`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.24} />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.015} />
+                    <stop offset="0%" stopColor={trendColor} stopOpacity={0.24} />
+                    <stop offset="100%" stopColor={trendColor} stopOpacity={0.015} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -722,7 +724,7 @@ function Analytics() {
                   type="monotone"
                   dataKey="current"
                   name={c.portfolioReturn}
-                  stroke="var(--primary)"
+                  stroke={trendColor}
                   strokeWidth={2.5}
                   fill={`url(#${gradientId}-portfolio-fill)`}
                   baseValue={0}
@@ -730,7 +732,7 @@ function Analytics() {
                   dot={false}
                   activeDot={{
                     r: 4,
-                    fill: "var(--primary)",
+                    fill: trendColor,
                     stroke: "var(--card)",
                     strokeWidth: 2,
                   }}
@@ -1023,7 +1025,7 @@ function Analytics() {
                       type="monotone"
                       dataKey="portfolio"
                       name={c.portfolioReturn}
-                      stroke="var(--primary)"
+                      stroke={trendColor}
                       dot={false}
                       strokeWidth={2}
                     />

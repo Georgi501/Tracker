@@ -520,7 +520,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               !p.authError &&
               (!p.user || p.accessReady) &&
               (p.isPro ? (
-                <span className="hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground md:inline">
+                <span className="hidden rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold tracking-wider text-primary ring-1 ring-inset ring-primary/30 md:inline">
                   PRO
                 </span>
               ) : p.user ? (
@@ -639,7 +639,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuTrigger asChild>
                   <button
                     aria-label={p.displayName || p.user.email || "account"}
-                    className="press relative ml-1 grid size-9 place-items-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-foreground"
+                    className="press relative ml-1 grid size-9 place-items-center overflow-hidden rounded-full bg-primary/15 text-sm font-bold text-primary ring-1 ring-inset ring-primary/30 hover:bg-primary/25"
                   >
                     {ownAvatar ? (
                       <img src={ownAvatar} alt="" className="size-9 object-cover" />
