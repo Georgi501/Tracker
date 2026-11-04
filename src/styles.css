@@ -219,11 +219,9 @@
 /* Interactive polish */
 @keyframes page-enter {
   from {
-    opacity: 0;
     transform: translateY(8px);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -333,31 +331,6 @@ nav a {
   min-height: 44px;
 }
 
-/* Smooth cross-fade between pages (View Transitions API) */
-@keyframes vt-out {
-  to {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-}
-@keyframes vt-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-::view-transition-old(root) {
-  animation: 0.18s ease both vt-out;
-}
-::view-transition-new(root) {
-  animation: 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both vt-in;
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none;
-  }
-}
 @utility bg-brand-gradient {
   background-image: var(--gradient-brand);
 }
