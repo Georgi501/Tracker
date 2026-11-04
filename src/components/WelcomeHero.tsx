@@ -291,7 +291,7 @@ export function WelcomeHero() {
             </Link>
           </p>
         </div>
-        <figure className="min-w-0">
+        <figure className="hero-shot min-w-0">
           <img
             src="/hero-portfolio.png"
             alt=""

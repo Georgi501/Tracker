@@ -458,11 +458,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [p.user]);
   return (
     <div className="min-h-screen">
-      {isCreemTestMode() && (
-        <div className="topband px-4 py-1.5 text-center text-xs">
-          {paymentsCopy[p.lang].testBanner}
-        </div>
-      )}
+      {isCreemTestMode() &&
+        (pathname.startsWith("/pricing") || pathname.startsWith("/account")) && (
+          <div className="topband px-4 py-1.5 text-center text-xs">
+            {paymentsCopy[p.lang].testBanner}
+          </div>
+        )}
       <header className="header-as sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
@@ -517,7 +518,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <HeaderSearch />
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <CommandMenu onAddTx={openTransactionDialog} />
+            {p.user && <CommandMenu onAddTx={openTransactionDialog} />}
             {p.authReady &&
               !p.authError &&
               (!p.user || p.accessReady) &&
@@ -533,25 +534,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   {shellCopy.upgrade}
                 </Link>
-              ) : (
-                <Link
-                  to="/pricing"
-                  className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
-                >
-                  {shellCopy.plans}
-                </Link>
-              ))}
-            <button
-              onClick={() => {
-                if (p.user) openTransactionDialog();
-                else navigate({ to: "/auth" });
-              }}
-              aria-label={p.t("addTx")}
-              title={p.t("addTx")}
-              className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid"
-            >
-              <Plus size={17} />
-            </button>
+              ) : null)}
+            {p.user && (
+              <button
+                onClick={openTransactionDialog}
+                aria-label={p.t("addTx")}
+                title={p.t("addTx")}
+                className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid"
+              >
+                <Plus size={17} />
+              </button>
+            )}
             <DropdownMenu
               modal={false}
               open={activeMenu === "language"}
@@ -1007,20 +1000,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         data-hidden={navHidden}
         className="mobile-bottom-nav glass-bar fixed inset-x-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
-        {(
-          p.user
-            ? ([
-                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-                { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
-              ] as const)
-            : ([
-                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-                {
-                  to: "/demo",
-                  label: p.lang === "bg" ? "Пример" : "Sample",
-                  Icon: Wallet,
-                },
-              ] as const)
+        {(p.user
+          ? ([
+              { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+              { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
+            ] as const)
+          : ([
+              { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+              {
+                to: "/demo",
+                label: p.lang === "bg" ? "Пример" : "Sample",
+                Icon: Wallet,
+              },
+            ] as const)
         ).map(({ to, label, Icon }) => (
           <Link
             key={to}

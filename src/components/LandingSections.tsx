@@ -76,7 +76,7 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Full company analysis",
-        body: "Explore full company profiles for 2 companies per calendar week with a free account. Each includes that company's DCF calculator in the same view, with no extra view used. The standalone DCF tool is Pro.",
+        body: "Full company profiles for 2 companies per week, DCF calculator included. The standalone DCF tool is Pro.",
         href: "/pricing",
         link: "Compare plans",
       },
@@ -145,7 +145,7 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Пълен анализ на компании",
-        body: "С безплатен профил разглеждай пълни профили на 2 компании за календарна седмица. DCF калкулаторът за компанията е в същия преглед и не изразходва отделен преглед. Самостоятелният DCF инструмент е Pro.",
+        body: "Пълни профили на 2 компании седмично, с DCF калкулатор в същия преглед. Самостоятелният DCF инструмент е Pro.",
         href: "/pricing",
         link: "Сравни плановете",
       },
@@ -214,7 +214,7 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Vollständige Unternehmensanalysen",
-        body: "Mit einem kostenlosen Konto kannst du vollständige Unternehmensprofile für 2 Unternehmen pro Kalenderwoche ansehen. Der DCF-Rechner für das jeweilige Unternehmen ist in derselben Ansicht enthalten und verbraucht keinen zusätzlichen Aufruf. Der eigenständige DCF-Rechner ist Pro.",
+        body: "Vollständige Profile für 2 Unternehmen pro Woche, DCF-Rechner inklusive. Der eigenständige DCF-Rechner ist Pro.",
         href: "/pricing",
         link: "Tarife vergleichen",
       },
@@ -286,7 +286,7 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Análisis completos de empresas",
-        body: "Con una cuenta gratuita, consulta perfiles completos de 2 empresas por semana natural. La calculadora DCF de cada empresa está incluida en esa misma vista y no consume otra. La herramienta DCF independiente es Pro.",
+        body: "Perfiles completos de 2 empresas por semana, con calculadora DCF incluida. La herramienta DCF independiente es Pro.",
         href: "/pricing",
         link: "Comparar planes",
       },
@@ -359,7 +359,7 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Analisi aziendali complete",
-        body: "Con un account gratuito, consulta profili completi di 2 aziende a settimana. Il calcolatore DCF della singola azienda è incluso nella stessa visita e non ne consuma un'altra. Lo strumento DCF autonomo è Pro.",
+        body: "Profili completi di 2 aziende a settimana, con calcolatore DCF incluso. Lo strumento DCF autonomo è Pro.",
         href: "/pricing",
         link: "Confronta i piani",
       },
@@ -404,8 +404,8 @@ export function LandingSteps() {
           const Icon = STEP_ICONS[index] ?? Target;
           return (
             <li key={step.title}>
-              <Card className="flex h-full items-start gap-3 p-3.5 sm:p-4">
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <div className="flex h-full items-start gap-3 px-1 py-2 sm:px-2">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30">
                   <Icon size={18} aria-hidden />
                 </span>
                 <div className="min-w-0">
@@ -417,7 +417,7 @@ export function LandingSteps() {
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
                 </div>
-              </Card>
+              </div>
             </li>
           );
         })}
@@ -437,7 +437,10 @@ export function LandingSections() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {c.features.map((feature) => (
-            <Card key={feature.title} className="border-border/60 bg-card/60 p-4 sm:p-5">
+            <Card
+              key={feature.title}
+              className="border-border/60 bg-card/60 p-4 sm:p-5 sm:[&:last-child:nth-child(odd)]:col-span-2"
+            >
               <h3 className="font-display font-semibold">{feature.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
               <Link

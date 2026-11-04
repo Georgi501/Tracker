@@ -127,7 +127,7 @@
   --secondary: oklch(0.225 0.026 253);
   --secondary-foreground: oklch(0.94 0.012 85);
   --muted: oklch(0.205 0.024 253);
-  --muted-foreground: oklch(0.74 0.02 250);
+  --muted-foreground: oklch(0.8 0.02 250);
   --accent: oklch(0.29 0.06 265);
   --accent-foreground: oklch(0.92 0.035 265);
   --destructive: oklch(0.74 0.14 28);
@@ -1002,6 +1002,11 @@ main textarea {
   max-height: 24rem;
 }
 @media (prefers-reduced-motion: no-preference) {
+  .hero-shot {
+    animation:
+      rise 0.7s ease-out both,
+      hero-float 7s ease-in-out 0.8s infinite;
+  }
   html {
     scroll-behavior: smooth;
   }
@@ -1021,6 +1026,11 @@ main textarea {
   }
   details[open]::details-content {
     block-size: auto;
+  }
+}
+@keyframes hero-float {
+  50% {
+    translate: 0 -6px;
   }
 }
 @keyframes scroll-reveal {
