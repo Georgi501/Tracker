@@ -34,7 +34,7 @@ type LandingCopy = {
 const COPY: Record<Lang, LandingCopy> = {
   en: {
     stepsTitle: "Get started in three steps",
-    stepsIntro: "A simple way to bring your investments into one clear view.",
+    stepsIntro: "Broker CSV imports are free—bring your investments into one clear view.",
     steps: [
       { title: "Add your activity", body: "Import a broker CSV or record a transaction manually." },
       {
@@ -103,7 +103,7 @@ const COPY: Record<Lang, LandingCopy> = {
   },
   bg: {
     stepsTitle: "Започни в три стъпки",
-    stepsIntro: "Лесен начин да събереш инвестициите си на едно ясно място.",
+    stepsIntro: "Импортът на CSV от брокер е безплатен — събери инвестициите си на едно място.",
     steps: [
       { title: "Добави сделките си", body: "Импортирай CSV от брокер или въведи сделка ръчно." },
       {
@@ -172,7 +172,7 @@ const COPY: Record<Lang, LandingCopy> = {
   },
   de: {
     stepsTitle: "In drei Schritten starten",
-    stepsIntro: "Ein einfacher Weg, deine Anlagen übersichtlich zusammenzuführen.",
+    stepsIntro: "Broker-CSV-Importe sind kostenlos – bringe deine Anlagen übersichtlich zusammen.",
     steps: [
       {
         title: "Aktivitäten hinzufügen",
@@ -241,7 +241,7 @@ const COPY: Record<Lang, LandingCopy> = {
   },
   es: {
     stepsTitle: "Empieza en tres pasos",
-    stepsIntro: "Una forma sencilla de reunir tus inversiones en una vista clara.",
+    stepsIntro: "Importar CSV de un bróker es gratis: reúne tus inversiones en una vista clara.",
     steps: [
       {
         title: "Añade tu actividad",
@@ -313,7 +313,8 @@ const COPY: Record<Lang, LandingCopy> = {
   },
   it: {
     stepsTitle: "Inizia in tre passaggi",
-    stepsIntro: "Un modo semplice per riunire i tuoi investimenti in una vista chiara.",
+    stepsIntro:
+      "Importare un CSV del broker è gratis: riunisci i tuoi investimenti in una vista chiara.",
     steps: [
       {
         title: "Aggiungi le attività",
@@ -387,45 +388,49 @@ const COPY: Record<Lang, LandingCopy> = {
 
 const STEP_ICONS = [FileSpreadsheet, ChartNoAxesCombined, Target];
 
+export function LandingSteps() {
+  const { lang } = usePortfolio();
+  const c = COPY[lang];
+  return (
+    <section aria-labelledby="landing-steps" className="space-y-2 lg:col-span-3">
+      <div className="text-center">
+        <h2 id="landing-steps" className="font-display text-2xl font-bold">
+          {c.stepsTitle}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
+      </div>
+      <ol className="grid gap-2.5 md:grid-cols-3">
+        {c.steps.map((step, index) => {
+          const Icon = STEP_ICONS[index] ?? Target;
+          return (
+            <li key={step.title}>
+              <Card className="flex h-full items-start gap-3 p-3.5 sm:p-4">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Icon size={18} aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="font-display text-sm font-semibold">{step.title}</h3>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
+                </div>
+              </Card>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export function LandingSections() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
   return (
     <div className="space-y-8 lg:col-span-3">
-      <section aria-labelledby="landing-steps" className="space-y-2">
-        <div className="text-center">
-          <h2 id="landing-steps" className="font-display text-2xl font-bold">
-            {c.stepsTitle}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
-        </div>
-        <ol className="grid gap-2.5 md:grid-cols-3">
-          {c.steps.map((step, index) => {
-            const Icon = STEP_ICONS[index] ?? Target;
-            return (
-              <li key={step.title}>
-                <Card className="flex h-full items-start gap-3 p-3.5 sm:p-4">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                    <Icon size={18} aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-x-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {String(index + 1).padStart(2, "0")}
-                      </p>
-                      <h3 className="font-display text-sm font-semibold">{step.title}</h3>
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {step.body}
-                    </p>
-                  </div>
-                </Card>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-
       <section aria-labelledby="landing-features" className="space-y-3">
         <h2 id="landing-features" className="font-display text-center text-2xl font-bold">
           {c.featuresTitle}

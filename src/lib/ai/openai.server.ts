@@ -10,3 +10,11 @@ export function getOpenAIModel() {
   if (baseURL) return createOpenAI({ apiKey, baseURL }).chat(model);
   return createOpenAI({ apiKey }).responses(model);
 }
+
+// Reasoning/store options are OpenAI-only; compatible providers reject them with HTTP 400.
+export function getOpenAIProviderOptions() {
+  if (process.env["OPENAI_BASE_URL"]) return {};
+  return {
+    openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false },
+  };
+}

@@ -133,7 +133,7 @@ export const Route = createFileRoute("/api/advisor")({
           return new Response("Portfolio unavailable", { status: 503 });
         }
 
-        const { getOpenAIModel } = await import("@/lib/ai/openai.server");
+        const { getOpenAIModel, getOpenAIProviderOptions } = await import("@/lib/ai/openai.server");
         const model = getOpenAIModel();
         if (!model) return new Response("AI is not configured", { status: 500 });
         const { streamText } = await import("ai");
@@ -142,15 +142,13 @@ export const Route = createFileRoute("/api/advisor")({
           system: `${INSTRUCTIONS}\n\nPORTFOLIO DATA (JSON):\n${context}`,
           messages: await convertToModelMessages(messages),
           abortSignal: request.signal,
-          providerOptions: {
-            openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false },
-          },
+          providerOptions: getOpenAIProviderOptions(),
         });
         const response = result.toUIMessageStreamResponse({
           originalMessages: messages,
           sendReasoning: true,
           onError: (e) => {
-            console.error("advisor error", e);
+            console.error("advisor error", e, (e as { responseBody?: string })?.responseBody);
             const s = (e as { statusCode?: number })?.statusCode;
             return s === 402
               ? "AI credits are exhausted."

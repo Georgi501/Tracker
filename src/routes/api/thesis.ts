@@ -93,7 +93,7 @@ export const Route = createFileRoute("/api/thesis")({
           asOf: new Date().toISOString().slice(0, 10),
         };
 
-        const { getOpenAIModel } = await import("@/lib/ai/openai.server");
+        const { getOpenAIModel, getOpenAIProviderOptions } = await import("@/lib/ai/openai.server");
         const model = getOpenAIModel();
         if (!model) return new Response("AI is not configured", { status: 500 });
         const { streamText } = await import("ai");
@@ -110,9 +110,7 @@ COMPANY DATA (JSON):
 ${JSON.stringify(facts)}`,
           prompt: `My investment thesis for ${facts.symbol}:\n${thesis}`,
           abortSignal: request.signal,
-          providerOptions: {
-            openai: { reasoningEffort: "medium", reasoningSummary: "auto", store: false },
-          },
+          providerOptions: getOpenAIProviderOptions(),
         });
         return result.toTextStreamResponse();
       },

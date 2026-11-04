@@ -40,7 +40,7 @@ import { CompanyLogo } from "@/components/CompanyLogo";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { MarketTicker } from "@/components/MarketTicker";
-import { LandingSections } from "@/components/LandingSections";
+import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioIrr, type Transaction } from "@/lib/portfolio";
@@ -698,6 +698,7 @@ function Dashboard() {
       <div className="lg:col-span-3">
         <WelcomeHero />
       </div>
+      {!p.user && <LandingSteps />}
       {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
       <MarketTicker />
       {!p.user && <LandingSections />}
