@@ -11,7 +11,6 @@ import { useState } from "react";
 import {
   BROKER_FORMATS,
   GENERIC_TEMPLATE,
-  brokerLimit,
   detectFeeColumns,
   parseBrokerCsv,
   detectBrokerFormat,
@@ -206,8 +205,6 @@ function Brokers() {
   const [preview, setPreview] = useState<StagedImport | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const limit = brokerLimit(p.isPro);
-  const full = p.brokers.length >= limit;
 
   if (!p.user)
     return (
@@ -230,7 +227,7 @@ function Brokers() {
       .from("brokers")
       .insert({ name: n ? `${label} ${n + 1}` : label, format });
     if (error) {
-      toast.error(error.message.includes("BROKER_LIMIT") ? p.t("limitReached") : error.message);
+      toast.error(error.message);
       return;
     }
     await p.reload();
@@ -368,9 +365,7 @@ function Brokers() {
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h1 className="font-display text-2xl font-bold">{p.t("brokers")}</h1>
-        <span className="text-sm text-muted-foreground">
-          {p.brokers.length} / {limit} · {p.isPro ? p.t("pro") : p.t("free")}
-        </span>
+        <span className="text-sm text-muted-foreground">{p.isPro ? p.t("pro") : p.t("free")}</span>
       </div>
       {importResult && (
         <ImportResultCard
@@ -456,19 +451,6 @@ function Brokers() {
           onConfirm={() => void confirmImport()}
         />
       )}
-      {full && (
-        <Card className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm">{p.t("limitReached")}</span>
-          {!p.isPro && (
-            <Link
-              to="/pricing"
-              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-            >
-              {p.t("upgrade")}
-            </Link>
-          )}
-        </Card>
-      )}
       <div>
         <h2 className="mb-3 font-display text-lg font-semibold">{p.t("addBroker")}</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -476,9 +458,8 @@ function Brokers() {
             <button
               key={f.id}
               type="button"
-              disabled={full}
               onClick={() => void add(f.id)}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 font-display font-bold text-primary">
                 {f.label.slice(0, 2).toUpperCase()}

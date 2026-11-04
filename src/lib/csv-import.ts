@@ -499,8 +499,6 @@ export function detectFeeColumns(format: BrokerFormat, text: string): string[] {
   ];
 }
 
-export const brokerLimit = (isPro: boolean) => (isPro ? 5 : 1);
-
 export function detectBrokerFormat(text: string): BrokerFormat | null {
   const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));
   if (rows.some((r) => r[0] === "Trades" && r[1] === "Header")) return "ibkr";

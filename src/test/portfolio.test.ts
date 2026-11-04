@@ -201,9 +201,3 @@ describe("money-weighted return", () => {
     expect(portfolioIrr([], Number.NaN)).toBeNull();
   });
 });
-
-import { brokerLimit } from "@/lib/csv-import";
-describe("plan limits", () => {
-  it("free allows 1 broker", () => expect(brokerLimit(false)).toBe(1));
-  it("pro allows 5 brokers", () => expect(brokerLimit(true)).toBe(5));
-});

@@ -33,8 +33,8 @@ const en: PlanCopy = {
   groups: [
     {
       title: "Brokers & import",
-      free: "1 broker, CSV import",
-      pro: "Up to 5 brokers, direct IBKR & Trading 212 sync, import preview & duplicate checks",
+      free: "Unlimited brokers via CSV import",
+      pro: "Direct read-only IBKR & Trading 212 sync, import preview & duplicate checks",
     },
     {
       title: "Portfolio",
@@ -107,8 +107,8 @@ const bg: PlanCopy = {
   groups: [
     {
       title: "Брокери и импорт",
-      free: "1 брокер, CSV импорт",
-      pro: "До 5 брокера, директна връзка с IBKR и Trading 212, преглед и проверка за дубликати",
+      free: "Неограничен брой брокери чрез CSV импорт",
+      pro: "Директна връзка с IBKR и Trading 212 само за четене, преглед и проверка за дубликати",
     },
     {
       title: "Портфолио",
@@ -182,8 +182,8 @@ const de: PlanCopy = {
   groups: [
     {
       title: "Broker & Import",
-      free: "1 Broker, CSV-Import",
-      pro: "Bis zu 5 Broker, direkte IBKR- und Trading-212-Synchronisierung, Importvorschau & Duplikatprüfung",
+      free: "Unbegrenzt viele Broker per CSV-Import",
+      pro: "Direkte, schreibgeschützte IBKR- und Trading-212-Synchronisierung, Importvorschau & Duplikatprüfung",
     },
     {
       title: "Portfolio",
@@ -258,8 +258,8 @@ const es: PlanCopy = {
   groups: [
     {
       title: "Brókers e importación",
-      free: "1 bróker, importación CSV",
-      pro: "Hasta 5 brókers, sincronización directa con IBKR y Trading 212, vista previa y control de duplicados",
+      free: "Brókeres ilimitados mediante importación CSV",
+      pro: "Sincronización directa de solo lectura con IBKR y Trading 212, vista previa y control de duplicados",
     },
     {
       title: "Cartera",
@@ -334,8 +334,8 @@ const it: PlanCopy = {
   groups: [
     {
       title: "Broker e import",
-      free: "1 broker, import CSV",
-      pro: "Fino a 5 broker, sincronizzazione diretta IBKR e Trading 212, anteprima e controllo duplicati",
+      free: "Broker illimitati tramite importazione CSV",
+      pro: "Sincronizzazione diretta di sola lettura con IBKR e Trading 212, anteprima e controllo duplicati",
     },
     { title: "Portafoglio", free: "Patrimonio, P&L, posizioni, prezzi live", pro: "Tutto di Free" },
     {

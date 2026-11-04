@@ -26,8 +26,6 @@ const en = {
   communityTitle: "Investor community",
   communityDesc:
     "A profile with a photo, member connections, portfolio allocation sharing, and private chat are included with Pro.",
-  brokers: "Up to 5 brokers",
-  brokersDesc: "Manage up to 5 broker accounts and import CSV statements.",
   directBrokerSync: "Direct IBKR & Trading 212 sync",
   directBrokerSyncDesc:
     "Securely connect read-only broker APIs, fetch trades and dividends, then review every import before adding it.",
@@ -78,8 +76,6 @@ export const proCopy: Record<Lang, Copy> = {
     communityTitle: "Общност на инвеститорите",
     communityDesc:
       "Профил със снимка, свързване с други абонати, споделено портфолио и личен чат са включени в Pro.",
-    brokers: "До 5 брокера",
-    brokersDesc: "Управлявай до 5 брокерски сметки и импортирай CSV извлечения.",
     directBrokerSync: "Директна връзка с IBKR и Trading 212",
     directBrokerSyncDesc:
       "Свържи сигурно read-only API на брокера, зареди сделки и дивиденти и прегледай импорта преди добавяне.",
@@ -126,8 +122,6 @@ export const proCopy: Record<Lang, Copy> = {
     communityTitle: "Anleger-Community",
     communityDesc:
       "Ein Profil mit Foto, Kontakte zu anderen Mitgliedern, geteilte Portfolioaufteilung und privater Chat sind in Pro enthalten.",
-    brokers: "Bis zu 5 Broker",
-    brokersDesc: "Verwalte bis zu 5 Brokerkonten und importiere CSV-Abrechnungen.",
     directBrokerSync: "Direkte IBKR- und Trading-212-Synchronisierung",
     directBrokerSyncDesc:
       "Verbinde Broker-APIs sicher mit Leseberechtigung, lade Trades und Dividenden und prüfe jeden Import vor dem Hinzufügen.",
@@ -176,8 +170,6 @@ export const proCopy: Record<Lang, Copy> = {
     communityTitle: "Comunidad de inversores",
     communityDesc:
       "Un perfil con foto, conexiones con otros miembros, distribución compartida de la cartera y chat privado están incluidos en Pro.",
-    brokers: "Hasta 5 brókers",
-    brokersDesc: "Administra hasta 5 cuentas de bróker e importa extractos CSV.",
     directBrokerSync: "Sincronización directa con IBKR y Trading 212",
     directBrokerSyncDesc:
       "Conecta de forma segura APIs de solo lectura, carga operaciones y dividendos y revisa cada importación antes de añadirla.",
@@ -227,8 +219,6 @@ export const proCopy: Record<Lang, Copy> = {
     communityTitle: "Community degli investitori",
     communityDesc:
       "Profilo con foto, contatti con altri membri, allocazione condivisa del portafoglio e chat privata sono inclusi in Pro.",
-    brokers: "Fino a 5 broker",
-    brokersDesc: "Gestisci fino a 5 conti broker e importa estratti CSV.",
     directBrokerSync: "Sincronizzazione diretta IBKR e Trading 212",
     directBrokerSyncDesc:
       "Collega in sicurezza le API broker in sola lettura, carica operazioni e dividendi e controlla ogni importazione prima di aggiungerla.",

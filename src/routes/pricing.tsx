@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { isCreemTestMode } from "@/lib/creem";
 import { paymentsCopy } from "@/lib/payments-i18n";
-import { Check, Bot, Flame, LayoutGrid, CalendarRange, Layers, RefreshCw } from "lucide-react";
+import { Check, Bot, Flame, LayoutGrid, CalendarRange, RefreshCw } from "lucide-react";
 import { proCopy } from "@/lib/pro-i18n";
 import {
   BarsSilhouette,
@@ -397,13 +397,6 @@ function Pricing() {
             <div>
               <h3 className="font-display font-semibold">{pc.directBrokerSync}</h3>
               <p className="text-sm text-muted-foreground">{pc.directBrokerSyncDesc}</p>
-            </div>
-          </Card>
-          <Card className="flex gap-3 p-5">
-            <Layers className="shrink-0 text-primary" />
-            <div>
-              <h3 className="font-display font-semibold">{pc.brokers}</h3>
-              <p className="text-sm text-muted-foreground">{pc.brokersDesc}</p>
             </div>
           </Card>
         </div>

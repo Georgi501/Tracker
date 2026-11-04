@@ -616,5 +616,9 @@ CREATE POLICY "authorized members view public avatars" ON storage.objects
       )
     )
   );
+
+-- Source: 0026_remove_broker_limit.sql
+DROP TRIGGER IF EXISTS broker_limit ON public.brokers;
+DROP FUNCTION IF EXISTS public.enforce_broker_limit();
 
 COMMIT;
