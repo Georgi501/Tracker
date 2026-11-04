@@ -17,8 +17,10 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AverageCostRouteImport } from './routes/average-cost'
 import { Route as BrokersRouteImport } from './routes/brokers'
+import { Route as CapitalGainsTaxRouteImport } from './routes/capital-gains-tax'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as CsvImportRouteImport } from './routes/csv-import'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendTrackerRouteImport } from './routes/dividend-tracker'
@@ -37,6 +39,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RevolutImportRouteImport } from './routes/revolut-import'
 import { Route as StockTaxBgRouteImport } from './routes/stock-tax-bg'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TimelineRouteImport } from './routes/timeline'
@@ -47,6 +50,7 @@ import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
 import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
 import { Route as ApiAdminRouteImport } from './routes/api/admin'
+import { Route as ApiAdminInsightsRouteImport } from './routes/api/admin-insights'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiModerationRouteImport } from './routes/api/moderation'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
@@ -101,6 +105,11 @@ const BrokersRoute = BrokersRouteImport.update({
   path: '/brokers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CapitalGainsTaxRoute = CapitalGainsTaxRouteImport.update({
+  id: '/capital-gains-tax',
+  path: '/capital-gains-tax',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
@@ -109,6 +118,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CsvImportRoute = CsvImportRouteImport.update({
+  id: '/csv-import',
+  path: '/csv-import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -201,6 +215,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RevolutImportRoute = RevolutImportRouteImport.update({
+  id: '/revolut-import',
+  path: '/revolut-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StockTaxBgRoute = StockTaxBgRouteImport.update({
   id: '/stock-tax-bg',
   path: '/stock-tax-bg',
@@ -249,6 +268,11 @@ const AdvisorThreadIdRoute = AdvisorThreadIdRouteImport.update({
 const ApiAdminRoute = ApiAdminRouteImport.update({
   id: '/api/admin',
   path: '/api/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminInsightsRoute = ApiAdminInsightsRouteImport.update({
+  id: '/api/admin-insights',
+  path: '/api/admin-insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
@@ -327,8 +351,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
+  '/capital-gains-tax': typeof CapitalGainsTaxRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/csv-import': typeof CsvImportRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividend-tracker': typeof DividendTrackerRoute
@@ -347,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revolut-import': typeof RevolutImportRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -356,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
   '/api/review': typeof ApiReviewRoute
@@ -380,8 +408,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
+  '/capital-gains-tax': typeof CapitalGainsTaxRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/csv-import': typeof CsvImportRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividend-tracker': typeof DividendTrackerRoute
@@ -400,6 +430,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revolut-import': typeof RevolutImportRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -409,6 +440,7 @@ export interface FileRoutesByTo {
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
   '/api/review': typeof ApiReviewRoute
@@ -434,8 +466,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/average-cost': typeof AverageCostRoute
   '/brokers': typeof BrokersRoute
+  '/capital-gains-tax': typeof CapitalGainsTaxRoute
   '/community': typeof CommunityRouteWithChildren
   '/compare': typeof CompareRoute
+  '/csv-import': typeof CsvImportRoute
   '/demo': typeof DemoRoute
   '/disclaimer': typeof DisclaimerRoute
   '/dividend-tracker': typeof DividendTrackerRoute
@@ -454,6 +488,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revolut-import': typeof RevolutImportRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -463,6 +498,7 @@ export interface FileRoutesById {
   '/watchlist': typeof WatchlistRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
   '/api/review': typeof ApiReviewRoute
@@ -489,8 +525,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/average-cost'
     | '/brokers'
+    | '/capital-gains-tax'
     | '/community'
     | '/compare'
+    | '/csv-import'
     | '/demo'
     | '/disclaimer'
     | '/dividend-tracker'
@@ -509,6 +547,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/revolut-import'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -518,6 +557,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
+    | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
     | '/api/review'
@@ -542,8 +582,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/average-cost'
     | '/brokers'
+    | '/capital-gains-tax'
     | '/community'
     | '/compare'
+    | '/csv-import'
     | '/demo'
     | '/disclaimer'
     | '/dividend-tracker'
@@ -562,6 +604,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/revolut-import'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -571,6 +614,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
+    | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
     | '/api/review'
@@ -595,8 +639,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/average-cost'
     | '/brokers'
+    | '/capital-gains-tax'
     | '/community'
     | '/compare'
+    | '/csv-import'
     | '/demo'
     | '/disclaimer'
     | '/dividend-tracker'
@@ -615,6 +661,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/refund'
     | '/reset-password'
+    | '/revolut-import'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -624,6 +671,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/advisor/$threadId'
     | '/api/admin'
+    | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
     | '/api/review'
@@ -649,8 +697,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AverageCostRoute: typeof AverageCostRoute
   BrokersRoute: typeof BrokersRoute
+  CapitalGainsTaxRoute: typeof CapitalGainsTaxRoute
   CommunityRoute: typeof CommunityRouteWithChildren
   CompareRoute: typeof CompareRoute
+  CsvImportRoute: typeof CsvImportRoute
   DemoRoute: typeof DemoRoute
   DisclaimerRoute: typeof DisclaimerRoute
   DividendTrackerRoute: typeof DividendTrackerRoute
@@ -669,6 +719,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RefundRoute: typeof RefundRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RevolutImportRoute: typeof RevolutImportRoute
   StockTaxBgRoute: typeof StockTaxBgRoute
   TermsRoute: typeof TermsRoute
   TimelineRoute: typeof TimelineRoute
@@ -678,6 +729,7 @@ export interface RootRouteChildren {
   WatchlistRoute: typeof WatchlistRoute
   AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
   ApiAdminRoute: typeof ApiAdminRoute
+  ApiAdminInsightsRoute: typeof ApiAdminInsightsRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiModerationRoute: typeof ApiModerationRoute
   ApiReviewRoute: typeof ApiReviewRoute
@@ -751,6 +803,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrokersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/capital-gains-tax': {
+      id: '/capital-gains-tax'
+      path: '/capital-gains-tax'
+      fullPath: '/capital-gains-tax'
+      preLoaderRoute: typeof CapitalGainsTaxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community': {
       id: '/community'
       path: '/community'
@@ -763,6 +822,13 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/csv-import': {
+      id: '/csv-import'
+      path: '/csv-import'
+      fullPath: '/csv-import'
+      preLoaderRoute: typeof CsvImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -891,6 +957,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/revolut-import': {
+      id: '/revolut-import'
+      path: '/revolut-import'
+      fullPath: '/revolut-import'
+      preLoaderRoute: typeof RevolutImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stock-tax-bg': {
       id: '/stock-tax-bg'
       path: '/stock-tax-bg'
@@ -959,6 +1032,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin'
       fullPath: '/api/admin'
       preLoaderRoute: typeof ApiAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin-insights': {
+      id: '/api/admin-insights'
+      path: '/api/admin-insights'
+      fullPath: '/api/admin-insights'
+      preLoaderRoute: typeof ApiAdminInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/advisor': {
@@ -1076,8 +1156,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AverageCostRoute: AverageCostRoute,
   BrokersRoute: BrokersRoute,
+  CapitalGainsTaxRoute: CapitalGainsTaxRoute,
   CommunityRoute: CommunityRouteWithChildren,
   CompareRoute: CompareRoute,
+  CsvImportRoute: CsvImportRoute,
   DemoRoute: DemoRoute,
   DisclaimerRoute: DisclaimerRoute,
   DividendTrackerRoute: DividendTrackerRoute,
@@ -1096,6 +1178,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RefundRoute: RefundRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RevolutImportRoute: RevolutImportRoute,
   StockTaxBgRoute: StockTaxBgRoute,
   TermsRoute: TermsRoute,
   TimelineRoute: TimelineRoute,
@@ -1105,6 +1188,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchlistRoute: WatchlistRoute,
   AdvisorThreadIdRoute: AdvisorThreadIdRoute,
   ApiAdminRoute: ApiAdminRoute,
+  ApiAdminInsightsRoute: ApiAdminInsightsRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiModerationRoute: ApiModerationRoute,
   ApiReviewRoute: ApiReviewRoute,

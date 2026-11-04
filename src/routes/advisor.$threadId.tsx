@@ -99,8 +99,8 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
   useEffect(() => {
     if (!busy) ref.current?.focus();
   }, [busy]);
-  const submit = () => {
-    const text = input.trim();
+  const submit = (value = input) => {
+    const text = value.trim();
     if (!text || busy) return;
     void sendMessage({ text });
     setInput("");
@@ -108,14 +108,30 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
   return (
     <Card className="flex h-[calc(100vh-14rem)] min-h-[420px] flex-col p-0">
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
-        {!messages.length && <p className="text-sm text-muted-foreground">{c.disclaimer}</p>}
+        {!messages.length && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{c.disclaimer}</p>
+            <div className="flex flex-wrap gap-2">
+              {c.suggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => submit(s)}
+                  className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-left text-xs font-medium hover:border-primary/40 hover:bg-primary/5"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {messages.map((m) => (
           <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[80%] rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground"
-                  : "max-w-none text-sm leading-relaxed"
+                  ? "max-w-[80%] rounded-2xl rounded-br-md border border-primary/25 bg-primary/10 px-4 py-2.5 text-sm text-foreground"
+                  : "max-w-none rounded-2xl rounded-bl-md border border-border/60 bg-secondary/40 px-4 py-3 text-sm leading-relaxed"
               }
             >
               {m.parts.map((part, i) =>

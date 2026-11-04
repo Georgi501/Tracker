@@ -64,7 +64,7 @@ export const Route = createFileRoute("/tools")({
       {
         name: "description",
         content:
-          "Rebalancing calculator, FIFO realized gains report, risk metrics, watchlist and portfolio export.",
+          "Investor tools: buy-only rebalancing calculator, FIFO realized gains report, risk metrics from real history, watchlist, price alerts and portfolio export.",
       },
       { property: "og:title", content: "Investor tools — Capispot" },
       {

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/brokers")({
       {
         name: "description",
         content:
-          "Connect brokers via CSV: Trading 212, Interactive Brokers, Revolut or a generic template.",
+          "Import your transactions for free from a broker CSV: Trading 212, Interactive Brokers, Revolut or a generic template. Pro adds read-only IBKR and Trading 212 sync.",
       },
       { property: "og:title", content: "Brokers — Capispot" },
       { property: "og:description", content: "Import your broker transactions from CSV." },
@@ -496,7 +496,95 @@ function Brokers() {
           {p.t("template")}
         </a>
       </div>
+      <ImportGuide bg={p.lang === "bg"} />
     </div>
+  );
+}
+
+const IMPORT_GUIDE = {
+  en: {
+    title: "How importing works",
+    steps: [
+      [
+        "1. Add your broker",
+        "Pick the broker above. This only creates a container for its transactions; no login to the broker is needed for CSV import.",
+      ],
+      [
+        "2. Export a CSV from the broker",
+        "In your broker's reports or statements section, download the full transaction history. A full period avoids missing early purchases that would distort your average price and FIFO results.",
+      ],
+      [
+        "3. Upload the file",
+        "Press Import CSV next to the broker. The file is read in your browser and the layout is detected automatically.",
+      ],
+      [
+        "4. Review the preview",
+        "You see every new row before anything is saved. You can fix tickers, and rows already in your portfolio are marked as duplicates and skipped by default. Rows that cannot be read are listed with the reason.",
+      ],
+      [
+        "5. Confirm",
+        "After you confirm, the transactions are saved to your account. Each keeps its original currency and is converted to USD with the exchange rate of its date. Fees are included in the cost. You can undo the import right after.",
+      ],
+    ],
+    tips: [
+      "Importing the same file twice is safe: duplicates are detected.",
+      "If a ticker is not recognised, correct it in the preview so live prices can be found.",
+      "To update later, export a fresh CSV and import it again: only new rows are added.",
+      "Pro adds read-only sync for Interactive Brokers and Trading 212. Capispot never places orders.",
+    ],
+  },
+  bg: {
+    title: "Как работи импортът",
+    steps: [
+      [
+        "1. Добави брокера си",
+        "Избери брокера по-горе. Това само създава контейнер за сделките му; за CSV импорт не е нужно да влизаш в акаунта на брокера.",
+      ],
+      [
+        "2. Експортирай CSV от брокера",
+        "В раздела с отчети или извлечения на брокера изтегли цялата история на сделките. Пълен период предотвратява липсата на ранни покупки, които биха изкривили средната цена и FIFO резултатите.",
+      ],
+      [
+        "3. Качи файла",
+        "Натисни „Импорт на CSV“ до брокера. Файлът се чете в браузъра ти и форматът се разпознава автоматично.",
+      ],
+      [
+        "4. Прегледай",
+        "Виждаш всеки нов ред, преди да се запази нещо. Можеш да поправяш тикерите, а редовете, които вече са в портфолиото, се маркират като дубликати и по подразбиране се пропускат. Редовете, които не могат да се прочетат, се показват с причина.",
+      ],
+      [
+        "5. Потвърди",
+        "След потвърждение сделките се запазват в акаунта ти. Всяка запазва оригиналната си валута и се превръща в USD с курса към датата ѝ. Таксите са включени в цената. Веднага след това можеш да отмениш импорта.",
+      ],
+    ],
+    tips: [
+      "Импортът на един и същ файл два пъти е безопасен: дубликатите се откриват.",
+      "Ако тикер не е разпознат, поправи го в прегледа, за да се намерят живи цени.",
+      "За обновяване по-късно експортирай нов CSV и го импортирай: добавят се само новите редове.",
+      "Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. Capispot никога не подава поръчки.",
+    ],
+  },
+};
+
+function ImportGuide({ bg }: { bg: boolean }) {
+  const g = bg ? IMPORT_GUIDE.bg : IMPORT_GUIDE.en;
+  return (
+    <details className="mt-6 rounded-2xl border border-border bg-card p-4" open>
+      <summary className="cursor-pointer font-display text-lg font-semibold">{g.title}</summary>
+      <ol className="mt-3 space-y-3">
+        {g.steps.map(([h, body]) => (
+          <li key={h}>
+            <p className="text-sm font-semibold">{h}</p>
+            <p className="text-sm text-muted-foreground">{body}</p>
+          </li>
+        ))}
+      </ol>
+      <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        {g.tips.map((tip) => (
+          <li key={tip}>{tip}</li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

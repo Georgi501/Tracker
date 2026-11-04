@@ -33,7 +33,8 @@ export const Route = createFileRoute("/wall")({
       { title: "Community wall — Capispot" },
       {
         name: "description",
-        content: "Share wins, losses and questions with other investors.",
+        content:
+          "Community wall for Capispot Pro members: share wins, losses and questions with other investors and learn from their experience.",
       },
       { name: "robots", content: "noindex" },
     ],

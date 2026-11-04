@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/AppShell";
 import { ModerationPanel } from "@/components/ModerationPanel";
+import { AdminInsights } from "@/components/AdminInsights";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
 import { toast } from "sonner";
@@ -241,6 +242,7 @@ function AdminPage() {
           ))}
         </div>
       )}
+      <AdminInsights bg={bg} total={stats?.total_users ?? null} />
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-semibold">{copy.registeredAccounts}</h2>

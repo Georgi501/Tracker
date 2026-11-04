@@ -66,7 +66,8 @@ export const Route = createFileRoute("/dividends")({
       { title: "Dividends — Capispot Portfolio Tracker" },
       {
         name: "description",
-        content: "Dividend calendar, projected annual income and dividend yield.",
+        content:
+          "Dividend calendar, projected annual income and dividend yield for your holdings, based only on confirmed dividend events, never estimates.",
       },
       { property: "og:title", content: "Dividends — Capispot" },
       {

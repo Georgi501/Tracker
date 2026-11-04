@@ -7,7 +7,9 @@ const GUIDES = [
   { to: "/dividend-tracker", en: "Dividend tracking", bg: "Следене на дивиденти" },
   { to: "/etf-vs-stocks", en: "ETFs vs stocks", bg: "ETF срещу акции" },
   { to: "/portfolio-in-eur", en: "Portfolio in EUR", bg: "Портфолио в EUR" },
-  { to: "/stock-tax-bg", en: "Stock tax in Bulgaria", bg: "Данък за акции в България" },
+  { to: "/csv-import", en: "Free CSV import", bg: "Безплатен CSV импорт" },
+  { to: "/revolut-import", en: "Import Revolut", bg: "Импорт от Revolut" },
+  { to: "/capital-gains-tax", en: "Capital gains and FIFO", bg: "Капиталови печалби и FIFO" },
   { to: "/trading212-import", en: "Import Trading 212", bg: "Импорт от Trading 212" },
   { to: "/ibkr-import", en: "Import Interactive Brokers", bg: "Импорт от Interactive Brokers" },
 ] as const;

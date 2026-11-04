@@ -12,7 +12,11 @@ export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
       { title: "Community — Capispot" },
-      { name: "description", content: "Meet other investors, view shared portfolios and chat." },
+      {
+        name: "description",
+        content:
+          "Capispot Pro community: meet other investors, view opt-in shared portfolios as percentages only, and chat one-to-one.",
+      },
       { property: "og:title", content: "Community — Capispot" },
       { property: "og:description", content: "Investor profiles and private chat." },
       { property: "og:type", content: "website" },

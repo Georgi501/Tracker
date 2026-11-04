@@ -71,7 +71,7 @@ export const Route = createFileRoute("/markets")({
       {
         name: "description",
         content:
-          "Search stocks, ETFs and crypto by company name or ticker and inspect the latest available quote.",
+          "Search stocks, ETFs and crypto by company name or ticker, then open the latest available quote, price chart and company details in one place.",
       },
       { property: "og:title", content: "Asset search — Capispot" },
       {

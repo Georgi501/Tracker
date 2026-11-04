@@ -884,8 +884,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </li>
               <li>
-                <Link to="/stock-tax-bg">
-                  {p.lang === "bg" ? "Данък върху печалба" : "Stock gains tax (BG)"}
+                <Link to="/capital-gains-tax">
+                  {p.lang === "bg" ? "Капиталови печалби и FIFO" : "Capital gains and FIFO"}
                 </Link>
               </li>
               <li>
@@ -909,6 +909,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li>
                 <Link to="/portfolio-in-eur">
                   {p.lang === "bg" ? "Портфолио в EUR" : "Portfolio in EUR"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/csv-import">
+                  {p.lang === "bg" ? "Безплатен CSV импорт" : "Free CSV import"}
+                </Link>
+              </li>
+              <li>
+                <Link to="/revolut-import">
+                  {p.lang === "bg" ? "Импорт от Revolut" : "Import Revolut"}
                 </Link>
               </li>
             </ul>

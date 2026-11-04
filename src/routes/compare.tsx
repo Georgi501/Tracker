@@ -19,7 +19,7 @@ export const Route = createFileRoute("/compare")({
       {
         name: "description",
         content:
-          "Put two stocks or ETFs side by side: valuation, P/E, dividends, beta and 52-week range from real market data.",
+          "Put two stocks or ETFs side by side: valuation, P/E, dividends, beta and 52-week range from real market data, with no estimates for missing figures.",
       },
       { property: "og:title", content: "Head-to-head asset comparison — Capispot" },
       {

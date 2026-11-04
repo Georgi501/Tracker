@@ -1,4 +1,5 @@
 import { languageLocale } from "@/lib/i18n";
+import { softwareJsonLd } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -123,6 +124,11 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    scripts: [
+      softwareJsonLd(
+        "Track stocks, ETFs and crypto with portfolio value, cash-flow-adjusted performance, allocation and dividend insights. Free broker CSV import.",
+      ),
     ],
   }),
   component: Dashboard,
@@ -743,7 +749,7 @@ function Dashboard() {
               </p>
               {isConcentrated && largestHolding && largestShare && (
                 <>
-                  <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-1 hidden max-w-2xl text-xs leading-relaxed text-muted-foreground sm:block">
                     {isFundExposure
                       ? dashboardCopy.fundExposureContext
                       : dashboardCopy.concentrationContext}

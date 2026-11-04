@@ -17,6 +17,11 @@ const en = {
     "Answers use your real positions and transactions. General information, not financial advice.",
   error: "The assistant could not answer.",
   reasoning: "Reasoning",
+  suggestions: [
+    "How concentrated is my portfolio?",
+    "Which positions are my biggest risks?",
+    "How diversified am I by region?",
+  ],
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -36,6 +41,11 @@ const bg: Copy = {
     "Отговорите използват реалните ти позиции и трансакции. Обща информация, не финансов съвет.",
   error: "Асистентът не успя да отговори.",
   reasoning: "Разсъждение",
+  suggestions: [
+    "Колко е концентрирано портфолиото ми?",
+    "Кои позиции са най-големият ми риск?",
+    "Колко съм диверсифициран по региони?",
+  ],
 };
 const de: Copy = {
   advisor: "KI-Berater",
@@ -54,6 +64,11 @@ const de: Copy = {
     "Antworten nutzen deine echten Positionen und Transaktionen. Allgemeine Information, keine Finanzberatung.",
   error: "Der Assistent konnte nicht antworten.",
   reasoning: "Überlegung",
+  suggestions: [
+    "Wie konzentriert ist mein Portfolio?",
+    "Welche Positionen sind mein größtes Risiko?",
+    "Wie breit bin ich nach Regionen gestreut?",
+  ],
 };
 const es: Copy = {
   advisor: "Asesor IA",
@@ -72,6 +87,11 @@ const es: Copy = {
     "Las respuestas usan tus posiciones y operaciones reales. Información general, no asesoramiento financiero.",
   error: "El asistente no pudo responder.",
   reasoning: "Razonamiento",
+  suggestions: [
+    "¿Qué tan concentrada está mi cartera?",
+    "¿Cuáles son mis posiciones de mayor riesgo?",
+    "¿Qué tan diversificado estoy por regiones?",
+  ],
 };
 const it: Copy = {
   advisor: "Consulente IA",
@@ -90,5 +110,10 @@ const it: Copy = {
     "Le risposte usano posizioni e operazioni reali. Informazioni generali, non consulenza finanziaria.",
   error: "L'assistente non ha potuto rispondere.",
   reasoning: "Ragionamento",
+  suggestions: [
+    "Quanto è concentrato il mio portafoglio?",
+    "Quali posizioni sono il mio rischio maggiore?",
+    "Quanto sono diversificato per regione?",
+  ],
 };
 export const advisorCopy: Record<Lang, Copy> = { en, bg, de, es, it };
