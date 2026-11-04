@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { setAnalyticsConsent } from "@/lib/analytics";
+import { setAnalyticsConsent, trackSiteVisit } from "@/lib/analytics";
 import type { Lang } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/store";
 
@@ -63,8 +63,10 @@ export function AnalyticsConsent() {
       console.error("Unable to read analytics preference", error);
     }
     if (stored === "accepted" || stored === "rejected") setChoice(stored);
+    trackSiteVisit();
 
     const refresh = () => {
+      trackSiteVisit();
       let value: string | null = null;
       try {
         value = localStorage.getItem("folio-analytics-consent");

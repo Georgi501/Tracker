@@ -27,7 +27,7 @@ it("records only the allowed event and temporary session identifier after consen
     "/api/public/analytics",
     expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ sessionId, event: "pricing_view" }),
+      body: JSON.stringify({ sessionId, visitorId: sessionId, event: "pricing_view" }),
     }),
   );
   expect(sessionStorage.getItem("folio-analytics-session")).toBe(sessionId);
@@ -41,7 +41,7 @@ it("records onboarding funnel events after consent", () => {
     "/api/public/analytics",
     expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ sessionId, event: "csv_import_started" }),
+      body: JSON.stringify({ sessionId, visitorId: sessionId, event: "csv_import_started" }),
     }),
   );
 });

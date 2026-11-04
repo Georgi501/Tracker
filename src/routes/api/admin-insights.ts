@@ -57,6 +57,45 @@ export const Route = createFileRoute("/api/admin-insights")({
             loose.from(table).select("*", { count: "exact", head: true }).gte(column, since(days)),
           );
 
+        type VisitorStats = {
+          unique_visitors: number;
+          sessions: number;
+          returning_visitors: number;
+          avg_session_seconds: number | null;
+          visitors_pricing: number;
+          visitors_signup: number;
+        };
+        const visitorStats = async (days: number): Promise<VisitorStats | null> => {
+          try {
+            const { data, error } = await (
+              db as unknown as {
+                rpc: (
+                  fn: string,
+                  args: { _days: number },
+                ) => PromiseLike<{ data: VisitorStats[] | null; error: unknown }>;
+              }
+            ).rpc("admin_visitor_stats", { _days: days });
+            if (error || !data?.[0]) return null;
+            const row = data[0];
+            return {
+              unique_visitors: Number(row.unique_visitors),
+              sessions: Number(row.sessions),
+              returning_visitors: Number(row.returning_visitors),
+              avg_session_seconds:
+                row.avg_session_seconds === null ? null : Number(row.avg_session_seconds),
+              visitors_pricing: Number(row.visitors_pricing),
+              visitors_signup: Number(row.visitors_signup),
+            };
+          } catch {
+            return null;
+          }
+        };
+        const [visits1, visits7, visits30] = await Promise.all([
+          visitorStats(1),
+          visitorStats(7),
+          visitorStats(30),
+        ]);
+
         const eventCounts = await Promise.all(
           EVENTS.map(async (name) => {
             const count = await safe(() =>
@@ -202,6 +241,7 @@ export const Route = createFileRoute("/api/admin-insights")({
             usersWithTransactions: activationOk ? withTransactions.size : null,
             usersWithTransactionsCapped: capped,
           },
+          visits: { visits1, visits7, visits30 },
           events30: Object.fromEntries(eventCounts),
           features: { advisor7, advisor30, companies7, companies30, journal, goals },
           revenue: { activeSubs, trialing, canceling, expiring, canceled30, newSubs30 },

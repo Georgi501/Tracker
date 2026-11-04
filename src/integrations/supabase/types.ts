@@ -672,7 +672,12 @@ export type Database = {
       claim_referral_code: { Args: { _user_id: string; _code: string }; Returns: boolean };
       grant_referral_reward: { Args: { _referred_user_id: string }; Returns: boolean };
       record_analytics_event: {
-        Args: { _session_id: string; _event_name: string };
+        Args: {
+          _session_id: string;
+          _event_name: string;
+          _visitor_id?: string;
+          _duration_seconds?: number;
+        };
         Returns: boolean;
       };
       public_portfolio: {

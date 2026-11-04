@@ -4,7 +4,11 @@ import { z } from "zod";
 const eventSchema = z
   .object({
     sessionId: z.string().uuid(),
+    visitorId: z.string().uuid().optional(),
+    durationSeconds: z.number().int().min(1).max(86400).optional(),
     event: z.enum([
+      "site_visit",
+      "visit_end",
       "pricing_view",
       "signup_completed",
       "first_holding_added",
@@ -36,6 +40,10 @@ export const Route = createFileRoute("/api/public/analytics")({
         const { data, error } = await supabaseAdmin.rpc("record_analytics_event", {
           _session_id: parsed.data.sessionId,
           _event_name: parsed.data.event,
+          ...(parsed.data.visitorId ? { _visitor_id: parsed.data.visitorId } : {}),
+          ...(parsed.data.durationSeconds
+            ? { _duration_seconds: parsed.data.durationSeconds }
+            : {}),
         });
         if (error) {
           console.error("Unable to record analytics event", error);

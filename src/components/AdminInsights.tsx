@@ -3,6 +3,14 @@ import { Card } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 
 type Count = number | null;
+type VisitorStats = {
+  unique_visitors: number;
+  sessions: number;
+  returning_visitors: number;
+  avg_session_seconds: number | null;
+  visitors_pricing: number;
+  visitors_signup: number;
+};
 type Insights = {
   generatedAt: string;
   growth: {
@@ -10,6 +18,11 @@ type Insights = {
     signups30: Count;
     usersWithTransactions: Count;
     usersWithTransactionsCapped: boolean;
+  };
+  visits: {
+    visits1: VisitorStats | null;
+    visits7: VisitorStats | null;
+    visits30: VisitorStats | null;
   };
   events30: Record<string, Count>;
   features: Record<
@@ -29,6 +42,17 @@ const COPY = {
     title: "Insights",
     note: "Aggregate counts only. No private portfolios or messages are shown.",
     growth: "Growth",
+    visits: "Visitors",
+    visits1: "Unique visitors, 24 hours",
+    visits7: "Unique visitors, 7 days",
+    visits30: "Unique visitors, 30 days",
+    sessions30: "Visits (sessions), 30 days",
+    returning30: "Returning visitors, 30 days",
+    avgTime30: "Average time per visit, 30 days",
+    pricing30: "Visitors who viewed pricing, 30 days",
+    signup30v: "Visitors who signed up, 30 days",
+    visitsNote:
+      "Counts only visitors who allowed analytics (random ID, no personal data), so real traffic is higher.",
     signups7: "Sign-ups, 7 days",
     signups30: "Sign-ups, 30 days",
     activated: "Accounts with a transaction",
@@ -73,6 +97,17 @@ const COPY = {
     title: "Показатели",
     note: "Само обобщени числа. Не се показват лични портфейли или съобщения.",
     growth: "Растеж",
+    visits: "Посетители",
+    visits1: "Уникални посетители, 24 часа",
+    visits7: "Уникални посетители, 7 дни",
+    visits30: "Уникални посетители, 30 дни",
+    sessions30: "Посещения (сесии), 30 дни",
+    returning30: "Върнали се посетители, 30 дни",
+    avgTime30: "Средно време на посещение, 30 дни",
+    pricing30: "Посетители, разгледали цените, 30 дни",
+    signup30v: "Посетители, регистрирали се, 30 дни",
+    visitsNote:
+      "Отчитат се само посетители, разрешили анализите (случаен ID, без лични данни), затова реалният трафик е по-голям.",
     signups7: "Регистрации, 7 дни",
     signups30: "Регистрации, 30 дни",
     activated: "Профили с поне една сделка",
@@ -143,6 +178,19 @@ export function AdminInsights({ bg, total }: { bg: boolean; total: number | null
   }, []);
 
   const num = (value: Count) => (value === null ? c.unavailable : value.toLocaleString());
+  const v30 = data?.visits.visits30 ?? null;
+  const v = (value: number | undefined) => (value === undefined ? c.unavailable : num(value));
+  const duration = (seconds: number | null | undefined) => {
+    if (seconds === null || seconds === undefined) return c.unavailable;
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  };
+  const withShare = (count: number | undefined) => {
+    if (count === undefined || !v30) return c.unavailable;
+    const share = v30.unique_visitors
+      ? ` (${Math.round((count / v30.unique_visitors) * 100)}%)`
+      : "";
+    return `${count.toLocaleString()}${share}`;
+  };
 
   if (failed)
     return (
@@ -175,10 +223,23 @@ export function AdminInsights({ bg, total }: { bg: boolean; total: number | null
       <div>
         <h2 className="font-display text-xl font-semibold">{c.title}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          {c.note} {c.updated}: {new Date(data.generatedAt).toLocaleString()}
+          {c.note} {c.visitsNote} {c.updated}: {new Date(data.generatedAt).toLocaleString()}
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
+        <Block
+          title={c.visits}
+          rows={[
+            [c.visits1, v(data.visits.visits1?.unique_visitors)],
+            [c.visits7, v(data.visits.visits7?.unique_visitors)],
+            [c.visits30, v(v30?.unique_visitors)],
+            [c.sessions30, v(v30?.sessions)],
+            [c.returning30, v(v30?.returning_visitors)],
+            [c.avgTime30, duration(v30?.avg_session_seconds)],
+            [c.pricing30, withShare(v30?.visitors_pricing)],
+            [c.signup30v, withShare(v30?.visitors_signup)],
+          ]}
+        />
         <Block
           title={c.growth}
           rows={[
