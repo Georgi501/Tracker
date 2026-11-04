@@ -15,7 +15,10 @@ describe("localized product walkthrough", () => {
       render(<VideoPresentation mode="visitor" theme="dark" lang={lang} />);
 
       expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
-      expect(screen.getByTitle(frameTitle)).toBeInTheDocument();
+      const frame = screen.getByTitle(frameTitle);
+      expect(frame).toBeInTheDocument();
+      expect(frame).toHaveAttribute("allow", "fullscreen");
+      expect(frame).toHaveAttribute("allowfullscreen");
       expect(
         screen.getByRole("link", {
           name: /walkthrough|представяне|Rundgang|recorrido|panoramica/i,

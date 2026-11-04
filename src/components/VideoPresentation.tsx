@@ -134,6 +134,8 @@ export function VideoPresentation({
           src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}&lang=${lang}`}
           className="block w-full border-0"
           style={{ height }}
+          allow="fullscreen"
+          allowFullScreen
           loading="lazy"
         />
       </div>

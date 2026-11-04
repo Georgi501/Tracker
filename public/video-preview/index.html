@@ -421,6 +421,77 @@
           background 180ms ease;
       }
 
+      .screen-frame .fullscreen-toggle {
+        position: absolute;
+        z-index: 3;
+        top: 10px;
+        right: 10px;
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgb(255 255 255 / 28%);
+        border-radius: 11px;
+        background: rgb(7 10 16 / 62%);
+        color: #fff;
+        cursor: pointer;
+        opacity: 0.86;
+        backdrop-filter: blur(12px);
+        transition:
+          background 160ms ease,
+          opacity 160ms ease,
+          transform 160ms ease;
+      }
+
+      .screen-frame .fullscreen-toggle:hover,
+      .screen-frame .fullscreen-toggle:focus-visible {
+        background: rgb(7 10 16 / 86%);
+        opacity: 1;
+        transform: scale(1.05);
+      }
+
+      .fullscreen-toggle .exit-icon,
+      .fullscreen-toggle[aria-pressed="true"] .expand-icon {
+        display: none;
+      }
+
+      .fullscreen-toggle[aria-pressed="true"] .exit-icon {
+        display: block;
+      }
+
+      .screen-frame:fullscreen {
+        display: grid;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        max-width: none;
+        aspect-ratio: auto;
+        place-items: center;
+        border: 0;
+        border-radius: 0;
+        background: #070a10;
+        box-shadow: none;
+      }
+
+      .screen-frame:fullscreen img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .screen-frame:fullscreen .fullscreen-toggle {
+        top: max(16px, env(safe-area-inset-top));
+        right: max(16px, env(safe-area-inset-right));
+        width: 42px;
+        height: 42px;
+      }
+
+      .screen-frame:fullscreen .big-play {
+        width: 76px;
+        height: 76px;
+      }
+
       .screen-frame:hover .big-play,
       .screen-frame:focus-within .big-play,
       .screen-frame .big-play:focus-visible {
@@ -1132,19 +1203,7 @@
       }
 
       body.embedded .clip-controls {
-        position: absolute;
-        z-index: 4;
-        right: 8px;
-        bottom: 8px;
-        left: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        pointer-events: none;
-      }
-
-      body.embedded .clip-controls > * {
-        pointer-events: auto;
+        display: none;
       }
 
       body.embedded .player-controls {
@@ -1387,6 +1446,41 @@
                     <path
                       d="M8 5.7c0-.8.9-1.3 1.6-.9l10.1 6.2a1.2 1.2 0 0 1 0 2L9.6 19.2A1.1 1.1 0 0 1 8 18.3V5.7Z"
                     />
+                  </svg>
+                </button>
+                <button
+                  class="fullscreen-toggle"
+                  type="button"
+                  aria-label="View walkthrough screen full screen"
+                  aria-pressed="false"
+                >
+                  <svg
+                    class="expand-icon"
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M15 3h6v6M21 3l-7 7M9 21H3v-6M3 21l7-7" />
+                  </svg>
+                  <svg
+                    class="exit-icon"
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M8 3v5H3M3 3l7 7m11 11-7-7m7 7v-5h-5" />
                   </svg>
                 </button>
               </div>
@@ -1779,6 +1873,9 @@
           tour: "Portfolio tour",
           proTools: "Pro tools",
           controls: "Walkthrough controls",
+          fullscreen: "View walkthrough screen full screen",
+          exitFullscreen: "Exit full screen",
+          fullscreenUnavailable: "Full screen is unavailable in this browser.",
           previous: "Previous scene",
           play: "Play walkthrough",
           pause: "Pause walkthrough",
@@ -1839,6 +1936,9 @@
           tour: "Преглед на портфейла",
           proTools: "Pro инструменти",
           controls: "Контроли на представянето",
+          fullscreen: "Уголеми екрана на представянето",
+          exitFullscreen: "Излез от цял екран",
+          fullscreenUnavailable: "Целият екран не е наличен в този браузър.",
           previous: "Предишна сцена",
           play: "Пусни представянето",
           pause: "Постави на пауза",
@@ -1899,6 +1999,9 @@
           tour: "Portfolio-Rundgang",
           proTools: "Pro-Tools",
           controls: "Rundgang-Steuerung",
+          fullscreen: "Rundgang im Vollbild anzeigen",
+          exitFullscreen: "Vollbild beenden",
+          fullscreenUnavailable: "Der Vollbildmodus ist in diesem Browser nicht verfügbar.",
           previous: "Vorherige Szene",
           play: "Rundgang starten",
           pause: "Rundgang pausieren",
@@ -1959,6 +2062,9 @@
           tour: "Recorrido por la cartera",
           proTools: "Herramientas Pro",
           controls: "Controles del recorrido",
+          fullscreen: "Ver el recorrido en pantalla completa",
+          exitFullscreen: "Salir de pantalla completa",
+          fullscreenUnavailable: "La pantalla completa no está disponible en este navegador.",
           previous: "Escena anterior",
           play: "Reproducir recorrido",
           pause: "Pausar recorrido",
@@ -2019,6 +2125,9 @@
           tour: "Panoramica del portafoglio",
           proTools: "Strumenti Pro",
           controls: "Controlli della panoramica",
+          fullscreen: "Visualizza a schermo intero",
+          exitFullscreen: "Esci dallo schermo intero",
+          fullscreenUnavailable: "Lo schermo intero non è disponibile in questo browser.",
           previous: "Scena precedente",
           play: "Riproduci panoramica",
           pause: "Metti in pausa",
@@ -2908,6 +3017,7 @@
       const productImage = document.querySelector("#product-image");
       const clipControls = document.querySelector("#clip-controls");
       const screenFrame = document.querySelector(".screen-frame");
+      const fullscreenButton = document.querySelector(".fullscreen-toggle");
       const playButton = document.querySelector("#control-play");
       const bigPlayButton = document.querySelector(".big-play");
       const previousButton = document.querySelector("#previous-scene");
@@ -2968,6 +3078,8 @@
       document.querySelector('[data-mode="visitor"]').textContent = copy.tour;
       document.querySelector('[data-mode="pro"]').textContent = copy.proTools;
       document.querySelector(".player-controls").setAttribute("aria-label", copy.controls);
+      fullscreenButton.setAttribute("aria-label", copy.fullscreen);
+      fullscreenButton.title = copy.fullscreen;
       document.querySelector("#previous-scene").setAttribute("aria-label", copy.previous);
       document.querySelector("#next-scene").setAttribute("aria-label", copy.next);
       document.querySelector("#control-play").setAttribute("aria-label", copy.play);
@@ -2996,6 +3108,33 @@
         updateSoundButton();
         screenFrame.append(clipControls);
       }
+
+      function updateFullscreenButton() {
+        const isFullscreen = document.fullscreenElement === screenFrame;
+        const label = isFullscreen ? copy.exitFullscreen : copy.fullscreen;
+        fullscreenButton.setAttribute("aria-pressed", String(isFullscreen));
+        fullscreenButton.setAttribute("aria-label", label);
+        fullscreenButton.title = label;
+      }
+
+      async function toggleFullscreen() {
+        try {
+          if (document.fullscreenElement === screenFrame) {
+            await document.exitFullscreen();
+          } else if (typeof screenFrame.requestFullscreen === "function") {
+            await screenFrame.requestFullscreen();
+          } else {
+            status.textContent = copy.fullscreenUnavailable;
+          }
+        } catch (error) {
+          console.error("Could not toggle walkthrough full screen.", error);
+          status.textContent = copy.fullscreenUnavailable;
+        }
+      }
+
+      fullscreenButton.addEventListener("click", toggleFullscreen);
+      document.addEventListener("fullscreenchange", updateFullscreenButton);
+      updateFullscreenButton();
 
       function currentMode() {
         return modes[activeMode];
