@@ -13,6 +13,7 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 export const Route = createFileRoute("/community/$userId")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Investor profile — Capispot" },
       { name: "description", content: "Investor profile, shared portfolio and chat." },
       { property: "og:title", content: "Investor profile — Capispot" },

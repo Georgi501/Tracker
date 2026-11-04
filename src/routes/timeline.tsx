@@ -14,6 +14,7 @@ import { z } from "zod";
 export const Route = createFileRoute("/timeline")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Portfolio timeline — Capispot" },
       {
         name: "description",

@@ -16,6 +16,7 @@ import { advisorCopy } from "@/lib/advisor-i18n";
 export const Route = createFileRoute("/advisor/$threadId")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Conversation — Capispot AI Advisor" },
       { name: "description", content: "Your saved AI Advisor conversation about your portfolio" },
       { property: "og:title", content: "AI Advisor conversation — Capispot" },

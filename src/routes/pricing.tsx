@@ -160,7 +160,7 @@ function Pricing() {
   };
   const Feature = ({ children }: { children: string }) => (
     <li className="flex gap-2 text-sm">
-      <Check size={16} className="mt-0.5 text-primary" />
+      <Check size={16} className="mt-0.5 shrink-0 text-primary" />
       {children}
     </li>
   );

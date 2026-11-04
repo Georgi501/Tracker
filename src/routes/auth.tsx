@@ -4,6 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Sign in — Capispot Portfolio Tracker" },
       {
         name: "description",

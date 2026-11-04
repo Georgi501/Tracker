@@ -11,6 +11,7 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Account & billing — Capispot" },
       {
         name: "description",

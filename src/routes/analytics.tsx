@@ -101,6 +101,7 @@ const EMPTY_COPY: Record<
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Analytics — Capispot Portfolio Tracker" },
       {
         name: "description",

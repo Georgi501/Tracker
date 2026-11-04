@@ -11,6 +11,7 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Community — Capispot" },
       {
         name: "description",

@@ -349,6 +349,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/demo", label: shellCopy.demo },
     { to: "/pricing", label: p.t("pricing") },
   ];
+  const guestNavPaths = ["/markets", "/demo", "/pricing"];
+  const mainNav = p.user ? nav.slice(0, 5) : nav.filter((n) => guestNavPaths.includes(n.to));
   const moreGroups = [
     {
       label: shellCopy.portfolioGroup,
@@ -470,7 +472,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <nav className="ml-2 hidden items-center lg:flex">
-            {nav.slice(0, 5).map((n) => (
+            {mainNav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
@@ -722,9 +724,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setAuthOpen(true)}
                 aria-label={p.t("signIn")}
                 title={p.t("signIn")}
-                className="press ml-1 grid size-9 place-items-center rounded-md text-foreground hover:bg-secondary"
+                className="press ml-1 inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
               >
                 <UserRound size={18} />
+                <span className="hidden sm:inline">{p.t("signIn")}</span>
               </button>
             )}
           </div>
@@ -822,7 +825,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </main>
       <footer className="site-footer mt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <Link to="/" className="inline-flex items-center gap-2">
               <span className="brand-wordmark font-display text-lg font-bold tracking-tight">
@@ -875,6 +878,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li>
                 <Link to="/disclaimer">{legalCopy(p.lang).disclaimer.title}</Link>
               </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="footer-h">{p.lang === "bg" ? "Ръководства" : "Guides"}</h4>
+            <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <Link to="/fifo-guide">{p.lang === "bg" ? "FIFO ръководство" : "FIFO guide"}</Link>
               </li>
@@ -935,7 +943,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {SUPPORT_EMAIL ? (
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("CapiSpot feedback")}`}
-                className="mt-3 inline-flex items-center gap-2 text-sm"
+                className="mt-3 flex items-center gap-2 text-sm"
               >
                 <MessageSquare size={16} />
                 {feedbackCopy[p.lang].title}
@@ -944,7 +952,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setFeedbackOpen(true)}
-                className="mt-3 inline-flex items-center gap-2 text-sm"
+                className="mt-3 flex items-center gap-2 text-sm"
               >
                 <MessageSquare size={16} />
                 {feedbackCopy[p.lang].title}
@@ -954,7 +962,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               href="https://www.facebook.com/profile.php?id=61595996617839"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-sm"
+              className="mt-3 flex items-center gap-2 text-sm"
             >
               <Facebook size={16} />
               Facebook
@@ -1000,10 +1008,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="mobile-bottom-nav glass-bar fixed inset-x-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
       >
         {(
-          [
-            { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-            { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
-          ] as const
+          p.user
+            ? ([
+                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+                { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
+              ] as const)
+            : ([
+                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
+                {
+                  to: "/demo",
+                  label: p.lang === "bg" ? "Пример" : "Sample",
+                  Icon: Wallet,
+                },
+              ] as const)
         ).map(({ to, label, Icon }) => (
           <Link
             key={to}

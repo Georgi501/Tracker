@@ -31,7 +31,9 @@ type AdminResponse = {
 };
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Owner console — Capispot" }] }),
+  head: () => ({
+    meta: [{ title: "Owner console — Capispot" }, { name: "robots", content: "noindex" }],
+  }),
   component: AdminPage,
 });
 

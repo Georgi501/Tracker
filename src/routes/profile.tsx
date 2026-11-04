@@ -19,6 +19,7 @@ import {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "My profile — Capispot" },
       { name: "description", content: "Your photo, bio and sharing settings." },
       { property: "og:title", content: "My profile — Capispot" },

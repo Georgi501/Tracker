@@ -23,7 +23,9 @@ import { MARKET_ASSETS } from "@/lib/market-search";
 import { languageLocale } from "@/lib/i18n";
 
 export const Route = createFileRoute("/alerts")({
-  head: () => ({ meta: [{ title: "Price alerts — Capispot" }] }),
+  head: () => ({
+    meta: [{ title: "Price alerts — Capispot" }, { name: "robots", content: "noindex" }],
+  }),
   component: Alerts,
 });
 

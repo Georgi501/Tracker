@@ -24,6 +24,7 @@ type Copy = {
   sampleLink: string;
   dataTrust: string;
   dataTrustLink: string;
+  heroCaption: string;
   markets: string;
   watchlist: string;
   analytics: string;
@@ -45,7 +46,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Good evening",
     guestTitle: "Your investments, clearly in view.",
     guestSub:
-      "Track stocks, ETFs and crypto, with portfolio performance, allocation and dividend insights in one place.",
+      "Import a broker CSV (Trading 212, IBKR, Revolut) and see performance, allocation, dividends and FIFO tax in one clear dashboard, with no estimated prices.",
     signUp: "Create free account",
     explore: "Explore markets",
     emptyTitle: "Let's build your portfolio",
@@ -59,6 +60,7 @@ const COPY: Record<Lang, Copy> = {
     dataTrust:
       "Quotes come from Yahoo Finance; missing historical data is never replaced with estimates.",
     dataTrustLink: "How market data works",
+    heroCaption: "Sample portfolio with illustrative data",
     markets: "Markets",
     watchlist: "Watchlist",
     analytics: "Analytics",
@@ -81,7 +83,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Добър вечер",
     guestTitle: "Виж инвестициите си ясно.",
     guestSub:
-      "Следи акции, ETF-и и крипто, както и доходността, разпределението и дивидентите на портфолиото си — на едно място.",
+      "Импортирай CSV от брокера си (Trading 212, IBKR, Revolut) и виж доходността, разпределението, дивидентите и FIFO данъка на едно място, без оценени цени.",
     signUp: "Създай безплатен профил",
     explore: "Разгледай пазарите",
     emptyTitle: "Да изградим портфолиото ти",
@@ -95,6 +97,7 @@ const COPY: Record<Lang, Copy> = {
     dataTrust:
       "Котировките идват от Yahoo Finance; липсващите исторически данни не се заместват с оценки.",
     dataTrustLink: "Как работят пазарните данни",
+    heroCaption: "Примерно портфолио с илюстративни данни",
     markets: "Пазари",
     watchlist: "Watchlist",
     analytics: "Анализи",
@@ -117,7 +120,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Guten Abend",
     guestTitle: "Deine Investments klar im Blick.",
     guestSub:
-      "Behalte Aktien, ETFs und Krypto sowie Wertentwicklung, Aufteilung und Dividenden deines Portfolios an einem Ort im Blick.",
+      "Importiere ein Broker-CSV (Trading 212, IBKR, Revolut) und sieh Wertentwicklung, Aufteilung, Dividenden und FIFO-Steuer übersichtlich an einem Ort, ohne geschätzte Kurse.",
     signUp: "Kostenloses Konto",
     explore: "Märkte entdecken",
     emptyTitle: "Bauen wir dein Portfolio auf",
@@ -131,6 +134,7 @@ const COPY: Record<Lang, Copy> = {
     dataTrust:
       "Kurse stammen von Yahoo Finance; fehlende historische Daten werden nicht durch Schätzungen ersetzt.",
     dataTrustLink: "So funktionieren Marktdaten",
+    heroCaption: "Beispielportfolio mit illustrativen Daten",
     markets: "Märkte",
     watchlist: "Watchlist",
     analytics: "Analysen",
@@ -154,7 +158,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Buenas noches",
     guestTitle: "Tus inversiones, con claridad.",
     guestSub:
-      "Sigue acciones, ETF y cripto, junto con la rentabilidad, la distribución y los dividendos de tu cartera en un solo lugar.",
+      "Importa el CSV de tu bróker (Trading 212, IBKR, Revolut) y ve rentabilidad, distribución, dividendos e impuesto FIFO en un solo panel, sin precios estimados.",
     signUp: "Crear cuenta gratis",
     explore: "Explorar mercados",
     emptyTitle: "Construyamos tu cartera",
@@ -169,6 +173,7 @@ const COPY: Record<Lang, Copy> = {
     dataTrust:
       "Las cotizaciones proceden de Yahoo Finance; los datos históricos que faltan no se sustituyen por estimaciones.",
     dataTrustLink: "Cómo funcionan los datos de mercado",
+    heroCaption: "Cartera de ejemplo con datos ilustrativos",
     markets: "Mercados",
     watchlist: "Watchlist",
     analytics: "Análisis",
@@ -192,7 +197,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Buonasera",
     guestTitle: "I tuoi investimenti, in modo chiaro.",
     guestSub:
-      "Segui azioni, ETF e criptovalute, con rendimento, allocazione e informazioni sui dividendi del portafoglio in un unico posto.",
+      "Importa il CSV del tuo broker (Trading 212, IBKR, Revolut) e vedi rendimento, allocazione, dividendi e imposta FIFO in un'unica dashboard, senza prezzi stimati.",
     signUp: "Crea account gratis",
     explore: "Esplora i mercati",
     emptyTitle: "Costruiamo il tuo portafoglio",
@@ -207,6 +212,7 @@ const COPY: Record<Lang, Copy> = {
     dataTrust:
       "Le quotazioni provengono da Yahoo Finance; i dati storici mancanti non vengono sostituiti con stime.",
     dataTrustLink: "Come funzionano i dati di mercato",
+    heroCaption: "Portafoglio di esempio con dati illustrativi",
     markets: "Mercati",
     watchlist: "Watchlist",
     analytics: "Analisi",
@@ -252,40 +258,52 @@ export function WelcomeHero() {
 
   if (!p.user)
     return (
-      <section className="rise hover-lift-card rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7">
-        <h1 className="font-display max-w-4xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl">
-          {c.guestTitle}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {c.guestSub}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2.5">
-          <Link
-            to="/auth"
-            className="press inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20"
-          >
-            {c.signUp}
-            <ArrowRight className="size-4" />
-          </Link>
-          <Link to="/demo" className={`${chip} min-h-10 px-4`}>
-            <Eye className="size-4" />
-            {c.sampleLink}
-          </Link>
-          <Link to="/markets" className={`${chip} min-h-10 px-4`}>
-            <Search className="size-4" />
-            {c.explore}
-          </Link>
+      <section className="rise hover-lift-card grid items-center gap-6 rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7 lg:grid-cols-[1.05fr_1fr]">
+        <div>
+          <h1 className="font-display max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            {c.guestTitle}
+          </h1>
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
+            {c.guestSub}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="hero-cta press inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2 font-semibold transition-[transform,box-shadow,filter] hover:-translate-y-0.5"
+            >
+              {c.signUp}
+              <ArrowRight className="size-4" />
+            </Link>
+            <Link to="/demo" className={`${chip} min-h-11 px-5`}>
+              <Eye className="size-4" />
+              {c.sampleLink}
+            </Link>
+          </div>
+          <p className="mt-4 max-w-xl text-xs leading-relaxed text-muted-foreground">
+            {c.dataTrust}{" "}
+            <Link
+              to="/features"
+              hash="methodology"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {c.dataTrustLink}
+            </Link>
+          </p>
         </div>
-        <p className="mt-4 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-          {c.dataTrust}{" "}
-          <Link
-            to="/features"
-            hash="methodology"
-            className="font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            {c.dataTrustLink}
-          </Link>
-        </p>
+        <figure className="min-w-0">
+          <img
+            src="/hero-portfolio.png"
+            alt=""
+            width={1492}
+            height={1120}
+            fetchPriority="high"
+            className="w-full rounded-2xl border border-border shadow-xl shadow-black/20"
+          />
+          <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+            {c.heroCaption}
+          </figcaption>
+        </figure>
       </section>
     );
 

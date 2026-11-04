@@ -709,7 +709,7 @@ function Dashboard() {
       </div>
       {!p.user && <LandingSteps />}
       {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
-      <MarketTicker />
+      {p.user && <MarketTicker />}
       {!p.user && <LandingSections />}
       {p.user && p.holdings.length > 0 && (
         <Card

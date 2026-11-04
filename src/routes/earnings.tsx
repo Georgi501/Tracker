@@ -16,7 +16,9 @@ import { earningsSurprisePercent, type EarningsCalendarData } from "@/lib/earnin
 import { writeEarningsReminders } from "@/lib/watchlist";
 
 export const Route = createFileRoute("/earnings")({
-  head: () => ({ meta: [{ title: "Earnings calendar — Capispot" }] }),
+  head: () => ({
+    meta: [{ title: "Earnings calendar — Capispot" }, { name: "robots", content: "noindex" }],
+  }),
   component: EarningsCalendar,
 });
 

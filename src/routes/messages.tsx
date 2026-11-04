@@ -11,6 +11,7 @@ import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/communit
 export const Route = createFileRoute("/messages")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Messages — Capispot" },
       { name: "description", content: "Your private conversations with other investors." },
       { property: "og:title", content: "Messages — Capispot" },

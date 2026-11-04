@@ -99,7 +99,9 @@ export function AuthForm({
     if (redirectOnSignIn && p.user) navigate({ to: "/" });
   }, [p.user, navigate, redirectOnSignIn]);
   useEffect(() => {
-    const referralCode = new URLSearchParams(window.location.search).get("ref")?.trim();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "signup") setMode("up");
+    const referralCode = params.get("ref")?.trim();
     if (referralCode && /^[a-fA-F0-9]{16}$/.test(referralCode)) {
       setMode("up");
       try {

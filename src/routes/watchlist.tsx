@@ -29,6 +29,7 @@ import { z } from "zod";
 export const Route = createFileRoute("/watchlist")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Watchlist — Capispot Portfolio Tracker" },
       {
         name: "description",

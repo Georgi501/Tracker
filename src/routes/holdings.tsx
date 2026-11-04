@@ -34,6 +34,7 @@ import { AllocationCard } from "@/components/AllocationCard";
 export const Route = createFileRoute("/holdings")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Holdings — Capispot Portfolio Tracker" },
       {
         name: "description",

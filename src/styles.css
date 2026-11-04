@@ -735,6 +735,17 @@ main a.bg-primary:hover {
   background-color: color-mix(in oklab, var(--secondary) 92%, var(--primary));
   box-shadow: 0 3px 8px -5px color-mix(in oklab, var(--primary) 36%, transparent);
 }
+main a.hero-cta {
+  border: 0;
+  background-color: var(--primary);
+  background-image: var(--gradient-brand);
+  color: #0b0e1a;
+  box-shadow: 0 8px 24px -10px color-mix(in oklab, var(--primary) 70%, transparent);
+}
+main a.hero-cta:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 12px 28px -10px color-mix(in oklab, var(--primary) 80%, transparent);
+}
 .glass-bar > button.bg-brand-gradient {
   border: 1px solid color-mix(in oklab, var(--primary) 42%, var(--border));
   background: var(--secondary);
@@ -955,8 +966,10 @@ main p {
 
 /* Larger hit areas for text links and FAQ toggles without changing their look */
 .site-footer a {
-  display: inline-block;
   padding-block: 0.4rem;
+}
+.site-footer a:not(.flex) {
+  display: inline-block;
 }
 main summary {
   min-height: 2.75rem;

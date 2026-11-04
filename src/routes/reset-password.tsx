@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Reset password — Capispot" },
       { name: "description", content: "Choose a new password for your Capispot account." },
       { property: "og:title", content: "Reset password — Capispot" },

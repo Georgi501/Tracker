@@ -485,6 +485,7 @@ export function LandingSections() {
         <div className="mt-3 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             {c.signup}
