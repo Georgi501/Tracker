@@ -28,7 +28,7 @@
         -webkit-font-smoothing: antialiased;
         --muted: #a4afb9;
         --line: rgb(191 211 214 / 14%);
-        --mint: #72dfb5;
+        --mint: #a5b4fc;
         --panel: #0c121a;
         --green: #81c887;
         --red: #ef8d7f;
@@ -99,7 +99,7 @@
       }
 
       .brand span:last-child {
-        background: linear-gradient(105deg, #f0c16f 5%, #e99cc5 52%, #70d7b4 98%);
+        background: linear-gradient(105deg, #f0c16f 5%, #e99cc5 52%, #9aa8ff 98%);
         background-clip: text;
         color: transparent;
       }
@@ -143,13 +143,18 @@
       .header-cta,
       .primary-cta {
         background: var(--mint);
-        color: #06221a;
+        color: #0b1030;
       }
 
       .header-cta:hover,
       .primary-cta:hover {
         transform: translateY(-1px);
-        background: #91ebc7;
+        background: #bcc7ff;
+      }
+
+      .header-nav a.header-cta,
+      .header-nav a.header-cta:hover {
+        color: #0b1030;
       }
 
       .secondary-cta {
@@ -158,8 +163,8 @@
       }
 
       .secondary-cta:hover {
-        border-color: rgb(114 223 181 / 55%);
-        background: rgb(114 223 181 / 7%);
+        border-color: rgb(165 180 252 / 55%);
+        background: rgb(165 180 252 / 7%);
       }
 
       main {
@@ -191,7 +196,7 @@
         height: 7px;
         border-radius: 50%;
         background: currentColor;
-        box-shadow: 0 0 15px rgb(114 223 181 / 80%);
+        box-shadow: 0 0 15px rgb(165 180 252 / 80%);
         content: "";
       }
 
@@ -309,8 +314,8 @@
       }
 
       .mode-switch button[aria-pressed="true"] {
-        background: #1b302e;
-        color: #aaf2d8;
+        background: #1c2142;
+        color: #c3ccff;
       }
 
       .player-layout {
@@ -338,7 +343,7 @@
         width: 340px;
         height: 340px;
         border-radius: 50%;
-        background: rgb(82 208 165 / 7%);
+        background: rgb(120 135 240 / 8%);
         content: "";
         filter: blur(90px);
         pointer-events: none;
@@ -506,9 +511,9 @@
         flex: 0 0 17px;
         place-items: center;
         margin-top: 1px;
-        border: 1px solid rgb(114 223 181 / 35%);
+        border: 1px solid rgb(165 180 252 / 35%);
         border-radius: 50%;
-        background: rgb(114 223 181 / 9%);
+        background: rgb(165 180 252 / 9%);
         color: var(--mint);
         content: "✓";
         font-size: 10px;
@@ -555,9 +560,9 @@
       }
 
       .player-controls button:hover {
-        border-color: rgb(114 223 181 / 45%);
-        background: rgb(114 223 181 / 12%);
-        color: #aaf2d8;
+        border-color: rgb(165 180 252 / 45%);
+        background: rgb(165 180 252 / 12%);
+        color: #c3ccff;
       }
 
       .player-controls button[aria-pressed="true"] {
@@ -602,8 +607,8 @@
         width: 0;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #37bda0, #8ee6bd);
-        box-shadow: 0 0 14px rgb(114 223 181 / 45%);
+        background: linear-gradient(90deg, #6f7df0, #a9b8ff);
+        box-shadow: 0 0 14px rgb(165 180 252 / 45%);
         transition: width 180ms linear;
       }
 
@@ -637,7 +642,7 @@
         padding: 14px 17px;
         border-top: 1px solid var(--line);
         scrollbar-width: thin;
-        scrollbar-color: rgb(114 223 181 / 28%) transparent;
+        scrollbar-color: rgb(165 180 252 / 28%) transparent;
       }
 
       .chapter-button {
@@ -666,9 +671,9 @@
       }
 
       .chapter-button[aria-current="step"] {
-        border-color: rgb(114 223 181 / 22%);
-        background: rgb(114 223 181 / 8%);
-        color: #c9f4e3;
+        border-color: rgb(165 180 252 / 22%);
+        background: rgb(165 180 252 / 8%);
+        color: #d9deff;
       }
 
       .chapter-button[aria-current="step"] span {
@@ -718,10 +723,10 @@
         gap: 24px;
         margin-top: 34px;
         padding: 26px 28px;
-        border: 1px solid rgb(114 223 181 / 20%);
+        border: 1px solid rgb(165 180 252 / 20%);
         border-radius: 22px;
         background:
-          radial-gradient(ellipse at 95% 0%, rgb(114 223 181 / 12%), transparent 45%),
+          radial-gradient(ellipse at 95% 0%, rgb(165 180 252 / 12%), transparent 45%),
           linear-gradient(120deg, #101a20, #0b1219);
       }
 
@@ -988,8 +993,8 @@
       }
 
       body.embedded .mode-switch button[aria-pressed="true"] {
-        background: var(--app-accent, #244338);
-        color: var(--app-accent-foreground, #c8f2df);
+        background: var(--app-accent, #232a4d);
+        color: var(--app-accent-foreground, #d2d9ff);
       }
 
       body.embedded .player-layout {
@@ -1023,15 +1028,15 @@
 
       body.embedded .player-controls button:hover,
       body.embedded .chapter-button[aria-current="step"] {
-        border-color: color-mix(in oklab, var(--app-primary, #72dfb5) 38%, transparent);
-        background: color-mix(in oklab, var(--app-primary, #72dfb5) 12%, transparent);
-        color: var(--app-primary, #72dfb5);
+        border-color: color-mix(in oklab, var(--app-primary, #a5b4fc) 38%, transparent);
+        background: color-mix(in oklab, var(--app-primary, #a5b4fc) 12%, transparent);
+        color: var(--app-primary, #a5b4fc);
       }
 
       body.embedded .scene-kicker,
       body.embedded .player-controls button[aria-pressed="true"],
       body.embedded .chapter-button[aria-current="step"] span {
-        color: var(--app-primary, #72dfb5);
+        color: var(--app-primary, #a5b4fc);
       }
 
       body.embedded .scene-number,
@@ -1045,7 +1050,7 @@
       }
 
       body.embedded .player-progress span {
-        background: var(--app-primary, #72dfb5);
+        background: var(--app-primary, #a5b4fc);
         box-shadow: none;
       }
 
@@ -1059,9 +1064,9 @@
         --app-foreground: oklch(0.24 0.02 60);
         --app-card: oklch(0.993 0.005 85);
         --app-muted-foreground: oklch(0.46 0.02 65);
-        --app-primary: oklch(0.52 0.14 163);
-        --app-accent: oklch(0.94 0.035 163);
-        --app-accent-foreground: oklch(0.32 0.09 163);
+        --app-primary: oklch(0.5 0.17 265);
+        --app-accent: oklch(0.94 0.03 265);
+        --app-accent-foreground: oklch(0.32 0.1 265);
         --app-border: oklch(0.88 0.018 80);
         color-scheme: light;
       }
@@ -1071,9 +1076,9 @@
         --app-foreground: oklch(0.94 0.012 85);
         --app-card: oklch(0.17 0.023 253);
         --app-muted-foreground: oklch(0.74 0.02 250);
-        --app-primary: oklch(0.76 0.13 164);
-        --app-accent: oklch(0.29 0.06 163);
-        --app-accent-foreground: oklch(0.92 0.035 165);
+        --app-primary: oklch(0.74 0.12 265);
+        --app-accent: oklch(0.29 0.06 265);
+        --app-accent-foreground: oklch(0.92 0.035 265);
         --app-border: oklch(1 0 0 / 17%);
         color-scheme: dark;
       }
@@ -1353,7 +1358,7 @@
         <div class="section-heading">
           <div>
             <strong id="preview-title">See the product. Understand the difference.</strong>
-            <small id="preview-duration">A 24-second walkthrough · real Capispot screens</small>
+            <small id="preview-duration">A 36-second walkthrough · real Capispot screens</small>
           </div>
           <div class="mode-switch" role="group" aria-label="Choose a product walkthrough">
             <button type="button" data-mode="visitor" aria-pressed="true">Portfolio tour</button>
@@ -1511,9 +1516,9 @@
           eyebrow: "A clearer view of your investments",
           description:
             "See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools into one calm, connected experience.",
-          duration: 24,
+          duration: 36,
           sceneDuration: 4,
-          sectionDuration: "A 24-second walkthrough · real Capispot screens",
+          sectionDuration: "A 36-second walkthrough · real Capispot screens",
           cta: "Create free portfolio",
           ctaUrl: "https://capispot.com/auth",
           secondary: "Explore sample portfolio",
@@ -1581,6 +1586,48 @@
                 "Missing history is not filled with estimates",
               ],
               note: "Benchmark lines represent index price return, not total return including dividends.",
+            },
+            {
+              image: "./ui-import.png",
+              imageAlt: "CapiSpot guide for importing broker history from a CSV file",
+              kicker: "IMPORT & SYNC",
+              title: "Bring in your broker history.",
+              caption:
+                "Import a CSV from Trading 212, Interactive Brokers, Revolut and more for free, or connect read-only sync with Pro.",
+              points: [
+                "CSV import is free and auto-detects broker headers",
+                "Pro adds read-only sync for IBKR and Trading 212 (beta)",
+                "Capispot never places trades or holds your funds",
+              ],
+              note: "Direct sync is read-only; your broker credentials never allow trading.",
+            },
+            {
+              image: "./ui-fifo.png",
+              imageAlt: "CapiSpot guide explaining FIFO cost basis and capital gains",
+              kicker: "FIFO & GAINS",
+              title: "See realized gains with FIFO.",
+              caption:
+                "Every sale is matched to your oldest purchase lots, so realized results are easy to follow and prepare.",
+              points: [
+                "Works with any broker and currency",
+                "Fees and dated exchange rates are included",
+                "Rules differ by country—check with a tax professional",
+              ],
+              note: "Capispot prepares the numbers; it does not tell you what tax you owe.",
+            },
+            {
+              image: "./ui-dividends.png",
+              imageAlt: "CapiSpot guide for tracking dividends across brokers",
+              kicker: "DIVIDENDS",
+              title: "Keep every dividend in one place.",
+              caption:
+                "Received dividends from all your brokers sit beside your holdings, with upcoming dates only when they are confirmed.",
+              points: [
+                "Received payments with dates and currencies",
+                "Upcoming payments come from confirmed events",
+                "No estimates or invented payments",
+              ],
+              note: "Dividend dates and amounts depend on data-provider availability.",
             },
             {
               image: "./ui-pro-preview.png",
@@ -1662,7 +1709,8 @@
             },
             {
               image: "./ui-dcf.png",
-              imageAlt: "CapiSpot DCF estimate with bear, base and bull scenarios using fictional sample inputs",
+              imageAlt:
+                "CapiSpot DCF estimate with bear, base and bull scenarios using fictional sample inputs",
               kicker: "DCF CALCULATOR",
               title: "Test a valuation with your own assumptions.",
               caption:
@@ -1755,7 +1803,7 @@
               eyebrow: "A clearer view of your investments",
               description:
                 "See how Capispot brings portfolio tracking, real market context and thoughtful Pro tools into one calm, connected experience.",
-              sectionDuration: "A 24-second walkthrough · real Capispot screens",
+              sectionDuration: "A 36-second walkthrough · real Capispot screens",
               cta: "Create free portfolio",
               secondary: "Explore sample portfolio",
               closingTitle: "A clearer picture starts with your portfolio.",
@@ -1815,7 +1863,7 @@
               eyebrow: "По-ясен поглед към инвестициите ти",
               description:
                 "Виж как Capispot събира проследяването на портфейла, пазарния контекст и Pro инструментите в едно спокойно и свързано изживяване.",
-              sectionDuration: "24-секундно представяне · реални екрани на Capispot",
+              sectionDuration: "36-секундно представяне · реални екрани на Capispot",
               cta: "Създай безплатно портфолио",
               secondary: "Разгледай примерен портфейл",
               closingTitle: "По-ясната картина започва с портфейла ти.",
@@ -1875,7 +1923,7 @@
               eyebrow: "Ein klarerer Blick auf deine Anlagen",
               description:
                 "Erlebe, wie Capispot Portfolio-Tracking, echten Marktkontext und durchdachte Pro-Tools in einer ruhigen, vernetzten Erfahrung vereint.",
-              sectionDuration: "Ein 24-Sekunden-Rundgang · echte Capispot-Bildschirme",
+              sectionDuration: "Ein 36-Sekunden-Rundgang · echte Capispot-Bildschirme",
               cta: "Kostenloses Portfolio erstellen",
               secondary: "Beispielportfolio ansehen",
               closingTitle: "Ein klareres Bild beginnt mit deinem Portfolio.",
@@ -1935,7 +1983,7 @@
               eyebrow: "Una visión más clara de tus inversiones",
               description:
                 "Descubre cómo Capispot reúne el seguimiento de cartera, el contexto real del mercado y herramientas Pro en una experiencia conectada y sencilla.",
-              sectionDuration: "Recorrido de 24 segundos · pantallas reales de Capispot",
+              sectionDuration: "Recorrido de 36 segundos · pantallas reales de Capispot",
               cta: "Crear cartera gratis",
               secondary: "Explorar cartera de ejemplo",
               closingTitle: "Una visión más clara empieza con tu cartera.",
@@ -1995,7 +2043,7 @@
               eyebrow: "Una visione più chiara dei tuoi investimenti",
               description:
                 "Scopri come Capispot riunisce monitoraggio del portafoglio, contesto di mercato reale e strumenti Pro in un'esperienza semplice e connessa.",
-              sectionDuration: "Panoramica di 24 secondi · schermate reali di Capispot",
+              sectionDuration: "Panoramica di 36 secondi · schermate reali di Capispot",
               cta: "Crea un portafoglio gratuito",
               secondary: "Esplora il portafoglio di esempio",
               closingTitle: "Una visione più chiara inizia dal tuo portafoglio.",
@@ -2203,6 +2251,39 @@
               "Линиите на бенчмарка показват ценова доходност на индекса, без дивиденти.",
             ],
             [
+              "ИМПОРТ И СИНХРОНИЗАЦИЯ",
+              "Донеси историята от брокера си.",
+              "Импортирай безплатно CSV от Trading 212, Interactive Brokers, Revolut и други или свържи синхронизация само за четене с Pro.",
+              [
+                "CSV импортът е безплатен и разпознава заглавията на брокера",
+                "Pro добавя синхронизация само за четене за IBKR и Trading 212 (бета)",
+                "Capispot никога не търгува и не държи средствата ти",
+              ],
+              "Директната синхронизация е само за четене; достъпът никога не позволява търговия.",
+            ],
+            [
+              "FIFO И ПЕЧАЛБИ",
+              "Виж реализираните печалби с FIFO.",
+              "Всяка продажба се свързва с най-старите ти покупки, така че реализираните резултати са лесни за проследяване и подготовка.",
+              [
+                "Работи с всеки брокер и валута",
+                "Включва такси и датирани валутни курсове",
+                "Правилата зависят от държавата — провери със специалист",
+              ],
+              "Capispot подготвя числата; не определя какъв данък дължиш.",
+            ],
+            [
+              "ДИВИДЕНТИ",
+              "Всички дивиденти на едно място.",
+              "Получените дивиденти от всички брокери са до позициите ти, а предстоящите дати се показват само когато са потвърдени.",
+              [
+                "Получени плащания с дати и валути",
+                "Предстоящите плащания идват от потвърдени събития",
+                "Без прогнози и измислени плащания",
+              ],
+              "Датите и сумите на дивидентите зависят от наличността на доставчика на данни.",
+            ],
+            [
               "PRO АНАЛИЗ",
               "Виж разпределението, не само списъка.",
               "Разгледай карта на портфейла или разбивка по класове активи, за да разбереш как са разпределени позициите.",
@@ -2339,6 +2420,39 @@
                 "Fehlende Historie wird nicht geschätzt",
               ],
               "Benchmark-Linien zeigen die Kursrendite des Index ohne Dividenden.",
+            ],
+            [
+              "IMPORT & SYNC",
+              "Bring deine Broker-Historie mit.",
+              "Importiere kostenlos eine CSV von Trading 212, Interactive Brokers, Revolut und mehr oder verbinde mit Pro eine schreibgeschützte Synchronisierung.",
+              [
+                "CSV-Import ist kostenlos und erkennt Broker-Kopfzeilen",
+                "Pro ergänzt schreibgeschützte Sync für IBKR und Trading 212 (Beta)",
+                "Capispot handelt nie und verwahrt keine Gelder",
+              ],
+              "Die direkte Synchronisierung ist schreibgeschützt; der Zugriff erlaubt keinen Handel.",
+            ],
+            [
+              "FIFO & GEWINNE",
+              "Realisierte Gewinne mit FIFO sehen.",
+              "Jeder Verkauf wird den ältesten Käufen zugeordnet, sodass realisierte Ergebnisse leicht nachvollziehbar und vorbereitbar sind.",
+              [
+                "Funktioniert mit jedem Broker und jeder Währung",
+                "Gebühren und datierte Wechselkurse sind enthalten",
+                "Regeln unterscheiden sich je Land – frag eine Fachperson",
+              ],
+              "Capispot bereitet die Zahlen vor; es sagt dir nicht, welche Steuer du schuldest.",
+            ],
+            [
+              "DIVIDENDEN",
+              "Alle Dividenden an einem Ort.",
+              "Erhaltene Dividenden aller Broker stehen neben deinen Positionen; kommende Termine erscheinen nur, wenn sie bestätigt sind.",
+              [
+                "Erhaltene Zahlungen mit Datum und Währung",
+                "Kommende Zahlungen stammen aus bestätigten Ereignissen",
+                "Keine Schätzungen oder erfundenen Zahlungen",
+              ],
+              "Dividendentermine und -beträge hängen von der Verfügbarkeit des Datenanbieters ab.",
             ],
             [
               "PRO-EINBLICK",
@@ -2479,6 +2593,39 @@
               "Las líneas de referencia muestran el rendimiento del precio del índice, sin dividendos.",
             ],
             [
+              "IMPORTAR Y SINCRONIZAR",
+              "Trae el historial de tu bróker.",
+              "Importa gratis un CSV de Trading 212, Interactive Brokers, Revolut y más, o conecta con Pro una sincronización de solo lectura.",
+              [
+                "La importación CSV es gratuita y detecta las cabeceras del bróker",
+                "Pro añade sincronización de solo lectura para IBKR y Trading 212 (beta)",
+                "Capispot nunca opera ni custodia tus fondos",
+              ],
+              "La sincronización directa es de solo lectura; el acceso nunca permite operar.",
+            ],
+            [
+              "FIFO Y GANANCIAS",
+              "Ve tus ganancias realizadas con FIFO.",
+              "Cada venta se asocia a tus compras más antiguas, para que los resultados realizados sean fáciles de seguir y preparar.",
+              [
+                "Funciona con cualquier bróker y divisa",
+                "Incluye comisiones y tipos de cambio con fecha",
+                "Las reglas varían según el país: consulta a un profesional",
+              ],
+              "Capispot prepara las cifras; no te dice qué impuesto debes.",
+            ],
+            [
+              "DIVIDENDOS",
+              "Todos tus dividendos en un solo lugar.",
+              "Los dividendos recibidos de todos tus brókeres aparecen junto a tus posiciones y las fechas futuras solo si están confirmadas.",
+              [
+                "Pagos recibidos con fechas y divisas",
+                "Los pagos futuros proceden de eventos confirmados",
+                "Sin estimaciones ni pagos inventados",
+              ],
+              "Las fechas e importes de dividendos dependen de la disponibilidad del proveedor de datos.",
+            ],
+            [
               "ANÁLISIS PRO",
               "Descubre la distribución, no solo una lista.",
               "Explora un mapa de cartera o un desglose por clases de activos para entender cómo se distribuyen tus posiciones.",
@@ -2615,6 +2762,39 @@
                 "I dati storici mancanti non vengono stimati",
               ],
               "Le linee di benchmark mostrano il rendimento del prezzo dell'indice, senza dividendi.",
+            ],
+            [
+              "IMPORTA E SINCRONIZZA",
+              "Porta la cronologia del tuo broker.",
+              "Importa gratis un CSV da Trading 212, Interactive Brokers, Revolut e altri, oppure collega con Pro una sincronizzazione di sola lettura.",
+              [
+                "L'importazione CSV è gratuita e riconosce le intestazioni del broker",
+                "Pro aggiunge la sincronizzazione di sola lettura per IBKR e Trading 212 (beta)",
+                "Capispot non negozia mai e non custodisce i tuoi fondi",
+              ],
+              "La sincronizzazione diretta è di sola lettura; l'accesso non consente mai di negoziare.",
+            ],
+            [
+              "FIFO E PLUSVALENZE",
+              "Vedi le plusvalenze realizzate con il FIFO.",
+              "Ogni vendita è abbinata agli acquisti più vecchi, così i risultati realizzati sono facili da seguire e preparare.",
+              [
+                "Funziona con qualsiasi broker e valuta",
+                "Include commissioni e cambi datati",
+                "Le regole cambiano da paese a paese: chiedi a un professionista",
+              ],
+              "Capispot prepara i numeri; non ti dice quali imposte devi.",
+            ],
+            [
+              "DIVIDENDI",
+              "Tutti i dividendi in un unico posto.",
+              "I dividendi ricevuti da tutti i broker sono accanto alle tue posizioni e le date future appaiono solo se confermate.",
+              [
+                "Pagamenti ricevuti con date e valute",
+                "I pagamenti futuri derivano da eventi confermati",
+                "Nessuna stima o pagamento inventato",
+              ],
+              "Date e importi dei dividendi dipendono dalla disponibilità del fornitore di dati.",
             ],
             [
               "ANALISI PRO",
