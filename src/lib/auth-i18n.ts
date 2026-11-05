@@ -7,6 +7,9 @@ type Copy = {
   notConfirmed: string;
   exists: string;
   sent: (e: string) => string;
+  codeLabel: string;
+  verify: string;
+  invalidCode: string;
   back: string;
   resetNeedEmail: string;
   resetSentTo: (e: string) => string;
@@ -33,7 +36,10 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Wrong email or password.",
     notConfirmed: "Please confirm your email first — check your inbox (and spam).",
     exists: "This email is already registered. Sign in instead.",
-    sent: (e) => `We sent a confirmation link to ${e}. Open it, then sign in here.`,
+    sent: (e) => `We sent a confirmation code to ${e}. Enter it below to activate your account.`,
+    codeLabel: "Confirmation code",
+    verify: "Confirm email",
+    invalidCode: "The code is wrong or has expired. Check it or sign up again.",
     back: "Back to sign in",
     resetNeedEmail: "Enter your email address above, then click “Forgot password?” again.",
     resetSentTo: (e) =>
@@ -59,7 +65,11 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Грешен имейл или парола.",
     notConfirmed: "Първо потвърдете имейла си — проверете пощата (и спам папката).",
     exists: "Този имейл вече е регистриран. Влезте в профила си.",
-    sent: (e) => `Изпратихме линк за потвърждение на ${e}. Отворете го и после влезте тук.`,
+    sent: (e) =>
+      `Изпратихме код за потвърждение на ${e}. Въведете го по-долу, за да активирате профила.`,
+    codeLabel: "Код за потвърждение",
+    verify: "Потвърди имейла",
+    invalidCode: "Кодът е грешен или е изтекъл. Проверете го или се регистрирайте отново.",
     back: "Към вход",
     resetNeedEmail: "Въведете имейл адреса си по-горе и натиснете отново „Забравена парола“.",
     resetSentTo: (e) =>
@@ -85,7 +95,12 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Falsche E-Mail oder falsches Passwort.",
     notConfirmed: "Bitte bestätigen Sie zuerst Ihre E-Mail (auch Spam prüfen).",
     exists: "Diese E-Mail ist bereits registriert. Bitte anmelden.",
-    sent: (e) => `Bestätigungslink an ${e} gesendet. Öffnen und dann hier anmelden.`,
+    sent: (e) =>
+      `Bestätigungscode an ${e} gesendet. Geben Sie ihn unten ein, um das Konto zu aktivieren.`,
+    codeLabel: "Bestätigungscode",
+    verify: "E-Mail bestätigen",
+    invalidCode:
+      "Der Code ist falsch oder abgelaufen. Prüfen Sie ihn oder registrieren Sie sich erneut.",
     back: "Zur Anmeldung",
     resetNeedEmail:
       "Geben Sie oben Ihre E-Mail-Adresse ein und klicken Sie erneut auf „Passwort vergessen?“.",
@@ -114,7 +129,11 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Correo o contraseña incorrectos.",
     notConfirmed: "Confirma primero tu correo (revisa también spam).",
     exists: "Este correo ya está registrado. Inicia sesión.",
-    sent: (e) => `Enviamos un enlace de confirmación a ${e}. Ábrelo y luego inicia sesión aquí.`,
+    sent: (e) =>
+      `Enviamos un código de confirmación a ${e}. Introdúcelo abajo para activar la cuenta.`,
+    codeLabel: "Código de confirmación",
+    verify: "Confirmar correo",
+    invalidCode: "El código es incorrecto o ha caducado. Revísalo o regístrate de nuevo.",
     back: "Volver a iniciar sesión",
     resetNeedEmail: "Introduce tu correo arriba y vuelve a pulsar «¿Olvidaste tu contraseña?».",
     resetSentTo: (e) =>
@@ -141,7 +160,11 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Email o password errate.",
     notConfirmed: "Conferma prima la tua email (controlla anche lo spam).",
     exists: "Questa email è già registrata. Accedi.",
-    sent: (e) => `Abbiamo inviato un link di conferma a ${e}. Aprilo e poi accedi qui.`,
+    sent: (e) =>
+      `Abbiamo inviato un codice di conferma a ${e}. Inseriscilo qui sotto per attivare l'account.`,
+    codeLabel: "Codice di conferma",
+    verify: "Conferma email",
+    invalidCode: "Il codice è errato o scaduto. Controllalo o registrati di nuovo.",
     back: "Torna all'accesso",
     resetNeedEmail:
       "Inserisci la tua email qui sopra e clicca di nuovo su «Password dimenticata?».",

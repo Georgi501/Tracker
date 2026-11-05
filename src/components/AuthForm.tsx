@@ -88,6 +88,7 @@ export function AuthForm({
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState("");
   const [googleReady, setGoogleReady] = useState(false);
   const [googleLoadFailed, setGoogleLoadFailed] = useState(false);
   const [googleAttempt, setGoogleAttempt] = useState(0);
@@ -158,6 +159,25 @@ export function AuthForm({
     } finally {
       setBusy(false);
     }
+  };
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sentTo) return;
+    setBusy(true);
+    setError(null);
+    const { error } = await supabase.auth.verifyOtp({
+      email: sentTo,
+      token: code.trim(),
+      type: "signup",
+    });
+    setBusy(false);
+    if (error) {
+      setError(c.invalidCode);
+      return;
+    }
+    setCode("");
+    setSentTo(null);
+    onSignedIn?.();
   };
   const google = async (credential: string, nonce: string) => {
     setBusy(true);
@@ -253,12 +273,42 @@ export function AuthForm({
       <div className="rounded-2xl border border-border bg-card p-7 text-center shadow-lg">
         <h1 className="font-display text-2xl font-bold">{p.t("checkEmail")}</h1>
         <p className="mt-3 text-sm text-muted-foreground">{c.sent(sentTo)}</p>
+        <form onSubmit={verifyCode} className="mt-5 space-y-3">
+          <input
+            className={`${input} text-center text-lg tracking-widest`}
+            required
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            aria-label={c.codeLabel}
+            placeholder={c.codeLabel}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          />
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <button
+            disabled={busy || code.length < 6}
+            className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {c.verify}
+          </button>
+        </form>
         <button
           onClick={() => {
             setSentTo(null);
+            setCode("");
+            setError(null);
             switchMode("in");
           }}
-          className="mt-5 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground"
+          className="mt-3 w-full text-sm text-muted-foreground"
         >
           {c.back}
         </button>
