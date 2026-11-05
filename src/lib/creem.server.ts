@@ -57,6 +57,7 @@ export async function createCreemCheckout(input: {
   userId: string;
   email: string;
   interval: "month" | "year";
+  discountCode?: string | undefined;
 }): Promise<string> {
   const mode = getCreemMode();
   const product = getCreemProductPlans().find((plan) => plan.interval === input.interval);
@@ -67,6 +68,7 @@ export async function createCreemCheckout(input: {
   const result = await creemRequest(mode, "/v1/checkouts", {
     product_id: product.productId,
     units: 1,
+    ...(input.discountCode ? { discount_code: input.discountCode } : {}),
     customer: { email: input.email },
     success_url: new URL("/pricing?checkout=success", appUrl).toString(),
     metadata: {

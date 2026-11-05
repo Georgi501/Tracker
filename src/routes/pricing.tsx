@@ -14,6 +14,7 @@ import {
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
 import { planCopy } from "@/lib/plan-i18n";
+import type { Lang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
@@ -39,6 +40,14 @@ export const Route = createFileRoute("/pricing")({
   component: Pricing,
 });
 
+const promoCopy: Record<Lang, { label: string; hint: string }> = {
+  en: { label: "Promo code", hint: "Applied to the yearly plan at checkout" },
+  bg: { label: "Промо код", hint: "Прилага се към годишния план при плащане" },
+  de: { label: "Promo-Code", hint: "Wird beim Bezahlen auf den Jahresplan angewendet" },
+  es: { label: "Código promocional", hint: "Se aplica al plan anual al pagar" },
+  it: { label: "Codice promo", hint: "Applicato al piano annuale al pagamento" },
+};
+
 function Pricing() {
   const p = usePortfolio();
   const [yearly, setYearly] = useState(true);
@@ -47,9 +56,18 @@ function Pricing() {
   const [activationTimedOut, setActivationTimedOut] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralCounts, setReferralCounts] = useState({ pending: 0, rewarded: 0 });
+  const [promo, setPromo] = useState("");
+  const promoValid = /^[A-Za-z0-9_-]{3,32}$/.test(promo.trim());
   const c = paymentsCopy[p.lang];
   const pc = proCopy[p.lang];
   const { isPro, reload } = p;
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("promo")?.trim();
+    if (code && /^[A-Za-z0-9_-]{3,32}$/.test(code)) {
+      setPromo(code.toUpperCase());
+      setYearly(true);
+    }
+  }, []);
   useEffect(() => {
     trackAnalyticsEvent("pricing_view");
     if (new URLSearchParams(window.location.search).get("checkout") === "success") {
@@ -130,7 +148,10 @@ function Pricing() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ interval: yearly ? "year" : "month" }),
+        body: JSON.stringify({
+          interval: yearly ? "year" : "month",
+          ...(promoValid && yearly ? { promo: promo.trim() } : {}),
+        }),
       });
       const result = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || c.failed);
@@ -228,6 +249,23 @@ function Pricing() {
             <Feature>{pc.taxAwareRebalancing}</Feature>
             <Feature>{pc.monthlyReport}</Feature>
           </ul>
+          {yearly && p.user && !p.isPro && !activating && (
+            <div className="mt-5">
+              <label htmlFor="promo-code" className="text-xs font-semibold">
+                {promoCopy[p.lang].label}
+              </label>
+              <input
+                id="promo-code"
+                value={promo}
+                onChange={(event) => setPromo(event.target.value.toUpperCase().slice(0, 32))}
+                maxLength={32}
+                autoComplete="off"
+                spellCheck={false}
+                className="mt-1 block w-full max-w-48 rounded-lg border border-border bg-background px-3 py-1.5 text-sm uppercase"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">{promoCopy[p.lang].hint}</p>
+            </div>
+          )}
           <div className="mt-6">
             {p.isPro ? (
               <span className="text-sm font-semibold text-primary">{p.t("currentPlan")}</span>
