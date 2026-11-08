@@ -125,8 +125,8 @@ export const marketExtended = createServerFn({ method: "POST" })
   });
 
 export const getExchangeRate = createServerFn({ method: "GET" }).handler(async () => {
-  const { fetchFx } = await import("./prices.server");
-  return { eurPerUsd: await fetchFx() };
+  const { fetchLiveFx } = await import("./prices.server");
+  return { fx: await fetchLiveFx() };
 });
 
 export const getAssetRiskHistory = createServerFn({ method: "POST" })

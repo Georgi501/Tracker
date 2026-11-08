@@ -8,6 +8,8 @@ export type Quote = {
   at: string;
   currency: string;
   source: string;
+  fxAt?: string;
+  fxSource?: string;
 };
 export const getQuotes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -54,9 +56,16 @@ export const getQuotes = createServerFn({ method: "POST" })
             missing.push(item.symbol);
             return;
           }
-          quotes[item.symbol] = { ...q, price: q.price * rate, nativePrice: q.price };
+          quotes[item.symbol] = {
+            ...q,
+            price: q.price * rate,
+            nativePrice: q.price,
+            ...(["GBP", "GBX", "GBp"].includes(q.currency) && gbp
+              ? { fxAt: gbp.at, fxSource: gbp.source }
+              : {}),
+          };
         }),
       );
     }
-    return { quotes, missing, eurPerUsd: fx, at: new Date().toISOString() };
+    return { quotes, missing, at: new Date().toISOString() };
   });

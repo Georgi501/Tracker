@@ -861,7 +861,7 @@ function Dashboard() {
               </div>
             </div>
             <h1 className="numeric-display mt-1 break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-              {p.user ? <CountUp value={total} format={(n) => p.money(n)} /> : "—"}
+              {p.user ? p.money(total) : "—"}
             </h1>
             <p className="mt-1 text-sm font-semibold">
               <Delta value={chg}>

@@ -8,6 +8,27 @@ export type Database = {
   };
   public: {
     Tables: {
+      live_exchange_rates: {
+        Row: {
+          pair: string;
+          eur_per_usd: number;
+          quote_at: string;
+          source: string;
+        };
+        Insert: {
+          pair: string;
+          eur_per_usd: number;
+          quote_at: string;
+          source: string;
+        };
+        Update: {
+          pair?: string;
+          eur_per_usd?: number;
+          quote_at?: string;
+          source?: string;
+        };
+        Relationships: [];
+      };
       ai_messages: {
         Row: {
           created_at: string;
@@ -694,6 +715,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      save_live_eurusd: {
+        Args: { rate: number; observed_at: string; provider: string };
+        Returns: Database["public"]["Tables"]["live_exchange_rates"]["Row"][];
+      };
       claim_company_profile_view: {
         Args: { _symbol: string };
         Returns: { allowed: boolean; resets_on: string; used: number }[];

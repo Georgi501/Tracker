@@ -32,6 +32,7 @@ import { trackAnalyticsEvent } from "./analytics";
 import { increasesOversellAmount } from "./quality";
 import { isValidIsoDate } from "./history";
 import { localDateString } from "./local-date";
+import { currentUsdPrice, formatUsdAmount, type LiveFx } from "./live-fx";
 
 export interface Broker {
   id: string;
@@ -73,6 +74,7 @@ interface State {
   pricesLive: boolean;
   priceNote: string | null;
   eurPerUsd: number | null;
+  liveFx: LiveFx | null;
   addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
   createBrokerTransfer: (transfer: Omit<BrokerTransfer, "id" | "createdAt">) => Promise<void>;
   updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;
@@ -184,13 +186,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const authEventVersion = useRef(0);
 
-  const [eurPerUsd, setEurPerUsd] = useState<number | null>(null);
+  const [liveFx, setLiveFx] = useState<LiveFx | null>(null);
+  const eurPerUsd = liveFx?.eurPerUsd ?? null;
   const quoteFn = useServerFn(getQuotes);
   const fxFn = useServerFn(getExchangeRate);
   const convertFn = useServerFn(convertImport);
   const holdings = useMemo(
-    () => computeHoldings(assets, transactions, corporateActions),
-    [assets, transactions, corporateActions],
+    () =>
+      computeHoldings(
+        assets.map((asset) => ({ ...asset, price: currentUsdPrice(asset, liveFx) })),
+        transactions,
+        corporateActions,
+      ),
+    [assets, transactions, corporateActions, liveFx],
   );
   const validateBrokerTransfers = (nextTransactions: Transaction[]) => {
     if (!brokerTransfers.length) return;
@@ -210,8 +218,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const refresh = () => {
       void fxFn()
-        .then((r) => setEurPerUsd(r.eurPerUsd))
-        .catch(() => setEurPerUsd(null));
+        .then((r) =>
+          setLiveFx((previous) => {
+            if (!r.fx) return previous ? { ...previous, providerUnavailable: true } : null;
+            if (previous && Date.parse(previous.at) > Date.parse(r.fx.at)) return previous;
+            return r.fx;
+          }),
+        )
+        .catch((error: unknown) => {
+          console.error("Unable to refresh EUR/USD rate", error);
+          setLiveFx((previous) => (previous ? { ...previous, providerUnavailable: true } : null));
+        });
     };
     refresh();
     const timer = setInterval(refresh, 300000);
@@ -489,6 +506,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           ? { quoteNativePrice: current.quoteNativePrice }
           : {}),
         ...(current?.quoteAt !== undefined ? { quoteAt: current.quoteAt } : {}),
+        ...(current?.quoteFxAt !== undefined ? { quoteFxAt: current.quoteFxAt } : {}),
+        ...(current?.quoteFxSource !== undefined ? { quoteFxSource: current.quoteFxSource } : {}),
       };
     });
     setTx(txs);
@@ -504,19 +523,22 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setAssets(
         base.map((x) => {
           const q = res.quotes[x.symbol];
-          return q
-            ? {
-                ...x,
-                price: q.price,
-                change24h: q.change ?? Number.NaN,
-                quoteCurrency: q.currency,
-                quoteNativePrice: q.nativePrice,
-                quoteAt: q.at,
-              }
-            : x;
+          if (!q) return x;
+          const updated = {
+            ...x,
+            price: q.price,
+            change24h: q.change ?? Number.NaN,
+            quoteCurrency: q.currency,
+            quoteNativePrice: q.nativePrice,
+            quoteAt: q.at,
+          };
+          delete updated.quoteFxAt;
+          delete updated.quoteFxSource;
+          if (q.fxAt) updated.quoteFxAt = q.fxAt;
+          if (q.fxSource) updated.quoteFxSource = q.fxSource;
+          return updated;
         }),
       );
-      setEurPerUsd(res.eurPerUsd);
       setPricesLive(Object.keys(res.quotes).length > 0);
       setPriceNote(res.missing.length ? "unavailable" : null);
     } catch (e) {
@@ -562,18 +584,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<State>(() => {
     const locale = languageLocale(lang);
-    const moneyBase: State["money"] = (usd, o) => {
-      const rate = currency === "USD" ? 1 : eurPerUsd;
-      if (!Number.isFinite(usd) || !rate) return "—";
-      const v = usd * rate;
-      const s = new Intl.NumberFormat(locale, {
-        style: "currency",
-        currency,
-        notation: o?.compact ? "compact" : "standard",
-        maximumFractionDigits: o?.compact ? 1 : 2,
-      }).format(v);
-      return o?.sign && v > 0 ? `+${s}` : s;
-    };
+    const moneyBase: State["money"] = (usd, o) =>
+      formatUsdAmount(usd, currency, lang, eurPerUsd, o);
     return {
       lang,
       currency,
@@ -597,6 +609,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       pricesLive,
       priceNote,
       eurPerUsd,
+      liveFx,
       setLang: (l) => {
         setLangS(l);
         savePref({ lang: l });
@@ -998,6 +1011,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     priceNote,
     reload,
     eurPerUsd,
+    liveFx,
     convertFn,
   ]);
 

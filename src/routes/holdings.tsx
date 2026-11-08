@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { HoldingValue } from "@/components/HoldingValue";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { Card, Delta } from "@/components/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -837,9 +838,16 @@ function Holdings() {
                       />
                     </div>
                     <div className="text-right">
-                      <p className="numeric-display font-semibold">
-                        {p.moneyFor(h.value, h.asset)}
-                      </p>
+                      <HoldingValue
+                        asset={h.asset}
+                        quantity={h.quantity}
+                        valueUsd={h.value}
+                        currency={p.currency}
+                        liveFx={p.liveFx}
+                        displayValue={p.money(h.value)}
+                        lang={p.lang}
+                        t={p.t}
+                      />
                       <p className="numeric-display text-xs">
                         <Delta value={h.pnl}>
                           {p.moneyFor(h.pnl, h.asset, { sign: true })} · {pct(h.pnlPct)}
@@ -930,8 +938,17 @@ function Holdings() {
                         <td className="numeric-display px-2 text-right">
                           {p.moneyFor(h.avgCost, h.asset)}
                         </td>
-                        <td className="numeric-display px-2 text-right font-semibold">
-                          {p.moneyFor(h.value, h.asset)}
+                        <td className="px-2 text-right">
+                          <HoldingValue
+                            asset={h.asset}
+                            quantity={h.quantity}
+                            valueUsd={h.value}
+                            currency={p.currency}
+                            liveFx={p.liveFx}
+                            displayValue={p.money(h.value)}
+                            lang={p.lang}
+                            t={p.t}
+                          />
                         </td>
                         <td className="px-2 text-right">
                           <Delta value={h.pnl}>

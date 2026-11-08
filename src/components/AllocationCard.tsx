@@ -33,7 +33,11 @@ export function AllocationCard() {
       </div>
       <AllocationBreakdown
         data={data}
-        totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}
+        totalLabel={
+          p.holdings.some((h) => !Number.isFinite(h.value))
+            ? p.t("holdingValuePartialTotal")
+            : p.t("holdingValueTotal")
+        }
         formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
       />
       <div className="mt-4 flex justify-end">

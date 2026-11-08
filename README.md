@@ -56,6 +56,8 @@ Apply `drizzle/migrations/0017_reviewable_splits_and_asset_valuations.sql` befor
 
 Apply `drizzle/migrations/0029_broker_transfers.sql` to the intended Supabase project before deploying broker-to-broker transfers. The migration adds owner-scoped transfer records and a server-validated RPC; deploy the application only after it has been applied.
 
+Apply `drizzle/migrations/0030_live_exchange_rate.sql` before deploying the live EUR/USD valuation changes. The server refreshes Yahoo Finance's EUR/USD quote at most every five minutes and stores the last valid quote, timestamp, and source in a service-role-only table. On provider failure, the stored quote can be reused across Worker restarts; if the database is unavailable, the running server and browser session retain their last valid quote. Missing rates make affected valuations unavailable. Freshness excludes the Friday 17:00 to Sunday 17:00 New York FX market closure; it does not model individual market holidays.
+
 ### Owner console setup
 
 After applying `0013_owner_admin_access.sql`, provision the existing owner account once in the Supabase SQL Editor. Replace the placeholder with the email of the owner account that already exists in `auth.users`; this inserts only that account as a site admin and grants permanent Pro access. The console exposes aggregate account/subscription counts and Pro status by email, but never other users' portfolios or messages.

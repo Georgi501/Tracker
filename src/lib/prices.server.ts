@@ -1,5 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 import { CRYPTO_SYMBOLS } from "./crypto-assets";
+import { createLiveFxCache } from "./live-fx-cache";
+import { readPersistedFx, writePersistedFx } from "./live-fx-persistence.server";
 
 export interface LiveQuote {
   price: number;
@@ -120,14 +122,11 @@ async function fetchLiveQuoteRaw(symbol: string, type: string): Promise<LiveQuot
     return null;
   }
 }
-let fxCache: { at: number; v: number } | null = null;
+export const fetchLiveFx = createLiveFxCache(() => fetchLiveQuote("EURUSD=X", "stock"), Date.now, {
+  read: readPersistedFx,
+  write: writePersistedFx,
+});
+
 export async function fetchFx(): Promise<number | null> {
-  if (fxCache && Date.now() - fxCache.at < 5 * 60_000) return fxCache.v;
-  const v = await fetchFxRaw();
-  if (v) fxCache = { at: Date.now(), v };
-  return v;
-}
-async function fetchFxRaw(): Promise<number | null> {
-  const quote = await fetchLiveQuote("EURUSD=X", "stock");
-  return quote && quote.price > 0 ? 1 / quote.price : null;
+  return (await fetchLiveFx())?.eurPerUsd ?? null;
 }

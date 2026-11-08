@@ -36,6 +36,8 @@ export interface Asset {
   quoteCurrency?: string;
   quoteNativePrice?: number; // price in quoteCurrency, as quoted by the provider
   quoteAt?: string;
+  quoteFxAt?: string;
+  quoteFxSource?: string;
   bondCouponRate?: number;
   bondMaturityDate?: string;
   bondFaceValue?: number;
