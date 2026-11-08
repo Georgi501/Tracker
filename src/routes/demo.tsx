@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
 import { useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
+import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { ProBadge } from "@/components/ProFeatures";
 import { dcfCopy } from "@/components/DcfCalculator";
 import { dcfAnalysis, scenario } from "@/lib/dcf";
@@ -26,9 +36,24 @@ export const Route = createFileRoute("/demo")({
 const SAMPLE = [
   { symbol: "VWCE", name: "Vanguard FTSE All-World", cls: "ETF", qty: 40, cost: 112, value: 128 },
   { symbol: "AAPL", name: "Apple Inc.", cls: "Stock", qty: 15, cost: 170, value: 215 },
-  { symbol: "MSFT", name: "Microsoft Corp.", cls: "Stock", qty: 8, cost: 320, value: 410 },
+  { symbol: "MSFT", name: "Microsoft Corp.", cls: "Stock", qty: 8, cost: 290, value: 410 },
   { symbol: "BTC", name: "Bitcoin", cls: "Crypto", qty: 0.05, cost: 42000, value: 64000 },
   { symbol: "BND", name: "Vanguard Total Bond", cls: "Bonds", qty: 30, cost: 74, value: 72 },
+];
+
+const SAMPLE_HISTORY = [
+  { month: "2026-05", value: 14650 },
+  { month: "2026-06", value: 15180 },
+  { month: "2026-07", value: 14920 },
+  { month: "2026-08", value: 15940 },
+  { month: "2026-09", value: 16230 },
+  { month: "2026-10", value: 16985 },
+];
+
+const SAMPLE_DIVIDENDS = [
+  { date: "2026-09-15", symbol: "AAPL", name: "Apple Inc.", amount: 3.75 },
+  { date: "2026-09-15", symbol: "MSFT", name: "Microsoft Corp.", amount: 6.64 },
+  { date: "2026-07-14", symbol: "BND", name: "Vanguard Total Bond", amount: 18.6 },
 ];
 
 const COPY: Record<
@@ -38,6 +63,7 @@ const COPY: Record<
     title: string;
     note: string;
     value: string;
+    costBasis: string;
     gain: string;
     alloc: string;
     totalValue: string;
@@ -51,6 +77,12 @@ const COPY: Record<
     samplePreview: string;
     openPortfolio: string;
     dcfNote: string;
+    tryDemo: string;
+    historyTitle: string;
+    historyNote: string;
+    dividendsTitle: string;
+    dividendsNote: string;
+    dividendAmount: string;
   }
 > = {
   en: {
@@ -58,12 +90,13 @@ const COPY: Record<
     title: "A preview of your portfolio",
     note: "These holdings and figures are made up for illustration. They are not live quotes and not a recommendation.",
     value: "Sample value",
-    gain: "Sample gain",
+    costBasis: "Sample cost basis",
+    gain: "Sample gain / loss",
     alloc: "Allocation",
     totalValue: "Total value",
     bonds: "Bonds",
     holdings: "Holdings",
-    cols: ["Asset", "Qty", "Avg cost", "Value", "P/L"],
+    cols: ["Asset", "Qty", "Avg cost", "Value", "Gain / loss"],
     heatmap: "Portfolio heatmap",
     heatmapNote:
       "Each tile shows portfolio weight and illustrative gain/loss versus sample average cost—not live or daily market performance.",
@@ -73,34 +106,48 @@ const COPY: Record<
     openPortfolio: "Open your portfolio",
     dcfNote:
       "Fictional company and assumptions, shown only to illustrate how the DCF scenarios work. Not a forecast or investment advice.",
+    tryDemo: "Try the demo without an account",
+    historyTitle: "Portfolio value over time",
+    historyNote: "Illustrative monthly values, not actual account history.",
+    dividendsTitle: "Example dividends",
+    dividendsNote: "Illustrative entries—not confirmed payouts or a forecast.",
+    dividendAmount: "Amount",
   },
   bg: {
     badge: "Примерни данни",
-    title: "Преглед как изглежда портфолиото ти",
-    note: "Тези позиции и числа са измислени за илюстрация. Не са реални котировки и не са препоръка.",
+    title: "Примерно инвестиционно портфолио",
+    note: "Позициите и стойностите са примерни; не са реални котировки или инвестиционна препоръка.",
     value: "Примерна стойност",
-    gain: "Примерна печалба",
+    costBasis: "Обща себестойност",
+    gain: "Примерна печалба / загуба",
     alloc: "Разпределение",
     totalValue: "Обща стойност",
     bonds: "Облигации",
     holdings: "Позиции",
-    cols: ["Актив", "Бр.", "Ср. цена", "Стойност", "П/З"],
-    heatmap: "Heatmap на портфолиото",
+    cols: ["Актив", "Бр.", "Ср. цена", "Стойност", "Печ. / загуба"],
+    heatmap: "Топлинна карта на портфейла",
     heatmapNote:
-      "Всяка плочка показва теглото и примерната печалба/загуба спрямо примерната средна цена — не реално или дневно пазарно представяне.",
+      "Всяка плочка показва дела на позицията и примерната печалба или загуба спрямо средната ѝ цена — не реална или дневна доходност.",
     cta: "Създай безплатно портфолио",
     explore: "Разгледай пазарите",
-    samplePreview: "Разгледай Pro прегледа",
+    samplePreview: "Виж Pro функциите",
     openPortfolio: "Отвори портфейла си",
     dcfNote:
-      "Измислена компания и допускания, показани само за илюстрация как работят DCF сценариите. Не е прогноза или инвестиционен съвет.",
+      "Измислена компания и примерни стойности, които показват как работи DCF анализът. Не са прогноза или инвестиционен съвет.",
+    tryDemo: "Пробвай демото без регистрация",
+    historyTitle: "Стойност на портфейла във времето",
+    historyNote: "Примерни месечни стойности — не са история от реален портфейл.",
+    dividendsTitle: "Примерни дивиденти",
+    dividendsNote: "Илюстративни записи — не са потвърдени плащания или прогноза.",
+    dividendAmount: "Сума",
   },
   de: {
     badge: "Beispieldaten",
     title: "Ein Einblick in dein Portfolio",
     note: "Diese Positionen und Werte dienen nur der Illustration. Sie sind keine Live-Kurse und keine Empfehlung.",
     value: "Beispielwert",
-    gain: "Beispielgewinn",
+    costBasis: "Beispiel-Einstandskosten",
+    gain: "Beispielgewinn / -verlust",
     alloc: "Aufteilung",
     totalValue: "Gesamtwert",
     bonds: "Anleihen",
@@ -115,13 +162,20 @@ const COPY: Record<
     openPortfolio: "Portfolio öffnen",
     dcfNote:
       "Fiktives Unternehmen und fiktive Annahmen, nur zur Veranschaulichung der DCF-Szenarien. Keine Prognose und keine Anlageberatung.",
+    tryDemo: "Demo ohne Registrierung ansehen",
+    historyTitle: "Portfolio-Wert im Zeitverlauf",
+    historyNote: "Illustrative Monatswerte, kein tatsächlicher Kontoverlauf.",
+    dividendsTitle: "Beispieldividenden",
+    dividendsNote: "Illustrative Einträge – keine bestätigten Auszahlungen oder Prognose.",
+    dividendAmount: "Betrag",
   },
   es: {
     badge: "Datos de ejemplo",
     title: "Una vista previa de tu cartera",
     note: "Estas posiciones y cifras son ficticias y solo ilustrativas. No son cotizaciones en vivo ni una recomendación.",
     value: "Valor de ejemplo",
-    gain: "Ganancia de ejemplo",
+    costBasis: "Coste de compra de ejemplo",
+    gain: "Ganancia / pérdida de ejemplo",
     alloc: "Distribución",
     totalValue: "Valor total",
     bonds: "Bonos",
@@ -136,13 +190,20 @@ const COPY: Record<
     openPortfolio: "Abrir tu cartera",
     dcfNote:
       "Empresa y supuestos ficticios, solo para ilustrar cómo funcionan los escenarios DCF. No es una previsión ni asesoramiento de inversión.",
+    tryDemo: "Prueba la demo sin registrarte",
+    historyTitle: "Valor de la cartera a lo largo del tiempo",
+    historyNote: "Valores mensuales ilustrativos, no son el historial de una cuenta real.",
+    dividendsTitle: "Dividendos de ejemplo",
+    dividendsNote: "Datos ilustrativos, no son pagos confirmados ni una previsión.",
+    dividendAmount: "Importe",
   },
   it: {
     badge: "Dati di esempio",
     title: "Un'anteprima del tuo portafoglio",
     note: "Queste posizioni e cifre sono inventate a scopo illustrativo. Non sono quotazioni in tempo reale né una raccomandazione.",
     value: "Valore di esempio",
-    gain: "Guadagno di esempio",
+    costBasis: "Costo d'acquisto di esempio",
+    gain: "Guadagno / perdita di esempio",
     alloc: "Allocazione",
     totalValue: "Valore totale",
     bonds: "Obbligazioni",
@@ -157,6 +218,12 @@ const COPY: Record<
     openPortfolio: "Apri il tuo portafoglio",
     dcfNote:
       "Azienda e ipotesi fittizie, usate solo per illustrare come funzionano gli scenari DCF. Non è una previsione né una consulenza di investimento.",
+    tryDemo: "Prova la demo senza registrarti",
+    historyTitle: "Valore del portafoglio nel tempo",
+    historyNote: "Valori mensili illustrativi, non sono la cronologia di un conto reale.",
+    dividendsTitle: "Dividendi di esempio",
+    dividendsNote: "Dati illustrativi, non sono pagamenti confermati né previsioni.",
+    dividendAmount: "Importo",
   },
 };
 
@@ -180,6 +247,16 @@ function DemoPage() {
   const totalValue = rows.reduce((s, r) => s + r.totalValue, 0);
   const totalCost = rows.reduce((s, r) => s + r.totalCost, 0);
   const gain = totalValue - totalCost;
+  const gainPercent = (gain / totalCost) * 100;
+  const monthLabel = (month: string) =>
+    new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(
+      new Date(`${month}-01T00:00:00.000Z`),
+    );
+  const dateLabel = (date: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    }).format(new Date(`${date}T00:00:00.000Z`));
   const classLabels: Record<string, string> = {
     ETF: p.t("etf"),
     Stock: p.t("stock"),
@@ -194,7 +271,7 @@ function DemoPage() {
     .map((r) => ({
       ...r,
       weight: (r.totalValue / totalValue) * 100,
-      change: ((r.value - r.cost) / r.cost) * 100,
+      change: ((r.totalValue - r.totalCost) / r.totalCost) * 100,
     }))
     .sort((a, b) => b.weight - a.weight);
   const dc = dcfCopy[p.lang];
@@ -223,8 +300,16 @@ function DemoPage() {
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{c.note}</p>
         <div className="mt-4 flex flex-wrap gap-2.5">
           <Link
-            to={p.user ? "/holdings" : "/auth"}
+            to="/demo"
+            hash="portfolio-preview"
             className="press inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground"
+          >
+            {c.tryDemo}
+            <ArrowRight className="size-4" />
+          </Link>
+          <Link
+            to={p.user ? "/holdings" : "/auth"}
+            className="press inline-flex min-h-10 items-center gap-2 rounded-full border border-border px-4 py-2 font-semibold hover:bg-accent"
           >
             {p.user ? c.openPortfolio : c.cta}
             <ArrowRight className="size-4" />
@@ -238,11 +323,17 @@ function DemoPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div id="portfolio-preview" className="grid scroll-mt-24 gap-4 md:grid-cols-3">
         <div className="card-interactive rounded-2xl border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">{c.value}</p>
           <p className="numeric-display mt-1 text-2xl font-bold sm:text-3xl">
             {usd(totalValue, locale)}
+          </p>
+        </div>
+        <div className="card-interactive rounded-2xl border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">{c.costBasis}</p>
+          <p className="numeric-display mt-1 text-2xl font-bold sm:text-3xl">
+            {usd(totalCost, locale)}
           </p>
         </div>
         <div className="card-interactive rounded-2xl border border-border bg-card p-4">
@@ -262,7 +353,7 @@ function DemoPage() {
               }`}
             >
               {gain >= 0 ? "+" : "−"}
-              {Math.abs((gain / totalCost) * 100).toFixed(1)}%
+              {Math.abs(gainPercent).toFixed(1)}%
             </span>
           </div>
         </div>
@@ -282,7 +373,8 @@ function DemoPage() {
           </thead>
           <tbody>
             {rows.map((r) => {
-              const pl = ((r.value - r.cost) / r.cost) * 100;
+              const rowGain = r.totalValue - r.totalCost;
+              const pl = (rowGain / r.totalCost) * 100;
               return (
                 <tr key={r.symbol} className="border-t border-border">
                   <td className="py-2">
@@ -294,11 +386,19 @@ function DemoPage() {
                   <td className="numeric-display text-right font-semibold">
                     {usd(r.totalValue, locale)}
                   </td>
-                  <td
-                    className={`numeric-display text-right font-semibold ${pl >= 0 ? "text-success" : "text-destructive"}`}
-                  >
-                    {pl >= 0 ? "+" : ""}
-                    {pl.toFixed(1)}%
+                  <td className="text-right">
+                    <span
+                      className={`numeric-display block font-semibold ${pl >= 0 ? "text-success" : "text-destructive"}`}
+                    >
+                      {rowGain >= 0 ? "+" : "−"}
+                      {usd(Math.abs(rowGain), locale)}
+                    </span>
+                    <span
+                      className={`numeric-display text-xs font-medium ${pl >= 0 ? "text-success" : "text-destructive"}`}
+                    >
+                      {pl >= 0 ? "+" : "−"}
+                      {Math.abs(pl).toFixed(1)}%
+                    </span>
                   </td>
                 </tr>
               );
@@ -306,6 +406,97 @@ function DemoPage() {
           </tbody>
         </table>
       </section>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.65fr)]">
+        <section
+          aria-labelledby="sample-history-title"
+          className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5"
+        >
+          <h2 id="sample-history-title" className="font-display text-lg font-semibold">
+            {c.historyTitle}
+          </h2>
+          <div className="mt-4 h-56" role="img" aria-label={c.historyTitle}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={SAMPLE_HISTORY} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={monthLabel}
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                  minTickGap={20}
+                />
+                <YAxis
+                  domain={["dataMin - 1000", "dataMax + 1000"]}
+                  width={56}
+                  tickFormatter={(value: number) =>
+                    new Intl.NumberFormat(locale, {
+                      style: "currency",
+                      currency: "USD",
+                      notation: "compact",
+                      maximumFractionDigits: 0,
+                    }).format(value)
+                  }
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  content={(props) => (
+                    <ChartTooltipContent
+                      {...props}
+                      formatValue={(value) => usd(Number(value), locale)}
+                      formatLabel={(label) => monthLabel(String(label))}
+                    />
+                  )}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  name={c.value}
+                  stroke="var(--primary)"
+                  strokeWidth={3}
+                  dot={{ r: 3, fill: "var(--primary)" }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{c.historyNote}</p>
+        </section>
+
+        <section
+          aria-labelledby="sample-dividends-title"
+          className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5"
+        >
+          <h2 id="sample-dividends-title" className="font-display text-lg font-semibold">
+            {c.dividendsTitle}
+          </h2>
+          <ul className="mt-3 divide-y divide-border">
+            {SAMPLE_DIVIDENDS.map((dividend) => (
+              <li
+                key={`${dividend.date}-${dividend.symbol}`}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {dividend.symbol} · {dividend.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{dateLabel(dividend.date)}</p>
+                </div>
+                <span
+                  aria-label={`${c.dividendAmount}: ${usd(dividend.amount, locale)}`}
+                  className="numeric-display shrink-0 text-sm font-semibold text-success"
+                >
+                  +{usd(dividend.amount, locale)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-muted-foreground">{c.dividendsNote}</p>
+        </section>
+      </div>
 
       <section
         id="pro-preview"

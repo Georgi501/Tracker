@@ -35,7 +35,7 @@ export function HeaderSearch() {
         e.preventDefault();
         go(value.trim());
       }}
-      className="header-search-frame rotating-border-frame relative h-9 w-full rounded-full border border-border bg-secondary"
+      className="header-search-frame rotating-border-frame relative h-11 w-full rounded-full border border-border bg-secondary sm:h-9"
     >
       <Search
         size={16}
@@ -52,7 +52,7 @@ export function HeaderSearch() {
           setValue(e.target.value);
           go(e.target.value);
         }}
-        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground"
+        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
       />
     </form>
   );

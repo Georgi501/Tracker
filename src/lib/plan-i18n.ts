@@ -33,8 +33,8 @@ const en: PlanCopy = {
   groups: [
     {
       title: "Brokers & import",
-      free: "Unlimited brokers via CSV import",
-      pro: "Direct read-only IBKR & Trading 212 sync, import preview & duplicate checks",
+      free: "Unlimited CSV imports with a preview and duplicate checks",
+      pro: "Direct read-only sync with IBKR & Trading 212",
     },
     {
       title: "Portfolio",
@@ -89,7 +89,7 @@ const en: PlanCopy = {
   comparePlans: "Compare plans",
   freeRemains: "Your Free plan and existing portfolio stay available if you choose not to upgrade.",
   researchDemo: "Explore real company research with Oracle (ORCL)",
-  interactiveDemo: "Try the interactive Pro preview with sample data",
+  interactiveDemo: "Try the interactive Pro demo",
   referralTitle: "Invite a friend",
   referralBody:
     "You and a new friend each get one month of Pro after their first successful paid subscription. The month is added after any active paid period.",
@@ -101,29 +101,29 @@ const en: PlanCopy = {
 const bg: PlanCopy = {
   compareTitle: "Free срещу Pro",
   compareSub:
-    "Free следи парите ти уверено. Pro ти помага да взимаш по-добри инвестиционни решения.",
+    "С Free следиш инвестициите си, а Pro добавя директна синхронизация с IBKR и Trading 212.",
   freeTag: "Free",
   proTag: "Pro",
   groups: [
     {
       title: "Брокери и импорт",
-      free: "Неограничен брой брокери чрез CSV импорт",
-      pro: "Директна връзка с IBKR и Trading 212 само за четене, преглед и проверка за дубликати",
+      free: "Неограничен CSV импорт с преглед на файла и проверка за дублирани сделки",
+      pro: "Директна синхронизация с IBKR и Trading 212 (само за четене)",
     },
     {
       title: "Портфолио",
-      free: "Нетна стойност, P&L, позиции, реални цени",
+      free: "Нетна стойност, печалба и загуба, позиции и актуални котировки",
       pro: "Всичко от Free",
     },
     {
       title: "Анализи",
       free: "Основни разпределения и история",
-      pro: "Heatmap, сравнение с индекс, риск и концентрация",
+      pro: "Топлинна карта, сравнение с индекс, анализ на риска и концентрацията",
     },
     {
       title: "Дивиденти",
       free: "Потвърдени дивидентни събития",
-      pro: "Месечна матрица, yield on cost, цели за доход",
+      pro: "Месечна таблица на дивидентите, доходност спрямо себестойността и цели за доход",
     },
     {
       title: "Проучване",
@@ -139,13 +139,13 @@ const bg: PlanCopy = {
     { title: "Общност", free: "—", pro: "Профил, споделено разпределение, лични съобщения" },
   ],
   watchlist:
-    "Анализ на Watchlist-а: най-печеливши и губещи, възможности в зона за покупка и DCF справедливи стойности",
+    "Анализ на списъка за наблюдение: най-силно поскъпващи и поевтиняващи активи, възможности за покупка и справедливи стойности по DCF",
   taxIncluded: "Посочените цени са с включен ДДС — това е крайната сума, която ще платиш.",
   trialFaqTitle: "Безплатният пробен период — ясно и накратко",
   trialFaq: [
     [
       "Трябва ли да въведа карта?",
-      "Да. При започване на пробния период checkout-ът изисква данни за карта и я запазва сигурно за по-късно. През 5-те безплатни дни не се извършва таксуване.",
+      "Да. За да започнеш пробния период, въвеждаш данни за карта на защитената страница за плащане. През първите 5 дни няма да бъдеш таксуван.",
     ],
     [
       "Кога и колко ще платя?",
@@ -164,7 +164,7 @@ const bg: PlanCopy = {
   comparePlans: "Сравни плановете",
   freeRemains: "Безплатният ти план и портфолиото ти остават достъпни, ако не избереш надграждане.",
   researchDemo: "Разгледай реален фирмен анализ — Oracle (ORCL)",
-  interactiveDemo: "Пробвай интерактивен Pro преглед с примерни данни",
+  interactiveDemo: "Разгледай интерактивното Pro демо",
   referralTitle: "Покани приятел",
   referralBody:
     "Ти и новият ти приятел получавате по един месец Pro след първото му успешно платено плащане. Наградният месец се добавя след активния платен период.",
@@ -182,8 +182,8 @@ const de: PlanCopy = {
   groups: [
     {
       title: "Broker & Import",
-      free: "Unbegrenzt viele Broker per CSV-Import",
-      pro: "Direkte, schreibgeschützte IBKR- und Trading-212-Synchronisierung, Importvorschau & Duplikatprüfung",
+      free: "Unbegrenzte CSV-Importe mit Vorschau und Duplikatprüfung",
+      pro: "Direkte Synchronisierung mit IBKR und Trading 212 (nur Lesezugriff)",
     },
     {
       title: "Portfolio",
@@ -240,7 +240,7 @@ const de: PlanCopy = {
   freeRemains:
     "Dein Free-Plan und dein bestehendes Portfolio bleiben verfügbar, wenn du nicht upgradest.",
   researchDemo: "Echte Unternehmensanalyse ansehen — Oracle (ORCL)",
-  interactiveDemo: "Interaktive Pro-Vorschau mit Beispieldaten testen",
+  interactiveDemo: "Interaktive Pro-Demo ansehen",
   referralTitle: "Freund einladen",
   referralBody:
     "Du und ein neuer Freund erhalten je einen Pro-Monat nach der ersten erfolgreichen Zahlung des Freundes. Der Monat wird an einen aktiven bezahlten Zeitraum angehängt.",
@@ -258,8 +258,8 @@ const es: PlanCopy = {
   groups: [
     {
       title: "Brókers e importación",
-      free: "Brókeres ilimitados mediante importación CSV",
-      pro: "Sincronización directa de solo lectura con IBKR y Trading 212, vista previa y control de duplicados",
+      free: "Importaciones CSV ilimitadas con vista previa y detección de duplicados",
+      pro: "Sincronización directa con IBKR y Trading 212 (solo lectura)",
     },
     {
       title: "Cartera",
@@ -316,7 +316,7 @@ const es: PlanCopy = {
   comparePlans: "Comparar planes",
   freeRemains: "Tu plan Free y tu cartera actual seguirán disponibles si no actualizas.",
   researchDemo: "Explora un análisis real de empresa — Oracle (ORCL)",
-  interactiveDemo: "Prueba la vista Pro interactiva con datos de ejemplo",
+  interactiveDemo: "Prueba la demo interactiva de Pro",
   referralTitle: "Invita a un amigo",
   referralBody:
     "Tú y un nuevo amigo reciben un mes de Pro cada uno tras el primer pago válido del amigo. El mes se añade después de cualquier periodo pagado activo.",
@@ -334,8 +334,8 @@ const it: PlanCopy = {
   groups: [
     {
       title: "Broker e import",
-      free: "Broker illimitati tramite importazione CSV",
-      pro: "Sincronizzazione diretta di sola lettura con IBKR e Trading 212, anteprima e controllo duplicati",
+      free: "Importazioni CSV illimitate con anteprima e controllo dei duplicati",
+      pro: "Sincronizzazione diretta con IBKR e Trading 212 (sola lettura)",
     },
     { title: "Portafoglio", free: "Patrimonio, P&L, posizioni, prezzi live", pro: "Tutto di Free" },
     {
@@ -392,7 +392,7 @@ const it: PlanCopy = {
   freeRemains:
     "Il tuo piano Free e il portafoglio attuale restano disponibili se non effettui l'upgrade.",
   researchDemo: "Esplora un'analisi aziendale reale — Oracle (ORCL)",
-  interactiveDemo: "Prova l'anteprima Pro interattiva con dati di esempio",
+  interactiveDemo: "Prova la demo interattiva Pro",
   referralTitle: "Invita un amico",
   referralBody:
     "Tu e un nuovo amico ricevete un mese di Pro ciascuno dopo il primo pagamento riuscito dell'amico. Il mese si aggiunge al periodo già pagato.",

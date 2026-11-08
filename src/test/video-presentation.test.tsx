@@ -26,4 +26,18 @@ describe("localized product walkthrough", () => {
       ).toBeInTheDocument();
     },
   );
+
+  it("passes the selected language to the embedded presentation when it changes", () => {
+    const { rerender } = render(<VideoPresentation mode="visitor" theme="dark" lang="en" />);
+    expect(screen.getByTitle("Capispot portfolio walkthrough")).toHaveAttribute(
+      "src",
+      "/video-preview/?embed=1&mode=visitor&theme=dark&lang=en",
+    );
+
+    rerender(<VideoPresentation mode="visitor" theme="dark" lang="bg" />);
+    expect(screen.getByTitle("Представяне на портфейла в Capispot")).toHaveAttribute(
+      "src",
+      "/video-preview/?embed=1&mode=visitor&theme=dark&lang=bg",
+    );
+  });
 });

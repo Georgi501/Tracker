@@ -128,7 +128,7 @@ export function VideoPresentation({
       </div>
       <div className="min-w-0 bg-background/30">
         <iframe
-          key={mode}
+          key={`${mode}-${lang}`}
           ref={frame}
           title={mode === "pro" ? c.proFrame : c.visitorFrame}
           src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}&lang=${lang}`}

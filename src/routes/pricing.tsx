@@ -266,7 +266,7 @@ function Pricing() {
               <p className="mt-1 text-xs text-muted-foreground">{promoCopy[p.lang].hint}</p>
             </div>
           )}
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap items-center gap-2">
             {p.isPro ? (
               <span className="text-sm font-semibold text-primary">{p.t("currentPlan")}</span>
             ) : activating ? (
@@ -285,6 +285,15 @@ function Pricing() {
                 className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
               >
                 {c.upgrade}
+              </Link>
+            )}
+            {!p.isPro && (
+              <Link
+                to="/demo"
+                hash="pro-preview"
+                className="inline-flex min-h-10 items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-primary hover:bg-accent"
+              >
+                {planCopy[p.lang].interactiveDemo}
               </Link>
             )}
           </div>
@@ -319,15 +328,6 @@ function Pricing() {
           </button>
         </div>
       )}
-      <div className="mt-2 text-center">
-        <Link
-          to="/demo"
-          hash="pro-preview"
-          className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
-        >
-          {planCopy[p.lang].interactiveDemo}
-        </Link>
-      </div>
       <section className="mt-8" aria-labelledby="trial-faq-title">
         <h2 id="trial-faq-title" className="font-display text-center text-xl font-bold">
           {planCopy[p.lang].trialFaqTitle}

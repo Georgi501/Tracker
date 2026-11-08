@@ -465,7 +465,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
       <header className="header-as sticky top-0 z-30">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:h-16 lg:gap-4">
+        <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center gap-2 px-4 py-2 sm:h-16 sm:flex-nowrap sm:py-0 lg:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <span className="brand-wordmark font-display text-lg font-bold tracking-tight sm:text-xl">
               <span className="b1">Capi</span>
@@ -514,10 +514,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
-          <div className="min-w-0 flex-1 lg:max-w-md">
+          <div className="order-last min-w-0 w-full basis-full flex-1 sm:order-none sm:w-auto sm:basis-auto lg:max-w-md">
             <HeaderSearch />
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:ml-0">
             {p.user && <CommandMenu onAddTx={openTransactionDialog} />}
             {p.authReady &&
               !p.authError &&

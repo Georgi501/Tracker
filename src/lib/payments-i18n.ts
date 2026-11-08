@@ -12,7 +12,7 @@ const en = {
 };
 type Copy = typeof en;
 const bg: Copy = {
-  upgrade: "Вземи Pro",
+  upgrade: "Пробвай Pro безплатно",
   processing: "Активиране на Pro…",
   stillProcessing: "Плащането е потвърдено, но активирането на Pro се забавя.",
   checkStatus: "Провери отново",

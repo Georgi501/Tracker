@@ -23,4 +23,17 @@ describe("company analysis plan copy", () => {
       /standalone DCF|Самостоятелен DCF|eigenständiger DCF|DCF independiente|DCF autonomo/i,
     );
   });
+
+  it("includes CSV preview and duplicate checks in Free and direct broker sync in Pro", () => {
+    for (const lang of ["en", "bg"] as const) {
+      const broker = planCopy[lang].groups[0];
+      if (!broker) throw new Error(`Missing broker plan copy for ${lang}.`);
+      expect(broker.free).toMatch(/CSV/i);
+      expect(broker.free).toMatch(/preview|преглед/i);
+      expect(broker.free).toMatch(/duplicate|дубл/i);
+      expect(broker.pro).toMatch(/IBKR/);
+      expect(broker.pro).toMatch(/Trading 212/);
+      expect(broker.pro).not.toMatch(/preview|преглед|duplicate|дубл/i);
+    }
+  });
 });

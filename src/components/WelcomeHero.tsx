@@ -44,9 +44,9 @@ const COPY: Record<Lang, Copy> = {
     morning: "Good morning",
     afternoon: "Good afternoon",
     evening: "Good evening",
-    guestTitle: "Your investments, clearly in view.",
+    guestTitle: "Portfolio from every broker, all in one place.",
     guestSub:
-      "Import a broker CSV (Trading 212, IBKR, Revolut) and see performance, allocation, dividends and FIFO tax in one clear dashboard, with no estimated prices.",
+      "Import CSVs from Trading 212, IBKR or Revolut to track performance, allocation and dividends together. Get a FIFO report of realized gains and losses; missing quotes are never guessed.",
     signUp: "Create free account",
     explore: "Explore markets",
     emptyTitle: "Let's build your portfolio",
@@ -81,9 +81,9 @@ const COPY: Record<Lang, Copy> = {
     morning: "Добро утро",
     afternoon: "Добър ден",
     evening: "Добър вечер",
-    guestTitle: "Виж инвестициите си ясно.",
+    guestTitle: "Инвестициите от всички брокери — на едно място.",
     guestSub:
-      "Импортирай CSV от брокера си (Trading 212, IBKR, Revolut) и виж доходността, разпределението, дивидентите и FIFO данъка на едно място, без оценени цени.",
+      "Импортирай CSV от Trading 212, IBKR или Revolut и следи доходността, разпределението и дивидентите в общ портфейл. Получавай справка за реализираните печалби и загуби по FIFO; липсващите котировки не се заменят с измислени цени.",
     signUp: "Създай безплатен профил",
     explore: "Разгледай пазарите",
     emptyTitle: "Да изградим портфолиото ти",
