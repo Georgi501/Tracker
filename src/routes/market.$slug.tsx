@@ -88,6 +88,8 @@ function MarketInstrumentPage() {
           type="stock"
           lang={lang}
           kindLabel={copy.category[instrument.category]}
+          showStats={instrument.category === "index"}
+          statsVariant={instrument.category === "index" ? "index" : "company"}
         />
       ) : (
         <Card className="space-y-4">

@@ -51,6 +51,7 @@ const COPY: Record<
     heatmap: string;
     heatmapNote: string;
     cta: string;
+    sampleCsv: string;
     explore: string;
     samplePreview: string;
     openPortfolio: string;
@@ -80,6 +81,7 @@ const COPY: Record<
     heatmapNote:
       "Each tile shows portfolio weight and illustrative gain/loss versus sample average cost—not live or daily market performance.",
     cta: "Create your free portfolio",
+    sampleCsv: "Try a sample CSV",
     explore: "Explore markets",
     samplePreview: "Explore the Pro preview",
     openPortfolio: "Open your portfolio",
@@ -109,6 +111,7 @@ const COPY: Record<
     heatmapNote:
       "Всяка плочка показва дела на позицията и примерната печалба или загуба спрямо средната ѝ цена — не реална или дневна доходност.",
     cta: "Създай безплатно портфолио",
+    sampleCsv: "Пробвай примерен CSV",
     explore: "Разгледай пазарите",
     samplePreview: "Виж Pro функциите",
     openPortfolio: "Отвори портфейла си",
@@ -138,6 +141,7 @@ const COPY: Record<
     heatmapNote:
       "Jede Kachel zeigt das Portfolio-Gewicht und den illustrativen Gewinn/Verlust gegenüber den Beispiel-Einstandskosten – keine Live- oder Tagesentwicklung.",
     cta: "Kostenloses Portfolio erstellen",
+    sampleCsv: "CSV-Beispiel testen",
     explore: "Märkte entdecken",
     samplePreview: "Pro-Vorschau entdecken",
     openPortfolio: "Portfolio öffnen",
@@ -167,6 +171,7 @@ const COPY: Record<
     heatmapNote:
       "Cada bloque muestra el peso en la cartera y la ganancia/pérdida ilustrativa frente al coste medio de ejemplo; no es rendimiento diario ni en vivo.",
     cta: "Crea tu cartera gratis",
+    sampleCsv: "Probar un CSV de ejemplo",
     explore: "Explorar mercados",
     samplePreview: "Explora la vista previa Pro",
     openPortfolio: "Abrir tu cartera",
@@ -196,6 +201,7 @@ const COPY: Record<
     heatmapNote:
       "Ogni riquadro mostra il peso in portafoglio e il guadagno/perdita illustrativo rispetto al costo medio di esempio, non l'andamento reale o giornaliero.",
     cta: "Crea il tuo portafoglio gratuito",
+    sampleCsv: "Prova un CSV di esempio",
     explore: "Esplora i mercati",
     samplePreview: "Scopri l'anteprima Pro",
     openPortfolio: "Apri il tuo portafoglio",
@@ -300,13 +306,19 @@ function DemoPage() {
           ) : (
             <Link
               to="/auth"
-              search={{ mode: "signup" }}
+              search={{ mode: "signup", next: "/holdings" }}
               className="press inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 py-2 font-semibold hover:bg-accent"
             >
               {c.cta}
               <ArrowRight className="size-4" />
             </Link>
           )}
+          <Link
+            to="/import-demo"
+            className="press inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+          >
+            {c.sampleCsv}
+          </Link>
           <Link
             to="/markets"
             className="press inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"

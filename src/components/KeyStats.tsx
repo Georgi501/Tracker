@@ -7,6 +7,9 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 const L = {
   en: {
     snapshot: "Company snapshot",
+    indexSnapshot: "Index snapshot",
+    lastClose: "Last close",
+    dailyChange: "Daily change",
     more: "All key statistics",
     prev: "Previous close",
     open: "Open",
@@ -30,6 +33,9 @@ const L = {
   },
   bg: {
     snapshot: "Показатели на компанията",
+    indexSnapshot: "Показатели на индекса",
+    lastClose: "Последно затваряне",
+    dailyChange: "Дневна промяна",
     more: "Всички основни показатели",
     prev: "Предишно затваряне",
     open: "Отваряне",
@@ -54,6 +60,9 @@ const L = {
   },
   de: {
     snapshot: "Unternehmensüberblick",
+    indexSnapshot: "Indexüberblick",
+    lastClose: "Letzter Schlusskurs",
+    dailyChange: "Tagesveränderung",
     more: "Alle Kennzahlen",
     prev: "Vortagesschluss",
     open: "Eröffnung",
@@ -77,6 +86,9 @@ const L = {
   },
   es: {
     snapshot: "Resumen de la empresa",
+    indexSnapshot: "Resumen del índice",
+    lastClose: "Último cierre",
+    dailyChange: "Cambio diario",
     more: "Todas las estadísticas",
     prev: "Cierre anterior",
     open: "Apertura",
@@ -101,6 +113,9 @@ const L = {
   },
   it: {
     snapshot: "Quadro aziendale",
+    indexSnapshot: "Riepilogo dell'indice",
+    lastClose: "Ultima chiusura",
+    dailyChange: "Variazione giornaliera",
     more: "Tutte le statistiche",
     prev: "Chiusura precedente",
     open: "Apertura",
@@ -124,7 +139,15 @@ const L = {
   },
 } as const;
 
-export function KeyStats({ symbol, lang }: { symbol: string; lang: Lang }) {
+export function KeyStats({
+  symbol,
+  lang,
+  variant = "company",
+}: {
+  symbol: string;
+  lang: Lang;
+  variant?: "company" | "index";
+}) {
   const fetchStats = useServerFn(marketStats);
   const { data, isLoading } = useQuery({
     queryKey: ["market-stats", symbol],
@@ -159,6 +182,16 @@ export function KeyStats({ symbol, lang }: { symbol: string; lang: Lang }) {
   const earn = data.earningsDate
     ? new Date(data.earningsDate).toLocaleDateString(loc, { dateStyle: "medium" })
     : "—";
+  const dailyChange =
+    data.currentPrice == null || data.previousClose == null || data.previousClose === 0
+      ? "—"
+      : `${currency(data.currentPrice - data.previousClose)} (${num(((data.currentPrice - data.previousClose) / data.previousClose) * 100)}%)`;
+  const lastClose = data.marketState === "REGULAR" ? data.previousClose : data.currentPrice;
+  const indexRows = [
+    { label: c.lastClose, value: currency(lastClose) },
+    { label: c.dailyChange, value: dailyChange },
+    { label: c.w52, value: range(data.low52, data.high52) },
+  ];
   const rows: { label: string; value: string; help?: string }[] = [
     { label: c.prev, value: num(data.previousClose) },
     { label: c.open, value: num(data.open) },
@@ -172,15 +205,22 @@ export function KeyStats({ symbol, lang }: { symbol: string; lang: Lang }) {
     { label: c.target, value: currency(data.target), help: c.help.target },
     { label: c.earn, value: earn },
   ];
-  const featured = [
-    { label: c.cap, value: currency(data.marketCap, true) },
-    { label: c.pe, value: num(data.pe) },
-    { label: c.w52, value: range(data.low52, data.high52) },
-    { label: c.target, value: currency(data.target) },
-  ];
+  const featured =
+    variant === "index"
+      ? indexRows
+      : [
+          { label: c.cap, value: currency(data.marketCap, true) },
+          { label: c.pe, value: num(data.pe) },
+          { label: c.w52, value: range(data.low52, data.high52) },
+          { label: c.target, value: currency(data.target) },
+        ];
+  const visibleRows: { label: string; value: string; help?: string }[] =
+    variant === "index" ? indexRows : rows;
   return (
-    <section aria-label={c.snapshot} className="space-y-3">
-      <h2 className="font-display text-sm font-semibold">{c.snapshot}</h2>
+    <section aria-label={variant === "index" ? c.indexSnapshot : c.snapshot} className="space-y-3">
+      <h2 className="font-display text-sm font-semibold">
+        {variant === "index" ? c.indexSnapshot : c.snapshot}
+      </h2>
       <div className="grid grid-cols-2 gap-2">
         {featured.map(({ label, value }) => (
           <div key={label} className="min-w-0 rounded-xl border border-border/70 bg-card/70 p-3">
@@ -201,7 +241,7 @@ export function KeyStats({ symbol, lang }: { symbol: string; lang: Lang }) {
           </span>
         </summary>
         <dl className="grid gap-x-4 px-3 pb-2 sm:grid-cols-2">
-          {rows.map(({ label, value, help }) => (
+          {visibleRows.map(({ label, value, help }) => (
             <div
               key={label}
               className="flex items-center justify-between gap-3 border-t border-border/60 py-2 text-xs"

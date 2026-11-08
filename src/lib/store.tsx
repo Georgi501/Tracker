@@ -128,6 +128,8 @@ export const PRERENDERED_PATHS: ReadonlySet<string> = new Set([
   "/",
   "/demo",
   "/import-demo",
+  "/markets",
+  "/compare",
   "/features",
   "/fifo-guide",
   "/trading212-import",

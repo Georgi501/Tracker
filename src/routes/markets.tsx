@@ -95,10 +95,14 @@ function Markets() {
   const fetchQuote = useServerFn(marketQuote);
   const { q } = Route.useSearch();
   const [query, setQuery] = useState(q ?? "");
-  const [browseCategory, setBrowseCategory] = useState<BrowseCategory | null>("featured");
+  const [browseCategory, setBrowseCategory] = useState<BrowseCategory | null>(
+    q ? null : "featured",
+  );
   const [typeFilter, setTypeFilter] = useState<MarketAssetTypeFilter>("all");
   const [sortBy, setSortBy] = useState<MarketAssetSort>("relevance");
-  const [results, setResults] = useState<MarketAsset[]>(BROWSE_ASSETS.featured);
+  const [results, setResults] = useState<MarketAsset[]>(() =>
+    q ? searchCatalog(q) : BROWSE_ASSETS.featured,
+  );
   const watchState = useWatchState();
   const visibleResults = useMemo(
     () =>

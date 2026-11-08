@@ -41,7 +41,8 @@ const L = {
     low: "Low",
     quoteError: "Could not load the current quote.",
     chartError: "Could not load chart data.",
-    lastSession: "No intraday chart is available. Showing the latest available daily session:",
+    lastSession: "No intraday chart is available. These are the latest available daily values:",
+    dailyValues: "Daily values",
     retry: "Try again",
     viewData: "View chart data",
     chart: (
@@ -67,7 +68,8 @@ const L = {
     low: "Минимум",
     quoteError: "Текущата котировка не можа да се зареди.",
     chartError: "Данните за графиката не можаха да се заредят.",
-    lastSession: "Няма графика за днешната сесия. Показваме последните налични дневни данни:",
+    lastSession: "Няма графика за днешната сесия. Показани са последните налични дневни стойности:",
+    dailyValues: "Дневни стойности",
     retry: "Опитай отново",
     viewData: "Виж данните от графиката",
     chart: (
@@ -93,7 +95,9 @@ const L = {
     low: "Tief",
     quoteError: "Der aktuelle Kurs konnte nicht geladen werden.",
     chartError: "Diagrammdaten konnten nicht geladen werden.",
-    lastSession: "Keine Intraday-Daten verfügbar. Angezeigt wird der letzte verfügbare Handelstag:",
+    lastSession:
+      "Keine Intraday-Daten verfügbar. Angezeigt werden die letzten verfügbaren Tageswerte:",
+    dailyValues: "Tageswerte",
     retry: "Erneut versuchen",
     viewData: "Diagrammdaten anzeigen",
     chart: (
@@ -119,7 +123,8 @@ const L = {
     low: "Mínimo",
     quoteError: "No se pudo cargar la cotización actual.",
     chartError: "No se pudieron cargar los datos del gráfico.",
-    lastSession: "No hay datos intradía. Se muestra la última sesión diaria disponible:",
+    lastSession: "No hay datos intradía. Se muestran los últimos valores diarios disponibles:",
+    dailyValues: "Valores diarios",
     retry: "Reintentar",
     viewData: "Ver datos del gráfico",
     chart: (
@@ -146,7 +151,8 @@ const L = {
     quoteError: "Impossibile caricare la quotazione attuale.",
     chartError: "Impossibile caricare i dati del grafico.",
     lastSession:
-      "Dati intraday non disponibili. Viene mostrata l'ultima sessione giornaliera disponibile:",
+      "Dati intraday non disponibili. Vengono mostrati gli ultimi valori giornalieri disponibili:",
+    dailyValues: "Valori giornalieri",
     retry: "Riprova",
     viewData: "Visualizza i dati del grafico",
     chart: (
@@ -168,6 +174,7 @@ export function QuoteHero({
   lang,
   kindLabel,
   showStats = type !== "crypto",
+  statsVariant = "company",
 }: {
   symbol: string;
   name: string;
@@ -175,6 +182,7 @@ export function QuoteHero({
   lang: Lang;
   kindLabel?: string;
   showStats?: boolean;
+  statsVariant?: "company" | "index";
 }) {
   const c = L[lang];
   const loc = languageLocale(lang);
@@ -238,7 +246,7 @@ export function QuoteHero({
     : (ch.data?.closes ?? []);
   const first = closes[0]?.c,
     last = closes.at(-1)?.c;
-  const displayedRange = showingDailyFallback ? "latest session" : range;
+  const displayedRange = showingDailyFallback ? c.dailyValues : range;
   const periodPct = first && last ? (last / first - 1) * 100 : null;
   const up = periodPct == null ? (quote?.change ?? 0) >= 0 : periodPct >= 0;
   const color = up ? "var(--success, var(--primary))" : "var(--destructive)";
@@ -493,7 +501,13 @@ export function QuoteHero({
           {showingDailyFallback && closes.length > 1 && (
             <p className="mt-2 text-xs text-muted-foreground">
               {c.lastSession}{" "}
-              {new Date(closes.at(-1)!.t).toLocaleDateString(loc, { dateStyle: "medium" })}
+              {closes
+                .slice(-2)
+                .map(
+                  (point) =>
+                    `${new Date(point.t).toLocaleDateString(loc, { dateStyle: "medium" })}: ${money(point.c)}`,
+                )
+                .join(" · ")}
             </p>
           )}
           {closes.length > 1 && (
@@ -514,7 +528,7 @@ export function QuoteHero({
         </div>
         {showStats && type !== "crypto" && (
           <div className="min-w-0 rounded-xl border border-border bg-background/45 p-3 sm:p-4">
-            <KeyStats symbol={symbol} lang={lang} />
+            <KeyStats symbol={symbol} lang={lang} variant={statsVariant} />
           </div>
         )}
       </div>

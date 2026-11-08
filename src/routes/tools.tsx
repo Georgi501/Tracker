@@ -270,111 +270,138 @@ function Tools() {
       setRestoring(false);
     }
   };
+  const toolGroups =
+    p.lang === "bg"
+      ? { free: "Безплатни", portfolio: "За моето портфолио", pro: "Pro" }
+      : { free: "Free", portfolio: "For my portfolio", pro: "Pro" };
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <h1 className="font-display text-2xl font-bold lg:col-span-2">{c.tools}</h1>
-      <CompoundCalculator />
-      <ProGate
-        title={proCopy[p.lang].fire}
-        desc={proCopy[p.lang].fireDesc}
-        preview={<CurveSilhouette />}
-      >
-        <FireCalculator />
-      </ProGate>
-      <ProGate
-        title={dcfCopy[p.lang].intrinsic + " (DCF)"}
-        desc={dcfCopy[p.lang].gateDescription}
-        preview={<CurveSilhouette />}
-      >
-        <DcfCalculator />
-      </ProGate>
-      <ProGate
-        title={thesisCopy[p.lang].title}
-        desc={thesisCopy[p.lang].desc}
-        preview={<CurveSilhouette />}
-      >
-        <ThesisCheck />
-      </ProGate>
-      <ProGate
-        title={proToolsCopy[p.lang].review}
-        desc={proToolsCopy[p.lang].reviewDesc}
-        preview={<CurveSilhouette />}
-      >
-        <PortfolioReview />
-      </ProGate>
-      <ProGate
-        title={p.lang === "bg" ? "Споделима снимка на портфолиото" : "Shareable portfolio snapshot"}
-        desc={
-          p.lang === "bg"
-            ? "Красива картичка само с проценти по класове активи."
-            : "A clean card with asset-class percentages only."
-        }
-        preview={<CurveSilhouette />}
-      >
-        <SnapshotCard />
-      </ProGate>
-      {p.user && (
-        <Card className="lg:col-span-2">
-          <h2 className="font-display mb-3 font-semibold">{proToolsCopy[p.lang].quality}</h2>
-          <DataQuality />
-        </Card>
-      )}
-      <GoalsCard />
-      <ProGate title={c.rebalance} desc={c.rebalanceHint} preview={<CurveSilhouette />}>
-        <Rebalance />
-      </ProGate>
-      <ProGate
-        title={proCopy[p.lang].scenarioStudio}
-        desc={proCopy[p.lang].scenarioStudioDesc}
-        preview={<CurveSilhouette />}
-      >
-        <ScenarioStudio />
-      </ProGate>
-      <ProGate
-        title={proCopy[p.lang].allocationAlerts}
-        desc={proCopy[p.lang].allocationAlertsDesc}
-        preview={<CurveSilhouette />}
-      >
-        <AllocationTargetsCard />
-      </ProGate>
-      <Risk />
-      <ProGate
-        title={proCopy[p.lang].dividendIncome}
-        desc={proCopy[p.lang].dividendIncomeDesc}
-        preview={<CurveSilhouette />}
-      >
-        <DividendIncomeDashboard />
-      </ProGate>
-      <ProGate
-        title={
-          {
-            en: "Asset correlation & risk contribution",
-            bg: "Корелация и принос към риска",
-            de: "Korrelation & Risikobeitrag",
-            es: "Correlación y contribución al riesgo",
-            it: "Correlazione e contributo al rischio",
-          }[p.lang]
-        }
-        desc={
-          {
-            en: "Real daily closes converted with dated FX rates.",
-            bg: "Реални дневни котировки, конвертирани с датиран валутен курс.",
-            de: "Tatsächliche Tageskurse, umgerechnet mit datierten Wechselkursen.",
-            es: "Cierres diarios reales convertidos con tipos de cambio fechados.",
-            it: "Chiusure giornaliere reali convertite con tassi FX datati.",
-          }[p.lang]
-        }
-        preview={<CurveSilhouette />}
-      >
-        <AssetRiskAnalysis />
-      </ProGate>
-      <ConcentrationCard />
-      <RecurringReminders />
-      <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}>
-        <Tax />
-      </ProGate>
+    <div className="space-y-8">
+      <h1 className="font-display text-2xl font-bold">{c.tools}</h1>
+      <section aria-labelledby="free-tools">
+        <h2 id="free-tools" className="mb-3 font-display text-lg font-semibold">
+          {toolGroups.free}
+        </h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <CompoundCalculator />
+          <Watchlist />
+        </div>
+      </section>
+      <section aria-labelledby="portfolio-tools">
+        <h2 id="portfolio-tools" className="mb-3 font-display text-lg font-semibold">
+          {toolGroups.portfolio}
+        </h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          {p.user && (
+            <Card>
+              <h3 className="font-display mb-3 font-semibold">{proToolsCopy[p.lang].quality}</h3>
+              <DataQuality />
+            </Card>
+          )}
+          <GoalsCard />
+          <Risk />
+          <ConcentrationCard />
+          <RecurringReminders />
+        </div>
+      </section>
+      <section aria-labelledby="pro-tools">
+        <h2 id="pro-tools" className="mb-3 font-display text-lg font-semibold">
+          {toolGroups.pro}
+        </h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ProGate
+            title={proCopy[p.lang].fire}
+            desc={proCopy[p.lang].fireDesc}
+            preview={<CurveSilhouette />}
+          >
+            <FireCalculator />
+          </ProGate>
+          <ProGate
+            title={dcfCopy[p.lang].intrinsic + " (DCF)"}
+            desc={dcfCopy[p.lang].gateDescription}
+            preview={<CurveSilhouette />}
+          >
+            <DcfCalculator />
+          </ProGate>
+          <ProGate
+            title={thesisCopy[p.lang].title}
+            desc={thesisCopy[p.lang].desc}
+            preview={<CurveSilhouette />}
+          >
+            <ThesisCheck />
+          </ProGate>
+          <ProGate
+            title={proToolsCopy[p.lang].review}
+            desc={proToolsCopy[p.lang].reviewDesc}
+            preview={<CurveSilhouette />}
+          >
+            <PortfolioReview />
+          </ProGate>
+          <ProGate
+            title={
+              p.lang === "bg" ? "Споделима снимка на портфолиото" : "Shareable portfolio snapshot"
+            }
+            desc={
+              p.lang === "bg"
+                ? "Красива картичка само с проценти по класове активи."
+                : "A clean card with asset-class percentages only."
+            }
+            preview={<CurveSilhouette />}
+          >
+            <SnapshotCard />
+          </ProGate>
+          <ProGate title={c.rebalance} desc={c.rebalanceHint} preview={<CurveSilhouette />}>
+            <Rebalance />
+          </ProGate>
+          <ProGate
+            title={proCopy[p.lang].scenarioStudio}
+            desc={proCopy[p.lang].scenarioStudioDesc}
+            preview={<CurveSilhouette />}
+          >
+            <ScenarioStudio />
+          </ProGate>
+          <ProGate
+            title={proCopy[p.lang].allocationAlerts}
+            desc={proCopy[p.lang].allocationAlertsDesc}
+            preview={<CurveSilhouette />}
+          >
+            <AllocationTargetsCard />
+          </ProGate>
+          <ProGate
+            title={proCopy[p.lang].dividendIncome}
+            desc={proCopy[p.lang].dividendIncomeDesc}
+            preview={<CurveSilhouette />}
+          >
+            <DividendIncomeDashboard />
+          </ProGate>
+          <ProGate
+            title={
+              {
+                en: "Asset correlation & risk contribution",
+                bg: "Корелация и принос към риска",
+                de: "Korrelation & Risikobeitrag",
+                es: "Correlación y contribución al riesgo",
+                it: "Correlazione e contributo al rischio",
+              }[p.lang]
+            }
+            desc={
+              {
+                en: "Real daily closes converted with dated FX rates.",
+                bg: "Реални дневни котировки, конвертирани с датиран валутен курс.",
+                de: "Tatsächliche Tageskurse, umgerechnet mit datierten Wechselkursen.",
+                es: "Cierres diarios reales convertidos con tipos de cambio fechados.",
+                it: "Chiusure giornaliere reali convertite con tassi FX datati.",
+              }[p.lang]
+            }
+            preview={<CurveSilhouette />}
+          >
+            <AssetRiskAnalysis />
+          </ProGate>
+          <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}>
+            <Tax />
+          </ProGate>
+        </div>
+      </section>
       <div className="grid gap-5">
-        <Watchlist />
         <Card>
           <h3 className="font-display mb-3 font-semibold">{c.exportTitle}</h3>
           <p className="mb-3 text-xs leading-relaxed text-muted-foreground">

@@ -199,6 +199,7 @@ function Dividends() {
             <>
               <Link
                 to="/auth"
+                search={{ mode: "signup", next: "/holdings" }}
                 className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
               >
                 {empty.signIn}

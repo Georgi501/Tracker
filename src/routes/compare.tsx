@@ -7,7 +7,7 @@ import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { Input } from "@/components/ui/input";
 import { marketStats, marketDcf, searchMarket } from "@/lib/market.functions";
-import { dcfValueFromFundamentals, potentialUpside, scenario } from "@/lib/dcf";
+import { dcfAnalysis, hasUsableDcfFundamentals, potentialUpside, scenario } from "@/lib/dcf";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { isUsableQuote } from "@/lib/portfolio";
@@ -70,14 +70,23 @@ function useAsset(symbol: string | null | undefined) {
           .catch(() => ({ data: null, failed: true })),
       ]);
       const d = dcfResult.data;
-      const fair = d
-        ? dcfValueFromFundamentals(d, scenario("base", d.revenueGrowth ?? 0.05))
-        : null;
+      const assumptions = d ? scenario("base", d.revenueGrowth ?? 0.05) : null;
+      const analysis =
+        d && assumptions && hasUsableDcfFundamentals(d)
+          ? dcfAnalysis({
+              fcf: d.fcf,
+              cash: d.cash,
+              debt: d.debt,
+              shares: d.shares,
+              ...assumptions,
+            })
+          : null;
+      const fair = analysis?.valuePerShare ?? null;
       const upside =
         fair != null && d && isUsableQuote(d.price, d.priceAsOf)
           ? potentialUpside(fair, d.price)
           : null;
-      return { s, d, fair, upside, dcfFailed: dcfResult.failed };
+      return { s, d, assumptions, analysis, fair, upside, dcfFailed: dcfResult.failed };
     },
   });
 }
@@ -116,9 +125,19 @@ function Compare() {
       return "—";
     return `${num(data.price)} ${data.currency.toUpperCase()}`;
   };
+  const fairValue = (x: R) => {
+    const data = x?.d;
+    if (x?.fair == null || !data?.currency) return "—";
+    const date = data.priceAsOf
+      ? new Intl.DateTimeFormat(loc, { dateStyle: "medium", timeZone: "UTC" }).format(
+          new Date(data.priceAsOf),
+        )
+      : "—";
+    return `${num(x.fair)} ${data.currency.toUpperCase()} · ${date}`;
+  };
   const rows: [string, (x: R) => string, ((x: R) => number | null)?, boolean?][] = [
     [c.price, marketPrice],
-    [c.fairValue, (x) => num(x?.fair)],
+    [c.fairValue, fairValue],
     [c.upside, (x) => pct(x?.upside), (x) => x?.upside ?? null, true],
     [c.marketCap, (x) => cap(x?.s?.marketCap)],
     ["P/E (TTM)", (x) => num(x?.s?.pe), (x) => x?.s?.pe ?? null, false],
@@ -155,6 +174,68 @@ function Compare() {
       </div>
     </div>
   );
+  const dcfDetails = (x: R) => {
+    const data = x?.d;
+    const assumptions = x?.assumptions;
+    const analysis = x?.analysis;
+    const detailsCopy = DCF_DETAILS_COPY[p.lang === "bg" ? "bg" : "en"];
+    const date = (value: string | null | undefined) =>
+      value
+        ? new Intl.DateTimeFormat(loc, { dateStyle: "medium", timeZone: "UTC" }).format(
+            new Date(value),
+          )
+        : "—";
+    const amount = (value: number | null | undefined, currency = data?.finCurrency) =>
+      value == null
+        ? "—"
+        : `${new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(value)} ${currency ?? ""}`.trim();
+    return (
+      <details className="rounded-xl border border-border">
+        <summary className="cursor-pointer px-3 py-3 text-sm font-semibold">
+          {detailsCopy.title}
+          {data?.symbol ? ` · ${data.symbol}` : ""}
+        </summary>
+        <div className="border-t border-border px-3 py-3 text-sm">
+          <p className="mb-3 text-xs text-muted-foreground">{detailsCopy.method}</p>
+          <dl className="grid gap-x-4 sm:grid-cols-2">
+            <DcfDetail label={detailsCopy.price} value={amount(data?.price, data?.currency)} />
+            <DcfDetail label={detailsCopy.priceDate} value={date(data?.priceAsOf)} />
+            <DcfDetail label={detailsCopy.dataDate} value={date(data?.fetchedAt)} />
+            <DcfDetail label={detailsCopy.fcf} value={amount(data?.fcf)} />
+            <DcfDetail label={detailsCopy.cash} value={amount(data?.cash)} />
+            <DcfDetail label={detailsCopy.debt} value={amount(data?.debt)} />
+            <DcfDetail label={detailsCopy.shares} value={amount(data?.shares, "shares")} />
+            <DcfDetail label={detailsCopy.financialCurrency} value={data?.finCurrency ?? "—"} />
+            <DcfDetail
+              label={detailsCopy.growth}
+              value={assumptions ? pct(assumptions.growth) : "—"}
+            />
+            <DcfDetail
+              label={detailsCopy.discount}
+              value={assumptions ? pct(assumptions.discount) : "—"}
+            />
+            <DcfDetail
+              label={detailsCopy.terminal}
+              value={assumptions ? pct(assumptions.terminal) : "—"}
+            />
+            <DcfDetail
+              label={detailsCopy.projectedCashFlows}
+              value={amount(analysis?.presentValueOfCashFlows)}
+            />
+            <DcfDetail
+              label={detailsCopy.terminalValue}
+              value={amount(analysis?.presentValueOfTerminalValue)}
+            />
+            <DcfDetail
+              label={detailsCopy.result}
+              value={amount(analysis?.valuePerShare, data?.currency)}
+            />
+          </dl>
+          {!analysis && <p className="mt-2 text-xs text-muted-foreground">{detailsCopy.missing}</p>}
+        </div>
+      </details>
+    );
+  };
   return (
     <div className="page-enter space-y-5">
       <div>
@@ -233,10 +314,10 @@ function Compare() {
           ) : null,
         )}
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr>
-                <th className="w-2/5" />
+                <th className="sticky left-0 z-10 w-2/5 bg-card" />
                 <th className="p-2 text-left">{head(ra.data, qa.data?.d?.name)}</th>
                 <th className="p-2 text-left">{head(rb.data, qb.data?.d?.name)}</th>
               </tr>
@@ -244,12 +325,15 @@ function Compare() {
             <tbody>
               {rows.map(([label, fmt, get, higher]) => (
                 <tr key={label} className="border-t border-border">
-                  <td className="p-2 text-muted-foreground">{label}</td>
+                  <td className="sticky left-0 z-10 bg-card p-2 text-muted-foreground">{label}</td>
                   {([0, 1] as const).map((side) => (
                     <td
                       key={side}
                       className={`p-2 font-semibold tabular-nums ${win(get, higher, side) ? "text-success" : ""}`}
                     >
+                      <span className="mb-1 block text-[10px] font-medium text-muted-foreground sm:hidden">
+                        {(side ? rb.data : ra.data) ?? (side ? b : a).toUpperCase()}
+                      </span>
                       {(side ? qb : qa).isLoading
                         ? "…"
                         : (side ? qb : qa).isError
@@ -275,6 +359,10 @@ function Compare() {
           </div>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{c.footnote}</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {dcfDetails(qa.data)}
+          {dcfDetails(qb.data)}
+        </div>
       </ProGate>
     </div>
   );
@@ -459,3 +547,55 @@ const COPY: Record<
       "Dati di Yahoo Finance; “—” indica un dato non disponibile o non confrontabile. Il DCF usa un modello semplificato a cinque anni; il potenziale appare solo con quotazione recente e valute coincidenti. Non è consulenza finanziaria.",
   },
 };
+
+function DcfDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 justify-between gap-3 border-b border-border/60 py-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+const DCF_DETAILS_COPY = {
+  en: {
+    title: "How is it calculated?",
+    method:
+      "Simplified two-stage DCF: five annual cash-flow projections, discounted at 9%, plus a 2.5% perpetual growth value; cash is added and debt deducted, then divided by shares outstanding.",
+    price: "Market price",
+    priceDate: "Quote date",
+    dataDate: "Inputs retrieved",
+    fcf: "Provider free cash flow",
+    cash: "Cash",
+    debt: "Total debt",
+    shares: "Shares outstanding",
+    financialCurrency: "Financial statement currency",
+    growth: "Annual growth assumption",
+    discount: "Discount rate",
+    terminal: "Perpetual growth rate",
+    projectedCashFlows: "Present value of projected cash flows",
+    terminalValue: "Present value of terminal value",
+    result: "Estimated value per share",
+    missing: "A usable estimate requires complete inputs in a currency matching the quote.",
+  },
+  bg: {
+    title: "Как е сметнато?",
+    method:
+      "Опростен двуетапен DCF: пет годишни прогнози на паричния поток, дисконтирани с 9%, плюс терминална стойност при постоянен ръст 2,5%; паричните средства се добавят, дългът се изважда, а резултатът се дели на броя акции.",
+    price: "Пазарна цена",
+    priceDate: "Дата на котировката",
+    dataDate: "Дата на получаване на данните",
+    fcf: "Свободен паричен поток",
+    cash: "Парични средства",
+    debt: "Общ дълг",
+    shares: "Брой акции",
+    financialCurrency: "Валута на финансовия отчет",
+    growth: "Приет годишен ръст",
+    discount: "Дисконтов процент",
+    terminal: "Постоянен ръст",
+    projectedCashFlows: "Настояща стойност на прогнозните потоци",
+    terminalValue: "Настояща стойност на терминалната стойност",
+    result: "Оценка на акция",
+    missing: "Оценка се изчислява само при пълни данни във валута, съвпадаща с котировката.",
+  },
+} as const;

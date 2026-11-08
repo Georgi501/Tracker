@@ -6,11 +6,15 @@ import { usePortfolio } from "@/lib/store";
 
 const AUTH_CONTINUATION_KEY = "capispot-auth-continuation";
 
-function safePricingContinuation(value: string | null): string | null {
+function safeAuthContinuation(value: string | null): string | null {
   if (!value) return null;
   try {
     const url = new URL(value, window.location.origin);
-    if (url.origin !== window.location.origin || url.pathname !== "/pricing") return null;
+    if (url.origin !== window.location.origin || url.hash) return null;
+    if (url.pathname === "/brokers" || url.pathname === "/holdings") {
+      return url.search ? null : url.pathname;
+    }
+    if (url.pathname !== "/pricing") return null;
     const params = url.searchParams;
     if (params.get("checkout") !== "pro") return null;
     const interval = params.get("interval");
@@ -120,8 +124,8 @@ export function AuthForm({
     let continuation: string | null = null;
     try {
       continuation =
-        safePricingContinuation(new URLSearchParams(window.location.search).get("next")) ??
-        safePricingContinuation(sessionStorage.getItem(AUTH_CONTINUATION_KEY));
+        safeAuthContinuation(new URLSearchParams(window.location.search).get("next")) ??
+        safeAuthContinuation(sessionStorage.getItem(AUTH_CONTINUATION_KEY));
       sessionStorage.removeItem(AUTH_CONTINUATION_KEY);
     } catch (error) {
       console.error("Unable to restore the requested sign-in action", error);
@@ -131,7 +135,7 @@ export function AuthForm({
   }, [p.user, navigate, redirectOnSignIn]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const continuation = safePricingContinuation(params.get("next"));
+    const continuation = safeAuthContinuation(params.get("next"));
     if (continuation) {
       try {
         sessionStorage.setItem(AUTH_CONTINUATION_KEY, continuation);
