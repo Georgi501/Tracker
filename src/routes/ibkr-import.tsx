@@ -9,6 +9,7 @@ type Guide = {
   intro: string;
   sections: [string, string][];
   cta: string;
+  sampleCta: string;
   note: string;
 };
 
@@ -36,6 +37,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
     ],
     cta: "Open Brokers and import",
+    sampleCta: "Try a sample CSV",
     note: "General information, not tax or investment advice. Capispot is not affiliated with Interactive Brokers.",
   },
   bg: {
@@ -61,6 +63,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
     ],
     cta: "Отвори „Брокери“ и импортирай",
+    sampleCta: "Пробвай примерен CSV",
     note: "Обща информация, не е данъчен или инвестиционен съвет. Capispot не е свързан с Interactive Brokers.",
   },
 };
@@ -104,9 +107,16 @@ function IbkrImport() {
       <div className="flex flex-wrap items-center gap-3">
         <Link
           to="/brokers"
-          className="press rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          className="press inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
         >
           {g.cta}
+        </Link>
+        <Link
+          to="/import-demo"
+          search={{ broker: "ibkr" }}
+          className="press inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-accent"
+        >
+          {g.sampleCta}
         </Link>
         <p className="text-xs text-muted-foreground">{g.note}</p>
       </div>

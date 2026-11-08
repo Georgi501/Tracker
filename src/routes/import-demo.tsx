@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CircleAlert, CircleCheck, Upload } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   detectBrokerFormat,
   parseBrokerCsv,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
 import { SAMPLE_IBKR_CSV, SAMPLE_IMPORT_CSV, SAMPLE_TRADING212_CSV } from "@/lib/sample-import";
+import { z } from "zod";
 
 const SAMPLE_CSVS: Record<BrokerFormat, string> = {
   generic: SAMPLE_IMPORT_CSV,
@@ -21,6 +22,8 @@ const SAMPLE_CSVS: Record<BrokerFormat, string> = {
 };
 
 export const Route = createFileRoute("/import-demo")({
+  validateSearch: (search) =>
+    z.object({ broker: z.string().optional().catch(undefined) }).parse(search),
   head: () => ({
     meta: [
       { title: "Try a sample CSV import — Capispot" },
@@ -174,7 +177,15 @@ const COPY: Record<
 function ImportDemo() {
   const p = usePortfolio();
   const c = COPY[p.lang];
-  const [selectedFormat, setSelectedFormat] = useState<BrokerFormat>("generic");
+  const { broker } = Route.useSearch();
+  const formatFromBroker = (value: string | undefined): BrokerFormat =>
+    value === "trading212" || value === "ibkr" ? value : "generic";
+  const [selectedFormat, setSelectedFormat] = useState<BrokerFormat>(() =>
+    formatFromBroker(broker),
+  );
+  useEffect(() => {
+    setSelectedFormat(formatFromBroker(broker));
+  }, [broker]);
   const csv = SAMPLE_CSVS[selectedFormat];
   const format = detectBrokerFormat(csv);
   const rows = format ? parseBrokerCsv(format, csv) : [];
