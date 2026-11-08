@@ -16,7 +16,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Import Trading 212 history into a portfolio tracker",
     intro:
-      "Export your Trading 212 history as a CSV file and bring it into Capispot to see all holdings, dividends and realized results in one place.",
+      "Export your Trading 212 history as a CSV file and bring it into Capispot to see holdings and dividends from all your brokers in one place.",
     sections: [
       [
         "1. Export from Trading 212",
@@ -31,8 +31,8 @@ const GUIDE: Record<"en" | "bg", Guide> = {
         "A preview shows possible duplicates and a report by currency, fees and transaction type, so you can check the rows before anything is added.",
       ],
       [
-        "4. Use the results",
-        "Once imported, the FIFO report groups realized results by tax year, and analytics show the split across brokers. Import other brokers too for a complete picture.",
+        "4. Review the results",
+        "Free includes the import preview and duplicate checks. The annual FIFO report of realized gains and losses is a separate Pro feature; analytics show the split across brokers.",
       ],
       [
         "Direct sync with Pro",
@@ -45,7 +45,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   bg: {
     title: "Как да импортираш историята от Trading 212 в тракер за портфолио",
     intro:
-      "Експортирай историята си от Trading 212 като CSV файл и я качи в Capispot, за да виждаш всички позиции, дивиденти и реализирани резултати на едно място.",
+      "Експортирай историята си от Trading 212 като CSV файл и я качи в Capispot, за да виждаш позициите и дивидентите от всичките си брокери на едно място.",
     sections: [
       [
         "1. Експорт от Trading 212",
@@ -60,8 +60,8 @@ const GUIDE: Record<"en" | "bg", Guide> = {
         "Преди да се добави нещо, виждаш преглед с възможни дубликати и отчет по валути, такси и вид сделки, за да провериш редовете.",
       ],
       [
-        "4. Използвай резултатите",
-        "След импорта FIFO справката групира реализираните резултати по данъчна година, а анализите показват разпределението по брокери. Импортирай и други брокери за пълна картина.",
+        "4. Разгледай резултатите",
+        "В безплатния план CSV импортът включва преглед и проверка за дублирани сделки. Годишната FIFO справка за реализираните печалби и загуби е отделна Pro функция; анализите показват разпределението по брокери.",
       ],
       [
         "Директна връзка с Pro",
@@ -75,7 +75,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
 
 const TITLE = "Import Trading 212 history (CSV) — Capispot";
 const DESCRIPTION =
-  "Step-by-step: export your Trading 212 CSV, import it into Capispot, check duplicates and see FIFO results.";
+  "Step-by-step: export your Trading 212 CSV, import it for free, review duplicates and learn which annual FIFO reports are included with Pro.";
 
 export const Route = createFileRoute("/trading212-import")({
   head: () => ({

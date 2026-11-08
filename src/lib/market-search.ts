@@ -6,6 +6,8 @@ export interface MarketAsset {
   symbol: string;
   name: string;
   type: "stock" | "etf" | "crypto";
+  exchange?: string;
+  currency?: string;
 }
 export type MarketAssetTypeFilter = MarketAsset["type"] | "all";
 export type MarketAssetSort = "relevance" | "name" | "symbol";
@@ -149,6 +151,15 @@ export const UCITS: (MarketAsset & UcitsInfo)[] = [
     index: "S&P 500",
   },
   {
+    symbol: "SPYL.AS",
+    name: "SPDR S&P 500 UCITS ETF (Acc)",
+    type: "etf",
+    isin: "IE000XZSV718",
+    domicile: "IE",
+    policy: "acc",
+    index: "S&P 500",
+  },
+  {
     symbol: "SXRV.DE",
     name: "iShares Nasdaq 100 UCITS ETF (Acc)",
     type: "etf",
@@ -216,6 +227,81 @@ MARKET_ASSETS.push(...UCITS.map(({ symbol, name, type }) => ({ symbol, name, typ
 export const ucitsInfo = (symbol: string) =>
   UCITS.find((u) => u.symbol.toUpperCase() === symbol.toUpperCase());
 export const isIsin = (q: string) => /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(q.trim().toUpperCase());
+
+const EXCHANGES: Record<string, string> = {
+  AS: "Euronext Amsterdam",
+  AMS: "Euronext Amsterdam",
+  BR: "Euronext Brussels",
+  BRU: "Euronext Brussels",
+  DE: "Xetra",
+  GER: "Xetra",
+  F: "Frankfurt",
+  HE: "Nasdaq Helsinki",
+  HEL: "Nasdaq Helsinki",
+  IR: "Euronext Dublin",
+  L: "London Stock Exchange",
+  LSE: "London Stock Exchange",
+  LS: "Euronext Lisbon",
+  LIS: "Euronext Lisbon",
+  MC: "Bolsa de Madrid",
+  MCE: "Bolsa de Madrid",
+  MI: "Borsa Italiana",
+  MIL: "Borsa Italiana",
+  PA: "Euronext Paris",
+  PAR: "Euronext Paris",
+  VI: "Vienna Stock Exchange",
+  VIE: "Vienna Stock Exchange",
+};
+const CURRENCIES: Record<string, string> = {
+  AS: "EUR",
+  AMS: "EUR",
+  BR: "EUR",
+  BRU: "EUR",
+  DE: "EUR",
+  GER: "EUR",
+  F: "EUR",
+  HE: "EUR",
+  HEL: "EUR",
+  IR: "EUR",
+  L: "GBP",
+  LSE: "GBP",
+  LS: "EUR",
+  LIS: "EUR",
+  MC: "EUR",
+  MCE: "EUR",
+  MI: "EUR",
+  MIL: "EUR",
+  PA: "EUR",
+  PAR: "EUR",
+  VI: "EUR",
+  VIE: "EUR",
+};
+
+export function marketListingDetails(asset: MarketAsset) {
+  const suffix = asset.symbol.split(".").at(-1)?.toUpperCase() ?? "";
+  const exchangeCode = asset.exchange?.toUpperCase() ?? suffix;
+  return {
+    exchange: EXCHANGES[exchangeCode] ?? asset.exchange ?? null,
+    currency: asset.currency ?? CURRENCIES[suffix] ?? CURRENCIES[exchangeCode] ?? null,
+    isin: ucitsInfo(asset.symbol)?.isin ?? null,
+  };
+}
+
+export function groupMarketListings(assets: MarketAsset[]) {
+  const groups = new Map<string, MarketAsset[]>();
+  for (const asset of assets) {
+    const isin = ucitsInfo(asset.symbol)?.isin;
+    const key = isin ? `isin:${isin}` : `symbol:${asset.symbol}`;
+    const group = groups.get(key) ?? [];
+    group.push(asset);
+    groups.set(key, group);
+  }
+  return [...groups].map(([key, listings]) => ({
+    key,
+    isin: key.startsWith("isin:") ? key.slice(5) : null,
+    listings,
+  }));
+}
 
 export function searchCatalog(query: string): MarketAsset[] {
   const q = query.trim().toLowerCase();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   accountValues,
+  brokerHoldings,
   computeHoldings,
   FX,
   irr,
@@ -123,6 +124,149 @@ describe("portfolio math", () => {
       { id: "broker-1", name: "Broker One", value: 60, missingQuotes: 0 },
       { id: "broker-2", name: "Broker Two", value: 40, missingQuotes: 0 },
       { id: "manual", name: null, value: 20, missingQuotes: 0 },
+    ]);
+  });
+  it("moves FIFO lots between brokers without changing acquisition cost", () => {
+    const transactions = [
+      {
+        id: "early-buy",
+        assetId: "x",
+        brokerId: "broker-1",
+        kind: "buy" as const,
+        quantity: 5,
+        price: 10,
+        date: "2024-01-01",
+      },
+      {
+        id: "late-buy",
+        assetId: "x",
+        brokerId: "broker-1",
+        kind: "buy" as const,
+        quantity: 5,
+        price: 20,
+        date: "2024-02-01",
+      },
+    ];
+    const transfers = [
+      {
+        id: "out",
+        assetId: "x",
+        fromBrokerId: "broker-1",
+        toBrokerId: "broker-2",
+        quantity: 7,
+        date: "2024-03-01",
+      },
+      {
+        id: "back",
+        assetId: "x",
+        fromBrokerId: "broker-2",
+        toBrokerId: "broker-1",
+        quantity: 1,
+        date: "2024-04-01",
+      },
+    ];
+    const holdings = brokerHoldings([a], transactions, transfers).sort((left, right) =>
+      left.brokerId.localeCompare(right.brokerId),
+    );
+    expect(
+      holdings.map(({ brokerId, quantity, costBasis }) => ({ brokerId, quantity, costBasis })),
+    ).toEqual([
+      { brokerId: "broker-1", quantity: 4, costBasis: 70 },
+      { brokerId: "broker-2", quantity: 6, costBasis: 80 },
+    ]);
+  });
+  it("rejects a transfer that exceeds the source account's dated holdings", () => {
+    expect(() =>
+      brokerHoldings(
+        [a],
+        [
+          {
+            id: "buy",
+            assetId: "x",
+            brokerId: "broker-1",
+            kind: "buy",
+            quantity: 5,
+            price: 10,
+            date: "2024-01-01",
+          },
+        ],
+        [
+          {
+            id: "transfer",
+            assetId: "x",
+            fromBrokerId: "broker-1",
+            toBrokerId: "broker-2",
+            quantity: 6,
+            date: "2024-02-01",
+          },
+        ],
+      ),
+    ).toThrow("Broker transfer exceeds available holdings");
+  });
+  it("normalizes historical transfers through a later split without changing total cost", () => {
+    const holdings = brokerHoldings(
+      [a],
+      [
+        {
+          id: "buy",
+          assetId: "x",
+          brokerId: "broker-1",
+          kind: "buy",
+          quantity: 10,
+          price: 10,
+          date: "2024-01-01",
+        },
+      ],
+      [
+        {
+          id: "transfer",
+          assetId: "x",
+          fromBrokerId: "broker-1",
+          toBrokerId: "broker-2",
+          quantity: 4,
+          date: "2024-02-01",
+        },
+      ],
+      [{ assetId: "x", date: "2024-03-01", numerator: 2, denominator: 1 }],
+    ).sort((left, right) => left.brokerId.localeCompare(right.brokerId));
+    expect(holdings.map(({ quantity, costBasis }) => ({ quantity, costBasis }))).toEqual([
+      { quantity: 12, costBasis: 60 },
+      { quantity: 8, costBasis: 40 },
+    ]);
+  });
+  it("includes transfers when calculating broker account values", () => {
+    const accounts = accountValues(
+      [a],
+      [
+        {
+          id: "buy",
+          assetId: "x",
+          brokerId: "broker-1",
+          kind: "buy",
+          quantity: 5,
+          price: 10,
+          date: "2024-01-01",
+        },
+      ],
+      [
+        { id: "broker-1", name: "Broker One" },
+        { id: "broker-2", name: "Broker Two" },
+      ],
+      [],
+      [
+        {
+          id: "transfer",
+          assetId: "x",
+          fromBrokerId: "broker-1",
+          toBrokerId: "broker-2",
+          quantity: 2,
+          date: "2024-02-01",
+        },
+      ],
+    );
+    expect(accounts).toEqual([
+      { id: "broker-1", name: "Broker One", value: 60, missingQuotes: 0 },
+      { id: "broker-2", name: "Broker Two", value: 40, missingQuotes: 0 },
     ]);
   });
   it("supports only EUR and USD (no BGN)", () => {

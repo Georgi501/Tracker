@@ -160,10 +160,12 @@ function Compare() {
       <div>
         <h1 className="font-display text-2xl font-bold">{c.title}</h1>
         <p className="text-sm text-muted-foreground">{c.subtitle}</p>
+        {!p.user && <p className="mt-2 text-sm text-muted-foreground">{c.guestNote}</p>}
       </div>
       <ProGate
         title={c.gateTitle}
         desc={c.gateDescription}
+        unlocked={!p.user}
         preview={
           <div className="flex min-h-80 items-center">
             <BarsSilhouette />
@@ -283,6 +285,7 @@ const COPY: Record<
   {
     title: string;
     subtitle: string;
+    guestNote: string;
     gateTitle: string;
     gateDescription: string;
     assetA: string;
@@ -310,6 +313,7 @@ const COPY: Record<
   en: {
     title: "Head-to-head comparison",
     subtitle: "Enter a ticker or name for two companies or ETFs.",
+    guestNote: "The AAPL and MSFT example uses current provider data, not preset sample prices.",
     gateTitle: "Compare assets",
     gateDescription:
       "Compare market cap, P/E, EPS, dividend yield, revenue growth, beta, 52-week range and analyst targets. Simplified DCF estimates are shown for supported stocks when fundamentals are complete.",
@@ -338,6 +342,8 @@ const COPY: Record<
   bg: {
     title: "Сравнение активи",
     subtitle: "Въведи тикер или име на две компании или ETF-а.",
+    guestNote:
+      "Примерът с AAPL и MSFT използва актуални данни от доставчика, а не зададени примерни цени.",
     gateTitle: "Сравни активи",
     gateDescription:
       "Сравни пазарна капитализация, P/E, EPS, дивидентна доходност, ръст на приходите, бета, 52-седмичен диапазон и цели на анализаторите. Опростена DCF оценка се показва за поддържани акции при пълни финансови данни.",
@@ -366,6 +372,8 @@ const COPY: Record<
   de: {
     title: "Direkter Vergleich",
     subtitle: "Gib ein Symbol oder einen Namen für zwei Unternehmen oder ETFs ein.",
+    guestNote:
+      "Der AAPL- und MSFT-Vergleich nutzt aktuelle Anbieterdaten statt festgelegter Beispielkurse.",
     gateTitle: "Werte vergleichen",
     gateDescription:
       "Vergleiche Marktkapitalisierung, KGV, EPS, Dividendenrendite, Umsatzwachstum, Beta, 52-Wochen-Spanne und Analystenziele. Vereinfachte DCF-Schätzungen erscheinen für unterstützte Aktien bei vollständigen Fundamentaldaten.",
@@ -394,6 +402,8 @@ const COPY: Record<
   es: {
     title: "Comparación directa",
     subtitle: "Introduce el ticker o nombre de dos empresas o ETF.",
+    guestNote:
+      "El ejemplo de AAPL y MSFT utiliza datos actuales del proveedor, no precios inventados.",
     gateTitle: "Comparar activos",
     gateDescription:
       "Compara capitalización, PER, BPA, rentabilidad por dividendo, crecimiento de ingresos, beta, rango de 52 semanas y objetivos de analistas. Las estimaciones DCF simplificadas aparecen para acciones compatibles cuando los datos fundamentales están completos.",
@@ -422,6 +432,7 @@ const COPY: Record<
   it: {
     title: "Confronto diretto",
     subtitle: "Inserisci il ticker o il nome di due società o ETF.",
+    guestNote: "L'esempio AAPL e MSFT usa dati aggiornati del provider, non prezzi preimpostati.",
     gateTitle: "Confronta asset",
     gateDescription:
       "Confronta capitalizzazione, P/E, EPS, rendimento da dividendo, crescita dei ricavi, beta, intervallo a 52 settimane e obiettivi degli analisti. Le stime DCF semplificate sono mostrate per azioni supportate con dati fondamentali completi.",

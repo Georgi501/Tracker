@@ -22,7 +22,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
       ],
       [
         "Combine it with other brokers",
-        "Revolut holdings sit in the same portfolio as Trading 212 or Interactive Brokers, so allocation, dividends and FIFO results cover everything you own.",
+        "Revolut holdings sit in the same portfolio as Trading 212 or Interactive Brokers. Free includes CSV preview and duplicate checks; the annual FIFO report of realized gains and losses is a Pro feature.",
       ],
     ],
     cta: "Import a CSV",
@@ -47,7 +47,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
       ],
       [
         "Обедини го с други брокери",
-        "Позициите от Revolut стоят в същото портфолио като Trading 212 или Interactive Brokers, така че разпределението, дивидентите и FIFO резултатите обхващат всичко, което притежаваш.",
+        "Позициите от Revolut са в едно портфолио със сделките от Trading 212 и Interactive Brokers. Безплатният CSV импорт включва преглед и проверка за дубликати; годишната FIFO справка за реализираните печалби и загуби е Pro функция.",
       ],
     ],
     cta: "Импортирай CSV",

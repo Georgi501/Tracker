@@ -38,7 +38,6 @@ import { Card, Delta } from "@/components/AppShell";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { CompanyLogo } from "@/components/CompanyLogo";
-import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { WelcomeHero } from "@/components/WelcomeHero";
 import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections, LandingSteps } from "@/components/LandingSections";
@@ -94,6 +93,11 @@ const DashboardMovers = lazy(() =>
 const PortfolioDataCheck = lazy(() =>
   import("@/components/PortfolioDataCheck").then((module) => ({
     default: module.PortfolioDataCheck,
+  })),
+);
+const EditTransactionDialog = lazy(() =>
+  import("@/components/EditTransactionDialog").then((module) => ({
+    default: module.EditTransactionDialog,
   })),
 );
 const AllocationCard = lazy(() =>
@@ -1360,10 +1364,14 @@ function Dashboard() {
           </Card>
         </div>
       )}
-      <EditTransactionDialog
-        transaction={editingTransaction}
-        onClose={() => setEditingTransaction(null)}
-      />
+      {editingTransaction && (
+        <Suspense fallback={null}>
+          <EditTransactionDialog
+            transaction={editingTransaction}
+            onClose={() => setEditingTransaction(null)}
+          />
+        </Suspense>
+      )}
       <AlertDialog
         open={!!deletingTransaction}
         onOpenChange={(open) => {

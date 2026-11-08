@@ -340,7 +340,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/dividends", label: p.t("dividends") },
     { to: "/tools", label: toolsCopy[p.lang].tools },
     { to: "/advisor", label: advisorCopy[p.lang].advisor },
-    { to: "/brokers", label: p.t("brokers") },
+    { to: "/brokers", label: p.lang === "bg" ? "Импорт" : "Import" },
     { to: "/community", label: shellCopy.community },
     {
       to: "/wall",
@@ -349,63 +349,72 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/demo", label: shellCopy.demo },
     { to: "/pricing", label: p.t("pricing") },
   ];
-  const guestNavPaths = ["/markets", "/demo", "/pricing"];
+  const guestNavPaths = ["/demo", "/brokers", "/pricing"];
   const mainNav = p.user ? nav.slice(0, 5) : nav.filter((n) => guestNavPaths.includes(n.to));
-  const moreGroups = [
-    {
-      label: shellCopy.portfolioGroup,
-      links: nav.filter((item) =>
-        ["/compare", "/timeline", "/dividends", "/brokers", "/alerts", "/earnings"].includes(
-          item.to,
-        ),
-      ),
-    },
-    {
-      label: shellCopy.planningGroup,
-      links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
-    },
-    {
-      label: shellCopy.exploreGroup,
-      links: nav.filter(
-        (item) =>
-          ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
-          (item.to !== "/wall" || p.isPro),
-      ),
-    },
-  ];
-  const mobileMoreGroups = [
-    {
-      label: shellCopy.portfolioGroup,
-      links: nav.filter((item) =>
-        [
-          "/watchlist",
-          "/earnings",
-          "/alerts",
-          "/analytics",
-          "/compare",
-          "/timeline",
-          "/dividends",
-          "/brokers",
-        ].includes(item.to),
-      ),
-    },
-    {
-      label: shellCopy.planningGroup,
-      links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
-    },
-    {
-      label: shellCopy.exploreGroup,
-      links: [
-        ...nav.filter(
-          (item) =>
-            ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
-            (item.to !== "/wall" || p.isPro),
-        ),
-        { to: "/profile", label: shellCopy.profile },
-        { to: "/account", label: shellCopy.account },
-      ],
-    },
-  ];
+  const moreGroups = p.user
+    ? [
+        {
+          label: shellCopy.portfolioGroup,
+          links: nav.filter((item) =>
+            ["/compare", "/timeline", "/dividends", "/brokers", "/alerts", "/earnings"].includes(
+              item.to,
+            ),
+          ),
+        },
+        {
+          label: shellCopy.planningGroup,
+          links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
+        },
+        {
+          label: shellCopy.exploreGroup,
+          links: nav.filter(
+            (item) =>
+              ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
+              (item.to !== "/wall" || p.isPro),
+          ),
+        },
+      ]
+    : [];
+  const mobileMoreGroups = p.user
+    ? [
+        {
+          label: shellCopy.portfolioGroup,
+          links: nav.filter((item) =>
+            [
+              "/watchlist",
+              "/earnings",
+              "/alerts",
+              "/analytics",
+              "/compare",
+              "/timeline",
+              "/dividends",
+              "/brokers",
+            ].includes(item.to),
+          ),
+        },
+        {
+          label: shellCopy.planningGroup,
+          links: nav.filter((item) => ["/tools", "/advisor"].includes(item.to)),
+        },
+        {
+          label: shellCopy.exploreGroup,
+          links: [
+            ...nav.filter(
+              (item) =>
+                ["/community", "/wall", "/demo", "/pricing"].includes(item.to) &&
+                (item.to !== "/wall" || p.isPro),
+            ),
+            { to: "/profile", label: shellCopy.profile },
+            { to: "/account", label: shellCopy.account },
+          ],
+        },
+      ]
+    : [
+        {
+          label: shellCopy.exploreGroup,
+          links: nav.filter((item) => ["/brokers", "/pricing"].includes(item.to)),
+        },
+      ];
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -484,35 +493,37 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {n.label}
               </Link>
             ))}
-            <DropdownMenu
-              modal={false}
-              open={activeMenu === "desktop-more"}
-              onOpenChange={(isOpen) => setActiveMenu(isOpen ? "desktop-more" : null)}
-            >
-              <DropdownMenuTrigger asChild>
-                <button className="as-link flex items-center gap-1">
-                  {shellCopy.more}
-                  <ChevronDown size={14} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {moreGroups.map((group, index) => (
-                  <Fragment key={group.label}>
-                    {index > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        {group.label}
-                      </DropdownMenuLabel>
-                      {group.links.map((n) => (
-                        <DropdownMenuItem key={n.to} asChild>
-                          <Link to={n.to}>{n.label}</Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
-                  </Fragment>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {p.user && (
+              <DropdownMenu
+                modal={false}
+                open={activeMenu === "desktop-more"}
+                onOpenChange={(isOpen) => setActiveMenu(isOpen ? "desktop-more" : null)}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button className="as-link flex items-center gap-1">
+                    {shellCopy.more}
+                    <ChevronDown size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {moreGroups.map((group, index) => (
+                    <Fragment key={group.label}>
+                      {index > 0 && <DropdownMenuSeparator />}
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          {group.label}
+                        </DropdownMenuLabel>
+                        {group.links.map((n) => (
+                          <DropdownMenuItem key={n.to} asChild>
+                            <Link to={n.to}>{n.label}</Link>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuGroup>
+                    </Fragment>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
           <div className="order-last min-w-0 w-full basis-full flex-1 sm:order-none sm:w-auto sm:basis-auto lg:max-w-md">
             <HeaderSearch />
@@ -975,8 +986,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 const url = "https://capispot.com";
                 const text =
                   p.lang === "bg"
-                    ? "Безплатен тракер за инвестиционно портфолио с FIFO справка и импорт от брокери:"
-                    : "Free portfolio tracker with FIFO report and broker imports:";
+                    ? "Безплатен тракер за портфолио, CSV импорт и годишна FIFO справка в Pro:"
+                    : "Free portfolio tracker with CSV imports and an annual FIFO report in Pro:";
                 try {
                   if (navigator.share) {
                     await navigator.share({ title: "CapiSpot", text, url });

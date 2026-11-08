@@ -337,12 +337,16 @@ function Analytics() {
       ),
     },
   ];
-  const accounts = accountValues(p.assets, p.transactions, p.brokers, p.corporateActions).map(
-    (account) => ({
-      ...account,
-      name: account.name ?? (account.id === "manual" ? c.manualAccount : c.unknownAccount),
-    }),
-  );
+  const accounts = accountValues(
+    p.assets,
+    p.transactions,
+    p.brokers,
+    p.corporateActions,
+    p.brokerTransfers,
+  ).map((account) => ({
+    ...account,
+    name: account.name ?? (account.id === "manual" ? c.manualAccount : c.unknownAccount),
+  }));
   const pricedHoldings = p.holdings.filter(
     (holding) => Number.isFinite(holding.asset.price) && holding.asset.price > 0,
   );

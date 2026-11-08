@@ -361,26 +361,29 @@ function Holdings() {
   const lotsLabel = p.lang === "bg" ? "Лотове" : "Lots";
   const removeLot = async (id: string) => {
     const bg = p.lang === "bg";
-    const row = await supabase.from("transactions").select("*").eq("id", id).single();
-    if (row.error) {
-      toast.error(row.error.message);
+    const transaction = p.transactions.find((item) => item.id === id);
+    if (!transaction) {
+      toast.error(bg ? "Сделката не е намерена" : "Transaction not found");
       return;
     }
-    const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
+    try {
+      await p.deleteTransactions([id]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error");
       return;
     }
-    await p.reload();
     toast(bg ? "Лотът е изтрит" : "Lot deleted", {
       duration: 8000,
       action: {
         label: bg ? "Отмени" : "Undo",
         onClick: () => {
           void (async () => {
-            const res = await supabase.from("transactions").insert(row.data);
-            if (res.error) toast.error(res.error.message);
-            await p.reload();
+            try {
+              await p.restoreTransaction(transaction);
+              toast.success(bg ? "Лотът е възстановен" : "Lot restored");
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Error");
+            }
           })();
         },
       },
@@ -561,6 +564,22 @@ function Holdings() {
   );
   const removeAsset = async (id: string, symbol: string) => {
     const bg = p.lang === "bg";
+    if (p.dataError) {
+      toast.error(
+        bg
+          ? "Данните не са заредени. Не мога да проверя историята на трансферите."
+          : "Account data could not be loaded, so transfer history cannot be checked.",
+      );
+      return;
+    }
+    if (p.brokerTransfers.some((transfer) => transfer.assetId === id)) {
+      toast.error(
+        bg
+          ? "Този актив участва в трансфер. Не може да бъде премахнат, докато трансферите са записани."
+          : "This asset has recorded broker transfers and cannot be removed.",
+      );
+      return;
+    }
     const [assetRow, txRows] = await Promise.all([
       supabase.from("assets").select("*").eq("id", id).single(),
       supabase.from("transactions").select("*").eq("asset_id", id),
@@ -749,6 +768,7 @@ function Holdings() {
                 <div className="flex flex-wrap justify-center gap-2">
                   <Link
                     to="/auth"
+                    search={{ mode: "signup" }}
                     className="bg-brand-gradient shadow-glow press inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
                   >
                     {c.signUp}

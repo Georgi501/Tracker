@@ -5,7 +5,7 @@ import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { filterTimelineTransactions, timelineByMonth } from "@/lib/journey";
 import { useEffect, useState } from "react";
-import { Pencil, Search, X } from "lucide-react";
+import { Pencil, Search, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import type { Transaction, TxKind } from "@/lib/portfolio";
@@ -164,6 +164,15 @@ function Timeline() {
       {groups.length === 0 && (
         <Card>
           <p className="text-sm text-muted-foreground">{activeFilters ? c.noMatches : c.empty}</p>
+          {!activeFilters && (
+            <Link
+              to="/brokers"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              <Upload size={16} aria-hidden />
+              {c.importTransactions}
+            </Link>
+          )}
         </Card>
       )}
       {groups.map((g) => (
@@ -249,6 +258,7 @@ const COPY: Record<
     to: string;
     clearFilters: string;
     noMatches: string;
+    importTransactions: string;
     kind: Record<"buy" | "sell" | "dividend", string>;
   }
 > = {
@@ -267,6 +277,7 @@ const COPY: Record<
     to: "To date",
     clearFilters: "Clear filters",
     noMatches: "No transactions match these filters.",
+    importTransactions: "Import transactions",
     kind: { buy: "Buy", sell: "Sell", dividend: "Dividend" },
   },
   bg: {
@@ -284,6 +295,7 @@ const COPY: Record<
     to: "До дата",
     clearFilters: "Изчисти филтрите",
     noMatches: "Няма сделки, които отговарят на филтрите.",
+    importTransactions: "Импортирай сделки",
     kind: { buy: "Покупка", sell: "Продажба", dividend: "Дивидент" },
   },
   de: {
@@ -301,6 +313,7 @@ const COPY: Record<
     to: "Bis Datum",
     clearFilters: "Filter löschen",
     noMatches: "Keine Transaktionen entsprechen diesen Filtern.",
+    importTransactions: "Transaktionen importieren",
     kind: { buy: "Kauf", sell: "Verkauf", dividend: "Dividende" },
   },
   es: {
@@ -318,6 +331,7 @@ const COPY: Record<
     to: "Hasta",
     clearFilters: "Borrar filtros",
     noMatches: "No hay operaciones que coincidan con estos filtros.",
+    importTransactions: "Importar operaciones",
     kind: { buy: "Compra", sell: "Venta", dividend: "Dividendo" },
   },
   it: {
@@ -335,6 +349,7 @@ const COPY: Record<
     to: "Al",
     clearFilters: "Cancella filtri",
     noMatches: "Nessuna transazione corrisponde a questi filtri.",
+    importTransactions: "Importa transazioni",
     kind: { buy: "Acquisto", sell: "Vendita", dividend: "Dividendo" },
   },
 };

@@ -67,7 +67,7 @@ const COPY: Record<Lang, Copy> = {
     billingUnavailable: "Billing portal unavailable. Contact support.",
     exportTitle: "Export your data",
     exportBody:
-      "Download a copy of your profile, portfolio, transactions, goals, notes, conversations and subscription details.",
+      "Download a copy of your profile, portfolio, transactions and broker transfers, goals, notes, conversations and subscription details.",
     export: "Download my data",
     exportSuccess: "Your data export is ready.",
     deleteTitle: "Delete account",
@@ -100,7 +100,7 @@ const COPY: Record<Lang, Copy> = {
     billingUnavailable: "Платежният портал не е достъпен. Свържи се с поддръжката.",
     exportTitle: "Изтегли данните си",
     exportBody:
-      "Изтегли копие на профила, портфолиото, сделките, целите, бележките, разговорите и данните за абонамента.",
+      "Изтегли копие на профила, портфолиото, сделките и трансферите между брокери, целите, бележките, разговорите и данните за абонамента.",
     export: "Изтегли моите данни",
     exportSuccess: "Файлът с данните ти е готов.",
     deleteTitle: "Изтриване на профила",
@@ -133,7 +133,7 @@ const COPY: Record<Lang, Copy> = {
     billingUnavailable: "Abrechnungsportal nicht verfügbar. Bitte kontaktiere den Support.",
     exportTitle: "Daten exportieren",
     exportBody:
-      "Lade eine Kopie deines Profils, Portfolios, deiner Transaktionen, Ziele, Notizen, Gespräche und Abonnementdaten herunter.",
+      "Lade eine Kopie deines Profils, Portfolios, deiner Transaktionen und Brokerübertragungen, Ziele, Notizen, Gespräche und Abonnementdaten herunter.",
     export: "Meine Daten herunterladen",
     exportSuccess: "Dein Datenexport ist bereit.",
     deleteTitle: "Konto löschen",
@@ -166,7 +166,7 @@ const COPY: Record<Lang, Copy> = {
     billingUnavailable: "Portal de pagos no disponible. Contacta con soporte.",
     exportTitle: "Exportar tus datos",
     exportBody:
-      "Descarga una copia de tu perfil, cartera, transacciones, objetivos, notas, conversaciones y suscripción.",
+      "Descarga una copia de tu perfil, cartera, transacciones y transferencias entre brókeres, objetivos, notas, conversaciones y suscripción.",
     export: "Descargar mis datos",
     exportSuccess: "La exportación está lista.",
     deleteTitle: "Eliminar cuenta",
@@ -199,7 +199,7 @@ const COPY: Record<Lang, Copy> = {
     billingUnavailable: "Portale pagamenti non disponibile. Contatta l'assistenza.",
     exportTitle: "Esporta i tuoi dati",
     exportBody:
-      "Scarica una copia del profilo, portafoglio, transazioni, obiettivi, note, conversazioni e abbonamento.",
+      "Scarica una copia del profilo, portafoglio, transazioni e trasferimenti tra broker, obiettivi, note, conversazioni e abbonamento.",
     export: "Scarica i miei dati",
     exportSuccess: "Esportazione pronta.",
     deleteTitle: "Elimina account",
@@ -570,6 +570,7 @@ function AccountPage() {
         ["brokers", supabase.from("brokers").select("*")],
         ["assets", supabase.from("assets").select("*")],
         ["transactions", supabase.from("transactions").select("*")],
+        ["brokerTransfers", supabase.from("broker_transfers").select("*")],
         ["goals", supabase.from("goals").select("*")],
         ["journalNotes", supabase.from("journal_notes").select("*")],
         ["aiThreads", supabase.from("ai_threads").select("*")],

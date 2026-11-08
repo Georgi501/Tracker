@@ -45,6 +45,8 @@ export const searchMarket = createServerFn({ method: "POST" })
             symbol: a.symbol,
             name: a.longname ?? a.shortname ?? a.symbol,
             type: a.quoteType === "ETF" ? "etf" : "stock",
+            ...(typeof a.exchange === "string" ? { exchange: a.exchange } : {}),
+            ...(typeof a["currency"] === "string" ? { currency: a["currency"] } : {}),
           });
         }
         const news = dedupeMarketNews(

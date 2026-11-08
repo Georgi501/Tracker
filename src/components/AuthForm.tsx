@@ -3,6 +3,25 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
+
+const AUTH_CONTINUATION_KEY = "capispot-auth-continuation";
+
+function safePricingContinuation(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin || url.pathname !== "/pricing") return null;
+    const params = url.searchParams;
+    if (params.get("checkout") !== "pro") return null;
+    const interval = params.get("interval");
+    if (interval !== "month" && interval !== "year") return null;
+    const promo = params.get("promo");
+    if (promo && (interval !== "year" || !/^[A-Za-z0-9_-]{3,32}$/.test(promo))) return null;
+    return `/pricing?checkout=pro&interval=${interval}${promo ? `&promo=${encodeURIComponent(promo)}` : ""}`;
+  } catch {
+    return null;
+  }
+}
 import { authCopy, authErrorKey } from "@/lib/auth-i18n";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
@@ -97,10 +116,29 @@ export function AuthForm({
   const c = authCopy[p.lang];
 
   useEffect(() => {
-    if (redirectOnSignIn && p.user) navigate({ to: "/" });
+    if (!redirectOnSignIn || !p.user) return;
+    let continuation: string | null = null;
+    try {
+      continuation =
+        safePricingContinuation(new URLSearchParams(window.location.search).get("next")) ??
+        safePricingContinuation(sessionStorage.getItem(AUTH_CONTINUATION_KEY));
+      sessionStorage.removeItem(AUTH_CONTINUATION_KEY);
+    } catch (error) {
+      console.error("Unable to restore the requested sign-in action", error);
+    }
+    if (continuation) window.location.assign(continuation);
+    else navigate({ to: "/" });
   }, [p.user, navigate, redirectOnSignIn]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const continuation = safePricingContinuation(params.get("next"));
+    if (continuation) {
+      try {
+        sessionStorage.setItem(AUTH_CONTINUATION_KEY, continuation);
+      } catch (error) {
+        console.error("Unable to retain the requested sign-in action", error);
+      }
+    }
     if (params.get("mode") === "signup") setMode("up");
     const referralCode = params.get("ref")?.trim();
     if (referralCode && /^[a-fA-F0-9]{16}$/.test(referralCode)) {

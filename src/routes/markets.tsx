@@ -19,6 +19,8 @@ import { marketCopy } from "@/lib/market-i18n";
 import {
   MARKET_ASSETS,
   filterAndSortMarketAssets,
+  groupMarketListings,
+  marketListingDetails,
   marketSearchSchema,
   searchCatalog,
   ucitsInfo,
@@ -108,6 +110,7 @@ function Markets() {
       ),
     [p.lang, query, results, sortBy, typeFilter],
   );
+  const visibleGroups = useMemo(() => groupMarketListings(visibleResults), [visibleResults]);
   useEffect(() => {
     const next = q ?? "";
     setQuery(next);
@@ -204,6 +207,7 @@ function Markets() {
       toast.error(error instanceof Error ? error.message : "Could not update watchlist");
     }
   };
+  const listingGroupLabel = p.lang === "bg" ? "Листинги на този фонд" : "Fund listings";
   return (
     <div className="space-y-5">
       <h1 className="font-display text-2xl font-bold">{c.markets}</h1>
@@ -320,169 +324,205 @@ function Markets() {
           </div>
         </div>
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {visibleResults.map((a) => (
-            <li
-              key={a.symbol}
-              className="overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-secondary/20 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
-            >
-              <div className="flex items-center gap-2 p-2">
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    selected && selected.symbol === a.symbol ? setSelected(null) : void loadQuote(a)
-                  }
-                  className="h-auto min-h-16 min-w-0 flex-1 justify-start whitespace-normal px-2 py-2 text-left"
-                  aria-pressed={selected?.symbol === a.symbol}
-                  aria-expanded={selected?.symbol === a.symbol}
-                >
-                  <CompanyLogo symbol={a.symbol} type={a.type} size={44} />
-                  <span className="min-w-0 flex-1">
-                    <span className="mb-1 block truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {a.symbol}
+          {visibleGroups.map((group) => {
+            const a = group.listings[0]!;
+            const activeAsset =
+              group.listings.find((asset) => asset.symbol === selected?.symbol) ?? null;
+            const listing = marketListingDetails(a);
+            return (
+              <li
+                key={group.key}
+                className="overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-secondary/20 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+              >
+                <div className="flex items-center gap-2 p-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => (activeAsset ? setSelected(null) : void loadQuote(a))}
+                    className="h-auto min-h-16 min-w-0 flex-1 justify-start whitespace-normal px-2 py-2 text-left"
+                    aria-pressed={!!activeAsset}
+                    aria-expanded={!!activeAsset}
+                  >
+                    <CompanyLogo symbol={a.symbol} type={a.type} size={44} />
+                    <span className="min-w-0 flex-1">
+                      <span className="mb-1 block truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {a.symbol}
+                      </span>
+                      <span className="block truncate text-sm font-semibold">{a.name}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {[
+                          p.t(a.type),
+                          listing.exchange,
+                          listing.currency,
+                          listing.isin ? `ISIN ${listing.isin}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
                     </span>
-                    <span className="block truncate text-sm font-semibold">{a.name}</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {p.t(a.type)}
-                    </span>
-                  </span>
-                  <ChevronDown
-                    className={`size-4 shrink-0 text-muted-foreground transition-transform ${selected?.symbol === a.symbol ? "rotate-180" : ""}`}
-                  />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={
-                    watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch
-                  }
-                  aria-pressed={watchState.list.includes(a.symbol.toUpperCase())}
-                  title={watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch}
-                  onClick={() => toggleWatchlist(a)}
-                  className="size-9 shrink-0"
-                >
-                  {watchState.list.includes(a.symbol.toUpperCase()) ? (
-                    <BookmarkCheck className="size-4 text-primary" />
-                  ) : (
-                    <Star className="size-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-              {selected && selected.symbol === a.symbol && (
-                <Card className="mb-2 ml-3 mr-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        {selected.symbol} · {p.t(selected.type)}
-                      </p>
-                      <h3 className="font-display break-words text-xl font-semibold">
-                        {selected.name}
-                      </h3>
-                      {(() => {
-                        const u = ucitsInfo(selected.symbol);
-                        if (!u) return null;
-                        const bg = p.lang === "bg";
-                        return (
-                          <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                            {[
-                              "UCITS",
-                              u.isin,
-                              {
-                                IE: bg ? "Ирландия" : "Ireland",
-                                LU: bg ? "Люксембург" : "Luxembourg",
-                                DE: bg ? "Германия" : "Germany",
-                              }[u.domicile],
-                              u.policy === "acc"
-                                ? bg
-                                  ? "Акумулиращ"
-                                  : "Accumulating"
-                                : bg
-                                  ? "Разпределящ"
-                                  : "Distributing",
-                              u.index,
-                            ].map((t) => (
-                              <span
-                                key={t}
-                                className="rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={quoteBusy}
-                      aria-label={c.refresh}
-                      title={c.refresh}
-                      onClick={() => void loadQuote(selected)}
-                    >
-                      <RefreshCw className={quoteBusy ? "animate-spin" : ""} />
-                    </Button>
-                  </div>
-                  <div className="mt-4" aria-live="polite">
-                    <p className="text-sm text-muted-foreground">{c.latest}</p>
-                    <p className="numeric-display mt-2 min-h-9 text-3xl font-bold">
-                      {quoteBusy ? (
-                        <span
-                          aria-hidden="true"
-                          className="mt-1 block h-8 w-36 animate-pulse rounded bg-muted"
-                        />
-                      ) : quote?.quote ? (
-                        new Intl.NumberFormat(languageLocale(p.lang), {
-                          style: "currency",
-                          currency: quote.quote.currency,
-                        }).format(quote.quote.price)
-                      ) : (
-                        "—"
-                      )}
+                    <ChevronDown
+                      className={`size-4 shrink-0 text-muted-foreground transition-transform ${activeAsset ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={
+                      watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch
+                    }
+                    aria-pressed={watchState.list.includes(a.symbol.toUpperCase())}
+                    title={watchState.list.includes(a.symbol.toUpperCase()) ? c.watching : c.watch}
+                    onClick={() => toggleWatchlist(a)}
+                    className="size-9 shrink-0"
+                  >
+                    {watchState.list.includes(a.symbol.toUpperCase()) ? (
+                      <BookmarkCheck className="size-4 text-primary" />
+                    ) : (
+                      <Star className="size-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+                {group.listings.length > 1 && (
+                  <div className="px-3 pb-3">
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">
+                      {listingGroupLabel} · ISIN {group.isin}
                     </p>
-                    {quoteBusy && (
-                      <p role="status" className="mt-2 text-sm text-muted-foreground">
-                        {c.loadingQuote}
-                      </p>
-                    )}
-                    {quote?.quote && (
-                      <>
-                        <p className="mt-2 text-sm">
-                          <Delta value={quote.quote.change ?? Number.NaN}>
-                            {pct(quote.quote.change ?? Number.NaN)}
-                          </Delta>{" "}
-                          <span className="text-muted-foreground">{c.change}</span>
-                        </p>
-                        <p className="mt-4 text-xs text-muted-foreground">
-                          {c.updated}:{" "}
-                          {new Date(quote.quote.at).toLocaleString(languageLocale(p.lang))}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {c.source}: {quote.quote.source} · {quote.quote.currency}
-                        </p>
-                      </>
-                    )}
-                    {!quoteBusy && quote && !quote.quote && (
-                      <p role="status" className="mt-3 text-sm text-muted-foreground">
-                        {c.unavailable}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.listings.map((item) => {
+                        const detail = marketListingDetails(item);
+                        return (
+                          <button
+                            key={item.symbol}
+                            type="button"
+                            aria-pressed={activeAsset?.symbol === item.symbol}
+                            onClick={() => void loadQuote(item)}
+                            className={`min-h-11 rounded-lg border px-2.5 py-1 text-xs font-semibold ${activeAsset?.symbol === item.symbol ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}
+                          >
+                            {item.symbol}
+                            {detail.exchange ? ` · ${detail.exchange}` : ""}
+                            {detail.currency ? ` · ${detail.currency}` : ""}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  {selected.type !== "crypto" && (
-                    <KeyStats symbol={selected.symbol} lang={p.lang} />
-                  )}
-                  <AssetExtras asset={selected} price={quote?.quote?.price ?? null} />
-                  {selected.type === "stock" && (
-                    <ProFinancials symbol={selected.symbol} lang={p.lang} />
-                  )}
-                  {selected.type === "stock" && (
-                    <ProCompanyResearch symbol={selected.symbol} lang={p.lang} />
-                  )}
-                  <CompanyOverview asset={selected} lang={p.lang} />
-                </Card>
-              )}
-            </li>
-          ))}
+                )}
+                {activeAsset && (
+                  <Card className="mb-2 ml-3 mr-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          {activeAsset.symbol} · {p.t(activeAsset.type)}
+                        </p>
+                        <h3 className="font-display break-words text-xl font-semibold">
+                          {activeAsset.name}
+                        </h3>
+                        {(() => {
+                          const u = ucitsInfo(activeAsset.symbol);
+                          if (!u) return null;
+                          const bg = p.lang === "bg";
+                          return (
+                            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                              {[
+                                "UCITS",
+                                u.isin,
+                                {
+                                  IE: bg ? "Ирландия" : "Ireland",
+                                  LU: bg ? "Люксембург" : "Luxembourg",
+                                  DE: bg ? "Германия" : "Germany",
+                                }[u.domicile],
+                                u.policy === "acc"
+                                  ? bg
+                                    ? "Акумулиращ"
+                                    : "Accumulating"
+                                  : bg
+                                    ? "Разпределящ"
+                                    : "Distributing",
+                                u.index,
+                              ].map((t) => (
+                                <span
+                                  key={t}
+                                  className="rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary"
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={quoteBusy}
+                        aria-label={c.refresh}
+                        title={c.refresh}
+                        onClick={() => void loadQuote(activeAsset)}
+                      >
+                        <RefreshCw className={quoteBusy ? "animate-spin" : ""} />
+                      </Button>
+                    </div>
+                    <div className="mt-4" aria-live="polite">
+                      <p className="text-sm text-muted-foreground">{c.latest}</p>
+                      <p className="numeric-display mt-2 min-h-9 text-3xl font-bold">
+                        {quoteBusy ? (
+                          <span
+                            aria-hidden="true"
+                            className="mt-1 block h-8 w-36 animate-pulse rounded bg-muted"
+                          />
+                        ) : quote?.quote ? (
+                          new Intl.NumberFormat(languageLocale(p.lang), {
+                            style: "currency",
+                            currency: quote.quote.currency,
+                          }).format(quote.quote.price)
+                        ) : (
+                          "—"
+                        )}
+                      </p>
+                      {quoteBusy && (
+                        <p role="status" className="mt-2 text-sm text-muted-foreground">
+                          {c.loadingQuote}
+                        </p>
+                      )}
+                      {quote?.quote && (
+                        <>
+                          <p className="mt-2 text-sm">
+                            <Delta value={quote.quote.change ?? Number.NaN}>
+                              {pct(quote.quote.change ?? Number.NaN)}
+                            </Delta>{" "}
+                            <span className="text-muted-foreground">{c.change}</span>
+                          </p>
+                          <p className="mt-4 text-xs text-muted-foreground">
+                            {c.updated}:{" "}
+                            {new Date(quote.quote.at).toLocaleString(languageLocale(p.lang))}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {c.source}: {quote.quote.source} · {quote.quote.currency}
+                          </p>
+                        </>
+                      )}
+                      {!quoteBusy && quote && !quote.quote && (
+                        <p role="status" className="mt-3 text-sm text-muted-foreground">
+                          {c.unavailable}
+                        </p>
+                      )}
+                    </div>
+                    {activeAsset.type !== "crypto" && (
+                      <KeyStats symbol={activeAsset.symbol} lang={p.lang} />
+                    )}
+                    <AssetExtras asset={activeAsset} price={quote?.quote?.price ?? null} />
+                    {activeAsset.type === "stock" && (
+                      <ProFinancials symbol={activeAsset.symbol} lang={p.lang} />
+                    )}
+                    {activeAsset.type === "stock" && (
+                      <ProCompanyResearch symbol={activeAsset.symbol} lang={p.lang} />
+                    )}
+                    <CompanyOverview asset={activeAsset} lang={p.lang} />
+                  </Card>
+                )}
+              </li>
+            );
+          })}
         </ul>
         {!visibleResults.length && <p className="py-8 text-sm text-muted-foreground">{c.empty}</p>}
         {limited && (

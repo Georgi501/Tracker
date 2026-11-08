@@ -7,7 +7,13 @@ import { usePortfolio } from "@/lib/store";
 import type { Lang } from "@/lib/i18n";
 import { localDateString } from "@/lib/local-date";
 import { type AssetType, type Currency } from "@/lib/portfolio";
-import { searchCatalog, MARKET_ASSETS, type MarketAsset } from "@/lib/market-search";
+import {
+  searchCatalog,
+  groupMarketListings,
+  marketListingDetails,
+  MARKET_ASSETS,
+  type MarketAsset,
+} from "@/lib/market-search";
 import { searchMarket, marketQuote } from "@/lib/market.functions";
 import { CompanyLogo } from "@/components/CompanyLogo";
 
@@ -346,24 +352,42 @@ export function AddTransactionDialog({
                 role="listbox"
                 className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-xl"
               >
-                {results.map((a) => (
-                  <li key={a.symbol}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={false}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => void choose(a)}
-                      className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-secondary"
-                    >
-                      <CompanyLogo symbol={a.symbol} type={a.type} size={28} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{a.name}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {a.symbol} · {p.t(a.type)}
-                        </span>
-                      </span>
-                    </button>
+                {groupMarketListings(results).map((group) => (
+                  <li key={group.key} className="rounded-lg p-1">
+                    {group.listings.length > 1 && (
+                      <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                        {group.listings[0]!.name} · ISIN {group.isin}
+                      </p>
+                    )}
+                    {group.listings.map((a) => {
+                      const listing = marketListingDetails(a);
+                      return (
+                        <button
+                          key={a.symbol}
+                          type="button"
+                          role="option"
+                          aria-selected={false}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => void choose(a)}
+                          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-secondary"
+                        >
+                          <CompanyLogo symbol={a.symbol} type={a.type} size={28} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium">{a.name}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              {[a.symbol, p.t(a.type), listing.exchange, listing.currency]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
+                            {listing.isin && (
+                              <span className="block text-xs text-muted-foreground">
+                                ISIN {listing.isin}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </li>
                 ))}
               </ul>

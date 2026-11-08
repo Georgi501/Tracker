@@ -37,6 +37,11 @@ const en: PlanCopy = {
       pro: "Direct read-only sync with IBKR & Trading 212",
     },
     {
+      title: "FIFO report",
+      free: "Not included",
+      pro: "Annual realized gains and losses report using FIFO",
+    },
+    {
       title: "Portfolio",
       free: "Net worth, P&L, holdings, market quotes",
       pro: "Everything in Free",
@@ -109,6 +114,11 @@ const bg: PlanCopy = {
       title: "Брокери и импорт",
       free: "Неограничен CSV импорт с преглед на файла и проверка за дублирани сделки",
       pro: "Директна синхронизация с IBKR и Trading 212 (само за четене)",
+    },
+    {
+      title: "FIFO справка",
+      free: "Не е включена",
+      pro: "Годишна FIFO справка за реализираните печалби и загуби",
     },
     {
       title: "Портфолио",
@@ -184,6 +194,11 @@ const de: PlanCopy = {
       title: "Broker & Import",
       free: "Unbegrenzte CSV-Importe mit Vorschau und Duplikatprüfung",
       pro: "Direkte Synchronisierung mit IBKR und Trading 212 (nur Lesezugriff)",
+    },
+    {
+      title: "FIFO-Bericht",
+      free: "Nicht enthalten",
+      pro: "Jährlicher FIFO-Bericht über realisierte Gewinne und Verluste",
     },
     {
       title: "Portfolio",
@@ -262,6 +277,11 @@ const es: PlanCopy = {
       pro: "Sincronización directa con IBKR y Trading 212 (solo lectura)",
     },
     {
+      title: "Informe FIFO",
+      free: "No incluido",
+      pro: "Informe anual FIFO de ganancias y pérdidas realizadas",
+    },
+    {
       title: "Cartera",
       free: "Patrimonio, P&L, posiciones, precios en vivo",
       pro: "Todo lo de Free",
@@ -336,6 +356,11 @@ const it: PlanCopy = {
       title: "Broker e import",
       free: "Importazioni CSV illimitate con anteprima e controllo dei duplicati",
       pro: "Sincronizzazione diretta con IBKR e Trading 212 (sola lettura)",
+    },
+    {
+      title: "Report FIFO",
+      free: "Non incluso",
+      pro: "Report annuale FIFO di plusvalenze e minusvalenze realizzate",
     },
     { title: "Portafoglio", free: "Patrimonio, P&L, posizioni, prezzi live", pro: "Tutto di Free" },
     {

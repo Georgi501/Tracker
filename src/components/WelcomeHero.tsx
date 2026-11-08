@@ -2,9 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePortfolio } from "@/lib/store";
-import type { Lang } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { isQuoteStale } from "@/lib/portfolio";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
+import {
+  SAMPLE_GAIN,
+  SAMPLE_GAIN_PERCENT,
+  SAMPLE_HISTORY,
+  SAMPLE_TOTAL_VALUE,
+} from "@/lib/sample-portfolio";
 
 type Copy = {
   morning: string;
@@ -25,6 +31,9 @@ type Copy = {
   dataTrust: string;
   dataTrustLink: string;
   heroCaption: string;
+  sampleValue: string;
+  sampleGain: string;
+  sampleHistory: string;
   markets: string;
   watchlist: string;
   analytics: string;
@@ -46,7 +55,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Good evening",
     guestTitle: "Portfolio from every broker, all in one place.",
     guestSub:
-      "Import CSVs from Trading 212, IBKR or Revolut to track performance, allocation and dividends together. Get a FIFO report of realized gains and losses; missing quotes are never guessed.",
+      "Import CSVs from Trading 212, IBKR or Revolut to track performance, allocation and dividends together. Pro includes an annual FIFO report of realized gains and losses; missing quotes are never guessed.",
     signUp: "Create free account",
     explore: "Explore markets",
     emptyTitle: "Let's build your portfolio",
@@ -56,11 +65,14 @@ const COPY: Record<Lang, Copy> = {
     activeSub: "Here's how your portfolio is doing today.",
     sampleTitle: "Want to see an example first?",
     sampleSub: "Explore a sample portfolio to see how holdings and allocation are presented.",
-    sampleLink: "View sample portfolio",
+    sampleLink: "Try the demo without an account",
     dataTrust:
       "Quotes come from Yahoo Finance; missing historical data is never replaced with estimates.",
     dataTrustLink: "How market data works",
     heroCaption: "Sample portfolio with illustrative data",
+    sampleValue: "Sample portfolio value",
+    sampleGain: "Sample gain",
+    sampleHistory: "Illustrative portfolio value history",
     markets: "Markets",
     watchlist: "Watchlist",
     analytics: "Analytics",
@@ -83,7 +95,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Добър вечер",
     guestTitle: "Инвестициите от всички брокери — на едно място.",
     guestSub:
-      "Импортирай CSV от Trading 212, IBKR или Revolut и следи доходността, разпределението и дивидентите в общ портфейл. Получавай справка за реализираните печалби и загуби по FIFO; липсващите котировки не се заменят с измислени цени.",
+      "Импортирай CSV файлове от Trading 212, IBKR или Revolut и следи доходността, разпределението и дивидентите в общо портфолио. В Pro има годишна FIFO справка за реализираните печалби и загуби. Липсващите котировки не се заместват с измислени цени.",
     signUp: "Създай безплатен профил",
     explore: "Разгледай пазарите",
     emptyTitle: "Да изградим портфолиото ти",
@@ -93,11 +105,14 @@ const COPY: Record<Lang, Copy> = {
     activeSub: "Ето как се представя портфолиото ти днес.",
     sampleTitle: "Искаш първо да разгледаш пример?",
     sampleSub: "Виж примерно портфолио, за да разбереш как изглеждат позициите и разпределението.",
-    sampleLink: "Разгледай примерното портфолио",
+    sampleLink: "Пробвай демото без регистрация",
     dataTrust:
       "Котировките идват от Yahoo Finance; липсващите исторически данни не се заместват с оценки.",
     dataTrustLink: "Как работят пазарните данни",
     heroCaption: "Примерно портфолио с илюстративни данни",
+    sampleValue: "Примерна стойност на портфолиото",
+    sampleGain: "Примерна печалба",
+    sampleHistory: "Илюстративна история на стойността",
     markets: "Пазари",
     watchlist: "Watchlist",
     analytics: "Анализи",
@@ -120,7 +135,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Guten Abend",
     guestTitle: "Deine Investments klar im Blick.",
     guestSub:
-      "Importiere ein Broker-CSV (Trading 212, IBKR, Revolut) und sieh Wertentwicklung, Aufteilung, Dividenden und FIFO-Steuer übersichtlich an einem Ort, ohne geschätzte Kurse.",
+      "Importiere CSV-Dateien von Trading 212, IBKR oder Revolut und verfolge Wertentwicklung, Aufteilung und Dividenden an einem Ort. Pro enthält einen jährlichen FIFO-Bericht über realisierte Gewinne und Verluste; fehlende Kurse werden nicht geschätzt.",
     signUp: "Kostenloses Konto",
     explore: "Märkte entdecken",
     emptyTitle: "Bauen wir dein Portfolio auf",
@@ -130,11 +145,14 @@ const COPY: Record<Lang, Copy> = {
     activeSub: "So entwickelt sich dein Portfolio heute.",
     sampleTitle: "Möchtest du zuerst ein Beispiel sehen?",
     sampleSub: "Sieh dir ein Beispielportfolio mit Positionen und Aufteilung an.",
-    sampleLink: "Beispielportfolio ansehen",
+    sampleLink: "Demo ohne Registrierung ansehen",
     dataTrust:
       "Kurse stammen von Yahoo Finance; fehlende historische Daten werden nicht durch Schätzungen ersetzt.",
     dataTrustLink: "So funktionieren Marktdaten",
     heroCaption: "Beispielportfolio mit illustrativen Daten",
+    sampleValue: "Beispielwert des Portfolios",
+    sampleGain: "Beispielgewinn",
+    sampleHistory: "Illustrativer Portfolioverlauf",
     markets: "Märkte",
     watchlist: "Watchlist",
     analytics: "Analysen",
@@ -158,7 +176,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Buenas noches",
     guestTitle: "Tus inversiones, con claridad.",
     guestSub:
-      "Importa el CSV de tu bróker (Trading 212, IBKR, Revolut) y ve rentabilidad, distribución, dividendos e impuesto FIFO en un solo panel, sin precios estimados.",
+      "Importa archivos CSV de Trading 212, IBKR o Revolut para seguir la rentabilidad, la distribución y los dividendos en un solo lugar. Pro incluye un informe anual FIFO de ganancias y pérdidas realizadas; no estimamos cotizaciones ausentes.",
     signUp: "Crear cuenta gratis",
     explore: "Explorar mercados",
     emptyTitle: "Construyamos tu cartera",
@@ -169,11 +187,14 @@ const COPY: Record<Lang, Copy> = {
     sampleTitle: "¿Quieres ver un ejemplo primero?",
     sampleSub:
       "Explora una cartera de ejemplo para ver cómo se muestran las posiciones y la distribución.",
-    sampleLink: "Ver cartera de ejemplo",
+    sampleLink: "Probar la demo sin registrarse",
     dataTrust:
       "Las cotizaciones proceden de Yahoo Finance; los datos históricos que faltan no se sustituyen por estimaciones.",
     dataTrustLink: "Cómo funcionan los datos de mercado",
     heroCaption: "Cartera de ejemplo con datos ilustrativos",
+    sampleValue: "Valor de cartera de ejemplo",
+    sampleGain: "Ganancia de ejemplo",
+    sampleHistory: "Historial ilustrativo del valor",
     markets: "Mercados",
     watchlist: "Watchlist",
     analytics: "Análisis",
@@ -197,7 +218,7 @@ const COPY: Record<Lang, Copy> = {
     evening: "Buonasera",
     guestTitle: "I tuoi investimenti, in modo chiaro.",
     guestSub:
-      "Importa il CSV del tuo broker (Trading 212, IBKR, Revolut) e vedi rendimento, allocazione, dividendi e imposta FIFO in un'unica dashboard, senza prezzi stimati.",
+      "Importa i CSV di Trading 212, IBKR o Revolut per seguire rendimento, allocazione e dividendi in un unico posto. Pro include un report annuale FIFO di plusvalenze e minusvalenze realizzate; le quotazioni mancanti non vengono stimate.",
     signUp: "Crea account gratis",
     explore: "Esplora i mercati",
     emptyTitle: "Costruiamo il tuo portafoglio",
@@ -208,11 +229,14 @@ const COPY: Record<Lang, Copy> = {
     sampleTitle: "Vuoi vedere prima un esempio?",
     sampleSub:
       "Esplora un portafoglio di esempio per vedere come vengono mostrate le posizioni e l'allocazione.",
-    sampleLink: "Guarda il portafoglio di esempio",
+    sampleLink: "Prova la demo senza registrazione",
     dataTrust:
       "Le quotazioni provengono da Yahoo Finance; i dati storici mancanti non vengono sostituiti con stime.",
     dataTrustLink: "Come funzionano i dati di mercato",
     heroCaption: "Portafoglio di esempio con dati illustrativi",
+    sampleValue: "Valore del portafoglio di esempio",
+    sampleGain: "Guadagno di esempio",
+    sampleHistory: "Storico illustrativo del valore",
     markets: "Mercati",
     watchlist: "Watchlist",
     analytics: "Analisi",
@@ -248,6 +272,19 @@ export function WelcomeHero() {
   const [hour, setHour] = useState<number | null>(null);
   useEffect(() => setHour(new Date().getHours()), []);
   const greet = hour === null ? "" : hour < 12 ? c.morning : hour < 18 ? c.afternoon : c.evening;
+  const sampleMoney = (value: number) =>
+    new Intl.NumberFormat(languageLocale(p.lang), {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  const historyMin = Math.min(...SAMPLE_HISTORY.map((point) => point.value));
+  const historyMax = Math.max(...SAMPLE_HISTORY.map((point) => point.value));
+  const historyPoints = SAMPLE_HISTORY.map((point, index) => {
+    const x = (index / (SAMPLE_HISTORY.length - 1)) * 100;
+    const y = 44 - ((point.value - historyMin) / (historyMax - historyMin)) * 36;
+    return `${x},${y}`;
+  }).join(" ");
   const meta = p.user?.user_metadata;
   const name =
     p.displayName.trim() ||
@@ -291,18 +328,43 @@ export function WelcomeHero() {
             </Link>
           </p>
         </div>
-        <figure className="hero-shot min-w-0">
-          <img
-            src="/hero-portfolio.png"
-            alt=""
-            width={1492}
-            height={1120}
-            fetchPriority="high"
-            className="w-full rounded-2xl border border-border shadow-xl shadow-black/20"
-          />
-          <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+        <figure className="hero-shot min-w-0 rounded-2xl border border-border bg-background p-4 shadow-xl shadow-black/10 sm:p-5">
+          <figcaption className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <LineChart className="size-3.5" aria-hidden />
             {c.heroCaption}
           </figcaption>
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground">{c.sampleValue}</p>
+              <p className="numeric-display mt-1 text-3xl font-bold">
+                {sampleMoney(SAMPLE_TOTAL_VALUE)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">{c.sampleGain}</p>
+              <p className="numeric-display mt-1 font-semibold text-success">
+                +{sampleMoney(SAMPLE_GAIN)} ({SAMPLE_GAIN_PERCENT.toFixed(1)}%)
+              </p>
+            </div>
+          </div>
+          <svg
+            viewBox="0 0 100 52"
+            role="img"
+            aria-label={c.sampleHistory}
+            className="mt-4 h-32 w-full overflow-visible"
+            preserveAspectRatio="none"
+          >
+            <path d="M0 50H100" stroke="var(--border)" strokeDasharray="2 2" />
+            <polyline
+              points={historyPoints}
+              fill="none"
+              stroke="var(--primary)"
+              strokeWidth="2"
+              vectorEffect="non-scaling-stroke"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </figure>
       </section>
     );

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
+import { BrokerTransferForm } from "@/components/BrokerTransferForm";
 import { ProBadge } from "@/components/ProFeatures";
 import { usePortfolio } from "@/lib/store";
 import { useState } from "react";
@@ -209,13 +210,30 @@ function Brokers() {
   if (!p.user)
     return (
       <Card className="mx-auto max-w-lg text-center">
-        <h1 className="font-display text-2xl font-bold">{p.t("brokers")}</h1>
-        <p className="mb-4">{p.t("signInToUse")}</p>
+        <h1 className="font-display text-2xl font-bold">
+          {p.lang === "bg" ? "Импорт на сделки от CSV" : "Import transactions from CSV"}
+        </h1>
+        <p className="mx-auto mb-4 mt-2 max-w-md text-sm text-muted-foreground">
+          {p.lang === "bg"
+            ? "Безплатният CSV импорт включва преглед на файла и проверка за дублирани сделки."
+            : "Free CSV import includes a file preview and duplicate transaction checks."}
+        </p>
+        <Link
+          to="/import-demo"
+          className="mx-auto inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          <Upload size={16} aria-hidden />
+          {p.lang === "bg" ? "Пробвай с примерен CSV" : "Try a sample CSV"}
+        </Link>
+        <p className="mt-4 text-sm text-muted-foreground">
+          {p.lang === "bg" ? "За да импортираш свои сделки," : "To import your own transactions,"}
+        </p>
         <Link
           to="/auth"
-          className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          search={{ mode: "signup" }}
+          className="mt-2 inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-accent"
         >
-          {p.t("signIn")}
+          {p.t("signUp")}
         </Link>
       </Card>
     );
@@ -233,7 +251,31 @@ function Brokers() {
     await p.reload();
   };
   const remove = async (id: string) => {
-    await supabase.from("brokers").delete().eq("id", id);
+    if (p.dataError) {
+      toast.error(
+        p.lang === "bg"
+          ? "Данните не са заредени. Не мога да проверя историята на трансферите."
+          : "Account data could not be loaded, so transfer history cannot be checked.",
+      );
+      return;
+    }
+    if (
+      p.brokerTransfers.some(
+        (transfer) => transfer.fromBrokerId === id || transfer.toBrokerId === id,
+      )
+    ) {
+      toast.error(
+        p.lang === "bg"
+          ? "Тази сметка участва в трансфер. Не може да бъде изтрита, докато трансферите са записани."
+          : "This broker account has recorded transfers and cannot be deleted.",
+      );
+      return;
+    }
+    const { error } = await supabase.from("brokers").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await p.reload();
   };
   const upload = async (brokerId: string, fmt: string, file: File) => {
@@ -374,6 +416,7 @@ function Brokers() {
           onDismiss={() => setImportResult(null)}
         />
       )}
+      <BrokerTransferForm />
       {p.brokers.map((b) => (
         <div key={b.id} className="space-y-3">
           <Card className="flex flex-wrap items-center gap-3">
@@ -506,6 +549,10 @@ const IMPORT_GUIDE = {
         "5. Confirm",
         "After you confirm, the transactions are saved to your account. Each keeps its original currency and is converted to USD with the exchange rate of its date. Fees are included in the cost. You can undo the import right after.",
       ],
+      [
+        "6. FIFO report",
+        "The annual FIFO report of realized gains and losses is a Pro feature. Free includes CSV import, preview and duplicate checks.",
+      ],
     ],
     tips: [
       "Importing the same file twice is safe: duplicates are detected.",
@@ -536,6 +583,10 @@ const IMPORT_GUIDE = {
       [
         "5. Потвърди",
         "След потвърждение сделките се запазват в акаунта ти. Всяка запазва оригиналната си валута и се превръща в USD с курса към датата ѝ. Таксите са включени в цената. Веднага след това можеш да отмениш импорта.",
+      ],
+      [
+        "6. FIFO справка",
+        "Годишната FIFO справка за реализираните печалби и загуби е Pro функция. В безплатния план са включени CSV импортът, прегледът и проверката за дубликати.",
       ],
     ],
     tips: [

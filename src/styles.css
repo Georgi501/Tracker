@@ -69,18 +69,18 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.972 0.01 85);
-  --foreground: oklch(0.24 0.02 60);
-  --card: oklch(0.993 0.005 85);
-  --card-foreground: oklch(0.24 0.02 60);
-  --popover: oklch(0.993 0.005 85);
-  --popover-foreground: oklch(0.24 0.02 60);
+  --background: oklch(0.975 0.006 265);
+  --foreground: oklch(0.24 0.02 265);
+  --card: oklch(0.993 0.004 265);
+  --card-foreground: oklch(0.24 0.02 265);
+  --popover: oklch(0.993 0.004 265);
+  --popover-foreground: oklch(0.24 0.02 265);
   --primary: oklch(0.5 0.17 265);
   --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.935 0.015 80);
+  --secondary: oklch(0.935 0.012 265);
   --secondary-foreground: oklch(0.25 0.02 265);
-  --muted: oklch(0.935 0.015 80);
-  --muted-foreground: oklch(0.46 0.02 65);
+  --muted: oklch(0.935 0.012 265);
+  --muted-foreground: oklch(0.46 0.02 265);
   --accent: oklch(0.94 0.03 265);
   --accent-foreground: oklch(0.32 0.1 265);
   --destructive: oklch(0.55 0.15 30);
@@ -89,8 +89,8 @@
   --sun: oklch(0.68 0.14 80);
   --blossom: oklch(0.62 0.17 355);
   --violet: oklch(0.55 0.16 295);
-  --border: oklch(0.88 0.018 80);
-  --input: oklch(0.88 0.018 80);
+  --border: oklch(0.88 0.012 265);
+  --input: oklch(0.88 0.012 265);
   --ring: oklch(0.5 0.17 265);
   --chart-1: oklch(0.5 0.16 265);
   --chart-2: oklch(0.58 0.12 190);
@@ -103,13 +103,13 @@
   --chrome-foreground: oklch(0.94 0.012 250);
   --chrome-muted: oklch(0.78 0.018 251);
   --chrome-border: oklch(1 0 0 / 11%);
-  --sidebar: oklch(0.993 0.005 85);
-  --sidebar-foreground: oklch(0.24 0.02 60);
+  --sidebar: oklch(0.993 0.004 265);
+  --sidebar-foreground: oklch(0.24 0.02 265);
   --sidebar-primary: oklch(0.5 0.17 265);
   --sidebar-primary-foreground: oklch(0.98 0.01 85);
   --sidebar-accent: oklch(0.94 0.03 265);
-  --sidebar-accent-foreground: oklch(0.24 0.02 60);
-  --sidebar-border: oklch(0.88 0.018 80);
+  --sidebar-accent-foreground: oklch(0.24 0.02 265);
+  --sidebar-border: oklch(0.88 0.012 265);
   --sidebar-ring: oklch(0.5 0.17 265);
   --shadow-card: 0 1px 2px oklch(0 0 0 / 4%), 0 6px 18px -12px oklch(0 0 0 / 10%);
   --shadow-card-hover: 0 10px 24px -16px oklch(0 0 0 / 18%);
@@ -713,40 +713,40 @@ header button:not(:disabled):active {
 }
 main button.bg-primary {
   border: 1px solid color-mix(in oklab, var(--primary) 38%, var(--border));
-  background-color: var(--secondary);
+  background-color: var(--primary);
   background-image: none;
-  color: var(--foreground);
+  color: var(--primary-foreground);
   box-shadow: 0 1px 2px oklch(0 0 0 / 8%);
 }
 main button.bg-primary:hover:not(:disabled) {
   border-color: color-mix(in oklab, var(--primary) 58%, var(--border));
-  background-color: color-mix(in oklab, var(--secondary) 92%, var(--primary));
+  background-color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
   box-shadow: 0 3px 8px -5px color-mix(in oklab, var(--primary) 36%, transparent);
 }
 main button.bg-primary:active:not(:disabled) {
-  background-color: color-mix(in oklab, var(--secondary) 84%, var(--primary));
+  background-color: color-mix(in oklab, var(--primary) 82%, var(--foreground));
 }
 main a.bg-primary {
   border: 1px solid color-mix(in oklab, var(--primary) 38%, var(--border));
-  background-color: var(--secondary);
+  background-color: var(--primary);
   background-image: none;
-  color: var(--foreground);
+  color: var(--primary-foreground);
   box-shadow: 0 1px 2px oklch(0 0 0 / 8%);
 }
 main a.bg-primary:hover {
   border-color: color-mix(in oklab, var(--primary) 58%, var(--border));
-  background-color: color-mix(in oklab, var(--secondary) 92%, var(--primary));
+  background-color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
   box-shadow: 0 3px 8px -5px color-mix(in oklab, var(--primary) 36%, transparent);
 }
 main a.hero-cta {
   border: 0;
   background-color: var(--primary);
-  background-image: var(--gradient-brand);
-  color: #0b0e1a;
+  background-image: none;
+  color: var(--primary-foreground);
   box-shadow: 0 8px 24px -10px color-mix(in oklab, var(--primary) 70%, transparent);
 }
 main a.hero-cta:hover {
-  filter: brightness(1.06);
+  background-color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
   box-shadow: 0 12px 28px -10px color-mix(in oklab, var(--primary) 80%, transparent);
 }
 .glass-bar > button.bg-brand-gradient {

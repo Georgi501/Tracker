@@ -33,11 +33,15 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
         "Import every broker's CSV so the history is complete. Lots are matched per holding across all your imported transactions, and results are grouped by the tax year you choose.",
       ],
       [
+        "Capispot access",
+        "The annual FIFO report of realized gains and losses is a Pro feature. Free includes CSV import, file preview and duplicate checks.",
+      ],
+      [
         "Different tax years",
         "Many countries use the calendar year, others use a different fiscal year. Pick the year that matches your rules and compare the realized results with your own records before filing.",
       ],
     ],
-    cta: "Try the FIFO report free",
+    cta: "See the Pro FIFO report",
     note: "General information, not tax or investment advice. Rules change and differ by country; verify with your tax authority or a professional.",
   },
   bg: {
@@ -70,11 +74,15 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
         "Импортирай CSV от всеки брокер, за да е пълна историята. Покупките се съпоставят за всяка позиция през всички импортирани сделки, а резултатите се групират по избраната от теб година.",
       ],
       [
+        "Достъп в Capispot",
+        "Годишната FIFO справка за реализираните печалби и загуби е Pro функция. В безплатния план са включени CSV импортът, прегледът на файла и проверката за дубликати.",
+      ],
+      [
         "Различни данъчни години",
         "Много държави ползват календарната година, други имат различна фискална година. Избери годината според твоите правила и сравни реализираните резултати със собствените си записи, преди да подаваш.",
       ],
     ],
-    cta: "Пробвай FIFO справката безплатно",
+    cta: "Виж FIFO справката в Pro",
     note: "Обща информация, не е данъчен или инвестиционен съвет. Правилата се променят и са различни по държави; провери в данъчната администрация или при специалист.",
   },
 };
@@ -95,5 +103,5 @@ export const Route = createFileRoute("/capital-gains-tax")({
     ],
     scripts: [articleJsonLd(TITLE, DESCRIPTION, "/capital-gains-tax")],
   }),
-  component: () => <GuidePage path="/capital-gains-tax" copy={COPY} to="/tools" />,
+  component: () => <GuidePage path="/capital-gains-tax" copy={COPY} to="/pricing" />,
 });

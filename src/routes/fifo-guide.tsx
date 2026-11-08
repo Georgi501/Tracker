@@ -16,7 +16,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "FIFO method for stocks and ETFs: a simple guide",
     intro:
-      "FIFO means first in, first out: when you sell, the oldest shares you still hold are treated as sold first. Many investors use it to work out realized gains for a yearly tax report.",
+      "FIFO means first in, first out: when you sell, the oldest shares you still hold are treated as sold first. Capispot's annual FIFO report of realized gains and losses is included with Pro.",
     sections: [
       [
         "A simple example",
@@ -24,7 +24,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Why the tax year matters",
-        "Realized results are grouped by the tax year your country uses. In Capispot you choose the month the tax year starts, so sales are grouped into the right period.",
+        "Realized results are grouped by the tax year your country uses. In Capispot's Pro report you choose the month the tax year starts, so sales are grouped into the right period.",
       ],
       [
         "Several brokers",
@@ -35,13 +35,13 @@ const GUIDE: Record<"en" | "bg", Guide> = {
         "Costs are converted with dated exchange rates, and confirmed stock splits are applied to historical quantities without changing your original transactions.",
       ],
     ],
-    cta: "Try the FIFO report free",
+    cta: "See the Pro FIFO report",
     note: "General information, not tax or investment advice. Rules differ by country; check with a tax professional.",
   },
   bg: {
     title: "FIFO метод за акции и ETF: кратко ръководство",
     intro:
-      "FIFO означава „първо купено, първо продадено“: при продажба първо се считат продадени най-старите акции, които още притежаваш. Много инвеститори го ползват за изчисляване на реализираната печалба за годишна справка.",
+      "FIFO означава „първо купено, първо продадено“: при продажба първо се считат продадени най-старите акции, които още притежаваш. В Capispot годишната FIFO справка за реализираните печалби и загуби е част от Pro.",
     sections: [
       [
         "Прост пример",
@@ -49,7 +49,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Защо данъчната година има значение",
-        "Реализираните резултати се групират по данъчната година, която ползва твоята държава. В Capispot избираш от кой месец започва данъчната година, за да попаднат продажбите в правилния период.",
+        "Реализираните резултати се групират според данъчната година, която се използва във вашата държава. В Pro можеш да зададеш месеца, от който започва годината, за да се групират продажбите в правилния период.",
       ],
       [
         "Няколко брокера",
@@ -60,7 +60,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
         "Цените се превръщат с датирани валутни курсове, а потвърдените сплитове се отчитат в историческите количества, без да се променят оригиналните ти сделки.",
       ],
     ],
-    cta: "Пробвай FIFO справката безплатно",
+    cta: "Виж FIFO справката в Pro",
     note: "Обща информация, не е данъчен или инвестиционен съвет. Правилата са различни по държави; консултирай се със специалист.",
   },
 };
@@ -103,7 +103,8 @@ function FifoGuide() {
       </Card>
       <div className="flex flex-wrap items-center gap-3">
         <Link
-          to="/tools"
+          to="/pricing"
+          hash="plan-comparison"
           className="press rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
         >
           {g.cta}

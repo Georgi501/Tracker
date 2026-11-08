@@ -31,6 +31,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FifoGuideRouteImport } from './routes/fifo-guide'
 import { Route as HoldingsRouteImport } from './routes/holdings'
 import { Route as IbkrImportRouteImport } from './routes/ibkr-import'
+import { Route as ImportDemoRouteImport } from './routes/import-demo'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as PortfolioInEurRouteImport } from './routes/portfolio-in-eur'
@@ -173,6 +174,11 @@ const HoldingsRoute = HoldingsRouteImport.update({
 const IbkrImportRoute = IbkrImportRouteImport.update({
   id: '/ibkr-import',
   path: '/ibkr-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportDemoRoute = ImportDemoRouteImport.update({
+  id: '/import-demo',
+  path: '/import-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
+  '/import-demo': typeof ImportDemoRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/portfolio-in-eur': typeof PortfolioInEurRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
+  '/import-demo': typeof ImportDemoRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/portfolio-in-eur': typeof PortfolioInEurRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/fifo-guide': typeof FifoGuideRoute
   '/holdings': typeof HoldingsRoute
   '/ibkr-import': typeof IbkrImportRoute
+  '/import-demo': typeof ImportDemoRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/portfolio-in-eur': typeof PortfolioInEurRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
+    | '/import-demo'
     | '/markets'
     | '/messages'
     | '/portfolio-in-eur'
@@ -596,6 +606,7 @@ export interface FileRouteTypes {
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
+    | '/import-demo'
     | '/markets'
     | '/messages'
     | '/portfolio-in-eur'
@@ -653,6 +664,7 @@ export interface FileRouteTypes {
     | '/fifo-guide'
     | '/holdings'
     | '/ibkr-import'
+    | '/import-demo'
     | '/markets'
     | '/messages'
     | '/portfolio-in-eur'
@@ -711,6 +723,7 @@ export interface RootRouteChildren {
   FifoGuideRoute: typeof FifoGuideRoute
   HoldingsRoute: typeof HoldingsRoute
   IbkrImportRoute: typeof IbkrImportRoute
+  ImportDemoRoute: typeof ImportDemoRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
   PortfolioInEurRoute: typeof PortfolioInEurRoute
@@ -899,6 +912,13 @@ declare module '@tanstack/react-router' {
       path: '/ibkr-import'
       fullPath: '/ibkr-import'
       preLoaderRoute: typeof IbkrImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import-demo': {
+      id: '/import-demo'
+      path: '/import-demo'
+      fullPath: '/import-demo'
+      preLoaderRoute: typeof ImportDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -1170,6 +1190,7 @@ const rootRouteChildren: RootRouteChildren = {
   FifoGuideRoute: FifoGuideRoute,
   HoldingsRoute: HoldingsRoute,
   IbkrImportRoute: IbkrImportRoute,
+  ImportDemoRoute: ImportDemoRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,
   PortfolioInEurRoute: PortfolioInEurRoute,

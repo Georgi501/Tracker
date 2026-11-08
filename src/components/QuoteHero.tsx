@@ -41,6 +41,7 @@ const L = {
     low: "Low",
     quoteError: "Could not load the current quote.",
     chartError: "Could not load chart data.",
+    lastSession: "No intraday chart is available. Showing the latest available daily session:",
     retry: "Try again",
     viewData: "View chart data",
     chart: (
@@ -66,6 +67,7 @@ const L = {
     low: "Минимум",
     quoteError: "Текущата котировка не можа да се зареди.",
     chartError: "Данните за графиката не можаха да се заредят.",
+    lastSession: "Няма графика за днешната сесия. Показваме последните налични дневни данни:",
     retry: "Опитай отново",
     viewData: "Виж данните от графиката",
     chart: (
@@ -91,6 +93,7 @@ const L = {
     low: "Tief",
     quoteError: "Der aktuelle Kurs konnte nicht geladen werden.",
     chartError: "Diagrammdaten konnten nicht geladen werden.",
+    lastSession: "Keine Intraday-Daten verfügbar. Angezeigt wird der letzte verfügbare Handelstag:",
     retry: "Erneut versuchen",
     viewData: "Diagrammdaten anzeigen",
     chart: (
@@ -116,6 +119,7 @@ const L = {
     low: "Mínimo",
     quoteError: "No se pudo cargar la cotización actual.",
     chartError: "No se pudieron cargar los datos del gráfico.",
+    lastSession: "No hay datos intradía. Se muestra la última sesión diaria disponible:",
     retry: "Reintentar",
     viewData: "Ver datos del gráfico",
     chart: (
@@ -141,6 +145,8 @@ const L = {
     low: "Minimo",
     quoteError: "Impossibile caricare la quotazione attuale.",
     chartError: "Impossibile caricare i dati del grafico.",
+    lastSession:
+      "Dati intraday non disponibili. Viene mostrata l'ultima sessione giornaliera disponibile:",
     retry: "Riprova",
     viewData: "Visualizza i dati del grafico",
     chart: (
@@ -188,6 +194,20 @@ export function QuoteHero({
     queryFn: () => detailsFn({ data: { symbol, type, range } }),
     staleTime: range === "1D" ? 60_000 : 600_000,
   });
+  const shouldLoadDailyFallback =
+    range === "1D" &&
+    !ch.isPending &&
+    !ch.isError &&
+    !ch.data?.unavailable &&
+    (ch.data?.closes.length ?? 0) < 2;
+  const dailyFallback = useQuery({
+    queryKey: ["market-details", symbol, type, "1M-last-session"],
+    queryFn: () => detailsFn({ data: { symbol, type, range: "1M" } }),
+    enabled: shouldLoadDailyFallback,
+    staleTime: 600_000,
+  });
+  const showingDailyFallback =
+    shouldLoadDailyFallback && !!dailyFallback.data && !dailyFallback.data.unavailable;
   const usListing = type !== "crypto" && !symbol.includes(".");
   const e = useQuery({
     queryKey: ["market-ext", symbol],
@@ -213,15 +233,18 @@ export function QuoteHero({
     }).format(v);
   const num = (v: number) =>
     new Intl.NumberFormat(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-  const closes = ch.data?.closes ?? [];
+  const closes = showingDailyFallback
+    ? (dailyFallback.data?.closes.slice(-2) ?? [])
+    : (ch.data?.closes ?? []);
   const first = closes[0]?.c,
     last = closes.at(-1)?.c;
+  const displayedRange = showingDailyFallback ? "latest session" : range;
   const periodPct = first && last ? (last / first - 1) * 100 : null;
   const up = periodPct == null ? (quote?.change ?? 0) >= 0 : periodPct >= 0;
   const color = up ? "var(--success, var(--primary))" : "var(--destructive)";
   const change = quote?.change ?? null;
   const absChange = quote && change != null ? quote.price - quote.price / (1 + change / 100) : null;
-  const intraday = range === "1D" || range === "1W";
+  const intraday = !showingDailyFallback && (range === "1D" || range === "1W");
   const fmtT = (t: number) =>
     new Date(t).toLocaleString(
       loc,
@@ -325,7 +348,7 @@ export function QuoteHero({
                   type="button"
                   aria-pressed={r === range}
                   onClick={() => setRange(r)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${r === range ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                  className={`min-h-11 min-w-11 rounded-md px-3 py-1.5 text-sm font-semibold transition ${r === range ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
                 >
                   {r === "MAX" ? "Max" : r}
                 </button>
@@ -339,14 +362,19 @@ export function QuoteHero({
                 </span>
               )}
             </div>
-            {ch.isFetching && !ch.data ? (
+            {(ch.isFetching && !ch.data) ||
+            (shouldLoadDailyFallback && dailyFallback.isFetching && !dailyFallback.data) ? (
               <div className="h-48 animate-pulse rounded-md bg-muted sm:h-56" />
-            ) : ch.isError || ch.data?.unavailable ? (
+            ) : ch.isError ||
+              ch.data?.unavailable ||
+              (showingDailyFallback && dailyFallback.isError) ? (
               <p role="alert" className="py-16 text-center text-sm text-destructive">
                 {c.chartError}{" "}
                 <button
                   type="button"
-                  onClick={() => void ch.refetch()}
+                  onClick={() =>
+                    showingDailyFallback ? void dailyFallback.refetch() : void ch.refetch()
+                  }
                   className="font-semibold underline"
                 >
                   {c.retry}
@@ -357,7 +385,7 @@ export function QuoteHero({
                 role="img"
                 aria-label={c.chart(
                   name,
-                  range,
+                  displayedRange,
                   closes.length,
                   money(first!),
                   money(last!),
@@ -447,13 +475,38 @@ export function QuoteHero({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="py-10 text-center text-sm text-muted-foreground">{c.noChart}</p>
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                {showingDailyFallback && closes[0] ? (
+                  <p>
+                    {c.lastSession}{" "}
+                    <strong className="font-semibold text-foreground">
+                      {new Date(closes[0].t).toLocaleDateString(loc, { dateStyle: "medium" })} ·{" "}
+                      {money(closes[0].c)}
+                    </strong>
+                  </p>
+                ) : (
+                  <p>{c.noChart}</p>
+                )}
+              </div>
             )}
           </div>
+          {showingDailyFallback && closes.length > 1 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {c.lastSession}{" "}
+              {new Date(closes.at(-1)!.t).toLocaleDateString(loc, { dateStyle: "medium" })}
+            </p>
+          )}
           {closes.length > 1 && (
             <ChartDataTable
               summary={c.viewData}
-              caption={c.chart(name, range, closes.length, money(first!), money(last!), "")}
+              caption={c.chart(
+                name,
+                displayedRange,
+                closes.length,
+                money(first!),
+                money(last!),
+                "",
+              )}
               headers={[c.date, c.close]}
               rows={closes.map((point) => [fmtT(point.t), money(point.c)])}
             />

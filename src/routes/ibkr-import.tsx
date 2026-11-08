@@ -16,7 +16,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Import Interactive Brokers (IBKR) history into a portfolio tracker",
     intro:
-      "Bring your Interactive Brokers trades into Capispot to see all your holdings, dividends and realized results next to your other brokers.",
+      "Bring your Interactive Brokers trades into Capispot to see your holdings and dividends alongside transactions from your other brokers.",
     sections: [
       [
         "CSV import",
@@ -32,7 +32,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Combine with other brokers",
-        "Import Trading 212, Revolut or other brokers too. Analytics shows the split across brokers and the FIFO report groups realized results by tax year.",
+        "Import Trading 212, Revolut or other brokers too. Free includes CSV preview and duplicate checks; the annual FIFO report of realized gains and losses is a separate Pro feature.",
       ],
     ],
     cta: "Open Brokers and import",
@@ -41,7 +41,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   bg: {
     title: "Как да импортираш историята от Interactive Brokers (IBKR) в тракер за портфолио",
     intro:
-      "Добави сделките си от Interactive Brokers в Capispot, за да виждаш всички позиции, дивиденти и реализирани резултати до тези от другите си брокери.",
+      "Добави сделките си от Interactive Brokers в Capispot, за да виждаш позициите и дивидентите заедно със сделките от другите си брокери.",
     sections: [
       [
         "CSV импорт",
@@ -57,7 +57,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Комбинирай с други брокери",
-        "Импортирай и Trading 212, Revolut или други брокери. Анализите показват разпределението по брокери, а FIFO справката групира реализираните резултати по данъчна година.",
+        "Импортирай и Trading 212, Revolut или други брокери. Безплатният CSV импорт включва преглед и проверка за дубликати; годишната FIFO справка за реализираните печалби и загуби е отделна Pro функция.",
       ],
     ],
     cta: "Отвори „Брокери“ и импортирай",

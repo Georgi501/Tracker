@@ -1,6 +1,8 @@
 import { expect, it } from "vitest";
 import {
   filterAndSortMarketAssets,
+  groupMarketListings,
+  marketListingDetails,
   marketSearchSchema,
   searchCatalog,
   type MarketAsset,
@@ -28,6 +30,24 @@ it("returns no matches for unknown text", () => {
 it("finds European ETF exchange tickers", () => {
   expect(searchCatalog("SPYL.DE")[0]?.symbol).toBe("SPYL.DE");
   expect(searchCatalog("VWCE.DE")[0]?.symbol).toBe("VWCE.DE");
+});
+it("groups listings for the same fund and retains each exchange ticker", () => {
+  const listings = searchCatalog("SPYL");
+  expect(groupMarketListings(listings)).toEqual([
+    {
+      key: "isin:IE000XZSV718",
+      isin: "IE000XZSV718",
+      listings: expect.arrayContaining([
+        expect.objectContaining({ symbol: "SPYL.DE" }),
+        expect.objectContaining({ symbol: "SPYL.AS" }),
+      ]),
+    },
+  ]);
+  expect(marketListingDetails(listings[0]!)).toMatchObject({
+    exchange: expect.any(String),
+    currency: "EUR",
+    isin: "IE000XZSV718",
+  });
 });
 it("finds supported cryptocurrencies by ticker and name", () => {
   expect(searchCatalog("ADA")[0]).toMatchObject({

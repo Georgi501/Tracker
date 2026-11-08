@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { isCreemTestMode } from "@/lib/creem";
 import { paymentsCopy } from "@/lib/payments-i18n";
@@ -51,6 +51,11 @@ const promoCopy: Record<Lang, { label: string; hint: string }> = {
 function Pricing() {
   const p = usePortfolio();
   const [yearly, setYearly] = useState(true);
+  const [checkoutRequest, setCheckoutRequest] = useState<{
+    interval: "month" | "year";
+    promo: string;
+  } | null>(null);
+  const checkoutStarted = useRef(false);
   const [busy, setBusy] = useState(false);
   const [activating, setActivating] = useState(false);
   const [activationTimedOut, setActivationTimedOut] = useState(false);
@@ -62,9 +67,17 @@ function Pricing() {
   const pc = proCopy[p.lang];
   const { isPro, reload } = p;
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("promo")?.trim();
-    if (code && /^[A-Za-z0-9_-]{3,32}$/.test(code)) {
-      setPromo(code.toUpperCase());
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("promo")?.trim() ?? "";
+    const interval = params.get("interval");
+    const validPromo = /^[A-Za-z0-9_-]{3,32}$/.test(code) ? code.toUpperCase() : "";
+    if (interval === "month" || interval === "year") {
+      setYearly(interval === "year");
+      if (validPromo) setPromo(validPromo);
+      if (params.get("checkout") === "pro")
+        setCheckoutRequest({ interval, promo: interval === "year" ? validPromo : "" });
+    } else if (validPromo) {
+      setPromo(validPromo);
       setYearly(true);
     }
   }, []);
@@ -135,39 +148,53 @@ function Pricing() {
       window.clearTimeout(timeout);
     };
   }, [activating, isPro, reload, c.success]);
-  const buy = async () => {
-    if (!p.user) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      if (!data.session?.access_token) throw new Error("Sign-in session expired");
-      const response = await fetch("/api/payments/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
-        body: JSON.stringify({
-          interval: yearly ? "year" : "month",
-          ...(promoValid && yearly ? { promo: promo.trim() } : {}),
-        }),
-      });
-      const result = (await response.json()) as { url?: string; error?: string };
-      if (!response.ok || !result.url) throw new Error(result.error || c.failed);
-      const checkoutUrl = new URL(result.url);
-      if (
-        checkoutUrl.protocol !== "https:" ||
-        (checkoutUrl.hostname !== "creem.io" && !checkoutUrl.hostname.endsWith(".creem.io"))
-      )
-        throw new Error(c.failed);
-      window.location.assign(checkoutUrl);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : c.failed);
-    } finally {
-      setBusy(false);
-    }
-  };
+  const buy = useCallback(
+    async (interval: "month" | "year" = yearly ? "year" : "month", promoCode = promo) => {
+      if (!p.user) return;
+      setBusy(true);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!data.session?.access_token) throw new Error("Sign-in session expired");
+        const response = await fetch("/api/payments/checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({
+            interval,
+            ...(interval === "year" && /^[A-Za-z0-9_-]{3,32}$/.test(promoCode.trim())
+              ? { promo: promoCode.trim() }
+              : {}),
+          }),
+        });
+        const result = (await response.json()) as { url?: string; error?: string };
+        if (!response.ok || !result.url) throw new Error(result.error || c.failed);
+        const checkoutUrl = new URL(result.url);
+        if (
+          checkoutUrl.protocol !== "https:" ||
+          (checkoutUrl.hostname !== "creem.io" && !checkoutUrl.hostname.endsWith(".creem.io"))
+        )
+          throw new Error(c.failed);
+        window.location.assign(checkoutUrl);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : c.failed);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [c.failed, p.user, promo, yearly],
+  );
+  useEffect(() => {
+    if (!p.authReady || !p.user || p.isPro || !checkoutRequest || checkoutStarted.current) return;
+    checkoutStarted.current = true;
+    void buy(checkoutRequest.interval, checkoutRequest.promo);
+  }, [p.authReady, p.user, p.isPro, checkoutRequest, buy]);
+  const signupSearch = { mode: "signup" as const };
+  const checkoutContinuation = `/pricing?checkout=pro&interval=${yearly ? "year" : "month"}${
+    yearly && promoValid ? `&promo=${encodeURIComponent(promo.trim())}` : ""
+  }`;
   const copyReferralLink = async () => {
     if (!referralCode) return;
     const link = `${window.location.origin}/auth?ref=${encodeURIComponent(referralCode)}`;
@@ -193,7 +220,7 @@ function Pricing() {
           <button
             key={String(y)}
             onClick={() => setYearly(y)}
-            className={`rounded-full px-4 py-1.5 font-semibold capitalize ${yearly === y ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+            className={`min-h-11 rounded-full px-4 py-1.5 font-semibold capitalize ${yearly === y ? "bg-card shadow-sm" : "text-muted-foreground"}`}
           >
             {y ? p.t("perYear").replace("/ ", "") : p.t("perMonth").replace("/ ", "")}
           </button>
@@ -207,7 +234,7 @@ function Pricing() {
             <Feature>{p.t("freeF1")}</Feature>
             <Feature>{p.t("freeF2")}</Feature>
             <Feature>{p.t("freeF3")}</Feature>
-            {[4, 5, 6].map((i) => (
+            {[5, 6, 7].map((i) => (
               <Feature key={i}>{planCopy[p.lang].groups[i]?.free ?? ""}</Feature>
             ))}
           </ul>
@@ -219,6 +246,7 @@ function Pricing() {
             ) : (
               <Link
                 to="/auth"
+                search={signupSearch}
                 className="inline-block rounded-full border border-border px-5 py-2 text-sm font-semibold"
               >
                 {p.t("signUp")}
@@ -238,7 +266,8 @@ function Pricing() {
           <ul className="space-y-2">
             <Feature>{p.t("proF1")}</Feature>
             <Feature>{p.t("proF2")}</Feature>
-            <Feature>{planCopy[p.lang].groups[4]?.pro ?? ""}</Feature>
+            <Feature>{planCopy[p.lang].groups[1]?.pro ?? ""}</Feature>
+            <Feature>{planCopy[p.lang].groups[5]?.pro ?? ""}</Feature>
             <Feature>{pc.heatmap}</Feature>
             <Feature>{pc.income}</Feature>
             <Feature>{pc.fire}</Feature>
@@ -273,16 +302,17 @@ function Pricing() {
               <span className="text-sm text-muted-foreground">{c.processing}</span>
             ) : p.user ? (
               <button
-                onClick={buy}
+                onClick={() => void buy()}
                 disabled={busy}
-                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                className="min-h-11 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
               >
                 {c.upgrade}
               </button>
             ) : (
               <Link
                 to="/auth"
-                className="inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+                search={{ ...signupSearch, next: checkoutContinuation }}
+                className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
               >
                 {c.upgrade}
               </Link>
@@ -291,7 +321,7 @@ function Pricing() {
               <Link
                 to="/demo"
                 hash="pro-preview"
-                className="inline-flex min-h-10 items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-primary hover:bg-accent"
+                className="inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-primary hover:bg-accent"
               >
                 {planCopy[p.lang].interactiveDemo}
               </Link>
@@ -442,7 +472,7 @@ function Pricing() {
           <div className="mt-8 text-center">
             {p.user ? (
               <button
-                onClick={buy}
+                onClick={() => void buy()}
                 disabled={busy}
                 className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
               >
@@ -451,6 +481,7 @@ function Pricing() {
             ) : (
               <Link
                 to="/auth"
+                search={{ ...signupSearch, next: checkoutContinuation }}
                 className="inline-block rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
               >
                 {c.upgrade}

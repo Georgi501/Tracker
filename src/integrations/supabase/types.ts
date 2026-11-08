@@ -145,6 +145,61 @@ export type Database = {
         };
         Relationships: [];
       };
+      broker_transfers: {
+        Row: {
+          asset_id: string;
+          created_at: string;
+          from_broker_id: string;
+          id: string;
+          quantity: number;
+          to_broker_id: string;
+          transfer_date: string;
+          user_id: string;
+        };
+        Insert: {
+          asset_id: string;
+          created_at?: string;
+          from_broker_id: string;
+          id?: string;
+          quantity: number;
+          to_broker_id: string;
+          transfer_date?: string;
+          user_id?: string;
+        };
+        Update: {
+          asset_id?: string;
+          created_at?: string;
+          from_broker_id?: string;
+          id?: string;
+          quantity?: number;
+          to_broker_id?: string;
+          transfer_date?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "broker_transfers_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "broker_transfers_from_broker_id_fkey";
+            columns: ["from_broker_id"];
+            isOneToOne: false;
+            referencedRelation: "brokers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "broker_transfers_to_broker_id_fkey";
+            columns: ["to_broker_id"];
+            isOneToOne: false;
+            referencedRelation: "brokers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       broker_api_credentials: {
         Row: {
           broker_id: string;
@@ -642,6 +697,16 @@ export type Database = {
       claim_company_profile_view: {
         Args: { _symbol: string };
         Returns: { allowed: boolean; resets_on: string; used: number }[];
+      };
+      create_broker_transfer: {
+        Args: {
+          p_asset_id: string;
+          p_from_broker_id: string;
+          p_quantity: number;
+          p_to_broker_id: string;
+          p_transfer_date: string;
+        };
+        Returns: string;
       };
       is_pro: { Args: { _user_id: string }; Returns: boolean };
       is_site_admin: { Args: Record<PropertyKey, never>; Returns: boolean };

@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
-import { useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -17,6 +16,7 @@ import { dcfCopy } from "@/components/DcfCalculator";
 import { dcfAnalysis, scenario } from "@/lib/dcf";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
+import { SAMPLE_DIVIDENDS, SAMPLE_HISTORY, SAMPLE_HOLDINGS } from "@/lib/sample-portfolio";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -33,29 +33,6 @@ export const Route = createFileRoute("/demo")({
 });
 
 // Illustrative sample only: not live quotes and not real accounts.
-const SAMPLE = [
-  { symbol: "VWCE", name: "Vanguard FTSE All-World", cls: "ETF", qty: 40, cost: 112, value: 128 },
-  { symbol: "AAPL", name: "Apple Inc.", cls: "Stock", qty: 15, cost: 170, value: 215 },
-  { symbol: "MSFT", name: "Microsoft Corp.", cls: "Stock", qty: 8, cost: 290, value: 410 },
-  { symbol: "BTC", name: "Bitcoin", cls: "Crypto", qty: 0.05, cost: 42000, value: 64000 },
-  { symbol: "BND", name: "Vanguard Total Bond", cls: "Bonds", qty: 30, cost: 74, value: 72 },
-];
-
-const SAMPLE_HISTORY = [
-  { month: "2026-05", value: 14650 },
-  { month: "2026-06", value: 15180 },
-  { month: "2026-07", value: 14920 },
-  { month: "2026-08", value: 15940 },
-  { month: "2026-09", value: 16230 },
-  { month: "2026-10", value: 16985 },
-];
-
-const SAMPLE_DIVIDENDS = [
-  { date: "2026-09-15", symbol: "AAPL", name: "Apple Inc.", amount: 3.75 },
-  { date: "2026-09-15", symbol: "MSFT", name: "Microsoft Corp.", amount: 6.64 },
-  { date: "2026-07-14", symbol: "BND", name: "Vanguard Total Bond", amount: 18.6 },
-];
-
 const COPY: Record<
   Lang,
   {
@@ -70,6 +47,7 @@ const COPY: Record<
     bonds: string;
     holdings: string;
     cols: [string, string, string, string, string];
+    details: string;
     heatmap: string;
     heatmapNote: string;
     cta: string;
@@ -97,6 +75,7 @@ const COPY: Record<
     bonds: "Bonds",
     holdings: "Holdings",
     cols: ["Asset", "Qty", "Avg cost", "Value", "Gain / loss"],
+    details: "Details",
     heatmap: "Portfolio heatmap",
     heatmapNote:
       "Each tile shows portfolio weight and illustrative gain/loss versus sample average cost—not live or daily market performance.",
@@ -125,6 +104,7 @@ const COPY: Record<
     bonds: "Облигации",
     holdings: "Позиции",
     cols: ["Актив", "Бр.", "Ср. цена", "Стойност", "Печ. / загуба"],
+    details: "Детайли",
     heatmap: "Топлинна карта на портфейла",
     heatmapNote:
       "Всяка плочка показва дела на позицията и примерната печалба или загуба спрямо средната ѝ цена — не реална или дневна доходност.",
@@ -153,6 +133,7 @@ const COPY: Record<
     bonds: "Anleihen",
     holdings: "Positionen",
     cols: ["Wert", "Menge", "Ø Kosten", "Wert", "G/V"],
+    details: "Details",
     heatmap: "Portfolio-Heatmap",
     heatmapNote:
       "Jede Kachel zeigt das Portfolio-Gewicht und den illustrativen Gewinn/Verlust gegenüber den Beispiel-Einstandskosten – keine Live- oder Tagesentwicklung.",
@@ -181,6 +162,7 @@ const COPY: Record<
     bonds: "Bonos",
     holdings: "Posiciones",
     cols: ["Activo", "Cant.", "Coste medio", "Valor", "P/G"],
+    details: "Detalles",
     heatmap: "Mapa de calor de la cartera",
     heatmapNote:
       "Cada bloque muestra el peso en la cartera y la ganancia/pérdida ilustrativa frente al coste medio de ejemplo; no es rendimiento diario ni en vivo.",
@@ -209,6 +191,7 @@ const COPY: Record<
     bonds: "Obbligazioni",
     holdings: "Posizioni",
     cols: ["Asset", "Qtà", "Costo medio", "Valore", "P/L"],
+    details: "Dettagli",
     heatmap: "Mappa del portafoglio",
     heatmapNote:
       "Ogni riquadro mostra il peso in portafoglio e il guadagno/perdita illustrativo rispetto al costo medio di esempio, non l'andamento reale o giornaliero.",
@@ -237,9 +220,8 @@ const usd = (n: number, locale: string) =>
 function DemoPage() {
   const p = usePortfolio();
   const c = COPY[p.lang];
-  const [showHeatmap, setShowHeatmap] = useState(true);
   const locale = languageLocale(p.lang);
-  const rows = SAMPLE.map((r) => ({
+  const rows = SAMPLE_HOLDINGS.map((r) => ({
     ...r,
     totalValue: r.qty * r.value,
     totalCost: r.qty * r.cost,
@@ -302,21 +284,32 @@ function DemoPage() {
           <Link
             to="/demo"
             hash="portfolio-preview"
-            className="press inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground"
+            className="press inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground"
           >
             {c.tryDemo}
             <ArrowRight className="size-4" />
           </Link>
-          <Link
-            to={p.user ? "/holdings" : "/auth"}
-            className="press inline-flex min-h-10 items-center gap-2 rounded-full border border-border px-4 py-2 font-semibold hover:bg-accent"
-          >
-            {p.user ? c.openPortfolio : c.cta}
-            <ArrowRight className="size-4" />
-          </Link>
+          {p.user ? (
+            <Link
+              to="/holdings"
+              className="press inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 py-2 font-semibold hover:bg-accent"
+            >
+              {c.openPortfolio}
+              <ArrowRight className="size-4" />
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="press inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 py-2 font-semibold hover:bg-accent"
+            >
+              {c.cta}
+              <ArrowRight className="size-4" />
+            </Link>
+          )}
           <Link
             to="/markets"
-            className="press inline-flex min-h-10 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+            className="press inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
           >
             {c.explore}
           </Link>
@@ -359,54 +352,6 @@ function DemoPage() {
         </div>
       </div>
 
-      <section className="card-interactive overflow-x-auto rounded-2xl border border-border bg-card p-4">
-        <h2 className="font-display mb-3 text-lg font-semibold">{c.holdings}</h2>
-        <table className="w-full min-w-[480px] text-sm">
-          <thead className="text-left text-muted-foreground">
-            <tr>
-              {c.cols.map((h, i) => (
-                <th key={h} className={`pb-2 font-medium ${i ? "text-right" : ""}`}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const rowGain = r.totalValue - r.totalCost;
-              const pl = (rowGain / r.totalCost) * 100;
-              return (
-                <tr key={r.symbol} className="border-t border-border">
-                  <td className="py-2">
-                    <span className="font-semibold">{r.symbol}</span>
-                    <span className="ml-2 text-muted-foreground">{r.name}</span>
-                  </td>
-                  <td className="numeric-display text-right">{r.qty}</td>
-                  <td className="numeric-display text-right">{usd(r.cost, locale)}</td>
-                  <td className="numeric-display text-right font-semibold">
-                    {usd(r.totalValue, locale)}
-                  </td>
-                  <td className="text-right">
-                    <span
-                      className={`numeric-display block font-semibold ${pl >= 0 ? "text-success" : "text-destructive"}`}
-                    >
-                      {rowGain >= 0 ? "+" : "−"}
-                      {usd(Math.abs(rowGain), locale)}
-                    </span>
-                    <span
-                      className={`numeric-display text-xs font-medium ${pl >= 0 ? "text-success" : "text-destructive"}`}
-                    >
-                      {pl >= 0 ? "+" : "−"}
-                      {Math.abs(pl).toFixed(1)}%
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.65fr)]">
         <section
           aria-labelledby="sample-history-title"
@@ -417,7 +362,10 @@ function DemoPage() {
           </h2>
           <div className="mt-4 h-56" role="img" aria-label={c.historyTitle}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={SAMPLE_HISTORY} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+              <LineChart
+                data={[...SAMPLE_HISTORY]}
+                margin={{ top: 8, right: 12, left: 4, bottom: 0 }}
+              >
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="month"
@@ -498,6 +446,78 @@ function DemoPage() {
         </section>
       </div>
 
+      <section className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <h2 className="font-display mb-3 text-lg font-semibold">{c.alloc}</h2>
+        <AllocationBreakdown
+          data={byClass}
+          totalLabel={c.totalValue}
+          formatValue={(value) => usd(value, locale)}
+        />
+      </section>
+
+      <section className="card-interactive rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h2 className="font-display mb-3 text-lg font-semibold">{c.holdings}</h2>
+        <table className="w-full table-fixed text-xs sm:text-sm">
+          <thead className="text-left text-muted-foreground">
+            <tr>
+              {c.cols.map((h, i) => (
+                <th
+                  key={h}
+                  className={`pb-2 font-medium ${i ? "text-right" : ""} ${i === 1 || i === 2 ? "hidden sm:table-cell" : ""}`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const rowGain = r.totalValue - r.totalCost;
+              const pl = (rowGain / r.totalCost) * 100;
+              return (
+                <tr key={r.symbol} className="border-t border-border">
+                  <td className="max-w-0 py-2 pr-1 sm:pr-2">
+                    <span className="block truncate font-semibold sm:inline">{r.symbol}</span>
+                    <span className="block truncate text-muted-foreground sm:ml-2 sm:inline">
+                      {r.name}
+                    </span>
+                    <details className="mt-1 sm:hidden">
+                      <summary className="inline-flex min-h-11 cursor-pointer items-center text-[11px] font-semibold text-primary">
+                        {c.details}
+                      </summary>
+                      <p className="pb-2 text-[11px] text-muted-foreground">
+                        {c.cols[1]}: {r.qty} · {c.cols[2]}: {usd(r.cost, locale)}
+                      </p>
+                    </details>
+                  </td>
+                  <td className="numeric-display hidden text-right sm:table-cell">{r.qty}</td>
+                  <td className="numeric-display hidden text-right sm:table-cell">
+                    {usd(r.cost, locale)}
+                  </td>
+                  <td className="numeric-display overflow-hidden text-right font-semibold">
+                    {usd(r.totalValue, locale)}
+                  </td>
+                  <td className="overflow-hidden text-right">
+                    <span
+                      className={`numeric-display block truncate font-semibold ${pl >= 0 ? "text-success" : "text-destructive"}`}
+                    >
+                      {rowGain >= 0 ? "+" : "−"}
+                      {usd(Math.abs(rowGain), locale)}
+                    </span>
+                    <span
+                      className={`numeric-display text-xs font-medium ${pl >= 0 ? "text-success" : "text-destructive"}`}
+                    >
+                      {pl >= 0 ? "+" : "−"}
+                      {Math.abs(pl).toFixed(1)}%
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+
       <section
         id="pro-preview"
         className="card-interactive scroll-mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5"
@@ -506,80 +526,52 @@ function DemoPage() {
           <h2 className="font-display text-lg font-semibold">{c.samplePreview}</h2>
           <ProBadge />
         </div>
-        <div className="my-4 flex flex-wrap gap-2" aria-label={c.samplePreview}>
-          <button
-            type="button"
-            aria-pressed={!showHeatmap}
-            onClick={() => setShowHeatmap(false)}
-            className={`rounded-full border px-3 py-1.5 text-sm font-medium ${!showHeatmap ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}
-          >
-            {c.alloc}
-          </button>
-          <button
-            type="button"
-            aria-pressed={showHeatmap}
-            onClick={() => setShowHeatmap(true)}
-            className={`rounded-full border px-3 py-1.5 text-sm font-medium ${showHeatmap ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"}`}
-          >
-            {c.heatmap}
-          </button>
-        </div>
-        {showHeatmap ? (
-          <div className="flex flex-col gap-2" role="list">
-            {[heatRows.slice(0, 3), heatRows.slice(3)].map((line, lineIndex) => (
-              <div
-                key={lineIndex}
-                className={`flex flex-col gap-2 sm:flex-row ${lineIndex === 0 ? "sm:h-52" : "sm:h-32"}`}
-              >
-                {line.map((row) => {
-                  const up = row.change >= 0;
-                  const tone = up ? "var(--success)" : "var(--destructive)";
-                  const strength = Math.min(60, 22 + Math.abs(row.change) * 0.9);
-                  return (
-                    <div
-                      key={row.symbol}
-                      role="listitem"
-                      style={{
-                        flexGrow: row.weight,
-                        flexBasis: 0,
-                        background: `linear-gradient(145deg, color-mix(in oklab, ${tone} ${strength + 14}%, transparent), color-mix(in oklab, ${tone} ${strength - 10}%, transparent))`,
-                        borderColor: `color-mix(in oklab, ${tone} 55%, transparent)`,
-                      }}
-                      className="flex min-h-24 flex-col justify-between rounded-xl border p-3 transition-transform hover:scale-[1.015]"
-                    >
-                      <div>
-                        <span className="font-display text-lg font-bold text-foreground">
-                          {row.symbol}
-                        </span>
-                        <span className="block truncate text-xs text-foreground/70">
-                          {row.name}
-                        </span>
-                      </div>
-                      <div className="flex items-end justify-between gap-2 text-foreground">
-                        <span className="numeric-display text-sm font-semibold">
-                          {row.weight.toFixed(1)}%
-                        </span>
-                        <span
-                          className={`numeric-display rounded-full bg-background/60 px-2 py-0.5 text-xs font-bold ${up ? "text-success" : "text-destructive"}`}
-                        >
-                          {up ? "▲ +" : "▼ "}
-                          {row.change.toFixed(1)}%
-                        </span>
-                      </div>
+        <div className="mt-4 flex flex-col gap-2" role="list">
+          {[heatRows.slice(0, 3), heatRows.slice(3)].map((line, lineIndex) => (
+            <div
+              key={lineIndex}
+              className={`flex flex-col gap-2 sm:flex-row ${lineIndex === 0 ? "sm:h-52" : "sm:h-32"}`}
+            >
+              {line.map((row) => {
+                const up = row.change >= 0;
+                const tone = up ? "var(--success)" : "var(--destructive)";
+                const strength = Math.min(60, 22 + Math.abs(row.change) * 0.9);
+                return (
+                  <div
+                    key={row.symbol}
+                    role="listitem"
+                    style={{
+                      flexGrow: row.weight,
+                      flexBasis: 0,
+                      background: `linear-gradient(145deg, color-mix(in oklab, ${tone} ${strength + 14}%, transparent), color-mix(in oklab, ${tone} ${strength - 10}%, transparent))`,
+                      borderColor: `color-mix(in oklab, ${tone} 55%, transparent)`,
+                    }}
+                    className="flex min-h-24 flex-col justify-between rounded-xl border p-3 transition-transform hover:scale-[1.015]"
+                  >
+                    <div>
+                      <span className="font-display text-lg font-bold text-foreground">
+                        {row.symbol}
+                      </span>
+                      <span className="block truncate text-xs text-foreground/70">{row.name}</span>
                     </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <AllocationBreakdown
-            data={byClass}
-            totalLabel={c.totalValue}
-            formatValue={(value) => usd(value, locale)}
-          />
-        )}
-        {showHeatmap && <p className="mt-3 text-xs text-muted-foreground">{c.heatmapNote}</p>}
+                    <div className="flex items-end justify-between gap-2 text-foreground">
+                      <span className="numeric-display text-sm font-semibold">
+                        {row.weight.toFixed(1)}%
+                      </span>
+                      <span
+                        className={`numeric-display rounded-full bg-background/60 px-2 py-0.5 text-xs font-bold ${up ? "text-success" : "text-destructive"}`}
+                      >
+                        {up ? "▲ +" : "▼ "}
+                        {row.change.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">{c.heatmapNote}</p>
       </section>
 
       <section

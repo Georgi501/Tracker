@@ -12,9 +12,11 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FX,
+  brokerHoldings,
   computeHoldings,
   type Asset,
   type AssetType,
+  type BrokerTransfer,
   type CorporateAction,
   type Currency,
   type Transaction,
@@ -29,6 +31,7 @@ import type { ImportedTx } from "./csv-import";
 import { trackAnalyticsEvent } from "./analytics";
 import { increasesOversellAmount } from "./quality";
 import { isValidIsoDate } from "./history";
+import { localDateString } from "./local-date";
 
 export interface Broker {
   id: string;
@@ -63,6 +66,7 @@ interface State {
   assets: Asset[];
   transactions: Transaction[];
   brokers: Broker[];
+  brokerTransfers: BrokerTransfer[];
   corporateActions: CorporateAction[];
   manualValuations: ManualAssetValuation[];
   dataError: boolean;
@@ -70,6 +74,7 @@ interface State {
   priceNote: string | null;
   eurPerUsd: number | null;
   addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
+  createBrokerTransfer: (transfer: Omit<BrokerTransfer, "id" | "createdAt">) => Promise<void>;
   updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;
   saveManualValuation: (
     assetId: string,
@@ -120,6 +125,9 @@ type AssetRow = {
 
 // Static public pages that must be present in the server HTML for search engines.
 export const PRERENDERED_PATHS: ReadonlySet<string> = new Set([
+  "/",
+  "/demo",
+  "/import-demo",
   "/features",
   "/fifo-guide",
   "/trading212-import",
@@ -165,6 +173,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const transactionsRef = useRef(transactions);
   transactionsRef.current = transactions;
   const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [brokerTransfers, setBrokerTransfers] = useState<BrokerTransfer[]>([]);
   const [corporateActions, setCorporateActions] = useState<CorporateAction[]>([]);
   const [manualValuations, setManualValuations] = useState<ManualAssetValuation[]>([]);
   const [dataError, setDataError] = useState(false);
@@ -181,6 +190,20 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     () => computeHoldings(assets, transactions, corporateActions),
     [assets, transactions, corporateActions],
   );
+  const validateBrokerTransfers = (nextTransactions: Transaction[]) => {
+    if (!brokerTransfers.length) return;
+    try {
+      brokerHoldings(assetsRef.current, nextTransactions, brokerTransfers, corporateActions);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Broker transfer exceeds available holdings")
+        throw new Error(
+          lang === "bg"
+            ? "Промяната би направила записан трансфер невъзможен. Провери сделките и датите."
+            : "This change would invalidate a recorded broker transfer. Review the transactions and dates.",
+        );
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const refresh = () => {
@@ -234,6 +257,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setBrokerTransfers([]);
           setCorporateActions([]);
           setManualValuations([]);
           setIsPro(false);
@@ -252,6 +276,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setBrokerTransfers([]);
           setCorporateActions([]);
           setManualValuations([]);
           setIsPro(false);
@@ -282,6 +307,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setAssets([]);
           setTx([]);
           setBrokers([]);
+          setBrokerTransfers([]);
           setCorporateActions([]);
           setManualValuations([]);
           setIsPro(false);
@@ -316,6 +342,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setAssets([]);
       setTx([]);
       setBrokers([]);
+      setBrokerTransfers([]);
       setCorporateActions([]);
       setManualValuations([]);
       setIsPro(false);
@@ -332,6 +359,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       supabase.from("assets").select("*"),
       supabase.from("transactions").select("*"),
       supabase.from("brokers").select("id,name,format").order("created_at"),
+      supabase.from("broker_transfers").select("*").order("transfer_date").order("created_at"),
       supabase.from("corporate_actions").select("asset_id,event_date,numerator,denominator"),
       supabase.from("asset_valuations").select("*").order("valuation_date"),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
@@ -345,7 +373,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       return null;
     });
     if (!result) return;
-    const [a, t, b, ca, mv, p, pro, admin] = result;
+    const [a, t, b, bt, ca, mv, p, pro, admin] = result;
     if (userRef.current?.id !== user.id) return;
     if (pro.error) {
       console.error("Unable to verify portfolio access", pro.error);
@@ -355,10 +383,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
     setIsPro(!!pro.data);
     setAccessReady(true);
-    if (a.error || t.error || b.error || ca.error || mv.error || p.error || admin.error) {
+    if (
+      a.error ||
+      t.error ||
+      b.error ||
+      bt.error ||
+      ca.error ||
+      mv.error ||
+      p.error ||
+      admin.error
+    ) {
       console.error(
         "Unable to reload portfolio data",
-        a.error ?? t.error ?? b.error ?? ca.error ?? mv.error ?? p.error ?? admin.error,
+        a.error ?? t.error ?? b.error ?? bt.error ?? ca.error ?? mv.error ?? p.error ?? admin.error,
       );
       setDataError(true);
       return;
@@ -368,6 +405,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setDataUpdatedAt(Date.now());
     setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
+    setBrokerTransfers(
+      (bt.data ?? []).map((transfer) => ({
+        id: transfer.id,
+        assetId: transfer.asset_id,
+        fromBrokerId: transfer.from_broker_id,
+        toBrokerId: transfer.to_broker_id,
+        quantity: Number(transfer.quantity),
+        date: transfer.transfer_date,
+        createdAt: transfer.created_at,
+      })),
+    );
     const actions: CorporateAction[] = (ca.data ?? []).map((action) => ({
       assetId: action.asset_id,
       date: action.event_date,
@@ -540,6 +588,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       assets,
       transactions,
       brokers,
+      brokerTransfers,
       corporateActions,
       manualValuations,
       dataError,
@@ -570,6 +619,65 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         if (t.kind === "buy" && transactions.length === 0)
           trackAnalyticsEvent("first_holding_added");
+        await reload();
+      },
+      createBrokerTransfer: async (transfer) => {
+        if (!user) throw new Error(dictionaries[lang].signIn);
+        const today = localDateString();
+        if (
+          !isValidIsoDate(transfer.date) ||
+          transfer.date > today ||
+          !Number.isFinite(transfer.quantity) ||
+          transfer.quantity <= 0 ||
+          transfer.fromBrokerId === transfer.toBrokerId ||
+          !assetsRef.current.some((asset) => asset.id === transfer.assetId) ||
+          !brokers.some((broker) => broker.id === transfer.fromBrokerId) ||
+          !brokers.some((broker) => broker.id === transfer.toBrokerId)
+        )
+          throw new Error(
+            lang === "bg"
+              ? "Провери актива, брокерите, количеството и датата на трансфера."
+              : "Check the asset, brokers, quantity, and transfer date.",
+          );
+        const source = brokerHoldings(
+          assetsRef.current,
+          transactionsRef.current,
+          brokerTransfers,
+          corporateActions,
+          transfer.date,
+        ).find(
+          (holding) =>
+            holding.brokerId === transfer.fromBrokerId && holding.asset.id === transfer.assetId,
+        );
+        if (!source || transfer.quantity > source.quantity + 1e-9)
+          throw new Error(
+            lang === "bg"
+              ? "Няма достатъчно налични бройки при избрания брокер."
+              : "The selected broker does not hold enough shares.",
+          );
+        const { data, error } = await supabase.rpc("create_broker_transfer", {
+          p_asset_id: transfer.assetId,
+          p_from_broker_id: transfer.fromBrokerId,
+          p_to_broker_id: transfer.toBrokerId,
+          p_quantity: transfer.quantity,
+          p_transfer_date: transfer.date,
+        });
+        if (error) {
+          const knownMessages: Record<string, { en: string; bg: string }> = {
+            BROKER_TRANSFER_INSUFFICIENT_SHARES: {
+              en: "The selected broker does not hold enough shares on that date.",
+              bg: "Няма достатъчно налични бройки при избрания брокер към тази дата.",
+            },
+            BROKER_TRANSFER_INVALID_OWNER: {
+              en: "The selected asset or broker account could not be verified.",
+              bg: "Избраният актив или брокерска сметка не може да бъде потвърдена.",
+            },
+          };
+          throw new Error(
+            knownMessages[error.message]?.[lang === "bg" ? "bg" : "en"] ?? error.message,
+          );
+        }
+        if (!data) throw new Error("The broker transfer could not be confirmed.");
         await reload();
       },
       updateBondPrice: async (assetId, priceUsd) => {
@@ -638,6 +746,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               ? "Промяната би довела до продажба на повече налични акции."
               : "This change would result in selling more shares than are available.",
           );
+        validateBrokerTransfers(nextTransactions);
         const { data, error } = await supabase
           .from("transactions")
           .update({
@@ -669,6 +778,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               ? "Сделката не може да бъде възстановена, защото наличността вече е променена."
               : "This transaction can no longer be restored because holdings have changed.",
           );
+        validateBrokerTransfers([...transactionsRef.current, transaction]);
         const { error } = await supabase.from("transactions").insert({
           asset_id: transaction.assetId,
           ...(transaction.brokerId ? { broker_id: transaction.brokerId } : {}),
@@ -684,6 +794,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       deleteTransactions: async (ids) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
         if (!ids.length) return 0;
+        const deletedIds = new Set(ids);
+        validateBrokerTransfers(transactionsRef.current.filter((item) => !deletedIds.has(item.id)));
         const { data, error } = await supabase
           .from("transactions")
           .delete()
@@ -721,9 +833,20 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             : {}),
         }));
         const ids = new Map(assets.map((x) => [x.symbol.toUpperCase(), x.id]));
+        const pendingTransactions = converted.map((row, index) => ({
+          id: `pending-import-${index}`,
+          assetId: ids.get(row.symbol.toUpperCase()) ?? `pending-asset:${row.symbol.toUpperCase()}`,
+          brokerId,
+          kind: row.kind,
+          quantity: row.quantity,
+          price: row.price,
+          fee: row.fee ?? 0,
+          date: row.date,
+        }));
+        validateBrokerTransfers([...transactionsRef.current, ...pendingTransactions]);
         const createdAssetIds: string[] = [];
         for (const r of converted) {
-          if (ids.has(r.symbol)) continue;
+          if (ids.has(r.symbol.toUpperCase())) continue;
           const { data, error } = await supabase
             .from("assets")
             .insert({
@@ -744,14 +867,14 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             .select("id")
             .single();
           if (error) throw error;
-          ids.set(r.symbol, data.id);
+          ids.set(r.symbol.toUpperCase(), data.id);
           createdAssetIds.push(data.id);
         }
         const { data, error } = await supabase
           .from("transactions")
           .insert(
             converted.map((r) => {
-              const assetId = ids.get(r.symbol);
+              const assetId = ids.get(r.symbol.toUpperCase());
               if (!assetId) throw new Error("Asset unavailable");
               return {
                 asset_id: assetId,
@@ -783,6 +906,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       undoImport: async (transactionIds, createdAssetIds) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        const removedIds = new Set(transactionIds);
+        validateBrokerTransfers(
+          transactionsRef.current.filter((transaction) => !removedIds.has(transaction.id)),
+        );
         const { data: removed, error: removeError } = await supabase
           .from("transactions")
           .delete()
@@ -861,6 +988,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     transactions,
     holdings,
     brokers,
+    brokerTransfers,
     corporateActions,
     manualValuations,
     dataError,

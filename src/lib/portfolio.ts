@@ -66,6 +66,24 @@ export interface Transaction {
   sourceTransactionId?: string;
 }
 
+export interface BrokerTransfer {
+  id: string;
+  assetId: string;
+  fromBrokerId: string;
+  toBrokerId: string;
+  quantity: number;
+  date: string;
+  createdAt?: string;
+}
+
+export interface BrokerHolding {
+  brokerId: string;
+  asset: Asset;
+  quantity: number;
+  costBasis: number;
+  value: number;
+}
+
 export interface CorporateAction {
   assetId: string;
   date: string;
@@ -185,28 +203,184 @@ export function computeHoldings(
   return out.sort((a, b) => b.value - a.value);
 }
 
+export function brokerHoldings(
+  assets: Asset[],
+  transactions: Transaction[],
+  transfers: BrokerTransfer[],
+  splits: CorporateAction[] = [],
+  asOfDate?: string,
+): BrokerHolding[] {
+  if (asOfDate) {
+    const timestamp = Date.parse(`${asOfDate}T00:00:00Z`);
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(asOfDate) ||
+      !Number.isFinite(timestamp) ||
+      new Date(timestamp).toISOString().slice(0, 10) !== asOfDate
+    )
+      throw new Error("Invalid broker holdings date");
+  }
+
+  const relevantSplits = asOfDate ? splits.filter((action) => action.date <= asOfDate) : splits;
+  const relevantTransactions = asOfDate
+    ? transactions.filter((transaction) => transaction.date <= asOfDate)
+    : transactions;
+  const relevantTransfers = asOfDate
+    ? transfers.filter((transfer) => transfer.date <= asOfDate)
+    : transfers;
+  const sortedTransfers = [...relevantTransfers].sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      (a.createdAt ?? "").localeCompare(b.createdAt ?? "") ||
+      a.id.localeCompare(b.id),
+  );
+  const events: (
+    | { date: string; order: number; sequence: number; transaction: Transaction }
+    | { date: string; order: number; sequence: number; transfer: BrokerTransfer }
+  )[] = [
+    ...normalizeTransactionsForSplits(relevantTransactions, relevantSplits).map(
+      (transaction, sequence) => ({
+        date: transaction.date,
+        order: 0,
+        sequence,
+        transaction,
+      }),
+    ),
+    ...sortedTransfers.map((transfer, sequence) => {
+      const timestamp = Date.parse(`${transfer.date}T00:00:00Z`);
+      if (
+        !Number.isFinite(timestamp) ||
+        new Date(timestamp).toISOString().slice(0, 10) !== transfer.date ||
+        !Number.isFinite(transfer.quantity) ||
+        transfer.quantity <= 0 ||
+        transfer.fromBrokerId === transfer.toBrokerId
+      )
+        throw new Error("Invalid broker transfer");
+      const factor = relevantSplits.reduce(
+        (total, action) =>
+          action.assetId === transfer.assetId && transfer.date < action.date
+            ? total * (action.numerator / action.denominator)
+            : total,
+        1,
+      );
+      if (!Number.isFinite(factor) || factor <= 0) throw new Error("Invalid broker transfer split");
+      return {
+        date: transfer.date,
+        order: 1,
+        sequence,
+        transfer: { ...transfer, quantity: transfer.quantity * factor },
+      };
+    }),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.sequence - b.sequence);
+  type Lot = { quantity: number; costPerUnit: number; acquiredAt: string; order: number };
+  const accounts = new Map<string, Map<string, Lot[]>>();
+  const accountLots = (brokerId: string, assetId: string) => {
+    let account = accounts.get(brokerId);
+    if (!account) {
+      account = new Map();
+      accounts.set(brokerId, account);
+    }
+    let lots = account.get(assetId);
+    if (!lots) {
+      lots = [];
+      account.set(assetId, lots);
+    }
+    return lots;
+  };
+  const addLot = (lots: Lot[], lot: Lot) => {
+    let index = 0;
+    while (
+      index < lots.length &&
+      (lots[index]!.acquiredAt < lot.acquiredAt ||
+        (lots[index]!.acquiredAt === lot.acquiredAt && lots[index]!.order <= lot.order))
+    )
+      index++;
+    lots.splice(index, 0, lot);
+  };
+  const consumeLots = (lots: Lot[], quantity: number) => {
+    const moved: Lot[] = [];
+    let remaining = quantity;
+    while (remaining > 1e-12 && lots.length) {
+      const lot = lots[0]!;
+      const used = Math.min(remaining, lot.quantity);
+      if (used > 0) moved.push({ ...lot, quantity: used });
+      lot.quantity -= used;
+      remaining -= used;
+      if (lot.quantity <= 1e-12) lots.shift();
+    }
+    return { moved, remaining };
+  };
+
+  for (const [sequence, event] of events.entries()) {
+    if ("transaction" in event) {
+      const transaction = event.transaction;
+      const lots = accountLots(transaction.brokerId ?? "manual", transaction.assetId);
+      if (transaction.kind === "dividend") continue;
+      if (transaction.kind === "buy") {
+        addLot(lots, {
+          quantity: transaction.quantity,
+          costPerUnit: transaction.price + (transaction.fee ?? 0) / transaction.quantity,
+          acquiredAt: transaction.date,
+          order: sequence,
+        });
+      } else {
+        consumeLots(lots, transaction.quantity);
+      }
+      continue;
+    }
+
+    const { transfer } = event;
+    const sourceLots = accountLots(transfer.fromBrokerId, transfer.assetId);
+    const { moved, remaining } = consumeLots(sourceLots, transfer.quantity);
+    if (remaining > 1e-9) throw new Error("Broker transfer exceeds available holdings");
+    const destinationLots = accountLots(transfer.toBrokerId, transfer.assetId);
+    for (const lot of moved) addLot(destinationLots, lot);
+  }
+
+  const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
+  return [...accounts].flatMap(([brokerId, positions]) =>
+    [...positions].flatMap(([assetId, lots]) => {
+      const asset = assetsById.get(assetId);
+      const quantity = lots.reduce((total, lot) => total + lot.quantity, 0);
+      if (!asset || quantity <= 1e-9) return [];
+      return [
+        {
+          brokerId,
+          asset,
+          quantity,
+          costBasis: lots.reduce((total, lot) => total + lot.quantity * lot.costPerUnit, 0),
+          value: quantity * asset.price,
+        },
+      ];
+    }),
+  );
+}
+
 export function accountValues(
   assets: Asset[],
   transactions: Transaction[],
   brokers: { id: string; name: string }[],
   splits: CorporateAction[] = [],
+  transfers: BrokerTransfer[] = [],
 ): { id: string; name: string | null; value: number | null; missingQuotes: number }[] {
   const names = new Map(brokers.map((broker) => [broker.id, broker.name]));
-  const groups = new Map<string, Transaction[]>();
-  for (const transaction of transactions) {
-    const id = transaction.brokerId ?? "manual";
-    const group = groups.get(id) ?? [];
-    group.push(transaction);
-    groups.set(id, group);
-  }
-  return [...groups.entries()]
-    .map(([id, groupTransactions]) => {
-      const holdings = computeHoldings(assets, groupTransactions, splits);
-      const missingQuotes = holdings.filter((holding) => !Number.isFinite(holding.value)).length;
+  const accountIds = new Set([
+    ...transactions.map((transaction) => transaction.brokerId ?? "manual"),
+    ...transfers.flatMap((transfer) => [transfer.fromBrokerId, transfer.toBrokerId]),
+  ]);
+  const holdings = brokerHoldings(assets, transactions, transfers, splits);
+  return [...accountIds]
+    .map((id) => {
+      const accountHoldings = holdings.filter((holding) => holding.brokerId === id);
+      const missingQuotes = accountHoldings.filter(
+        (holding) => !Number.isFinite(holding.value),
+      ).length;
       return {
         id,
         name: names.get(id) ?? null,
-        value: missingQuotes > 0 ? null : holdings.reduce((sum, holding) => sum + holding.value, 0),
+        value:
+          missingQuotes > 0
+            ? null
+            : accountHoldings.reduce((sum, holding) => sum + holding.value, 0),
         missingQuotes,
       };
     })

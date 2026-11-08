@@ -18,7 +18,7 @@ export function GuidePage({
 }: {
   path: string;
   copy: Record<"en" | "bg", GuideCopy>;
-  to: "/brokers" | "/dividends" | "/tools";
+  to: "/brokers" | "/dividends" | "/tools" | "/pricing";
 }) {
   const p = usePortfolio();
   const g = p.lang === "bg" ? copy.bg : copy.en;
