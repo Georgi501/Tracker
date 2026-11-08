@@ -24,6 +24,10 @@ const validFundamentals: DcfFundamentals = {
   currency: "USD",
   finCurrency: "USD",
   fcf: 100,
+  fcfPeriodEnd: "2026-06-30T00:00:00.000Z",
+  fcfPeriodType: "12M",
+  operatingCashFlow: 150,
+  capitalExpenditure: 50,
   cash: 50,
   debt: 20,
   shares: 10,
@@ -133,6 +137,19 @@ describe("dcf", () => {
       dcfValueFromFundamentals({ ...validFundamentals, finCurrency: "EUR" }, assumptions),
     ).toBeNull();
     expect(dcfValueFromFundamentals({ ...validFundamentals, cash: null }, assumptions)).toBeNull();
+    expect(
+      dcfValueFromFundamentals({ ...validFundamentals, fcfPeriodEnd: null }, assumptions),
+    ).toBeNull();
+    expect(
+      dcfValueFromFundamentals({ ...validFundamentals, fcfPeriodType: null }, assumptions),
+    ).toBeNull();
+    expect(
+      dcfValueFromFundamentals({ ...validFundamentals, fcfPeriodEnd: "not-a-date" }, assumptions),
+    ).toBeNull();
+    expect(
+      dcfValueFromFundamentals({ ...validFundamentals, capitalExpenditure: null }, assumptions),
+    ).toBeNull();
+    expect(dcfValueFromFundamentals({ ...validFundamentals, fcf: 99 }, assumptions)).toBeNull();
   });
 
   it("calculates upside relative to the market price", () => {

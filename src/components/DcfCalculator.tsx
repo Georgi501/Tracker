@@ -58,6 +58,10 @@ type Copy = {
   missingPriceTime: string;
   terminalWarning: string;
   fcfLabel: string;
+  fcfPeriod: string;
+  operatingCashFlow: string;
+  capitalExpenditure: string;
+  fcfDefinition: string;
   cashLabel: string;
   debtLabel: string;
   sharesLabel: string;
@@ -119,7 +123,11 @@ export const dcfCopy: Record<Lang, Copy> = {
     missingPriceTime: "No usable timestamped market quote is available; comparison is hidden.",
     terminalWarning:
       "A large share of this estimate comes from the terminal value, so it is especially sensitive to long-term assumptions.",
-    fcfLabel: "Reported free cash flow",
+    fcfLabel: "Annual free cash flow",
+    fcfPeriod: "Reporting period ended",
+    operatingCashFlow: "Operating cash flow",
+    capitalExpenditure: "Capital expenditures",
+    fcfDefinition: "Free cash flow = operating cash flow − capital expenditures.",
     cashLabel: "Cash",
     debtLabel: "Debt",
     sharesLabel: "Shares outstanding",
@@ -183,7 +191,11 @@ export const dcfCopy: Record<Lang, Copy> = {
     missingPriceTime: "Няма валидна пазарна котировка с времеви печат; сравнението е скрито.",
     terminalWarning:
       "Голяма част от оценката идва от терминалната стойност и затова е особено чувствителна към дългосрочните допускания.",
-    fcfLabel: "Отчетен свободен паричен поток",
+    fcfLabel: "Годишен свободен паричен поток",
+    fcfPeriod: "Отчетен период до",
+    operatingCashFlow: "Оперативен паричен поток",
+    capitalExpenditure: "Капиталови разходи",
+    fcfDefinition: "Свободен паричен поток = оперативен паричен поток − капиталови разходи.",
     cashLabel: "Парични средства",
     debtLabel: "Дълг",
     sharesLabel: "Акции в обращение",
@@ -247,7 +259,11 @@ export const dcfCopy: Record<Lang, Copy> = {
       "Kein gültiger zeitgestempelter Marktkurs verfügbar; der Vergleich bleibt ausgeblendet.",
     terminalWarning:
       "Ein großer Teil der Schätzung stammt aus dem Endwert und reagiert daher besonders empfindlich auf langfristige Annahmen.",
-    fcfLabel: "Gemeldeter freier Cashflow",
+    fcfLabel: "Jährlicher freier Cashflow",
+    fcfPeriod: "Berichtszeitraum bis",
+    operatingCashFlow: "Operativer Cashflow",
+    capitalExpenditure: "Investitionen",
+    fcfDefinition: "Free Cashflow = operativer Cashflow − Investitionen.",
     cashLabel: "Barmittel",
     debtLabel: "Schulden",
     sharesLabel: "Ausstehende Aktien",
@@ -311,7 +327,11 @@ export const dcfCopy: Record<Lang, Copy> = {
       "No hay una cotización de mercado válida con fecha y hora; se oculta la comparación.",
     terminalWarning:
       "Una parte importante de la estimación procede del valor terminal y es especialmente sensible a los supuestos a largo plazo.",
-    fcfLabel: "Flujo de caja libre declarado",
+    fcfLabel: "Flujo de caja libre anual",
+    fcfPeriod: "Período informado hasta",
+    operatingCashFlow: "Flujo de caja operativo",
+    capitalExpenditure: "Gastos de capital",
+    fcfDefinition: "Flujo de caja libre = flujo de caja operativo − gastos de capital.",
     cashLabel: "Efectivo",
     debtLabel: "Deuda",
     sharesLabel: "Acciones en circulación",
@@ -375,7 +395,11 @@ export const dcfCopy: Record<Lang, Copy> = {
       "Non è disponibile una quotazione di mercato valida con data e ora; il confronto è nascosto.",
     terminalWarning:
       "Una parte consistente della stima deriva dal valore terminale, quindi è particolarmente sensibile alle ipotesi di lungo periodo.",
-    fcfLabel: "Free cash flow dichiarato",
+    fcfLabel: "Free cash flow annuale",
+    fcfPeriod: "Periodo contabile fino al",
+    operatingCashFlow: "Flusso di cassa operativo",
+    capitalExpenditure: "Spese in conto capitale",
+    fcfDefinition: "Free cash flow = flusso di cassa operativo − spese in conto capitale.",
     cashLabel: "Liquidità",
     debtLabel: "Debito",
     sharesLabel: "Azioni in circolazione",
@@ -484,6 +508,13 @@ export function DcfCalculator({ fixedSymbol }: { fixedSymbol?: string } = {}) {
           dateStyle: "medium",
           timeStyle: "short",
         }).format(date);
+  };
+  const periodDateLabel = (value: string | null) => {
+    if (!value) return c.unknownDate;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? c.unknownDate
+      : new Intl.DateTimeFormat(p.lang, { dateStyle: "medium", timeZone: "UTC" }).format(date);
   };
 
   return (
@@ -676,6 +707,16 @@ export function DcfCalculator({ fixedSymbol }: { fixedSymbol?: string } = {}) {
             <span>
               {c.fcfLabel}: {compactMoney(d.fcf)}
             </span>
+            <span>
+              {c.fcfPeriod}: {periodDateLabel(d.fcfPeriodEnd)}
+            </span>
+            <span>
+              {c.operatingCashFlow}: {compactMoney(d.operatingCashFlow)}
+            </span>
+            <span>
+              {c.capitalExpenditure}: {compactMoney(d.capitalExpenditure)}
+            </span>
+            <span>{c.fcfDefinition}</span>
             <span>
               {c.cashLabel}: {compactMoney(d.cash)}
             </span>

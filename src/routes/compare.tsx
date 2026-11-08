@@ -201,6 +201,18 @@ function Compare() {
             <DcfDetail label={detailsCopy.price} value={amount(data?.price, data?.currency)} />
             <DcfDetail label={detailsCopy.priceDate} value={date(data?.priceAsOf)} />
             <DcfDetail label={detailsCopy.dataDate} value={date(data?.fetchedAt)} />
+            <DcfDetail
+              label={detailsCopy.fcfPeriod}
+              value={`${data?.fcfPeriodType ?? "—"} · ${date(data?.fcfPeriodEnd)}`}
+            />
+            <DcfDetail
+              label={detailsCopy.operatingCashFlow}
+              value={amount(data?.operatingCashFlow)}
+            />
+            <DcfDetail
+              label={detailsCopy.capitalExpenditure}
+              value={amount(data?.capitalExpenditure)}
+            />
             <DcfDetail label={detailsCopy.fcf} value={amount(data?.fcf)} />
             <DcfDetail label={detailsCopy.cash} value={amount(data?.cash)} />
             <DcfDetail label={detailsCopy.debt} value={amount(data?.debt)} />
@@ -565,7 +577,10 @@ const DCF_DETAILS_COPY = {
     price: "Market price",
     priceDate: "Quote date",
     dataDate: "Inputs retrieved",
-    fcf: "Provider free cash flow",
+    fcfPeriod: "FCF reporting period",
+    operatingCashFlow: "Operating cash flow",
+    capitalExpenditure: "Capital expenditures",
+    fcf: "Free cash flow (operating cash flow − capital expenditures)",
     cash: "Cash",
     debt: "Total debt",
     shares: "Shares outstanding",
@@ -585,7 +600,10 @@ const DCF_DETAILS_COPY = {
     price: "Пазарна цена",
     priceDate: "Дата на котировката",
     dataDate: "Дата на получаване на данните",
-    fcf: "Свободен паричен поток",
+    fcfPeriod: "Отчетен период на FCF",
+    operatingCashFlow: "Оперативен паричен поток",
+    capitalExpenditure: "Капиталови разходи",
+    fcf: "Свободен паричен поток (оперативен поток − капиталови разходи)",
     cash: "Парични средства",
     debt: "Общ дълг",
     shares: "Брой акции",

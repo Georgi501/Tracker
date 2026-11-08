@@ -774,6 +774,10 @@ export interface DcfData {
   currency: string | null;
   finCurrency: string | null;
   fcf: number | null;
+  fcfPeriodEnd: string | null;
+  fcfPeriodType: "12M" | null;
+  operatingCashFlow: number | null;
+  capitalExpenditure: number | null;
   cash: number | null;
   debt: number | null;
   shares: number | null;
@@ -791,12 +795,42 @@ export const marketDcf = createServerFn({ method: "POST" })
     const { yahooClient } = await import("./prices.server");
     const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
     try {
-      const s = await yahooClient().quoteSummary(data.symbol, {
-        modules: ["financialData", "defaultKeyStatistics", "price"],
-      });
+      const yahoo = yahooClient();
+      const [s, cashFlowRows] = await Promise.all([
+        yahoo.quoteSummary(data.symbol, {
+          modules: ["financialData", "defaultKeyStatistics", "price"],
+        }),
+        yahoo.fundamentalsTimeSeries(data.symbol, {
+          period1: new Date(Date.UTC(new Date().getUTCFullYear() - 6, 0, 1)),
+          type: "annual",
+          module: "cash-flow",
+        }),
+      ]);
       const f = s.financialData;
       const k = s.defaultKeyStatistics;
       const p = s.price;
+      const cashFlow = cashFlowRows
+        .filter(
+          (row) =>
+            row.TYPE === "CASH_FLOW" &&
+            row.periodType === "12M" &&
+            row.date instanceof Date &&
+            Number.isFinite(row.date.getTime()) &&
+            row.date.getTime() <= Date.now(),
+        )
+        .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+      const operatingCashFlow = n(
+        cashFlow?.TYPE === "CASH_FLOW" ? cashFlow.operatingCashFlow : null,
+      );
+      const capitalExpenditureRaw = n(
+        cashFlow?.TYPE === "CASH_FLOW" ? cashFlow.capitalExpenditure : null,
+      );
+      const capitalExpenditure =
+        capitalExpenditureRaw == null ? null : Math.abs(capitalExpenditureRaw);
+      const fcf =
+        operatingCashFlow != null && capitalExpenditure != null
+          ? operatingCashFlow - capitalExpenditure
+          : null;
       const marketTime = (p as { regularMarketTime?: unknown } | undefined)?.regularMarketTime;
       const marketDate =
         marketTime instanceof Date
@@ -813,7 +847,11 @@ export const marketDcf = createServerFn({ method: "POST" })
           marketDate && Number.isFinite(marketDate.getTime()) ? marketDate.toISOString() : null,
         currency: p?.currency ?? null,
         finCurrency: f?.financialCurrency ?? null,
-        fcf: n(f?.freeCashflow),
+        fcf,
+        fcfPeriodEnd: cashFlow?.date.toISOString() ?? null,
+        fcfPeriodType: cashFlow?.periodType === "12M" ? "12M" : null,
+        operatingCashFlow,
+        capitalExpenditure,
         cash: n(f?.totalCash),
         debt: n(f?.totalDebt),
         shares: n(k?.sharesOutstanding),

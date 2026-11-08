@@ -45,6 +45,10 @@ function makeDcfData(overrides: Partial<DcfData> = {}): DcfData {
     currency: "USD",
     finCurrency: "USD",
     fcf: 1_000_000_000,
+    fcfPeriodEnd: "2026-06-30T00:00:00.000Z",
+    fcfPeriodType: "12M",
+    operatingCashFlow: 1_500_000_000,
+    capitalExpenditure: 500_000_000,
     cash: 500_000_000,
     debt: 200_000_000,
     shares: 100_000_000,
@@ -78,7 +82,9 @@ describe("DCF calculator data safeguards", () => {
     expect(screen.getByRole("table", { name: /sensitivity analysis/i })).toBeInTheDocument();
     expect(screen.getByText(/Yahoo Finance/)).toBeInTheDocument();
     expect(screen.getByText(/reported revenue growth as a proxy/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reported free cash flow:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Annual free cash flow:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reporting period ended:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Free cash flow = operating cash flow/i)).toBeInTheDocument();
   });
 
   it("withholds the valuation when a required financial input is missing", () => {

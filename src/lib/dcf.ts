@@ -23,6 +23,10 @@ export interface DcfFundamentals {
   currency: string | null;
   finCurrency: string | null;
   fcf: number | null;
+  fcfPeriodEnd: string | null;
+  fcfPeriodType: "12M" | null;
+  operatingCashFlow: number | null;
+  capitalExpenditure: number | null;
   cash: number | null;
   debt: number | null;
   shares: number | null;
@@ -32,9 +36,16 @@ const isFiniteNumber = (value: number) => Number.isFinite(value);
 const isValidCurrency = (value: string | null): value is string =>
   typeof value === "string" && /^[A-Za-z]{3}$/.test(value);
 
-export function hasUsableDcfFundamentals(
-  data: DcfFundamentals,
-): data is DcfFundamentals & { fcf: number; cash: number; debt: number; shares: number } {
+export function hasUsableDcfFundamentals(data: DcfFundamentals): data is DcfFundamentals & {
+  fcf: number;
+  operatingCashFlow: number;
+  capitalExpenditure: number;
+  cash: number;
+  debt: number;
+  shares: number;
+  fcfPeriodEnd: string;
+  fcfPeriodType: "12M";
+} {
   return (
     data.quoteType?.toUpperCase() === "EQUITY" &&
     isValidCurrency(data.currency) &&
@@ -43,6 +54,15 @@ export function hasUsableDcfFundamentals(
     typeof data.fcf === "number" &&
     Number.isFinite(data.fcf) &&
     data.fcf > 0 &&
+    typeof data.fcfPeriodEnd === "string" &&
+    Number.isFinite(Date.parse(data.fcfPeriodEnd)) &&
+    data.fcfPeriodType === "12M" &&
+    typeof data.operatingCashFlow === "number" &&
+    Number.isFinite(data.operatingCashFlow) &&
+    typeof data.capitalExpenditure === "number" &&
+    Number.isFinite(data.capitalExpenditure) &&
+    data.capitalExpenditure >= 0 &&
+    Math.abs(data.fcf - (data.operatingCashFlow - data.capitalExpenditure)) < 0.01 &&
     typeof data.cash === "number" &&
     Number.isFinite(data.cash) &&
     data.cash >= 0 &&
