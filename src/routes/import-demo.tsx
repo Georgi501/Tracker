@@ -54,6 +54,7 @@ const COPY: Record<
     rejected: string;
     noRows: string;
     upload: string;
+    portfolio: string;
     back: string;
   }
 > = {
@@ -78,6 +79,7 @@ const COPY: Record<
     rejected: "Needs review",
     noRows: "No transactions could be parsed from the sample.",
     upload: "Import your own CSV",
+    portfolio: "See an example portfolio",
     back: "Back to Brokers",
   },
   bg: {
@@ -101,6 +103,7 @@ const COPY: Record<
     rejected: "За проверка",
     noRows: "От примерните данни не бяха разпознати сделки.",
     upload: "Импортирай свой CSV файл",
+    portfolio: "Виж примерно портфолио",
     back: "Назад към брокерите",
   },
   de: {
@@ -124,6 +127,7 @@ const COPY: Record<
     rejected: "Zu prüfen",
     noRows: "Aus dem Beispiel konnten keine Transaktionen gelesen werden.",
     upload: "Eigene CSV-Datei importieren",
+    portfolio: "Beispielportfolio ansehen",
     back: "Zurück zu Broker",
   },
   es: {
@@ -147,6 +151,7 @@ const COPY: Record<
     rejected: "Revisar",
     noRows: "No se pudieron leer operaciones del ejemplo.",
     upload: "Importar tu propio CSV",
+    portfolio: "Ver una cartera de ejemplo",
     back: "Volver a Brokers",
   },
   it: {
@@ -170,6 +175,7 @@ const COPY: Record<
     rejected: "Da controllare",
     noRows: "Non è stato possibile leggere operazioni dall'esempio.",
     upload: "Importa un tuo CSV",
+    portfolio: "Vedi un portafoglio di esempio",
     back: "Torna a Broker",
   },
 };
@@ -351,6 +357,12 @@ function ImportDemo() {
               {p.t("signUp")} · {c.upload}
             </Link>
           )}
+          <Link
+            to="/demo"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-accent"
+          >
+            {c.portfolio}
+          </Link>
         </div>
       </Card>
     </div>
