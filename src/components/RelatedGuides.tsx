@@ -10,8 +10,8 @@ const GUIDES = [
   { to: "/csv-import", en: "Free CSV import", bg: "Безплатен CSV импорт" },
   { to: "/revolut-import", en: "Import Revolut", bg: "Импорт от Revolut" },
   { to: "/capital-gains-tax", en: "Capital gains and FIFO", bg: "Капиталови печалби и FIFO" },
-  { to: "/trading212-import", en: "Import Trading 212", bg: "Импорт от Trading 212" },
-  { to: "/ibkr-import", en: "Import Interactive Brokers", bg: "Импорт от Interactive Brokers" },
+  { to: "/trading212-import", en: "Trading 212 CSV guide", bg: "CSV от Trading 212" },
+  { to: "/ibkr-import", en: "Interactive Brokers CSV guide", bg: "CSV от Interactive Brokers" },
 ] as const;
 
 export function RelatedGuides({ current }: { current: string }) {

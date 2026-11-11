@@ -14,6 +14,8 @@ type FeaturePath = "/features" | "/dividends" | "/tools" | "/pricing";
 type LandingCopy = {
   stepsTitle: string;
   stepsIntro: string;
+  trading212Guide: string;
+  ibkrGuide: string;
   steps: { title: string; body: string }[];
   featuresTitle: string;
   features: {
@@ -35,6 +37,8 @@ const COPY: Record<Lang, LandingCopy> = {
   en: {
     stepsTitle: "Get started in three steps",
     stepsIntro: "Broker CSV imports are free—bring your investments into one clear view.",
+    trading212Guide: "Trading 212 CSV guide",
+    ibkrGuide: "Interactive Brokers CSV guide",
     steps: [
       { title: "Add your activity", body: "Import a broker CSV or record a transaction manually." },
       {
@@ -104,6 +108,8 @@ const COPY: Record<Lang, LandingCopy> = {
   bg: {
     stepsTitle: "Започни в три стъпки",
     stepsIntro: "Импортът на CSV от брокер е безплатен — събери инвестициите си на едно място.",
+    trading212Guide: "Ръководство за CSV от Trading 212",
+    ibkrGuide: "Ръководство за CSV от Interactive Brokers",
     steps: [
       { title: "Добави сделките си", body: "Импортирай CSV от брокер или въведи сделка ръчно." },
       {
@@ -173,6 +179,8 @@ const COPY: Record<Lang, LandingCopy> = {
   de: {
     stepsTitle: "In drei Schritten starten",
     stepsIntro: "Broker-CSV-Importe sind kostenlos – bringe deine Anlagen übersichtlich zusammen.",
+    trading212Guide: "Trading 212 CSV-Anleitung",
+    ibkrGuide: "Interactive Brokers CSV-Anleitung",
     steps: [
       {
         title: "Aktivitäten hinzufügen",
@@ -242,6 +250,8 @@ const COPY: Record<Lang, LandingCopy> = {
   es: {
     stepsTitle: "Empieza en tres pasos",
     stepsIntro: "Importar CSV de un bróker es gratis: reúne tus inversiones en una vista clara.",
+    trading212Guide: "Guía de CSV de Trading 212",
+    ibkrGuide: "Guía de CSV de Interactive Brokers",
     steps: [
       {
         title: "Añade tu actividad",
@@ -315,6 +325,8 @@ const COPY: Record<Lang, LandingCopy> = {
     stepsTitle: "Inizia in tre passaggi",
     stepsIntro:
       "Importare un CSV del broker è gratis: riunisci i tuoi investimenti in una vista chiara.",
+    trading212Guide: "Guida CSV di Trading 212",
+    ibkrGuide: "Guida CSV di Interactive Brokers",
     steps: [
       {
         title: "Aggiungi le attività",
@@ -398,6 +410,14 @@ export function LandingSteps() {
           {c.stepsTitle}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
+        <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
+          <Link to="/trading212-import" className="text-primary underline underline-offset-4">
+            {c.trading212Guide}
+          </Link>
+          <Link to="/ibkr-import" className="text-primary underline underline-offset-4">
+            {c.ibkrGuide}
+          </Link>
+        </div>
       </div>
       <ol className="grid gap-2.5 md:grid-cols-3">
         {c.steps.map((step, index) => {
