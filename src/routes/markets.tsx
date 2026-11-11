@@ -1,7 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BookmarkCheck, ChevronDown, Newspaper, RefreshCw, Search, Star } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookmarkCheck,
+  ChevronDown,
+  Newspaper,
+  RefreshCw,
+  Search,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,30 +349,46 @@ function Markets() {
                 <div className="flex items-center gap-2 p-2">
                   <Button
                     variant="ghost"
-                    onClick={() => (activeAsset ? setSelected(null) : void loadQuote(a))}
+                    asChild
                     className="h-auto min-h-16 min-w-0 flex-1 justify-start whitespace-normal px-2 py-2 text-left"
-                    aria-pressed={!!activeAsset}
-                    aria-expanded={!!activeAsset}
                   >
-                    <CompanyLogo symbol={a.symbol} type={a.type} size={44} />
-                    <span className="min-w-0 flex-1">
-                      <span className="mb-1 block truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {a.symbol}
+                    <Link
+                      to="/asset/$symbol"
+                      params={{ symbol: a.symbol }}
+                      search={{ from: "markets", q: query.trim() || undefined }}
+                    >
+                      <CompanyLogo symbol={a.symbol} type={a.type} size={44} />
+                      <span className="min-w-0 flex-1">
+                        <span className="mb-1 block truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {a.symbol}
+                        </span>
+                        <span className="block truncate text-sm font-semibold">{a.name}</span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {[
+                            p.t(a.type),
+                            listing.exchange,
+                            listing.currency,
+                            listing.isin ? `ISIN ${listing.isin}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
                       </span>
-                      <span className="block truncate text-sm font-semibold">{a.name}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">
-                        {[
-                          p.t(a.type),
-                          listing.exchange,
-                          listing.currency,
-                          listing.isin ? `ISIN ${listing.isin}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </span>
+                      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={activeAsset ? c.closeQuickView : c.quickView}
+                    aria-expanded={!!activeAsset}
+                    title={activeAsset ? c.closeQuickView : c.quickView}
+                    onClick={() => (activeAsset ? setSelected(null) : void loadQuote(a))}
+                    className="size-9 shrink-0"
+                  >
                     <ChevronDown
-                      className={`size-4 shrink-0 text-muted-foreground transition-transform ${activeAsset ? "rotate-180" : ""}`}
+                      className={`size-4 text-muted-foreground transition-transform ${activeAsset ? "rotate-180" : ""}`}
                     />
                   </Button>
                   <Button

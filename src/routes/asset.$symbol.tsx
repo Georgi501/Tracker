@@ -25,8 +25,16 @@ import { searchMarket } from "@/lib/market.functions";
 import { projectedBondCoupon } from "@/lib/portfolio";
 import type { Lang } from "@/lib/i18n";
 import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
+import { z } from "zod";
 
 export const Route = createFileRoute("/asset/$symbol")({
+  validateSearch: (search) =>
+    z
+      .object({
+        from: z.literal("markets").optional().catch(undefined),
+        q: z.string().max(60).optional().catch(undefined),
+      })
+      .parse(search),
   head: ({ params }) => ({
     meta: [
       { title: `${params.symbol} — quote, charts and position details | Capispot` },
@@ -345,6 +353,7 @@ const BOND_REMINDER_COPY: Record<Lang, { nextCoupon: string; saveDate: string; n
 
 function AssetPage() {
   const { symbol } = Route.useParams();
+  const { from, q } = Route.useSearch();
   const p = usePortfolio();
   const c = C[p.lang];
   const today = new Date().toISOString().slice(0, 10);
@@ -410,6 +419,7 @@ function AssetPage() {
     <div className="page-enter space-y-5">
       <Link
         to={h ? "/holdings" : "/markets"}
+        search={!h && from === "markets" && q ? { q } : {}}
         className="inline-flex min-h-9 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
