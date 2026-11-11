@@ -7,6 +7,11 @@ import {
   sortEarningsCalendar,
   type EarningsCalendarData,
 } from "./earnings";
+import {
+  filterFinancialRows,
+  toTrailingFinancialRows,
+  type FinancialSeriesRow,
+} from "./financial-series";
 
 export interface MarketNews {
   id: string;
@@ -362,18 +367,7 @@ export interface KeyStats {
   currency: string | null;
 }
 
-export interface FinancialSeriesRow {
-  date: string;
-  revenue: number | null;
-  costOfRevenue: number | null;
-  grossProfit: number | null;
-  operatingIncome: number | null;
-  operatingExpense: number | null;
-  netIncome: number | null;
-  dilutedEps: number | null;
-  operatingCashFlow: number | null;
-  freeCashFlow: number | null;
-}
+export type { FinancialSeriesRow } from "./financial-series";
 
 export interface FinancialSeries {
   rows: FinancialSeriesRow[];
@@ -397,20 +391,23 @@ export const marketFinancialSeries = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<FinancialSeries> => {
     const { yahooClient } = await import("./prices.server");
     const yf = yahooClient();
-    const period1 = new Date(Date.now() - data.years * 365.25 * 24 * 60 * 60 * 1000);
-    const moduleOptions =
-      data.period === "trailing" ? { validateResult: false as const } : undefined;
+    const periodStart = new Date(Date.now() - data.years * 365.25 * 24 * 60 * 60 * 1000);
+    const period1 =
+      data.period === "trailing"
+        ? new Date(periodStart.getTime() - 365.25 * 24 * 60 * 60 * 1000)
+        : periodStart;
+    const sourcePeriod = data.period === "trailing" ? "quarterly" : data.period;
     const [income, cashFlow, quote] = await Promise.all([
-      yf.fundamentalsTimeSeries(
-        data.symbol,
-        { period1, type: data.period, module: "financials" },
-        moduleOptions,
-      ),
-      yf.fundamentalsTimeSeries(
-        data.symbol,
-        { period1, type: data.period, module: "cash-flow" },
-        moduleOptions,
-      ),
+      yf.fundamentalsTimeSeries(data.symbol, {
+        period1,
+        type: sourcePeriod,
+        module: "financials",
+      }),
+      yf.fundamentalsTimeSeries(data.symbol, {
+        period1,
+        type: sourcePeriod,
+        module: "cash-flow",
+      }),
       yf.quote(data.symbol).catch(() => null),
     ]);
     const rows = new Map<string, FinancialSeriesRow>();
@@ -458,8 +455,13 @@ export const marketFinancialSeries = createServerFn({ method: "POST" })
       row.operatingCashFlow = numberOrNull(item.operatingCashFlow);
       row.freeCashFlow = numberOrNull(item.freeCashFlow);
     }
+    const sortedRows = [...rows.values()].sort((a, b) => a.date.localeCompare(b.date));
+    const selectedRows =
+      data.period === "trailing"
+        ? filterFinancialRows(toTrailingFinancialRows(sortedRows), periodStart)
+        : filterFinancialRows(sortedRows, periodStart);
     return {
-      rows: [...rows.values()].sort((a, b) => a.date.localeCompare(b.date)),
+      rows: selectedRows,
       currency: quote?.currency ?? null,
     };
   });

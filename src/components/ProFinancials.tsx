@@ -30,6 +30,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Statement period",
     rangeLabel: "History range",
+    historyLimited: (available: number, requested: number) =>
+      `Yahoo Finance returned ${available} of ${requested} requested periods for this asset.`,
     history: "Reported financial history",
     period: "Period",
     years: (n: number) => `${n}Y`,
@@ -64,6 +66,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Период на отчета",
     rangeLabel: "Исторически период",
+    historyLimited: (available: number, requested: number) =>
+      `Yahoo Finance предоставя само ${available} от заявените ${requested} отчетни периода за този актив.`,
     history: "Исторически финансови отчети",
     period: "Период",
     years: (n: number) => `${n} г.`,
@@ -100,6 +104,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Berichtszeitraum",
     rangeLabel: "Historischer Zeitraum",
+    historyLimited: (available: number, requested: number) =>
+      `Yahoo Finance liefert für diesen Wert nur ${available} von ${requested} angeforderten Berichtszeiträumen.`,
     history: "Gemeldete Finanzhistorie",
     period: "Zeitraum",
     years: (n: number) => `${n}J`,
@@ -136,6 +142,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Período del informe",
     rangeLabel: "Período histórico",
+    historyLimited: (available: number, requested: number) =>
+      `Yahoo Finance solo ofrece ${available} de los ${requested} períodos solicitados para este activo.`,
     history: "Historial financiero publicado",
     period: "Período",
     years: (n: number) => `${n}A`,
@@ -172,6 +180,8 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Periodo del bilancio",
     rangeLabel: "Intervallo storico",
+    historyLimited: (available: number, requested: number) =>
+      `Yahoo Finance fornisce solo ${available} dei ${requested} periodi richiesti per questo asset.`,
     history: "Storico finanziario dichiarato",
     period: "Periodo",
     years: (n: number) => `${n}A`,
@@ -252,6 +262,7 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
   });
   const locale = languageLocale(lang);
   const rows = query.data?.rows ?? [];
+  const requestedPeriods = period === "annual" ? years : years * 4;
   const compact = (value: number, digits = 1) =>
     new Intl.NumberFormat(locale, {
       notation: "compact",
@@ -308,6 +319,12 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
         </div>
       </div>
 
+      {rows.length > 0 && rows.length < requestedPeriods && (
+        <p role="status" className="text-xs text-muted-foreground">
+          {c.historyLimited(rows.length, requestedPeriods)}
+        </p>
+      )}
+
       {query.isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {METRICS.map((metric) => (
@@ -337,7 +354,6 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
                 format={(value) => formatMetric(metric.key, value)}
                 locale={locale}
                 period={period}
-                rangeLabel={c.years(years)}
               />
             ))}
           </div>
@@ -435,7 +451,6 @@ function MetricCard({
   format,
   locale,
   period,
-  rangeLabel,
 }: {
   rows: FinancialSeriesRow[];
   metric: { key: MetricKey; label: MetricKey };
@@ -443,7 +458,6 @@ function MetricCard({
   format: (value: number) => string;
   locale: string;
   period: Period;
-  rangeLabel: string;
 }) {
   const gradientId = useId().replaceAll(":", "");
   const color = METRIC_CHART_COLORS[metric.key];
@@ -453,8 +467,12 @@ function MetricCard({
   });
   const first = values[0]?.value;
   const last = values.at(-1)?.value;
+  const firstDate = values[0]?.date;
   const lastDate = values.at(-1)?.date;
-  const change = first != null && first > 0 && last != null ? (last / first - 1) * 100 : null;
+  const change =
+    values.length > 1 && first != null && first > 0 && last != null
+      ? (last / first - 1) * 100
+      : null;
   const periodLabel = period === "quarterly" ? "short" : "medium";
   const formatDate = (date: string) => {
     const parsed = new Date(`${date}T12:00:00`);
@@ -462,6 +480,12 @@ function MetricCard({
       ? date
       : parsed.toLocaleDateString(locale, { dateStyle: periodLabel });
   };
+  const dateRange =
+    firstDate && lastDate
+      ? firstDate === lastDate
+        ? formatDate(lastDate)
+        : `${formatDate(firstDate)} – ${formatDate(lastDate)}`
+      : "";
   return (
     <Card className="group relative overflow-hidden border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
       <div className="flex min-h-12 items-start justify-between gap-2">
@@ -533,8 +557,8 @@ function MetricCard({
         )}
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        {lastDate ? formatDate(lastDate) : ""}
-        {change != null && ` · ${rangeLabel} ${change > 0 ? "+" : ""}${change.toFixed(1)}%`}
+        {dateRange}
+        {change != null && ` · ${change > 0 ? "+" : ""}${change.toFixed(1)}%`}
       </p>
     </Card>
   );
