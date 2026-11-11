@@ -411,12 +411,12 @@ export function LandingSteps() {
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
         <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
-          <Link to="/trading212-import" className="text-primary underline underline-offset-4">
+          <a href="/trading212-import" className="text-primary underline underline-offset-4">
             {c.trading212Guide}
-          </Link>
-          <Link to="/ibkr-import" className="text-primary underline underline-offset-4">
+          </a>
+          <a href="/ibkr-import" className="text-primary underline underline-offset-4">
             {c.ibkrGuide}
-          </Link>
+          </a>
         </div>
       </div>
       <ol className="grid gap-2.5 md:grid-cols-3">
