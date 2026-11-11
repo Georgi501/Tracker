@@ -230,7 +230,7 @@ function Brokers() {
         </p>
         <Link
           to="/auth"
-          search={{ mode: "signup" }}
+          search={{ mode: "signup", next: "/brokers" }}
           className="mt-2 inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-accent"
         >
           {p.t("signUp")}
