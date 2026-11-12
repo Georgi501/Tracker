@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/SectionState";
+import { uiStateCopy } from "@/lib/ui-state-copy";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -791,7 +793,7 @@ function Holdings() {
               <select
                 value={sort.key}
                 onChange={(e) => toggleSort(e.target.value as SortKey)}
-                aria-label="Sort"
+                aria-label={uiStateCopy[p.lang].sort}
                 className="flex-1 rounded-full border border-input bg-background px-3 py-2 text-sm"
               >
                 {(Object.keys(sortLabels) as SortKey[]).map((k) => (
@@ -802,7 +804,7 @@ function Holdings() {
               </select>
               <button
                 onClick={() => setSort((s) => ({ ...s, dir: s.dir === 1 ? -1 : 1 }))}
-                aria-label="Toggle direction"
+                aria-label={uiStateCopy[p.lang].direction}
                 className="press rounded-full border border-border p-2"
               >
                 {sort.dir === 1 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
@@ -867,7 +869,23 @@ function Holdings() {
                 </li>
               ))}
               {!rows.length && (
-                <p className="py-10 text-center text-muted-foreground">{p.t("noResults")}</p>
+                <EmptyState
+                  icon="search"
+                  title={p.t("noResults")}
+                  description={uiStateCopy[p.lang].searchHelp}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQ("");
+                        setType("all");
+                      }}
+                      className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                    >
+                      {uiStateCopy[p.lang].reset}
+                    </button>
+                  }
+                />
               )}
             </ul>
             <div className="hidden overflow-x-auto md:block">
@@ -986,7 +1004,23 @@ function Holdings() {
                 </tbody>
               </table>
               {!rows.length && (
-                <p className="py-10 text-center text-muted-foreground">{p.t("noResults")}</p>
+                <EmptyState
+                  icon="search"
+                  title={p.t("noResults")}
+                  description={uiStateCopy[p.lang].searchHelp}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQ("");
+                        setType("all");
+                      }}
+                      className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                    >
+                      {uiStateCopy[p.lang].reset}
+                    </button>
+                  }
+                />
               )}
             </div>
           </>

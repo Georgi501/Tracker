@@ -1,3 +1,5 @@
+import { profileStatusCopy } from "@/lib/profile-status-copy";
+import { ListSkeleton } from "@/components/SectionState";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -41,6 +43,15 @@ function ProfilePage() {
   const [url, setUrl] = useState<string>();
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const status = profileStatusCopy[p.lang];
+  useEffect(
+    () => () => {
+      if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
   useEffect(() => {
     if (!p.user || !p.isPro) {
       setF(null);
@@ -111,37 +122,55 @@ function ProfilePage() {
         </Card>
       </div>
     );
-  if (!f) return <div className="mx-auto h-64 max-w-xl animate-pulse rounded-3xl" />;
+  if (!f)
+    return (
+      <div className="mx-auto max-w-xl">
+        <ListSkeleton label={c.loading} />
+      </div>
+    );
 
   const upload = async (file: File) => {
+    if (uploading || saving) return;
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-      toast.error("Image ≤ 5 MB");
+      toast.error(status.imageLimit);
       return;
     }
-    const path = `${p.user!.id}/avatar-${Date.now()}.${file.name.split(".").pop() || "jpg"}`;
-    const { error } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (error) {
-      toast.error(error.message);
-      return;
+    setUploading(true);
+    try {
+      const path = `${p.user!.id}/avatar-${Date.now()}.${file.name.split(".").pop() || "jpg"}`;
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      setF({ ...f, avatar_path: path });
+      setUrl(URL.createObjectURL(file));
+    } catch {
+      toast.error(status.uploadError);
+    } finally {
+      setUploading(false);
     }
-    setF({ ...f, avatar_path: path });
-    setUrl(URL.createObjectURL(file));
   };
   const save = async () => {
-    const { error } = await supabase.from("profiles").upsert({
-      id: f.id,
-      display_name: f.display_name?.trim().slice(0, 60) || null,
-      bio: f.bio.slice(0, 500),
-      investing_style: f.investing_style.slice(0, 80),
-      avatar_path: f.avatar_path,
-      is_public: f.is_public,
-      share_portfolio: f.is_public && f.share_portfolio,
-      share_level: f.share_level,
-    });
-    if (error) toast.error(error.message);
-    else toast.success(c.saved);
+    if (saving || uploading) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").upsert({
+        id: f.id,
+        display_name: f.display_name?.trim().slice(0, 60) || null,
+        bio: f.bio.slice(0, 500),
+        investing_style: f.investing_style.slice(0, 80),
+        avatar_path: f.avatar_path,
+        is_public: f.is_public,
+        share_portfolio: f.is_public && f.share_portfolio,
+        share_level: f.share_level,
+      });
+      if (error) throw error;
+      toast.success(c.saved);
+    } catch {
+      toast.error(status.saveError);
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <div className="mx-auto max-w-xl space-y-5">
@@ -149,13 +178,15 @@ function ProfilePage() {
       <Card className="space-y-4">
         <div className="flex items-center gap-4">
           <Avatar url={url} name={f.display_name || p.user.email} size={84} />
-          <label className="press flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-semibold">
+          <label className="press flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-semibold focus-within:ring-2 focus-within:ring-primary">
             <Camera size={16} />
-            {c.photo}
+            {uploading ? status.uploading : c.photo}
             <input
               type="file"
+              disabled={uploading || saving}
               accept="image/*"
-              className="hidden"
+              aria-label={c.photo}
+              className="sr-only"
               onChange={(e) => {
                 const x = e.target.files?.[0];
                 if (x) void upload(x);
@@ -231,9 +262,11 @@ function ProfilePage() {
         )}
         <button
           onClick={() => void save()}
+          disabled={saving || uploading}
+          aria-busy={saving}
           className="press w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          {c.save}
+          {saving ? status.saving : c.save}
         </button>
       </Card>
     </div>

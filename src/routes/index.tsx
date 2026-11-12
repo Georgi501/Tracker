@@ -1,3 +1,9 @@
+import { DashboardMotion } from "@/components/DashboardMotion";
+import {
+  DashboardMetricCard as Metric,
+  DashboardAnalyticsSkeleton,
+} from "@/components/DashboardMetricCard";
+import { useReducedMotion } from "framer-motion";
 import { languageLocale } from "@/lib/i18n";
 import { siteIdentityJsonLd, softwareJsonLd } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -6,7 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod, type PortfolioPoint } from "@/lib/history";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   Clock3,
@@ -603,10 +609,16 @@ function Dashboard() {
   const history = useQuery({
     queryKey: ["portfolio-history", p.user?.id, p.transactions, period, p.currency],
     queryFn: () => historyFn({ data: { period, currency: p.currency } }),
-    enabled: !!p.user,
+    enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,
   });
   const series = history.data?.points ?? EMPTY_HISTORY_POINTS;
+  const valueChartSeries = useMemo(
+    () => series.map((point) => ({ t: point.t, v: point.v })),
+    [series],
+  );
+  const reduceMotion = useReducedMotion();
+  const valueGradientId = useId();
   const indexFn = useServerFn(getBenchmarkHistory);
   const first = series[0];
   const last = series.at(-1);
@@ -708,192 +720,276 @@ function Dashboard() {
     );
 
   return (
-    <div className="dashboard-grid grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
-      <div className="lg:col-span-3">
-        <WelcomeHero />
-      </div>
-      {!p.user && <LandingSteps />}
-      {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
-      {p.user && <MarketTicker />}
-      {!p.user && <LandingSections />}
-      {p.user && p.holdings.length > 0 && (
-        <Card
-          className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3 ${
-            showConcentrationWarning
-              ? "border-amber-500/35 bg-amber-500/[0.045]"
-              : "border-primary/20 bg-primary/[0.035]"
-          }`}
-        >
-          <div className="flex min-w-0 items-start gap-3">
-            <span
-              className={`grid size-10 shrink-0 place-items-center rounded-xl ${
-                showConcentrationWarning
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
-              {showConcentrationWarning ? (
-                <ShieldAlert size={19} aria-hidden />
-              ) : (
-                <Lightbulb size={19} aria-hidden />
-              )}
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {isConcentrated
-                  ? isFundExposure
-                    ? dashboardCopy.fundExposureTitle
-                    : dashboardCopy.concentrationTitle
-                  : dashboardCopy.snapshot}
-              </p>
-              <p className="mt-1 text-sm font-medium leading-relaxed">
-                {largestHolding && largestShare
-                  ? isConcentrated
-                    ? isFundExposure
-                      ? dashboardCopy.fundExposureSignal(largestHolding.asset.name, largestShare)
-                      : dashboardCopy.concentrationSignal(largestHolding.asset.name, largestShare)
-                    : dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
-                  : dashboardCopy.unavailableSnapshot}
-              </p>
-              {isConcentrated && largestHolding && largestShare && (
-                <>
-                  <p className="mt-1 hidden max-w-2xl text-xs leading-relaxed text-muted-foreground sm:block">
-                    {isFundExposure
-                      ? dashboardCopy.fundExposureContext
-                      : dashboardCopy.concentrationContext}
-                  </p>
-                  {largestShareRatio !== null && (
-                    <div
-                      className={`mt-2 h-1.5 max-w-sm overflow-hidden rounded-full ${
-                        showConcentrationWarning ? "bg-amber-500/15" : "bg-primary/15"
-                      }`}
-                      role="img"
-                      aria-label={
-                        isFundExposure
-                          ? dashboardCopy.fundExposureSignal(
-                              largestHolding.asset.name,
-                              largestShare,
-                            )
-                          : dashboardCopy.concentrationSignal(
-                              largestHolding.asset.name,
-                              largestShare,
-                            )
-                      }
-                    >
-                      <div
-                        className={`h-full rounded-full ${
-                          showConcentrationWarning ? "bg-amber-500" : "bg-primary"
-                        }`}
-                        style={{ width: `${Math.min(largestShareRatio, 1) * 100}%` }}
-                      />
-                    </div>
-                  )}
-                  <Link
-                    to="/holdings"
-                    className="mt-2 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    {dashboardCopy.reviewHoldings}{" "}
-                    <ArrowRight size={13} className="ml-1" aria-hidden />
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-            <p className="w-full text-xs font-semibold text-muted-foreground sm:hidden">
-              {dashboardCopy.quickActions}
-            </p>
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new Event("folio-open-add-transaction"))}
-              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Plus size={16} aria-hidden />
-              {dashboardCopy.addInvestment}
-            </button>
-            <Link
-              to="/brokers"
-              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Landmark size={15} aria-hidden />
-              {dashboardCopy.connectBroker}
-            </Link>
-            <Link
-              to="/brokers"
-              className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Upload size={15} aria-hidden />
-              {dashboardCopy.importCsv}
-            </Link>
-          </div>
-        </Card>
-      )}
-      {p.user && p.holdings.length > 0 && (
-        <>
-          <Card className="dashboard-primary-card order-1 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {p.t("netWorth")}
-              </p>
-              <div
-                role="group"
-                aria-label={p.t("performance")}
-                className="rotating-border-frame relative flex rounded-lg border border-border bg-background/50 p-0.5"
+    <DashboardMotion>
+      <div className="dashboard-grid grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-3">
+          {p.user && !p.portfolioReady ? (
+            <Skeleton className="h-36 w-full rounded-2xl" />
+          ) : (
+            <WelcomeHero />
+          )}
+        </div>
+        {!p.user && <LandingSteps />}
+        {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
+        {p.user && <MarketTicker />}
+        {p.user && !p.portfolioReady && <DashboardAnalyticsSkeleton />}
+        {!p.user && <LandingSections />}
+        {p.user && p.portfolioReady && p.holdings.length > 0 && (
+          <Card
+            className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 lg:col-span-3 ${
+              showConcentrationWarning
+                ? "border-amber-500/35 bg-amber-500/[0.045]"
+                : "border-primary/20 bg-primary/[0.035]"
+            }`}
+          >
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                className={`grid size-10 shrink-0 place-items-center rounded-xl ${
+                  showConcentrationWarning
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                    : "bg-primary/10 text-primary"
+                }`}
               >
-                <Button
-                  size="sm"
-                  variant={chartMode === "value" ? "secondary" : "ghost"}
-                  aria-pressed={chartMode === "value"}
-                  onClick={() => {
-                    setChartMode("value");
-                    setBenchmark("none");
-                  }}
-                >
-                  {p.t("netWorth")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartMode === "performance" ? "secondary" : "ghost"}
-                  aria-pressed={chartMode === "performance"}
-                  onClick={() => setChartMode("performance")}
-                >
-                  {p.t("performance")}
-                </Button>
+                {showConcentrationWarning ? (
+                  <ShieldAlert size={19} aria-hidden />
+                ) : (
+                  <Lightbulb size={19} aria-hidden />
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  {isConcentrated
+                    ? isFundExposure
+                      ? dashboardCopy.fundExposureTitle
+                      : dashboardCopy.concentrationTitle
+                    : dashboardCopy.snapshot}
+                </p>
+                <p className="mt-1 text-sm font-medium leading-relaxed">
+                  {largestHolding && largestShare
+                    ? isConcentrated
+                      ? isFundExposure
+                        ? dashboardCopy.fundExposureSignal(largestHolding.asset.name, largestShare)
+                        : dashboardCopy.concentrationSignal(largestHolding.asset.name, largestShare)
+                      : dashboardCopy.largestPosition(largestHolding.asset.name, largestShare)
+                    : dashboardCopy.unavailableSnapshot}
+                </p>
+                {isConcentrated && largestHolding && largestShare && (
+                  <>
+                    <p className="mt-1 hidden max-w-2xl text-xs leading-relaxed text-muted-foreground sm:block">
+                      {isFundExposure
+                        ? dashboardCopy.fundExposureContext
+                        : dashboardCopy.concentrationContext}
+                    </p>
+                    {largestShareRatio !== null && (
+                      <div
+                        className={`mt-2 h-1.5 max-w-sm overflow-hidden rounded-full ${
+                          showConcentrationWarning ? "bg-amber-500/15" : "bg-primary/15"
+                        }`}
+                        role="img"
+                        aria-label={
+                          isFundExposure
+                            ? dashboardCopy.fundExposureSignal(
+                                largestHolding.asset.name,
+                                largestShare,
+                              )
+                            : dashboardCopy.concentrationSignal(
+                                largestHolding.asset.name,
+                                largestShare,
+                              )
+                        }
+                      >
+                        <div
+                          className={`h-full rounded-full ${
+                            showConcentrationWarning ? "bg-amber-500" : "bg-primary"
+                          }`}
+                          style={{ width: `${Math.min(largestShareRatio, 1) * 100}%` }}
+                        />
+                      </div>
+                    )}
+                    <Link
+                      to="/holdings"
+                      className="mt-2 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      {dashboardCopy.reviewHoldings}{" "}
+                      <ArrowRight size={13} className="ml-1" aria-hidden />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
-            <h1 className="numeric-display mt-1 break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-              {p.user ? p.money(total) : "—"}
-            </h1>
-            <p className="mt-1 text-sm font-semibold">
-              <Delta value={chg}>
-                {Number.isFinite(chg)
-                  ? new Intl.NumberFormat(languageLocale(p.lang), {
-                      style: "currency",
-                      currency: p.currency,
-                      signDisplay: "exceptZero",
-                    }).format(chg)
-                  : "—"}{" "}
-                ({pct(tw)})
-              </Delta>{" "}
-              <span className="font-normal text-muted-foreground">{p.t("perPeriod")}</span>
-            </p>
-            <div
-              role="img"
-              aria-label={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}, ${chartMode === "performance" ? `${performanceSeries.length} ${p.t("dataPoints")}${performanceSeries.length ? `, ${p.t("latestValue")} ${pct(performanceSeries.at(-1)!.v)}` : ""}` : `${series.length} ${p.t("dataPoints")}${series.length ? `, ${p.t("latestValue")} ${p.money(series.at(-1)!.v)}` : ""}`}.`}
-              className="relative mt-2 h-32 touch-pan-y sm:h-36 md:h-40"
-              onTouchStart={(e) => (swipeX.current = e.touches[0]?.clientX ?? null)}
-              onTouchEnd={(e) => {
-                const x0 = swipeX.current;
-                swipeX.current = null;
-                const x1 = e.changedTouches[0]?.clientX;
-                if (x0 === null || x1 === undefined || Math.abs(x1 - x0) < 60) return;
-                const i = PERIODS.indexOf(period) + (x1 < x0 ? 1 : -1);
-                const next = PERIODS[i];
-                if (next) setPeriod(next);
-              }}
-            >
-              {chartMode === "performance" ? (
-                !performanceSeries.length ? (
+            <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
+              <p className="w-full text-xs font-semibold text-muted-foreground sm:hidden">
+                {dashboardCopy.quickActions}
+              </p>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("folio-open-add-transaction"))}
+                className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Plus size={16} aria-hidden />
+                {dashboardCopy.addInvestment}
+              </button>
+              <Link
+                to="/brokers"
+                className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Landmark size={15} aria-hidden />
+                {dashboardCopy.connectBroker}
+              </Link>
+              <Link
+                to="/brokers"
+                className="press inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Upload size={15} aria-hidden />
+                {dashboardCopy.importCsv}
+              </Link>
+            </div>
+          </Card>
+        )}
+        {p.user && p.portfolioReady && p.holdings.length > 0 && (
+          <>
+            <Card className="dashboard-primary-card analytics-surface order-1 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {p.t("netWorth")}
+                </p>
+                <div
+                  role="group"
+                  aria-label={p.t("performance")}
+                  className="rotating-border-frame relative flex rounded-lg border border-border bg-background/50 p-0.5"
+                >
+                  <Button
+                    size="sm"
+                    variant={chartMode === "value" ? "secondary" : "ghost"}
+                    aria-pressed={chartMode === "value"}
+                    onClick={() => {
+                      setChartMode("value");
+                      setBenchmark("none");
+                    }}
+                  >
+                    {p.t("netWorth")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={chartMode === "performance" ? "secondary" : "ghost"}
+                    aria-pressed={chartMode === "performance"}
+                    onClick={() => setChartMode("performance")}
+                  >
+                    {p.t("performance")}
+                  </Button>
+                </div>
+              </div>
+              <h1 className="numeric-display mt-1 break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                {p.user ? p.money(total) : "—"}
+              </h1>
+              <p className="mt-1 text-sm font-semibold">
+                <Delta value={chg}>
+                  {Number.isFinite(chg)
+                    ? new Intl.NumberFormat(languageLocale(p.lang), {
+                        style: "currency",
+                        currency: p.currency,
+                        signDisplay: "exceptZero",
+                      }).format(chg)
+                    : "—"}{" "}
+                  ({pct(tw)})
+                </Delta>{" "}
+                <span className="font-normal text-muted-foreground">{p.t("perPeriod")}</span>
+              </p>
+              <div
+                role="img"
+                aria-label={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}, ${chartMode === "performance" ? `${performanceSeries.length} ${p.t("dataPoints")}${performanceSeries.length ? `, ${p.t("latestValue")} ${pct(performanceSeries.at(-1)!.v)}` : ""}` : `${series.length} ${p.t("dataPoints")}${series.length ? `, ${p.t("latestValue")} ${p.money(series.at(-1)!.v)}` : ""}`}.`}
+                className="relative mt-3 h-52 touch-pan-y sm:h-60 md:h-64"
+                onTouchStart={(e) => (swipeX.current = e.touches[0]?.clientX ?? null)}
+                onTouchEnd={(e) => {
+                  const x0 = swipeX.current;
+                  swipeX.current = null;
+                  const x1 = e.changedTouches[0]?.clientX;
+                  if (x0 === null || x1 === undefined || Math.abs(x1 - x0) < 60) return;
+                  const i = PERIODS.indexOf(period) + (x1 < x0 ? 1 : -1);
+                  const next = PERIODS[i];
+                  if (next) setPeriod(next);
+                }}
+              >
+                {chartMode === "performance" ? (
+                  !performanceSeries.length ? (
+                    <div className="py-8 text-sm text-muted-foreground">
+                      <HistoryChartStatus
+                        fetching={history.isFetching && !history.data}
+                        error={history.isError}
+                        noData={
+                          history.data?.unavailable
+                            ? HISTORY_STATUS[p.lang].unavailable
+                            : history.data
+                              ? HISTORY_STATUS[p.lang].noTransactions
+                              : p.t("noPeriodData")
+                        }
+                        errorText={HISTORY_STATUS[p.lang].error}
+                        retryText={HISTORY_STATUS[p.lang].retry}
+                        onRetry={() => void history.refetch()}
+                      />
+                    </div>
+                  ) : (
+                    <ResponsiveContainer>
+                      <LineChart
+                        accessibilityLayer
+                        data={performanceChart}
+                        margin={{ top: comparison.length ? 34 : 0 }}
+                      >
+                        <CartesianGrid
+                          stroke="var(--border)"
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          strokeOpacity={0.55}
+                        />
+                        <XAxis
+                          dataKey="t"
+                          tickFormatter={fmtT}
+                          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                          axisLine={false}
+                          tickLine={false}
+                          minTickGap={40}
+                        />
+                        <YAxis
+                          tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                          width={42}
+                          tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
+                        <ChartTooltip
+                          content={(props) => (
+                            <ChartTooltipContent
+                              {...props}
+                              formatLabel={(t) => fmtT(Number(t))}
+                              formatValue={(value) => pct(Number(value))}
+                            />
+                          )}
+                        />
+                        <Line
+                          type="linear"
+                          dataKey="v"
+                          name={c.portfolio}
+                          stroke={performanceTrend}
+                          strokeWidth={2.5}
+                          dot={false}
+                          isAnimationActive={false}
+                        />
+                        {comparison.length > 0 && (
+                          <Line
+                            type="linear"
+                            dataKey="benchmark"
+                            name={indexName}
+                            stroke="var(--chart-2)"
+                            strokeWidth={2}
+                            dot={false}
+                            isAnimationActive={false}
+                          />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )
+                ) : !series.length ? (
                   <div className="py-8 text-sm text-muted-foreground">
                     <HistoryChartStatus
                       fetching={history.isFetching && !history.data}
@@ -912,7 +1008,13 @@ function Dashboard() {
                   </div>
                 ) : (
                   <ResponsiveContainer>
-                    <LineChart data={performanceChart} margin={{ top: comparison.length ? 34 : 0 }}>
+                    <AreaChart data={valueChartSeries} accessibilityLayer>
+                      <defs>
+                        <linearGradient id={valueGradientId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={valueTrend} stopOpacity={0.3} />
+                          <stop offset="100%" stopColor={valueTrend} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid
                         stroke="var(--border)"
                         strokeDasharray="3 3"
@@ -927,555 +1029,445 @@ function Dashboard() {
                         tickLine={false}
                         minTickGap={40}
                       />
-                      <YAxis
-                        tickFormatter={(v: number) => `${v.toFixed(1)}%`}
-                        width={42}
-                        tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.7} />
+                      <YAxis hide domain={["dataMin", "dataMax"]} />
                       <ChartTooltip
                         content={(props) => (
                           <ChartTooltipContent
                             {...props}
                             formatLabel={(t) => fmtT(Number(t))}
-                            formatValue={(value) => pct(Number(value))}
+                            formatValue={(value) =>
+                              new Intl.NumberFormat(locale, {
+                                style: "currency",
+                                currency: p.currency,
+                              }).format(Number(value))
+                            }
                           />
                         )}
                       />
-                      <Line
-                        type="linear"
+                      <Area
+                        type="monotone"
                         dataKey="v"
-                        name={c.portfolio}
-                        stroke={performanceTrend}
-                        strokeWidth={2.5}
-                        dot={false}
-                        isAnimationActive={false}
+                        stroke={valueTrend}
+                        strokeWidth={2.25}
+                        fill={`url(#${valueGradientId})`}
+                        isAnimationActive={!reduceMotion}
+                        animationDuration={350}
                       />
-                      {comparison.length > 0 && (
-                        <Line
-                          type="linear"
-                          dataKey="benchmark"
-                          name={indexName}
-                          stroke="var(--chart-2)"
-                          strokeWidth={2}
-                          dot={false}
-                          isAnimationActive={false}
-                        />
-                      )}
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
-                )
-              ) : !series.length ? (
-                <div className="py-8 text-sm text-muted-foreground">
-                  <HistoryChartStatus
-                    fetching={history.isFetching && !history.data}
-                    error={history.isError}
-                    noData={
-                      history.data?.unavailable
-                        ? HISTORY_STATUS[p.lang].unavailable
-                        : history.data
-                          ? HISTORY_STATUS[p.lang].noTransactions
-                          : p.t("noPeriodData")
-                    }
-                    errorText={HISTORY_STATUS[p.lang].error}
-                    retryText={HISTORY_STATUS[p.lang].retry}
-                    onRetry={() => void history.refetch()}
-                  />
-                </div>
-              ) : (
-                <ResponsiveContainer>
-                  <AreaChart data={series.map((d) => ({ t: d.t, v: d.v }))}>
-                    <defs>
-                      <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={valueTrend} stopOpacity={0.3} />
-                        <stop offset="100%" stopColor={valueTrend} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      stroke="var(--border)"
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      strokeOpacity={0.55}
-                    />
-                    <XAxis
-                      dataKey="t"
-                      tickFormatter={fmtT}
-                      tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                      minTickGap={40}
-                    />
-                    <YAxis hide domain={["dataMin", "dataMax"]} />
-                    <ChartTooltip
-                      content={(props) => (
-                        <ChartTooltipContent
-                          {...props}
-                          formatLabel={(t) => fmtT(Number(t))}
-                          formatValue={(value) =>
-                            new Intl.NumberFormat(locale, {
-                              style: "currency",
-                              currency: p.currency,
-                            }).format(Number(value))
-                          }
-                        />
-                      )}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="v"
-                      stroke={valueTrend}
-                      strokeWidth={2.25}
-                      fill="url(#g)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-              {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
-                <div className="absolute left-11 right-0 top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] leading-tight sm:gap-x-4 sm:text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      className="size-1.5 shrink-0 rounded-full"
-                      style={{ background: performanceTrend }}
-                    />
-                    {c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="size-1.5 shrink-0 rounded-full bg-chart-2" />
-                    {indexName}: <b>{comparisonLast ? pct(comparisonLast.benchmark) : "—"}</b>
-                  </span>
-                  <span className="hidden text-muted-foreground sm:inline">
-                    {c.difference}:{" "}
-                    <b>
-                      {comparisonLast
-                        ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}`
-                        : "—"}
-                    </b>
-                  </span>
-                  <span
-                    className="basis-full truncate text-[9px] text-muted-foreground"
-                    title={c.priceReturn}
-                  >
-                    {c.priceReturn}
-                  </span>
-                </div>
-              )}
-              {benchmark !== "none" &&
-                chartMode === "performance" &&
-                performanceSeries.length > 0 &&
-                !comparison.length && (
-                  <p
-                    role="status"
-                    className="absolute left-11 top-2 z-10 text-xs text-muted-foreground"
-                  >
-                    {indexHistory.isFetching ? "…" : c.unavailable}
-                  </p>
                 )}
-            </div>
-            <ChartDataTable
-              summary={p.t("viewChartData")}
-              caption={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}`}
-              headers={[
-                p.t("date"),
-                chartMode === "performance" ? c.portfolio : p.t("netWorth"),
-                ...(chartMode === "performance" && comparison.length ? [indexName] : []),
-              ]}
-              rows={
-                chartMode === "performance"
-                  ? performanceChart.map((point, index) => [
-                      fmtT(point.t),
-                      pct(point.v),
-                      ...(comparison[index] ? [pct(comparison[index]!.benchmark)] : []),
-                    ])
-                  : series.map((point) => [fmtT(point.t), p.money(point.v)])
-              }
-            />
-            <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-              <div className="flex flex-wrap gap-1">
-                {PERIODS.map((x) => (
-                  <Button
-                    key={x}
-                    size="sm"
-                    variant={period === x ? "default" : "secondary"}
-                    aria-pressed={period === x}
-                    onClick={() => setPeriod(x)}
-                  >
-                    {x}
-                  </Button>
-                ))}
+                {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
+                  <div className="absolute left-11 right-0 top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] leading-tight sm:gap-x-4 sm:text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className="size-1.5 shrink-0 rounded-full"
+                        style={{ background: performanceTrend }}
+                      />
+                      {c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-1.5 shrink-0 rounded-full bg-chart-2" />
+                      {indexName}: <b>{comparisonLast ? pct(comparisonLast.benchmark) : "—"}</b>
+                    </span>
+                    <span className="hidden text-muted-foreground sm:inline">
+                      {c.difference}:{" "}
+                      <b>
+                        {comparisonLast
+                          ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}`
+                          : "—"}
+                      </b>
+                    </span>
+                    <span
+                      className="basis-full truncate text-[9px] text-muted-foreground"
+                      title={c.priceReturn}
+                    >
+                      {c.priceReturn}
+                    </span>
+                  </div>
+                )}
+                {benchmark !== "none" &&
+                  chartMode === "performance" &&
+                  performanceSeries.length > 0 &&
+                  !comparison.length && (
+                    <p
+                      role="status"
+                      className="absolute left-11 top-2 z-10 text-xs text-muted-foreground"
+                    >
+                      {indexHistory.isFetching ? "…" : c.unavailable}
+                    </p>
+                  )}
               </div>
-              <label className="grid gap-1 text-xs text-muted-foreground">
-                {c.compare}
-                <Select
-                  value={benchmark}
-                  onValueChange={(value) => {
-                    if (value === "none") {
-                      setBenchmark("none");
-                      return;
-                    }
-                    const selected = BENCHMARKS.find((item) => item.symbol === value);
-                    if (selected) {
-                      setBenchmark(selected.symbol);
-                      setChartMode("performance");
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    id="dashboard-benchmark"
-                    aria-label={c.compare}
-                    className="w-full text-foreground sm:w-52"
+              <ChartDataTable
+                summary={p.t("viewChartData")}
+                caption={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}`}
+                headers={[
+                  p.t("date"),
+                  chartMode === "performance" ? c.portfolio : p.t("netWorth"),
+                  ...(chartMode === "performance" && comparison.length ? [indexName] : []),
+                ]}
+                rows={
+                  chartMode === "performance"
+                    ? performanceChart.map((point, index) => [
+                        fmtT(point.t),
+                        pct(point.v),
+                        ...(comparison[index] ? [pct(comparison[index]!.benchmark)] : []),
+                      ])
+                    : series.map((point) => [fmtT(point.t), p.money(point.v)])
+                }
+              />
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+                <div className="flex flex-wrap gap-1">
+                  {PERIODS.map((x) => (
+                    <Button
+                      key={x}
+                      size="sm"
+                      variant={period === x ? "default" : "secondary"}
+                      aria-pressed={period === x}
+                      onClick={() => setPeriod(x)}
+                    >
+                      {x}
+                    </Button>
+                  ))}
+                </div>
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  {c.compare}
+                  <Select
+                    value={benchmark}
+                    onValueChange={(value) => {
+                      if (value === "none") {
+                        setBenchmark("none");
+                        return;
+                      }
+                      const selected = BENCHMARKS.find((item) => item.symbol === value);
+                      if (selected) {
+                        setBenchmark(selected.symbol);
+                        setChartMode("performance");
+                      }
+                    }}
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{c.none}</SelectItem>
-                    {BENCHMARKS.map((b) => (
-                      <SelectItem key={b.symbol} value={b.symbol}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-            </div>
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              {chartMode === "performance" ? chartNote.performance : chartNote.value}
-            </p>
-          </Card>
-          <TooltipProvider>
-            <div className="dashboard-metrics order-2 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5 lg:order-none">
-              <Metric
-                label={p.t("totalPnl")}
-                help={METRIC_HELP[p.lang].totalPnl}
-                value={
-                  p.user ? <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} /> : "—"
-                }
-                sub={pct((pnl / cost) * 100)}
-                n={pnl}
-              />
-              <Metric
-                label={p.t("dayChange")}
-                help={METRIC_HELP[p.lang].dayChange}
-                value={
-                  p.user ? <CountUp value={day} format={(n) => p.money(n, { sign: true })} /> : "—"
-                }
-                sub={pct((day / (total - day)) * 100)}
-                n={day}
-              />
-              <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
-                <Metric
-                  label={`${p.t("ttwror")} · ${period}`}
-                  help={METRIC_HELP[p.lang].ttwror}
-                  value={pct(tw)}
-                  n={tw}
-                />
-                <Metric
-                  label={p.t("irr")}
-                  help={METRIC_HELP[p.lang].irr}
-                  value={irrV == null ? "—" : pct(irrV)}
-                  {...(irrV != null ? { n: irrV } : {})}
-                />
+                    <SelectTrigger
+                      id="dashboard-benchmark"
+                      aria-label={c.compare}
+                      className="w-full text-foreground sm:w-52"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{c.none}</SelectItem>
+                      {BENCHMARKS.map((b) => (
+                        <SelectItem key={b.symbol} value={b.symbol}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
               </div>
-              <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                {chartMode === "performance" ? chartNote.performance : chartNote.value}
+              </p>
+            </Card>
+            <TooltipProvider>
+              <div className="dashboard-metrics order-2 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-2.5 lg:order-none">
                 <Metric
-                  label={p.t("invested")}
-                  help={METRIC_HELP[p.lang].invested}
-                  value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
-                />
-                <Metric
-                  label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
-                  help={METRIC_HELP[p.lang].realized}
+                  label={p.t("totalPnl")}
+                  help={METRIC_HELP[p.lang].totalPnl}
                   value={
                     p.user ? (
-                      <CountUp value={realized} format={(n) => p.money(n, { sign: true })} />
+                      <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} />
                     ) : (
                       "—"
                     )
                   }
-                  n={realized}
+                  sub={pct((pnl / cost) * 100)}
+                  n={pnl}
                 />
-              </div>
-            </div>
-          </TooltipProvider>
-        </>
-      )}
-      <DeferredDashboardSection>
-        <>
-          <div className="order-3 lg:contents">
-            <MonthlyOverview
-              data={history.data}
-              isLoading={history.isLoading}
-              isError={history.isError}
-              onRetry={() => void history.refetch()}
-            />
-          </div>
-          <div className="order-3 lg:contents">
-            <PortfolioContributors data={history.data} isLoading={history.isLoading} />
-          </div>
-          <div className="order-3 lg:contents">
-            <PortfolioHealth />
-          </div>
-          <div className="order-3 lg:contents">
-            <WeeklyDigest />
-          </div>
-          <div className="order-3 lg:contents">
-            <DashboardMovers />
-          </div>
-          <div className="order-3 lg:contents">
-            <PortfolioDataCheck />
-          </div>
-          {p.holdings.length > 0 && (
-            <div className="order-3 lg:contents">
-              <AllocationCard />
-            </div>
-          )}
-          {p.holdings.length > 0 && (
-            <div className="order-3 lg:contents">
-              <Card className="lg:col-span-2">
-                <div className="mb-3 flex justify-between">
-                  <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
-                  <Link to="/holdings" className="text-sm font-semibold text-primary">
-                    {p.t("holdings")} →
-                  </Link>
+                <Metric
+                  label={p.t("dayChange")}
+                  help={METRIC_HELP[p.lang].dayChange}
+                  value={
+                    p.user ? (
+                      <CountUp value={day} format={(n) => p.money(n, { sign: true })} />
+                    ) : (
+                      "—"
+                    )
+                  }
+                  sub={pct((day / (total - day)) * 100)}
+                  n={day}
+                />
+                <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+                  <Metric
+                    pending={history.isPending && !history.data}
+                    label={`${p.t("ttwror")} · ${period}`}
+                    help={METRIC_HELP[p.lang].ttwror}
+                    value={pct(tw)}
+                    n={tw}
+                  />
+                  <Metric
+                    label={p.t("irr")}
+                    help={METRIC_HELP[p.lang].irr}
+                    value={irrV == null ? "—" : pct(irrV)}
+                    {...(irrV != null ? { n: irrV } : {})}
+                  />
                 </div>
+                <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
+                  <Metric
+                    label={p.t("invested")}
+                    help={METRIC_HELP[p.lang].invested}
+                    value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
+                  />
+                  <Metric
+                    label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
+                    help={METRIC_HELP[p.lang].realized}
+                    value={
+                      p.user ? (
+                        <CountUp value={realized} format={(n) => p.money(n, { sign: true })} />
+                      ) : (
+                        "—"
+                      )
+                    }
+                    n={realized}
+                  />
+                </div>
+              </div>
+            </TooltipProvider>
+          </>
+        )}
+        <DeferredDashboardSection>
+          <>
+            <div className="order-3 lg:contents">
+              <MonthlyOverview
+                data={history.data}
+                isLoading={history.isLoading}
+                isError={history.isError}
+                onRetry={() => void history.refetch()}
+              />
+            </div>
+            <div className="order-3 lg:contents">
+              <PortfolioContributors data={history.data} isLoading={history.isLoading} />
+            </div>
+            <div className="order-3 lg:contents">
+              <PortfolioHealth />
+            </div>
+            <div className="order-3 lg:contents">
+              <WeeklyDigest />
+            </div>
+            <div className="order-3 lg:contents">
+              <DashboardMovers />
+            </div>
+            <div className="order-3 lg:contents">
+              <PortfolioDataCheck />
+            </div>
+            {p.holdings.length > 0 && (
+              <div className="order-3 lg:contents">
+                <AllocationCard />
+              </div>
+            )}
+            {p.holdings.length > 0 && (
+              <div className="order-3 lg:contents">
+                <Card className="lg:col-span-2">
+                  <div className="mb-3 flex justify-between">
+                    <h3 className="font-display font-semibold">{p.t("topHoldings")}</h3>
+                    <Link to="/holdings" className="text-sm font-semibold text-primary">
+                      {p.t("holdings")} →
+                    </Link>
+                  </div>
+                  <ul className="divide-y divide-border">
+                    {p.holdings.slice(0, 6).map((h) => (
+                      <li key={h.asset.id}>
+                        <Link
+                          to="/asset/$symbol"
+                          params={{ symbol: h.asset.symbol }}
+                          className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                          <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold">{h.asset.name}</p>
+                            <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
+                          </div>
+                          <div className="text-right text-sm">
+                            <p className="font-semibold">{p.money(h.value)}</p>
+                            <div className="flex items-center justify-end gap-2 text-xs">
+                              <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
+                              <span className="text-muted-foreground">
+                                {portfolioValue > 0 && Number.isFinite(h.value)
+                                  ? ((h.value / portfolioValue) * 100).toFixed(1)
+                                  : "0.0"}
+                                % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </div>
+            )}
+          </>
+        </DeferredDashboardSection>
+        {p.user && p.portfolioReady && p.holdings.length > 0 && (
+          <div className="order-3 lg:contents">
+            <Card className="min-w-0">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 font-display font-semibold">
+                  <Clock3 size={16} className="text-muted-foreground" aria-hidden />
+                  {dashboardCopy.recentActivity}
+                </h3>
+                <Link
+                  to="/timeline"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+                >
+                  {dashboardCopy.viewAll}
+                  <ArrowRight size={14} aria-hidden />
+                </Link>
+              </div>
+              {recentTransactions.length ? (
                 <ul className="divide-y divide-border">
-                  {p.holdings.slice(0, 6).map((h) => (
-                    <li key={h.asset.id}>
-                      <Link
-                        to="/asset/$symbol"
-                        params={{ symbol: h.asset.symbol }}
-                        className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  {recentTransactions.map((transaction) => {
+                    const asset = p.assets.find((item) => item.id === transaction.assetId);
+                    const amount =
+                      transaction.kind === "dividend"
+                        ? transaction.price - (transaction.fee ?? 0)
+                        : transaction.kind === "buy"
+                          ? transaction.quantity * transaction.price + (transaction.fee ?? 0)
+                          : transaction.quantity * transaction.price - (transaction.fee ?? 0);
+                    const date = new Date(`${transaction.date}T12:00:00`);
+                    return (
+                      <li
+                        key={transaction.id}
+                        className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                       >
-                        <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold">{h.asset.name}</p>
-                          <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {asset?.name ?? p.t("asset")}
+                            {asset?.symbol ? (
+                              <span className="ml-1.5 font-normal text-muted-foreground">
+                                {asset.symbol}
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {p.t(transaction.kind)}
+                            {transaction.kind !== "dividend" &&
+                              ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
+                            {" · "}
+                            {Number.isNaN(date.getTime())
+                              ? transaction.date
+                              : date.toLocaleDateString(locale, {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                          </p>
                         </div>
-                        <div className="text-right text-sm">
-                          <p className="font-semibold">{p.money(h.value)}</p>
-                          <div className="flex items-center justify-end gap-2 text-xs">
-                            <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                            <span className="text-muted-foreground">
-                              {portfolioValue > 0 && Number.isFinite(h.value)
-                                ? ((h.value / portfolioValue) * 100).toFixed(1)
-                                : "0.0"}
-                              % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
-                            </span>
+                        <div className="flex items-center justify-between gap-2 sm:justify-end">
+                          <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
+                            {p.money(amount, { sign: transaction.kind === "dividend" })}
+                          </p>
+                          <div className="flex shrink-0 items-center">
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              aria-label={TRANSACTION_ACTION_COPY[p.lang].edit}
+                              title={TRANSACTION_ACTION_COPY[p.lang].edit}
+                              onClick={() => setEditingTransaction(transaction)}
+                            >
+                              <Pencil aria-hidden />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              aria-label={TRANSACTION_ACTION_COPY[p.lang].delete}
+                              title={TRANSACTION_ACTION_COPY[p.lang].delete}
+                              onClick={() => setDeletingTransaction(transaction)}
+                            >
+                              <Trash2 aria-hidden />
+                            </Button>
                           </div>
                         </div>
-                      </Link>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
-              </Card>
-            </div>
-          )}
-        </>
-      </DeferredDashboardSection>
-      {p.user && p.holdings.length > 0 && (
-        <div className="order-3 lg:contents">
-          <Card className="min-w-0">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="flex items-center gap-2 font-display font-semibold">
-                <Clock3 size={16} className="text-muted-foreground" aria-hidden />
-                {dashboardCopy.recentActivity}
-              </h3>
-              <Link
-                to="/timeline"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
-              >
-                {dashboardCopy.viewAll}
-                <ArrowRight size={14} aria-hidden />
-              </Link>
-            </div>
-            {recentTransactions.length ? (
-              <ul className="divide-y divide-border">
-                {recentTransactions.map((transaction) => {
-                  const asset = p.assets.find((item) => item.id === transaction.assetId);
-                  const amount =
-                    transaction.kind === "dividend"
-                      ? transaction.price - (transaction.fee ?? 0)
-                      : transaction.kind === "buy"
-                        ? transaction.quantity * transaction.price + (transaction.fee ?? 0)
-                        : transaction.quantity * transaction.price - (transaction.fee ?? 0);
-                  const date = new Date(`${transaction.date}T12:00:00`);
-                  return (
-                    <li
-                      key={transaction.id}
-                      className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">
-                          {asset?.name ?? p.t("asset")}
-                          {asset?.symbol ? (
-                            <span className="ml-1.5 font-normal text-muted-foreground">
-                              {asset.symbol}
-                            </span>
-                          ) : null}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {p.t(transaction.kind)}
-                          {transaction.kind !== "dividend" &&
-                            ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
-                          {" · "}
-                          {Number.isNaN(date.getTime())
-                            ? transaction.date
-                            : date.toLocaleDateString(locale, {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 sm:justify-end">
-                        <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
-                          {p.money(amount, { sign: transaction.kind === "dividend" })}
-                        </p>
-                        <div className="flex shrink-0 items-center">
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            aria-label={TRANSACTION_ACTION_COPY[p.lang].edit}
-                            title={TRANSACTION_ACTION_COPY[p.lang].edit}
-                            onClick={() => setEditingTransaction(transaction)}
-                          >
-                            <Pencil aria-hidden />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            aria-label={TRANSACTION_ACTION_COPY[p.lang].delete}
-                            title={TRANSACTION_ACTION_COPY[p.lang].delete}
-                            onClick={() => setDeletingTransaction(transaction)}
-                          >
-                            <Trash2 aria-hidden />
-                          </Button>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="py-6 text-sm text-muted-foreground">{dashboardCopy.noRecentActivity}</p>
-            )}
-          </Card>
-        </div>
-      )}
-      {editingTransaction && (
-        <Suspense fallback={null}>
-          <EditTransactionDialog
-            transaction={editingTransaction}
-            onClose={() => setEditingTransaction(null)}
-          />
-        </Suspense>
-      )}
-      <AlertDialog
-        open={!!deletingTransaction}
-        onOpenChange={(open) => {
-          if (!open && !deletingBusy) setDeletingTransaction(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{TRANSACTION_ACTION_COPY[p.lang].deleteTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {TRANSACTION_ACTION_COPY[p.lang].deleteDescription}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingBusy}>
-              {TRANSACTION_ACTION_COPY[p.lang].cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={deletingBusy}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={(event) => {
-                event.preventDefault();
-                if (!deletingTransaction) return;
-                setDeletingBusy(true);
-                void p
-                  .deleteTransactions([deletingTransaction.id])
-                  .then((count) => {
-                    if (!count) throw new Error("Transaction not found.");
-                    toast.success(TRANSACTION_ACTION_COPY[p.lang].deleted, {
-                      duration: 10_000,
-                      action: {
-                        label: TRANSACTION_ACTION_COPY[p.lang].undo,
-                        onClick: () => {
-                          void p
-                            .restoreTransaction(deletingTransaction)
-                            .then(() => toast.success(TRANSACTION_ACTION_COPY[p.lang].restored))
-                            .catch((restoreError: unknown) =>
-                              toast.error(
-                                restoreError instanceof Error ? restoreError.message : "Error",
-                              ),
-                            );
+              ) : (
+                <p className="py-6 text-sm text-muted-foreground">
+                  {dashboardCopy.noRecentActivity}
+                </p>
+              )}
+            </Card>
+          </div>
+        )}
+        {editingTransaction && (
+          <Suspense fallback={null}>
+            <EditTransactionDialog
+              transaction={editingTransaction}
+              onClose={() => setEditingTransaction(null)}
+            />
+          </Suspense>
+        )}
+        <AlertDialog
+          open={!!deletingTransaction}
+          onOpenChange={(open) => {
+            if (!open && !deletingBusy) setDeletingTransaction(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{TRANSACTION_ACTION_COPY[p.lang].deleteTitle}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {TRANSACTION_ACTION_COPY[p.lang].deleteDescription}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletingBusy}>
+                {TRANSACTION_ACTION_COPY[p.lang].cancel}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deletingBusy}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (!deletingTransaction) return;
+                  setDeletingBusy(true);
+                  void p
+                    .deleteTransactions([deletingTransaction.id])
+                    .then((count) => {
+                      if (!count) throw new Error("Transaction not found.");
+                      toast.success(TRANSACTION_ACTION_COPY[p.lang].deleted, {
+                        duration: 10_000,
+                        action: {
+                          label: TRANSACTION_ACTION_COPY[p.lang].undo,
+                          onClick: () => {
+                            void p
+                              .restoreTransaction(deletingTransaction)
+                              .then(() => toast.success(TRANSACTION_ACTION_COPY[p.lang].restored))
+                              .catch((restoreError: unknown) =>
+                                toast.error(
+                                  restoreError instanceof Error ? restoreError.message : "Error",
+                                ),
+                              );
+                          },
                         },
-                      },
-                    });
-                    setDeletingTransaction(null);
-                  })
-                  .catch((error: unknown) =>
-                    toast.error(error instanceof Error ? error.message : "Error"),
-                  )
-                  .finally(() => setDeletingBusy(false));
-              }}
-            >
-              {TRANSACTION_ACTION_COPY[p.lang].deleteConfirm}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {p.user && <VideoPresentation mode="pro" theme={p.theme} lang={p.lang} />}
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  help,
-  value,
-  sub,
-  n,
-}: {
-  label: string;
-  help: string;
-  value: ReactNode;
-  sub?: string;
-  n?: number;
-}) {
-  return (
-    <Card className="dashboard-metric min-w-0 p-2.5">
-      <p className="text-[10px] font-semibold uppercase leading-snug tracking-[0.08em] text-muted-foreground sm:text-[11px]">
-        {label}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={`${label}: ${help}`}
-              className="ml-1 inline-flex align-middle text-muted-foreground/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <Info size={12} aria-hidden />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 text-left normal-case tracking-normal">
-            {help}
-          </TooltipContent>
-        </Tooltip>
-      </p>
-      <p className="numeric-display mt-0.5 break-words text-sm font-semibold tracking-tight sm:text-lg">
-        {n === undefined ? value : <Delta value={n}>{value}</Delta>}
-      </p>
-      {sub && (
-        <p className="mt-0.5 text-xs font-semibold tabular-nums">
-          {n !== undefined ? <Delta value={n}>{sub}</Delta> : sub}
-        </p>
-      )}
-    </Card>
+                      });
+                      setDeletingTransaction(null);
+                    })
+                    .catch((error: unknown) =>
+                      toast.error(error instanceof Error ? error.message : "Error"),
+                    )
+                    .finally(() => setDeletingBusy(false));
+                }}
+              >
+                {TRANSACTION_ACTION_COPY[p.lang].deleteConfirm}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {p.user && <VideoPresentation mode="pro" theme={p.theme} lang={p.lang} />}
+      </div>
+    </DashboardMotion>
   );
 }
 

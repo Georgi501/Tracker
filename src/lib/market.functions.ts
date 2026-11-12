@@ -33,7 +33,9 @@ function thumb(n: Thumb): string | null {
 }
 
 export const searchMarket = createServerFn({ method: "POST" })
-  .validator((input) => marketSearchSchema.parse(input))
+  .validator((input) =>
+    marketSearchSchema.extend({ includeNews: z.boolean().optional() }).parse(input),
+  )
   .handler(
     async ({
       data,
@@ -41,7 +43,9 @@ export const searchMarket = createServerFn({ method: "POST" })
       const fallback = searchCatalog(data.query);
       try {
         const { yahooClient } = await import("./prices.server");
-        const result = await yahooClient().search(data.query, { newsCount: 8 });
+        const result = await yahooClient().search(data.query, {
+          newsCount: data.includeNews === false ? 0 : 8,
+        });
         const assets = new Map(fallback.map((a) => [a.symbol, a]));
         for (const a of result.quotes) {
           if (!a.isYahooFinance || !a.symbol || !["EQUITY", "ETF"].includes(a.quoteType ?? ""))

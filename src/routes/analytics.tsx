@@ -673,6 +673,7 @@ function Analytics() {
           >
             <ResponsiveContainer>
               <AreaChart
+                accessibilityLayer
                 data={performanceCurve}
                 margin={{ top: 8, right: 12, bottom: 0, left: -12 }}
               >
@@ -996,7 +997,7 @@ function Analytics() {
                 className="h-64"
               >
                 <ResponsiveContainer>
-                  <LineChart data={benchmarkData}>
+                  <LineChart accessibilityLayer data={benchmarkData}>
                     <CartesianGrid
                       stroke="var(--border)"
                       strokeDasharray="3 3"
@@ -1181,6 +1182,7 @@ function Breakdown({
     <Card>
       <h3 className="font-display mb-3 font-semibold">{title}</h3>
       <AllocationBreakdown
+        locale={languageLocale(p.lang)}
         data={data}
         colorOffset={colorOffset}
         totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}

@@ -1,3 +1,4 @@
+import { SamplePortfolioPreview } from "./SamplePortfolioPreview";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -5,12 +6,6 @@ import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { isQuoteStale } from "@/lib/portfolio";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
-import {
-  SAMPLE_GAIN,
-  SAMPLE_GAIN_PERCENT,
-  SAMPLE_HISTORY,
-  SAMPLE_TOTAL_VALUE,
-} from "@/lib/sample-portfolio";
 
 type Copy = {
   morning: string;
@@ -272,19 +267,6 @@ export function WelcomeHero() {
   const [hour, setHour] = useState<number | null>(null);
   useEffect(() => setHour(new Date().getHours()), []);
   const greet = hour === null ? "" : hour < 12 ? c.morning : hour < 18 ? c.afternoon : c.evening;
-  const sampleMoney = (value: number) =>
-    new Intl.NumberFormat(languageLocale(p.lang), {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  const historyMin = Math.min(...SAMPLE_HISTORY.map((point) => point.value));
-  const historyMax = Math.max(...SAMPLE_HISTORY.map((point) => point.value));
-  const historyPoints = SAMPLE_HISTORY.map((point, index) => {
-    const x = (index / (SAMPLE_HISTORY.length - 1)) * 100;
-    const y = 44 - ((point.value - historyMin) / (historyMax - historyMin)) * 36;
-    return `${x},${y}`;
-  }).join(" ");
   const meta = p.user?.user_metadata;
   const name =
     p.displayName.trim() ||
@@ -328,44 +310,7 @@ export function WelcomeHero() {
             </Link>
           </p>
         </div>
-        <figure className="hero-shot min-w-0 rounded-2xl border border-border bg-background p-4 shadow-xl shadow-black/10 sm:p-5">
-          <figcaption className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <LineChart className="size-3.5" aria-hidden />
-            {c.heroCaption}
-          </figcaption>
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-sm text-muted-foreground">{c.sampleValue}</p>
-              <p className="numeric-display mt-1 text-3xl font-bold">
-                {sampleMoney(SAMPLE_TOTAL_VALUE)}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">{c.sampleGain}</p>
-              <p className="numeric-display mt-1 font-semibold text-success">
-                +{sampleMoney(SAMPLE_GAIN)} ({SAMPLE_GAIN_PERCENT.toFixed(1)}%)
-              </p>
-            </div>
-          </div>
-          <svg
-            viewBox="0 0 100 52"
-            role="img"
-            aria-label={c.sampleHistory}
-            className="mt-4 h-32 w-full overflow-visible"
-            preserveAspectRatio="none"
-          >
-            <path d="M0 50H100" stroke="var(--border)" strokeDasharray="2 2" />
-            <polyline
-              points={historyPoints}
-              fill="none"
-              stroke="var(--primary)"
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </figure>
+        <SamplePortfolioPreview lang={p.lang} />
       </section>
     );
 

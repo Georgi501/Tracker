@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
@@ -102,6 +102,7 @@ export function AuthForm({
   redirectOnSignIn?: boolean;
 }) {
   const p = usePortfolio();
+  const passwordId = useId();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -367,33 +368,46 @@ export function AuthForm({
       <p className="mb-5 mt-1 text-sm text-muted-foreground">{p.t("tagline")}</p>
       <form onSubmit={submit} className="space-y-3">
         {mode === "up" && (
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{p.t("displayName")}</span>
+            <input
+              className={input}
+              required
+              minLength={2}
+              maxLength={60}
+              aria-label={p.t("displayName")}
+              autoComplete="nickname"
+              placeholder={p.t("displayName")}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+        )}
+        <label className="block space-y-1.5 text-sm font-medium">
+          <span>{p.t("email")}</span>
           <input
             className={input}
+            type="email"
             required
-            minLength={2}
-            maxLength={60}
-            autoComplete="nickname"
-            placeholder={p.lang === "bg" ? "Име или никнейм" : "Name or nickname"}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            aria-label={p.t("email")}
+            autoComplete="email"
+            placeholder={p.t("email")}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
-        )}
-        <input
-          className={input}
-          type="email"
-          required
-          autoComplete="email"
-          placeholder={p.t("email")}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        </label>
+        <label htmlFor={passwordId} className="block text-sm font-medium">
+          {p.t("password")}
+        </label>
         <div className="relative">
           <input
+            id={passwordId}
             className={`${input} pr-20`}
             type={show ? "text" : "password"}
             required
             minLength={mode === "up" ? 8 : 1}
             autoComplete={mode === "up" ? "new-password" : "current-password"}
+            aria-label={p.t("password")}
             placeholder={p.t("password")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -430,7 +444,7 @@ export function AuthForm({
       <div
         ref={googleButtonRef}
         className={`flex min-h-10 justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}
-        aria-label={p.lang === "bg" ? "Продължи с Google" : "Continue with Google"}
+        aria-label={c.googleContinue}
       />
       {!googleReady && !error && (
         <p role="status" className="mt-1 text-center text-xs text-muted-foreground">

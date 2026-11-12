@@ -23,6 +23,7 @@ type Copy = {
   savingPassword: string;
   passwordMismatch: string;
   resetSessionExpired: string;
+  googleContinue: string;
   googleLoading: string;
   googleRetry: string;
   googleFailed: string;
@@ -54,6 +55,7 @@ export const authCopy: Record<Lang, Copy> = {
     savingPassword: "Updating password…",
     passwordMismatch: "The passwords do not match.",
     resetSessionExpired: "This reset link is invalid or expired. Request a new one and try again.",
+    googleContinue: "Continue with Google",
     googleLoading: "Loading secure Google sign-in…",
     googleRetry: "Retry Google sign-in",
     googleFailed: "Google sign-in couldn't be completed.",
@@ -84,6 +86,7 @@ export const authCopy: Record<Lang, Copy> = {
     savingPassword: "Паролата се обновява…",
     passwordMismatch: "Паролите не съвпадат.",
     resetSessionExpired: "Линкът за смяна е невалиден или изтекъл. Поискай нов и опитай отново.",
+    googleContinue: "Продължи с Google",
     googleLoading: "Зареждане на защитения вход с Google…",
     googleRetry: "Опитай Google входа отново",
     googleFailed: "Входът с Google не беше завършен.",
@@ -117,6 +120,7 @@ export const authCopy: Record<Lang, Copy> = {
     passwordMismatch: "Die Passwörter stimmen nicht überein.",
     resetSessionExpired:
       "Dieser Link ist ungültig oder abgelaufen. Fordere einen neuen an und versuche es erneut.",
+    googleContinue: "Mit Google fortfahren",
     googleLoading: "Sichere Google-Anmeldung wird geladen…",
     googleRetry: "Google-Anmeldung erneut versuchen",
     googleFailed: "Die Google-Anmeldung konnte nicht abgeschlossen werden.",
@@ -149,6 +153,7 @@ export const authCopy: Record<Lang, Copy> = {
     passwordMismatch: "Las contraseñas no coinciden.",
     resetSessionExpired:
       "Este enlace no es válido o ha caducado. Solicita uno nuevo e inténtalo de nuevo.",
+    googleContinue: "Continuar con Google",
     googleLoading: "Cargando el acceso seguro de Google…",
     googleRetry: "Reintentar acceso con Google",
     googleFailed: "No se pudo completar el acceso con Google.",
@@ -180,6 +185,7 @@ export const authCopy: Record<Lang, Copy> = {
     savingPassword: "Aggiornamento password…",
     passwordMismatch: "Le password non coincidono.",
     resetSessionExpired: "Questo link non è valido o è scaduto. Richiedine uno nuovo e riprova.",
+    googleContinue: "Continua con Google",
     googleLoading: "Caricamento dell'accesso sicuro con Google…",
     googleRetry: "Riprova l'accesso con Google",
     googleFailed: "Non è stato possibile completare l'accesso con Google.",

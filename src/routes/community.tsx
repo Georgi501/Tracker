@@ -1,3 +1,5 @@
+import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { uiStateCopy } from "@/lib/ui-state-copy";
 import { createFileRoute, Link, Outlet, useMatch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MessageCircle, Newspaper, UserRound } from "lucide-react";
@@ -119,6 +121,7 @@ function Directory() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={c.search}
+        aria-label={c.search}
         className="w-full rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
       {loadError ? (
@@ -135,15 +138,31 @@ function Directory() {
           </Card>
         </div>
       ) : list === null ? (
-        <div role="status" className="h-40 animate-pulse rounded-3xl">
-          <span className="sr-only">{c.loading}</span>
-        </div>
+        <ListSkeleton label={c.loading} />
       ) : shown.length === 0 ? (
-        <Card className="text-center text-sm text-muted-foreground">
-          {c.none}
-          <br />
-          {c.makePublic}
-        </Card>
+        <EmptyState
+          icon="community"
+          title={q.trim() ? uiStateCopy[p.lang].noMatches : c.none}
+          description={q.trim() ? uiStateCopy[p.lang].searchHelp : uiStateCopy[p.lang].membersHelp}
+          action={
+            q.trim() ? (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                {uiStateCopy[p.lang].reset}
+              </button>
+            ) : (
+              <Link
+                to="/profile"
+                className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                {c.profile}
+              </Link>
+            )
+          }
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {shown.map((m) => (

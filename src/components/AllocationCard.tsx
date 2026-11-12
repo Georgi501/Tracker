@@ -1,3 +1,4 @@
+import { languageLocale } from "@/lib/i18n";
 import { useState } from "react";
 import { usePortfolio } from "@/lib/store";
 import { groupBy } from "@/lib/portfolio";
@@ -32,6 +33,7 @@ export function AllocationCard() {
         </div>
       </div>
       <AllocationBreakdown
+        locale={languageLocale(p.lang)}
         data={data}
         totalLabel={
           p.holdings.some((h) => !Number.isFinite(h.value))

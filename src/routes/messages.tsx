@@ -1,3 +1,5 @@
+import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { uiStateCopy } from "@/lib/ui-state-copy";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,16 +138,21 @@ function Messages() {
           </Card>
         </div>
       ) : convs === null ? (
-        <div role="status" className="h-40 animate-pulse rounded-3xl">
-          <span className="sr-only">{c.loading}</span>
-        </div>
+        <ListSkeleton label={c.loading} />
       ) : !convs.length ? (
-        <Card className="text-center text-sm text-muted-foreground">
-          {c.noChats}{" "}
-          <Link to="/community" className="font-semibold text-primary">
-            {c.community} →
-          </Link>
-        </Card>
+        <EmptyState
+          icon="messages"
+          title={c.noChats}
+          description={uiStateCopy[p.lang].messagesHelp}
+          action={
+            <Link
+              to="/community"
+              className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {c.community} →
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-2">
           {convs.map((cv) => {

@@ -406,26 +406,32 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
       )}
       {open === "email" && (
         <form onSubmit={(e) => void submitEmail(e)} className="space-y-2">
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            placeholder={t.current}
-            aria-label={t.current}
-            className={input}
-          />
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            placeholder={t.newEmail}
-            aria-label={t.newEmail}
-            className={input}
-          />
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{t.current}</span>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              placeholder={t.current}
+              aria-label={t.current}
+              className={input}
+            />
+          </label>
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{t.newEmail}</span>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder={t.newEmail}
+              aria-label={t.newEmail}
+              className={input}
+            />
+          </label>
           <div className="flex gap-2">
             <button disabled={busy || !newEmail.trim() || !current} className={button}>
               {t.changeEmail}
@@ -439,38 +445,47 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
       {open === "password" && (
         <form onSubmit={(e) => void submitPassword(e)} className="space-y-2">
           <h3 className="text-sm font-semibold">{t.password}</h3>
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            placeholder={t.current}
-            aria-label={t.current}
-            className={input}
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            placeholder={t.newPassword}
-            aria-label={t.newPassword}
-            className={input}
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            value={pw2}
-            onChange={(e) => setPw2(e.target.value)}
-            placeholder={t.repeat}
-            aria-label={t.repeat}
-            className={input}
-          />
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{t.current}</span>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              placeholder={t.current}
+              aria-label={t.current}
+              className={input}
+            />
+          </label>
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{t.newPassword}</span>
+            <input
+              type="password"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder={t.newPassword}
+              aria-label={t.newPassword}
+              className={input}
+            />
+          </label>
+          <label className="block space-y-1.5 text-sm font-medium">
+            <span>{t.repeat}</span>
+            <input
+              type="password"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+              placeholder={t.repeat}
+              aria-label={t.repeat}
+              className={input}
+            />
+          </label>
           <div className="flex gap-2">
             <button disabled={busy || !pw || !current} className={button}>
               {t.changePassword}

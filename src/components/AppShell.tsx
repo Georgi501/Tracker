@@ -1,3 +1,4 @@
+import { ListSkeleton } from "./SectionState";
 import { legalCopy, SUPPORT_EMAIL } from "@/lib/legal";
 import { advisorCopy } from "@/lib/advisor-i18n";
 import { paymentsCopy } from "@/lib/payments-i18n";
@@ -529,7 +530,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <HeaderSearch />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:ml-0">
-            {p.user && <CommandMenu onAddTx={openTransactionDialog} />}
+            <CommandMenu onAddTx={openTransactionDialog} />
             {p.authReady &&
               !p.authError &&
               (!p.user || p.accessReady) &&
@@ -812,7 +813,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div role="status" className="mx-auto max-w-xl py-16 text-center">
               {p.authReady ? (
                 <>
-                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                  <ListSkeleton label={DATA_ERROR_COPY[p.lang].dataLoading} />
                   <p className="text-sm text-muted-foreground">
                     {DATA_ERROR_COPY[p.lang].dataLoading}
                   </p>
@@ -1147,5 +1148,17 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 }
 
 export function Delta({ value, children }: { value: number; children: ReactNode }) {
-  return <span className={value >= 0 ? "text-success" : "text-destructive"}>{children}</span>;
+  return (
+    <span
+      className={
+        !Number.isFinite(value)
+          ? "text-muted-foreground"
+          : value >= 0
+            ? "text-success"
+            : "text-destructive"
+      }
+    >
+      {children}
+    </span>
+  );
 }

@@ -1,3 +1,4 @@
+import { languageLocale } from "@/lib/i18n";
 import { useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { allocationColorAt } from "@/lib/palette";
@@ -9,12 +10,16 @@ export function AllocationBreakdown({
   totalLabel,
   formatValue,
   colorOffset = 0,
+  locale = languageLocale("en"),
 }: {
   data: AllocationItem[];
   totalLabel: string;
   formatValue: (value: number, compact?: boolean) => string;
   colorOffset?: number;
+  locale?: string;
 }) {
+  const percentage = (value: number) =>
+    new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(value);
   const colorFor = (index: number) => allocationColorAt(index, colorOffset);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -31,7 +36,7 @@ export function AllocationBreakdown({
         aria-label={`${totalLabel}: ${formatValue(total)}. ${rows
           .map(
             (item) =>
-              `${item.name}: ${formatValue(item.value)} (${((item.value / total) * 100).toFixed(1)}%)`,
+              `${item.name}: ${formatValue(item.value)} (${percentage(item.value / total)})`,
           )
           .join(", ")}`}
         className="relative mx-auto h-36 w-full max-w-[240px] sm:h-44"
@@ -119,7 +124,7 @@ export function AllocationBreakdown({
                     {formatValue(item.value, true)}
                   </span>
                   <span className="numeric-display w-12 shrink-0 text-right text-sm font-semibold">
-                    {share.toFixed(1)}%
+                    {percentage(share / 100)}
                   </span>
                 </span>
                 <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-muted">

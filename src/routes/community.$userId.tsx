@@ -1,3 +1,4 @@
+import { ListSkeleton } from "@/components/SectionState";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
@@ -62,7 +63,12 @@ function Member() {
       </Card>
     );
   if (!p.isPro) return <CommunityUpsell lang={p.lang} />;
-  if (m === undefined) return <div className="mx-auto h-64 max-w-3xl animate-pulse rounded-3xl" />;
+  if (m === undefined)
+    return (
+      <div className="mx-auto max-w-xl">
+        <ListSkeleton label={c.loading} />
+      </div>
+    );
   if (!m) return <Card className="mx-auto max-w-lg text-center">{c.none}</Card>;
   return (
     <div className="mx-auto max-w-3xl space-y-5">

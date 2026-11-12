@@ -1,3 +1,5 @@
+import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { uiStateCopy } from "@/lib/ui-state-copy";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useCallback,
@@ -217,7 +219,9 @@ function Wall() {
         <h1 className="font-display mt-1 text-2xl font-bold">{w.title}</h1>
         <p className="text-sm text-muted-foreground">{w.sub}</p>
       </div>
-      <Composer w={w} c={c} canPost={isPublic} onPosted={() => void load()} />
+      <div id="wall-composer">
+        <Composer w={w} c={c} canPost={isPublic} onPosted={() => void load()} />
+      </div>
       {posts && posts.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={w.all}>
           {(["all", ...MOODS] as const).map((m) => (
@@ -296,21 +300,49 @@ function Wall() {
           </Card>
         </div>
       ) : posts === null ? (
-        <div role="status" className="h-40 animate-pulse rounded-3xl">
-          <span className="sr-only">{c.loading}</span>
-        </div>
+        <ListSkeleton label={c.loading} />
       ) : posts.length === 0 ? (
-        <div className="space-y-4">
-          <Card className="text-center text-sm text-muted-foreground">{w.empty}</Card>
-          <Card className="space-y-2 border-dashed opacity-80">
-            <span className="inline-block rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
-              {w.example}
-            </span>
-            <p className="text-sm">{w.exampleBody}</p>
-          </Card>
-        </div>
+        <EmptyState
+          icon="community"
+          title={w.empty}
+          description={uiStateCopy[p.lang].wallHelp}
+          action={
+            isPublic ? (
+              <a
+                href="#wall-composer"
+                className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                {uiStateCopy[p.lang].writeFirst}
+              </a>
+            ) : (
+              <Link
+                to="/profile"
+                className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                {c.profile}
+              </Link>
+            )
+          }
+        />
       ) : shownPosts.length === 0 ? (
-        <Card className="text-center text-sm text-muted-foreground">{w.noMatch}</Card>
+        <EmptyState
+          icon="search"
+          title={w.noMatch}
+          description={uiStateCopy[p.lang].searchHelp}
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                setMoodFilter("all");
+                setFollowingOnly(false);
+                setTagFilter(null);
+              }}
+              className="press min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {uiStateCopy[p.lang].reset}
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-4">
           {shownPosts.map((post) => (

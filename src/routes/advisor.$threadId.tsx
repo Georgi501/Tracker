@@ -175,6 +175,7 @@ function ChatWindow({ threadId, initial }: { threadId: string; initial: UIMessag
           rows={2}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          aria-label={c.placeholder}
           placeholder={c.placeholder}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

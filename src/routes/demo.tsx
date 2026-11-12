@@ -1,22 +1,13 @@
+import { SamplePortfolioPreview } from "@/components/SamplePortfolioPreview";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
-import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { ProBadge } from "@/components/ProFeatures";
 import { dcfCopy } from "@/components/DcfCalculator";
 import { dcfAnalysis, scenario } from "@/lib/dcf";
 import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
-import { SAMPLE_DIVIDENDS, SAMPLE_HISTORY, SAMPLE_HOLDINGS } from "@/lib/sample-portfolio";
+import { SAMPLE_DIVIDENDS, SAMPLE_HOLDINGS } from "@/lib/sample-portfolio";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -236,10 +227,6 @@ function DemoPage() {
   const totalCost = rows.reduce((s, r) => s + r.totalCost, 0);
   const gain = totalValue - totalCost;
   const gainPercent = (gain / totalCost) * 100;
-  const monthLabel = (month: string) =>
-    new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(
-      new Date(`${month}-01T00:00:00.000Z`),
-    );
   const dateLabel = (date: string) =>
     new Intl.DateTimeFormat(locale, {
       dateStyle: "medium",
@@ -358,72 +345,19 @@ function DemoPage() {
               }`}
             >
               {gain >= 0 ? "+" : "−"}
-              {Math.abs(gainPercent).toFixed(1)}%
+              {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                Math.abs(gainPercent),
+              )}
+              %
             </span>
           </div>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.65fr)]">
-        <section
-          aria-labelledby="sample-history-title"
-          className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5"
-        >
-          <h2 id="sample-history-title" className="font-display text-lg font-semibold">
-            {c.historyTitle}
-          </h2>
-          <div className="mt-4 h-56" role="img" aria-label={c.historyTitle}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={[...SAMPLE_HISTORY]}
-                margin={{ top: 8, right: 12, left: 4, bottom: 0 }}
-              >
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  tickFormatter={monthLabel}
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={20}
-                />
-                <YAxis
-                  domain={["dataMin - 1000", "dataMax + 1000"]}
-                  width={56}
-                  tickFormatter={(value: number) =>
-                    new Intl.NumberFormat(locale, {
-                      style: "currency",
-                      currency: "USD",
-                      notation: "compact",
-                      maximumFractionDigits: 0,
-                    }).format(value)
-                  }
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  content={(props) => (
-                    <ChartTooltipContent
-                      {...props}
-                      formatValue={(value) => usd(Number(value), locale)}
-                      formatLabel={(label) => monthLabel(String(label))}
-                    />
-                  )}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  name={c.value}
-                  stroke="var(--primary)"
-                  strokeWidth={3}
-                  dot={{ r: 3, fill: "var(--primary)" }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">{c.historyNote}</p>
+        <section aria-labelledby="sample-history-title">
+          <h2 id="sample-history-title" className="font-display mb-3 text-lg font-semibold">{c.historyTitle}</h2>
+          <SamplePortfolioPreview lang={p.lang} />
         </section>
 
         <section
@@ -461,6 +395,7 @@ function DemoPage() {
       <section className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5">
         <h2 className="font-display mb-3 text-lg font-semibold">{c.alloc}</h2>
         <AllocationBreakdown
+          locale={languageLocale(p.lang)}
           data={byClass}
           totalLabel={c.totalValue}
           formatValue={(value) => usd(value, locale)}
@@ -520,7 +455,10 @@ function DemoPage() {
                       className={`numeric-display text-xs font-medium ${pl >= 0 ? "text-success" : "text-destructive"}`}
                     >
                       {pl >= 0 ? "+" : "−"}
-                      {Math.abs(pl).toFixed(1)}%
+                      {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                        Math.abs(pl),
+                      )}
+                      %
                     </span>
                   </td>
                 </tr>
@@ -568,13 +506,19 @@ function DemoPage() {
                     </div>
                     <div className="flex items-end justify-between gap-2 text-foreground">
                       <span className="numeric-display text-sm font-semibold">
-                        {row.weight.toFixed(1)}%
+                        {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                          row.weight,
+                        )}
+                        %
                       </span>
                       <span
                         className={`numeric-display rounded-full bg-background/60 px-2 py-0.5 text-xs font-bold ${up ? "text-success" : "text-destructive"}`}
                       >
                         {up ? "▲ +" : "▼ "}
-                        {row.change.toFixed(1)}%
+                        {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                          row.change,
+                        )}
+                        %
                       </span>
                     </div>
                   </div>
@@ -611,8 +555,10 @@ function DemoPage() {
                     className={`numeric-display mt-1 text-sm font-semibold ${gap >= 0 ? "text-success" : "text-destructive"}`}
                   >
                     {gap >= 0 ? "+" : "−"}
-                    {Math.abs(gap * 100).toFixed(1)}% · {dc.price}{" "}
-                    {usd(dcfPrice, languageLocale(p.lang))}
+                    {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                      Math.abs(gap * 100),
+                    )}
+                    % · {dc.price} {usd(dcfPrice, languageLocale(p.lang))}
                   </p>
                 )}
                 <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -626,7 +572,10 @@ function DemoPage() {
                     <div key={name} className="flex justify-between gap-2">
                       <dt>{name}</dt>
                       <dd className="numeric-display font-semibold text-foreground">
-                        {(value * 100).toFixed(1)}%
+                        {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                          value * 100,
+                        )}
+                        %
                       </dd>
                     </div>
                   ))}

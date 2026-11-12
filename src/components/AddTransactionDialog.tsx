@@ -337,6 +337,7 @@ export function AddTransactionDialog({
               className={input}
               autoFocus
               spellCheck={false}
+              aria-label={`${p.t("assetName")} / ${p.t("ticker")}`}
               placeholder={`${p.t("assetName")} / ${p.t("ticker")}`}
               value={query}
               onChange={(e) => {
