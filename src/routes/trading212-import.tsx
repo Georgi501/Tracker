@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -17,14 +17,14 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Import Trading 212 history into a portfolio tracker",
     intro:
-      "Export your Trading 212 history as a CSV file and bring it into Capispot to see holdings and dividends from all your brokers in one place.",
+      "Export your Trading 212 history as a CSV file and bring it into CapiSpot to see holdings and dividends from all your brokers in one place.",
     sections: [
       [
         "1. Export from Trading 212",
         "In Trading 212 open the history section and export the full period as CSV. If your history is long, export it in several date ranges so no transactions are missed.",
       ],
       [
-        "2. Import into Capispot",
+        "2. Import into CapiSpot",
         "Open Brokers, choose Trading 212 and upload the file. The format is detected from the headers and the original transaction currency is kept.",
       ],
       [
@@ -42,19 +42,19 @@ const GUIDE: Record<"en" | "bg", Guide> = {
     ],
     cta: "Open Brokers and import",
     sampleCta: "Try a sample CSV",
-    note: "General information, not tax or investment advice. Capispot is not affiliated with Trading 212.",
+    note: "General information, not tax or investment advice. CapiSpot is not affiliated with Trading 212.",
   },
   bg: {
     title: "Как да импортираш историята от Trading 212 в тракер за портфолио",
     intro:
-      "Експортирай историята си от Trading 212 като CSV файл и я качи в Capispot, за да виждаш позициите и дивидентите от всичките си брокери на едно място.",
+      "Експортирай историята си от Trading 212 като CSV файл и я качи в CapiSpot, за да виждаш позициите и дивидентите от всичките си брокери на едно място.",
     sections: [
       [
         "1. Експорт от Trading 212",
         "В Trading 212 отвори историята и експортирай целия период като CSV. Ако историята е дълга, експортирай я на няколко периода, за да не пропуснеш сделки.",
       ],
       [
-        "2. Импорт в Capispot",
+        "2. Импорт в CapiSpot",
         "Отвори „Брокери“, избери Trading 212 и качи файла. Форматът се разпознава от заглавията, а оригиналната валута на сделките се запазва.",
       ],
       [
@@ -72,11 +72,11 @@ const GUIDE: Record<"en" | "bg", Guide> = {
     ],
     cta: "Отвори „Брокери“ и импортирай",
     sampleCta: "Пробвай примерен CSV",
-    note: "Обща информация, не е данъчен или инвестиционен съвет. Capispot не е свързан с Trading 212.",
+    note: "Обща информация, не е данъчен или инвестиционен съвет. CapiSpot не е свързан с Trading 212.",
   },
 };
 
-const TITLE = "Import Trading 212 history (CSV) — Capispot";
+const TITLE = "Import Trading 212 history (CSV) — CapiSpot";
 const DESCRIPTION =
   "Step-by-step: export your Trading 212 CSV, import it for free, review duplicates and learn which annual FIFO reports are included with Pro.";
 

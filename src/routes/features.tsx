@@ -1,3 +1,6 @@
+import { Card } from "@/components/AppShell";
+import type { Lang } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -9,20 +12,17 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
-import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import type { Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
-      { title: "Portfolio tracking features — Capispot" },
+      { title: "Portfolio tracking features — CapiSpot" },
       {
         name: "description",
         content:
           "Explore full company profiles for 2 companies per calendar week with a free account; each includes that company's DCF calculator in the same view, without using an extra view. The standalone DCF tool is Pro.",
       },
-      { property: "og:title", content: "Portfolio tracking features — Capispot" },
+      { property: "og:title", content: "Portfolio tracking features — CapiSpot" },
       {
         property: "og:description",
         content:
@@ -51,7 +51,7 @@ const COPY: Record<Lang, FeatureCopy> = {
   en: {
     title: "A clearer view of your investments",
     subtitle:
-      "Capispot brings your portfolio, real market data and long-term plan together—without pretending that forecasts are facts.",
+      "CapiSpot brings your portfolio, real market data and long-term plan together—without pretending that forecasts are facts.",
     cta: "Create a free account",
     pricing: "Compare plans",
     features: [
@@ -99,7 +99,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Not investment advice",
-        body: "Capispot is tracking and analytics software. It does not tell you what to buy or sell; forecasts and AI outputs are informational tools, not personal recommendations.",
+        body: "CapiSpot is tracking and analytics software. It does not tell you what to buy or sell; forecasts and AI outputs are informational tools, not personal recommendations.",
       },
     ],
     disclaimer:
@@ -108,7 +108,7 @@ const COPY: Record<Lang, FeatureCopy> = {
   bg: {
     title: "По-ясен поглед към инвестициите ти",
     subtitle:
-      "Capispot събира портфолиото, реалните пазарни данни и дългосрочния план — без да представя прогнозите като факти.",
+      "CapiSpot събира портфолиото, реалните пазарни данни и дългосрочния план — без да представя прогнозите като факти.",
     cta: "Създай безплатен профил",
     pricing: "Сравни плановете",
     features: [
@@ -156,7 +156,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Не е инвестиционен съвет",
-        body: "Capispot е софтуер за следене и анализ. Не ти казва какво да купиш или продадеш; прогнозите и AI резултатите са информационни инструменти, не лични препоръки.",
+        body: "CapiSpot е софтуер за следене и анализ. Не ти казва какво да купиш или продадеш; прогнозите и AI резултатите са информационни инструменти, не лични препоръки.",
       },
     ],
     disclaimer:
@@ -165,7 +165,7 @@ const COPY: Record<Lang, FeatureCopy> = {
   de: {
     title: "Mehr Überblick über deine Investments",
     subtitle:
-      "Capispot verbindet Portfolio, echte Marktdaten und langfristige Planung, ohne Prognosen als Fakten darzustellen.",
+      "CapiSpot verbindet Portfolio, echte Marktdaten und langfristige Planung, ohne Prognosen als Fakten darzustellen.",
     cta: "Kostenloses Konto erstellen",
     pricing: "Tarife vergleichen",
     features: [
@@ -213,7 +213,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Keine Anlageberatung",
-        body: "Capispot ist Portfolio- und Analysesoftware, keine persönliche Empfehlung zum Kauf oder Verkauf.",
+        body: "CapiSpot ist Portfolio- und Analysesoftware, keine persönliche Empfehlung zum Kauf oder Verkauf.",
       },
     ],
     disclaimer:
@@ -222,7 +222,7 @@ const COPY: Record<Lang, FeatureCopy> = {
   es: {
     title: "Una visión más clara de tus inversiones",
     subtitle:
-      "Capispot reúne tu cartera, datos reales del mercado y planificación a largo plazo sin presentar previsiones como hechos.",
+      "CapiSpot reúne tu cartera, datos reales del mercado y planificación a largo plazo sin presentar previsiones como hechos.",
     cta: "Crear cuenta gratis",
     pricing: "Comparar planes",
     features: [
@@ -270,7 +270,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "No es asesoramiento financiero",
-        body: "Capispot es software de seguimiento y análisis, no una recomendación personal para comprar o vender.",
+        body: "CapiSpot es software de seguimiento y análisis, no una recomendación personal para comprar o vender.",
       },
     ],
     disclaimer:
@@ -279,7 +279,7 @@ const COPY: Record<Lang, FeatureCopy> = {
   it: {
     title: "Una visione più chiara dei tuoi investimenti",
     subtitle:
-      "Capispot riunisce portafoglio, dati di mercato reali e pianificazione senza presentare le previsioni come fatti.",
+      "CapiSpot riunisce portafoglio, dati di mercato reali e pianificazione senza presentare le previsioni come fatti.",
     cta: "Crea un account gratuito",
     pricing: "Confronta i piani",
     features: [
@@ -327,7 +327,7 @@ const COPY: Record<Lang, FeatureCopy> = {
       },
       {
         title: "Non è consulenza finanziaria",
-        body: "Capispot è un software di monitoraggio e analisi, non una raccomandazione personale di acquisto o vendita.",
+        body: "CapiSpot è un software di monitoraggio e analisi, non una raccomandazione personale di acquisto o vendita.",
       },
     ],
     disclaimer:
@@ -344,7 +344,7 @@ function FeaturesPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-12 py-6">
       <section className="rounded-3xl border border-border bg-card px-6 py-12 text-center sm:px-12">
-        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-primary">Capispot</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-primary">CapiSpot</p>
         <h1 className="font-display mx-auto mt-3 max-w-3xl text-balance text-3xl font-bold sm:text-5xl">
           {c.title}
         </h1>

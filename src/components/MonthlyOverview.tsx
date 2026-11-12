@@ -1,10 +1,10 @@
-import { CalendarDays, Download, Share2, TrendingDown, TrendingUp } from "lucide-react";
 import { Card } from "@/components/AppShell";
-import { toast } from "sonner";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { historyReturn, type PortfolioPoint } from "@/lib/history";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { pct, usePortfolio } from "@/lib/store";
+import { CalendarDays, Download, Share2, TrendingDown, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 
 type MonthlyHistory = {
   points: PortfolioPoint[];
@@ -178,7 +178,7 @@ export function MonthlyOverview({
   const monthName = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(now);
   const historyUnavailable = !data || data.unavailable;
   const reportText = [
-    `Capispot — ${monthName}`,
+    `CapiSpot — ${monthName}`,
     `${c.return}: ${monthlyReturn == null ? "—" : pct(monthlyReturn)}`,
     `${c.valueChange}: ${
       data && !data.unavailable && Number.isFinite(monthValueChange)
@@ -210,7 +210,7 @@ export function MonthlyOverview({
       return;
     }
     try {
-      await navigator.share({ title: `Capispot — ${monthName}`, text: reportText });
+      await navigator.share({ title: `CapiSpot — ${monthName}`, text: reportText });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error("Could not share monthly report", error);

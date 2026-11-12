@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { GuidePage, type GuideCopy } from "@/components/GuidePage";
 import { articleJsonLd } from "@/lib/seo";
+import { createFileRoute } from "@tanstack/react-router";
 
 const COPY: Record<"en" | "bg", GuideCopy> = {
   en: {
@@ -13,7 +13,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
         "In the Revolut app open your investing account, choose the statement or report option and export the full history as a CSV file.",
       ],
       [
-        "2. Upload it in Capispot",
+        "2. Upload it in CapiSpot",
         "Open the Brokers page and drop in the file. The Revolut layout is recognised automatically, and you see a preview before anything is saved.",
       ],
       [
@@ -38,7 +38,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
         "В приложението на Revolut отвори инвестиционния си акаунт, избери опцията за извлечение или отчет и експортирай цялата история като CSV файл.",
       ],
       [
-        "2. Качи го в Capispot",
+        "2. Качи го в CapiSpot",
         "Отвори страницата „Брокери“ и качи файла. Форматът на Revolut се разпознава автоматично и виждаш преглед, преди да се запише нещо.",
       ],
       [
@@ -55,7 +55,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
   },
 };
 
-const TITLE = "Import Revolut trades into a portfolio tracker — Capispot";
+const TITLE = "Import Revolut trades into a portfolio tracker — CapiSpot";
 const DESCRIPTION =
   "Import your Revolut investing CSV into one portfolio for free: automatic format detection, original currencies, a preview before saving, and all brokers in one place.";
 

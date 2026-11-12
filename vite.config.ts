@@ -11,6 +11,9 @@ export default defineConfig({
     tanstackStart({ server: { entry: "server" } }),
     react(),
   ],
+  // Worker production maps are disabled because Vite CSS URL rewriting cannot map them accurately.
+  // Development source maps are unaffected; do not emit misleading production maps.
+  environments: { ssr: { build: { sourcemap: false } } },
   resolve: {
     tsconfigPaths: true,
     dedupe: [

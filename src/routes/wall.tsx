@@ -1,24 +1,9 @@
-import { EmptyState, ListSkeleton } from "@/components/SectionState";
-import { uiStateCopy } from "@/lib/ui-state-copy";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { Ban, Flag, MessageCircle, Pencil, Send, Trash2, UserCheck, UserPlus } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
 import { CommunityUpsell } from "@/components/CommunityGate";
 import { PortfolioSnapshot, type SnapshotRow } from "@/components/PortfolioSnapshot";
-import { usePortfolio } from "@/lib/store";
-import { wallCopy, type WallCopy } from "@/lib/wall-i18n";
+import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { supabase } from "@/integrations/supabase/client";
 import {
   avatarUrls,
   cc,
@@ -28,15 +13,30 @@ import {
   type MemberProfile,
   type ShareLevel,
 } from "@/lib/community";
+import { usePortfolio } from "@/lib/store";
+import { uiStateCopy } from "@/lib/ui-state-copy";
+import { wallCopy, type WallCopy } from "@/lib/wall-i18n";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Ban, Flag, MessageCircle, Pencil, Send, Trash2, UserCheck, UserPlus } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/wall")({
   head: () => ({
     meta: [
-      { title: "Community wall — Capispot" },
+      { title: "Community wall — CapiSpot" },
       {
         name: "description",
         content:
-          "Community wall for Capispot Pro members: share wins, losses and questions with other investors and learn from their experience.",
+          "Community wall for CapiSpot Pro members: share wins, losses and questions with other investors and learn from their experience.",
       },
       { name: "robots", content: "noindex" },
     ],

@@ -1,11 +1,18 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
 import { SamplePortfolioPreview } from "@/components/SamplePortfolioPreview";
-import { samplePeriodData, SAMPLE_PERIODS } from "@/lib/sample-preview";
+import { SAMPLE_PERIODS, samplePeriodData } from "@/lib/sample-preview";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cloneElement, type ReactElement } from "react";
+import { afterEach, expect, it, vi } from "vitest";
 vi.mock("recharts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("recharts")>();
-  return { ...actual, ResponsiveContainer: ({ children }: { children: React.ReactElement }) =>
-    <actual.ResponsiveContainer width={480} height={208}>{children}</actual.ResponsiveContainer> };
+  return {
+    ...actual,
+    ResponsiveContainer: ({
+      children,
+    }: {
+      children: ReactElement<{ width?: number; height?: number }>;
+    }) => cloneElement(children, { width: 480, height: 208 }),
+  };
 });
 afterEach(cleanup);
 it("changes the selected period, visible return and chart for each real control", () => {
@@ -13,10 +20,7 @@ it("changes the selected period, visible return and chart for each real control"
   let previous = "";
   for (const period of SAMPLE_PERIODS) {
     fireEvent.click(screen.getByRole("button", { name: period }));
-    expect(screen.getByRole("button", { name: period })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: period })).toHaveAttribute("aria-pressed", "true");
     const formatted = new Intl.NumberFormat("en-US", {
       style: "percent",
       maximumFractionDigits: 2,
@@ -35,6 +39,7 @@ it("changes the selected period, visible return and chart for each real control"
 it("localizes Bulgarian copy and formats percentages through the registry locale", () => {
   render(<SamplePortfolioPreview lang="bg" />);
   expect(screen.getByText("Интерактивно примерно портфолио")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Покажи подробните показатели" }));
   expect(screen.getByText(/Не?реализирана печалба/)).toBeInTheDocument();
   expect(screen.getByText(/не са котировки на живо/)).toBeInTheDocument();
   expect(screen.getByText("Trading 212")).toBeInTheDocument();

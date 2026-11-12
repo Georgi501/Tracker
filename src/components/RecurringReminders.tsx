@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { BellRing, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import type { Lang } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/store";
 import {
   readRecurringReminders,
@@ -10,7 +8,9 @@ import {
   writeRecurringReminders,
   type RecurringReminder,
 } from "@/lib/watchlist";
-import type { Lang } from "@/lib/i18n";
+import { BellRing, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const COPY: Record<
   Lang,
@@ -34,7 +34,7 @@ const COPY: Record<
 > = {
   en: {
     title: "Monthly investment reminders",
-    description: "Plan a recurring contribution. Capispot will remind you; it never places trades.",
+    description: "Plan a recurring contribution. CapiSpot will remind you; it never places trades.",
     ticker: "Ticker (optional)",
     amount: "Planned amount",
     day: "Remind me on day",
@@ -51,7 +51,7 @@ const COPY: Record<
   },
   bg: {
     title: "Месечни напомняния за инвестиции",
-    description: "Планирай повтаряща се вноска. Capispot само напомня — не подава сделки.",
+    description: "Планирай повтаряща се вноска. CapiSpot само напомня — не подава сделки.",
     ticker: "Тикер (по избор)",
     amount: "Планирана сума",
     day: "Напомни ми на ден",
@@ -70,7 +70,7 @@ const COPY: Record<
   de: {
     title: "Monatliche Anlageerinnerungen",
     description:
-      "Plane einen regelmäßigen Beitrag. Capispot erinnert dich, führt aber keine Trades aus.",
+      "Plane einen regelmäßigen Beitrag. CapiSpot erinnert dich, führt aber keine Trades aus.",
     ticker: "Ticker (optional)",
     amount: "Geplanter Betrag",
     day: "Erinnerung am Tag",
@@ -88,7 +88,7 @@ const COPY: Record<
   es: {
     title: "Recordatorios mensuales de inversión",
     description:
-      "Planifica una aportación recurrente. Capispot te avisa, pero nunca realiza operaciones.",
+      "Planifica una aportación recurrente. CapiSpot te avisa, pero nunca realiza operaciones.",
     ticker: "Ticker (opcional)",
     amount: "Importe previsto",
     day: "Recordarme el día",
@@ -107,7 +107,7 @@ const COPY: Record<
   it: {
     title: "Promemoria mensili d'investimento",
     description:
-      "Pianifica un versamento ricorrente. Capispot ti avvisa, ma non esegue operazioni.",
+      "Pianifica un versamento ricorrente. CapiSpot ti avvisa, ma non esegue operazioni.",
     ticker: "Ticker (facoltativo)",
     amount: "Importo previsto",
     day: "Avvisami il giorno",

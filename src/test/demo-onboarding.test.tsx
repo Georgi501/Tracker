@@ -1,7 +1,25 @@
-import { createElement, type ComponentType, type ReactNode } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Route } from "@/routes/demo";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cloneElement,
+  createElement,
+  type ComponentType,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("recharts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("recharts")>();
+  return {
+    ...actual,
+    ResponsiveContainer: ({
+      children,
+    }: {
+      children: ReactElement<{ width?: number; height?: number }>;
+    }) => cloneElement(children, { width: 480, height: 208 }),
+  };
+});
 
 const state = vi.hoisted(() => ({ signedIn: false }));
 
@@ -73,23 +91,21 @@ describe("sample portfolio onboarding", () => {
   it("shows a registration-free demo CTA on the first screen", () => {
     render(getDemoPage());
 
-    expect(screen.getByRole("link", { name: /try the demo without an account/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /inspect performance/i })).toHaveAttribute(
       "href",
-      "/demo#portfolio-preview",
+      "#demo-performance",
     );
   });
 
   it("calculates cost basis and gain from the same sample holdings", () => {
     render(getDemoPage());
 
-    expect(screen.getByText("Sample cost basis")).toBeInTheDocument();
-    expect(screen.getByText("$13,670")).toBeInTheDocument();
-    expect(screen.getByText("+$3,315")).toBeInTheDocument();
-    expect(screen.getByText("+24.3%")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show detailed metrics" }));
+    expect(screen.getByText("$3,315")).toBeInTheDocument();
 
     const microsoft = screen.getByRole("row", { name: /MSFT/ });
-    expect(microsoft).toHaveTextContent("$290");
-    expect(microsoft).toHaveTextContent("$960");
+    expect(microsoft).toHaveTextContent("$290.00");
+    expect(microsoft).toHaveTextContent("$960.00");
     expect(microsoft).toHaveTextContent("+41.4%");
   });
 

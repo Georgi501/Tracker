@@ -1,15 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/LegalPage";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Capispot" },
-      { name: "description", content: "What data Capispot stores, why, and your GDPR rights." },
-      { property: "og:title", content: "Privacy Policy — Capispot" },
+      { title: "Privacy Policy — CapiSpot" },
+      { name: "description", content: "What data CapiSpot stores, why, and your GDPR rights." },
+      { property: "og:title", content: "Privacy Policy — CapiSpot" },
       {
         property: "og:description",
-        content: "What data Capispot stores, why, and your GDPR rights.",
+        content: "What data CapiSpot stores, why, and your GDPR rights.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

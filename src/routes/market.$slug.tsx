@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { QuoteHero } from "@/components/QuoteHero";
-import { usePortfolio } from "@/lib/store";
-import { MARKET_TICKER_INSTRUMENTS } from "@/lib/market-ticker";
 import type { Lang } from "@/lib/i18n";
+import { MARKET_TICKER_INSTRUMENTS } from "@/lib/market-ticker";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/market/$slug")({
   head: ({ params }) => {
@@ -12,11 +12,11 @@ export const Route = createFileRoute("/market/$slug")({
     const name = instrument?.name.en ?? params.slug;
     return {
       meta: [
-        { title: `${name} live quote and price chart — Capispot` },
+        { title: `${name} live quote and price chart — CapiSpot` },
         {
           name: "description",
           content: instrument
-            ? `Follow the ${name} quote, daily change and price history from Yahoo Finance, and compare it with your own portfolio on Capispot.`
+            ? `Follow the ${name} quote, daily change and price history from Yahoo Finance, and compare it with your own portfolio on CapiSpot.`
             : `Market quote and price history for ${name}.`,
         },
         ...(instrument ? [] : [{ name: "robots", content: "noindex" }]),

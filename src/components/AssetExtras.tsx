@@ -1,51 +1,21 @@
-import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { Bell, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePortfolio } from "@/lib/store";
-import { languageLocale } from "@/lib/i18n";
+import { useWatchState } from "@/hooks/use-watch-state";
 import { extrasCopy, priceAlertCopy } from "@/lib/extras-i18n";
+import { languageLocale } from "@/lib/i18n";
+import type { MarketAsset } from "@/lib/market-search";
 import {
   CHART_RANGES,
   marketDetails,
   type ChartRange,
   type MarketCandle,
 } from "@/lib/market.functions";
-import {
-  readAlerts,
-  readBondCouponDates,
-  readEarningsReminders,
-  readWatchlist,
-  writeAlerts,
-  writeWatchlist,
-  type PriceAlert,
-} from "@/lib/watchlist";
-import type { MarketAsset } from "@/lib/market-search";
-
-export function useWatchState() {
-  const [list, setList] = useState<string[]>([]);
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [earningsReminders, setEarningsReminders] = useState<string[]>([]);
-  const [bondCouponDates, setBondCouponDates] = useState<Record<string, string>>({});
-  useEffect(() => {
-    const sync = () => {
-      setList(readWatchlist());
-      setAlerts(readAlerts());
-      setEarningsReminders(readEarningsReminders());
-      setBondCouponDates(readBondCouponDates());
-    };
-    sync();
-    window.addEventListener("folio-watch", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("folio-watch", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-  return { list, alerts, earningsReminders, bondCouponDates };
-}
+import { usePortfolio } from "@/lib/store";
+import { writeAlerts, writeWatchlist } from "@/lib/watchlist";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Bell, Star } from "lucide-react";
+import { useState } from "react";
 
 function Sparkline({
   closes,

@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { GuidePage, type GuideCopy } from "@/components/GuidePage";
 import { articleJsonLd } from "@/lib/seo";
+import { createFileRoute } from "@tanstack/react-router";
 
 const COPY: Record<"en" | "bg", GuideCopy> = {
   en: {
@@ -10,7 +10,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
     sections: [
       [
         "Rules depend on your country",
-        "Whether a gain is taxed, at what rate and with which allowances depends on your tax residency, the instrument and where it trades. Check the current rules with your tax authority or an accountant. Capispot prepares the numbers; it does not tell you what you owe.",
+        "Whether a gain is taxed, at what rate and with which allowances depends on your tax residency, the instrument and where it trades. Check the current rules with your tax authority or an accountant. CapiSpot prepares the numbers; it does not tell you what you owe.",
       ],
       [
         "What data you need",
@@ -26,14 +26,14 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
       ],
       [
         "Fees and currencies",
-        "Fees are part of the cost basis on purchases and reduce proceeds on sales. If your broker trades in another currency, amounts are usually converted at the rate of each transaction date, so Capispot keeps the original currency and uses dated exchange rates.",
+        "Fees are part of the cost basis on purchases and reduce proceeds on sales. If your broker trades in another currency, amounts are usually converted at the rate of each transaction date, so CapiSpot keeps the original currency and uses dated exchange rates.",
       ],
       [
         "Several brokers",
         "Import every broker's CSV so the history is complete. Lots are matched per holding across all your imported transactions, and results are grouped by the tax year you choose.",
       ],
       [
-        "Capispot access",
+        "CapiSpot access",
         "The annual FIFO report of realized gains and losses is a Pro feature. Free includes CSV import, file preview and duplicate checks.",
       ],
       [
@@ -51,7 +51,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
     sections: [
       [
         "Правилата зависят от държавата ти",
-        "Дали една печалба се облага, с каква ставка и с какви облекчения, зависи от данъчното ти пребиваване, инструмента и мястото на търгуване. Провери актуалните правила в данъчната си администрация или при счетоводител. Capispot подготвя числата, но не казва колко дължиш.",
+        "Дали една печалба се облага, с каква ставка и с какви облекчения, зависи от данъчното ти пребиваване, инструмента и мястото на търгуване. Провери актуалните правила в данъчната си администрация или при счетоводител. CapiSpot подготвя числата, но не казва колко дължиш.",
       ],
       [
         "Какви данни ти трябват",
@@ -67,14 +67,14 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
       ],
       [
         "Такси и валути",
-        "Таксите са част от цената на придобиване при покупка и намаляват прихода при продажба. Ако брокерът търгува в друга валута, сумите обикновено се превръщат по курса към датата на всяка сделка, затова Capispot пази оригиналната валута и ползва курсове към съответната дата.",
+        "Таксите са част от цената на придобиване при покупка и намаляват прихода при продажба. Ако брокерът търгува в друга валута, сумите обикновено се превръщат по курса към датата на всяка сделка, затова CapiSpot пази оригиналната валута и ползва курсове към съответната дата.",
       ],
       [
         "Няколко брокера",
         "Импортирай CSV от всеки брокер, за да е пълна историята. Покупките се съпоставят за всяка позиция през всички импортирани сделки, а резултатите се групират по избраната от теб година.",
       ],
       [
-        "Достъп в Capispot",
+        "Достъп в CapiSpot",
         "Годишната FIFO справка за реализираните печалби и загуби е Pro функция. В безплатния план са включени CSV импортът, прегледът на файла и проверката за дубликати.",
       ],
       [
@@ -87,7 +87,7 @@ const COPY: Record<"en" | "bg", GuideCopy> = {
   },
 };
 
-const TITLE = "Capital gains on stocks and ETFs: FIFO and what to prepare — Capispot";
+const TITLE = "Capital gains on stocks and ETFs: FIFO and what to prepare — CapiSpot";
 const DESCRIPTION =
   "What data to prepare for yearly stock and ETF results anywhere: purchases, sales, fees, currencies and FIFO cost basis, with a worked example. General guide, not tax advice.";
 

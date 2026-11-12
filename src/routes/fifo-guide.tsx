@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -16,7 +16,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "FIFO method for stocks and ETFs: a simple guide",
     intro:
-      "FIFO means first in, first out: when you sell, the oldest shares you still hold are treated as sold first. Capispot's annual FIFO report of realized gains and losses is included with Pro.",
+      "FIFO means first in, first out: when you sell, the oldest shares you still hold are treated as sold first. CapiSpot's annual FIFO report of realized gains and losses is included with Pro.",
     sections: [
       [
         "A simple example",
@@ -24,7 +24,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Why the tax year matters",
-        "Realized results are grouped by the tax year your country uses. In Capispot's Pro report you choose the month the tax year starts, so sales are grouped into the right period.",
+        "Realized results are grouped by the tax year your country uses. In CapiSpot's Pro report you choose the month the tax year starts, so sales are grouped into the right period.",
       ],
       [
         "Several brokers",
@@ -41,7 +41,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   bg: {
     title: "FIFO метод за акции и ETF: кратко ръководство",
     intro:
-      "FIFO означава „първо купено, първо продадено“: при продажба първо се считат продадени най-старите акции, които още притежаваш. В Capispot годишната FIFO справка за реализираните печалби и загуби е част от Pro.",
+      "FIFO означава „първо купено, първо продадено“: при продажба първо се считат продадени най-старите акции, които още притежаваш. В CapiSpot годишната FIFO справка за реализираните печалби и загуби е част от Pro.",
     sections: [
       [
         "Прост пример",
@@ -65,7 +65,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "FIFO method for stocks and ETFs — Capispot";
+const TITLE = "FIFO method for stocks and ETFs — CapiSpot";
 const DESCRIPTION =
   "How FIFO works for stocks and ETFs, with a worked example, tax-year grouping and multi-broker tips.";
 

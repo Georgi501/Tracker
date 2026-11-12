@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -32,7 +32,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Several brokers",
-        "If you hold the same asset in more than one account, combine all purchases. Importing every broker into Capispot does this automatically and keeps original currencies.",
+        "If you hold the same asset in more than one account, combine all purchases. Importing every broker into CapiSpot does this automatically and keeps original currencies.",
       ],
     ],
     cta: "Open the portfolio",
@@ -57,7 +57,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Няколко брокера",
-        "Ако държиш един и същ актив в повече от една сметка, обедини всички покупки. Импортът на всички брокери в Capispot го прави автоматично и запазва оригиналните валути.",
+        "Ако държиш един и същ актив в повече от една сметка, обедини всички покупки. Импортът на всички брокери в CapiSpot го прави автоматично и запазва оригиналните валути.",
       ],
     ],
     cta: "Отвори портфолиото",
@@ -65,7 +65,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "How to calculate your average buy price — Capispot";
+const TITLE = "How to calculate your average buy price — CapiSpot";
 const DESCRIPTION =
   "Learn how to calculate the average cost of a stock bought several times, and how it differs from FIFO.";
 

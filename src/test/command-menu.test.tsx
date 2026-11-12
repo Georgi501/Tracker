@@ -1,8 +1,8 @@
+import { CommandMenu } from "@/components/CommandMenu";
+import { dictionaries, type Lang } from "@/lib/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { CommandMenu } from "@/components/CommandMenu";
-import { dictionaries, type Lang } from "@/lib/i18n";
 const state = vi.hoisted(() => ({
   navigate: vi.fn(),
   search: vi.fn(),
@@ -189,4 +189,14 @@ it("sends signed-out transaction actions to authentication", async () => {
   fireEvent.click(screen.getByRole("option", { name: /Add transaction/ }));
   expect(state.add).not.toHaveBeenCalled();
   expect(state.navigate).toHaveBeenCalledWith({ to: "/auth" });
+});
+
+it("keeps catalog navigation usable after a rejected provider request", async () => {
+  state.search.mockRejectedValue(new Error("Provider disconnected"));
+  setup();
+  const input = await open();
+  fireEvent.change(input, { target: { value: "NVDA" } });
+  expect(await screen.findByText(/Live search unavailable/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("option", { name: /NVDA NVIDIA/ }));
+  expect(state.navigate).toHaveBeenCalledWith({ to: "/asset/$symbol", params: { symbol: "NVDA" } });
 });

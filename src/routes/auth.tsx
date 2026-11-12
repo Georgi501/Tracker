@@ -1,17 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AuthForm } from "@/components/AuthForm";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Sign in — Capispot Portfolio Tracker" },
+      { title: "Sign in — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content:
           "Create a free CapiSpot account or sign in to track stocks, ETFs and crypto, import broker CSV files and follow dividends in one place.",
       },
-      { property: "og:title", content: "Sign in — Capispot" },
+      { property: "og:title", content: "Sign in — CapiSpot" },
       {
         property: "og:description",
         content: "Free portfolio tracking with market quotes and broker CSV import.",

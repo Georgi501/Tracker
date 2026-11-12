@@ -1,20 +1,19 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Card } from "@/components/AppShell";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { authCopy, authErrorKey } from "@/lib/auth-i18n";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { authCopy, authErrorKey } from "@/lib/auth-i18n";
-import { Input } from "@/components/ui/input";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Reset password — Capispot" },
-      { name: "description", content: "Choose a new password for your Capispot account." },
-      { property: "og:title", content: "Reset password — Capispot" },
+      { title: "Reset password — CapiSpot" },
+      { name: "description", content: "Choose a new password for your CapiSpot account." },
+      { property: "og:title", content: "Reset password — CapiSpot" },
       { property: "og:description", content: "Choose a new password." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

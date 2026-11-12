@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { AdminInsights } from "@/components/AdminInsights";
 import { Card } from "@/components/AppShell";
 import { ModerationPanel } from "@/components/ModerationPanel";
-import { AdminInsights } from "@/components/AdminInsights";
 import { supabase } from "@/integrations/supabase/client";
 import { usePortfolio } from "@/lib/store";
+import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 type AdminStats = {
@@ -32,7 +32,7 @@ type AdminResponse = {
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Owner console — Capispot" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Owner console — CapiSpot" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminPage,
 });

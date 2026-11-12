@@ -1,6 +1,19 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Card } from "@/components/AppShell";
+import { CompanyOverview } from "@/components/CompanyOverview";
+import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
+import { QuoteHero } from "@/components/QuoteHero";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import type { Lang } from "@/lib/i18n";
+import { assetSummary, reviewDue } from "@/lib/journey";
+import { searchCatalog } from "@/lib/market-search";
+import { searchMarket } from "@/lib/market.functions";
+import { projectedBondCoupon } from "@/lib/portfolio";
+import { pct, usePortfolio } from "@/lib/store";
+import { useSectionAnchor } from "@/lib/use-section-anchor";
+import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
 import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
@@ -11,22 +24,9 @@ import {
   Newspaper,
   UsersRound,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Card } from "@/components/AppShell";
-import { QuoteHero } from "@/components/QuoteHero";
-import { CompanyOverview } from "@/components/CompanyOverview";
-import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
-import { Button } from "@/components/ui/button";
-import { pct, usePortfolio } from "@/lib/store";
-import { assetSummary, reviewDue } from "@/lib/journey";
-import { supabase } from "@/integrations/supabase/client";
-import { searchCatalog } from "@/lib/market-search";
-import { searchMarket } from "@/lib/market.functions";
-import { projectedBondCoupon } from "@/lib/portfolio";
-import type { Lang } from "@/lib/i18n";
-import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
 import { z } from "zod";
-import { useSectionAnchor } from "@/lib/use-section-anchor";
 
 export const Route = createFileRoute("/asset/$symbol")({
   validateSearch: (search) =>
@@ -38,12 +38,12 @@ export const Route = createFileRoute("/asset/$symbol")({
       .parse(search),
   head: ({ params }) => ({
     meta: [
-      { title: `${params.symbol} — quote, charts and position details | Capispot` },
+      { title: `${params.symbol} — quote, charts and position details | CapiSpot` },
       {
         name: "description",
         content: `Your ${params.symbol} position: P&L, dividends, transaction history, company overview and investing journal.`,
       },
-      { property: "og:title", content: `${params.symbol} — Capispot` },
+      { property: "og:title", content: `${params.symbol} — CapiSpot` },
       {
         property: "og:description",
         content: "Position details, history, news and your investment thesis in one place.",
@@ -328,27 +328,27 @@ const BOND_REMINDER_COPY: Record<Lang, { nextCoupon: string; saveDate: string; n
   en: {
     nextCoupon: "Next confirmed coupon date",
     saveDate: "Save reminder date",
-    note: "Enter the next confirmed date yourself. Reminders run only while Capispot is open.",
+    note: "Enter the next confirmed date yourself. Reminders run only while CapiSpot is open.",
   },
   bg: {
     nextCoupon: "Следваща потвърдена купонна дата",
     saveDate: "Запази датата за напомняне",
-    note: "Въведи следващата потвърдена дата. Напомнянията работят само докато Capispot е отворен.",
+    note: "Въведи следващата потвърдена дата. Напомнянията работят само докато CapiSpot е отворен.",
   },
   de: {
     nextCoupon: "Nächster bestätigter Kupontermin",
     saveDate: "Erinnerungstermin speichern",
-    note: "Gib den nächsten bestätigten Termin selbst ein. Erinnerungen laufen nur bei geöffnetem Capispot.",
+    note: "Gib den nächsten bestätigten Termin selbst ein. Erinnerungen laufen nur bei geöffnetem CapiSpot.",
   },
   es: {
     nextCoupon: "Próxima fecha de cupón confirmada",
     saveDate: "Guardar fecha del aviso",
-    note: "Introduce tú la próxima fecha confirmada. Los avisos solo funcionan con Capispot abierto.",
+    note: "Introduce tú la próxima fecha confirmada. Los avisos solo funcionan con CapiSpot abierto.",
   },
   it: {
     nextCoupon: "Prossima data cedola confermata",
     saveDate: "Salva data promemoria",
-    note: "Inserisci tu la prossima data confermata. I promemoria funzionano solo con Capispot aperto.",
+    note: "Inserisci tu la prossima data confermata. I promemoria funzionano solo con CapiSpot aperto.",
   },
 };
 

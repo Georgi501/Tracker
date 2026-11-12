@@ -1,42 +1,41 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { Check, Pencil, Plus, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
-import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { ProGate } from "@/components/ProFeatures";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
+import { useWatchState } from "@/hooks/use-watch-state";
+import { dcfValueFromFundamentals, scenario, valuationGap } from "@/lib/dcf";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDcf, marketDetails, marketQuote, type ChartRange } from "@/lib/market.functions";
-import { dcfValueFromFundamentals, scenario, valuationGap } from "@/lib/dcf";
 import { isQuoteFresh } from "@/lib/portfolio";
+import { usePortfolio } from "@/lib/store";
 import {
   clearTargetReview,
   inBuyZone,
-  readTargets,
   readTargetReviews,
+  readTargets,
   writeTargetReview,
   writeTargets,
   writeWatchlist,
 } from "@/lib/watchlist";
-import { useEffect } from "react";
+import { useQueries } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Check, Pencil, Plus, Star, Target, TrendingDown, TrendingUp, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 export const Route = createFileRoute("/watchlist")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Watchlist — Capispot Portfolio Tracker" },
+      { title: "Watchlist — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content:
           "Track favourite stocks, ETFs and crypto with logos, top gainers and losers, buy targets and DCF fair value.",
       },
-      { property: "og:title", content: "Watchlist — Capispot" },
+      { property: "og:title", content: "Watchlist — CapiSpot" },
       {
         property: "og:description",
         content: "Gainers, losers, buy zone and intrinsic value for your watchlist.",

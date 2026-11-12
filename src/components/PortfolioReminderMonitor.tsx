@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useWatchState } from "@/hooks/use-watch-state";
+import { marketEarningsCalendar } from "@/lib/market.functions";
+import { usePortfolio } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { marketEarningsCalendar } from "@/lib/market.functions";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
-import { languageLocale } from "@/lib/i18n";
 
 const COPY = {
   en: {

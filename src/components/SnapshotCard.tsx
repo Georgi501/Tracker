@@ -1,7 +1,7 @@
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { usePortfolio } from "@/lib/store";
 import { snapshotCsv, snapshotWeights } from "@/lib/journey";
+import { usePortfolio } from "@/lib/store";
+import { toast } from "sonner";
 
 /** Pro: privacy-safe snapshot with class percentages only (no amounts, quantities or costs). */
 export function SnapshotCard() {
@@ -93,7 +93,7 @@ export function SnapshotCard() {
         </p>
       </div>
       <div className="bg-brand-gradient rounded-2xl p-4 text-primary-foreground">
-        <p className="font-display font-semibold">Capispot</p>
+        <p className="font-display font-semibold">CapiSpot</p>
         <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-background/30">
           {w.map((x, i) => (
             <div

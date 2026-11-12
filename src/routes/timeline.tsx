@@ -1,26 +1,26 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
-import { usePortfolio } from "@/lib/store";
+import { EditTransactionDialog } from "@/components/EditTransactionDialog";
+import { Button } from "@/components/ui/button";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { filterTimelineTransactions, timelineByMonth } from "@/lib/journey";
-import { useEffect, useState } from "react";
-import { Pencil, Search, Upload, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import type { Transaction, TxKind } from "@/lib/portfolio";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Pencil, Search, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 export const Route = createFileRoute("/timeline")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Portfolio timeline — Capispot" },
+      { title: "Portfolio timeline — CapiSpot" },
       {
         name: "description",
         content: "Every buy, sale and dividend in your portfolio, month by month.",
       },
-      { property: "og:title", content: "Portfolio timeline — Capispot" },
+      { property: "og:title", content: "Portfolio timeline — CapiSpot" },
       { property: "og:description", content: "See the story of your portfolio month by month." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

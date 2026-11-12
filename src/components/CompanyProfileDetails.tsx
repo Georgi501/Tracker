@@ -1,17 +1,18 @@
-import type { ReactNode } from "react";
+import { Card } from "@/components/AppShell";
+import { CompanyOverview } from "@/components/CompanyOverview";
+import { DcfCalculator } from "@/components/DcfCalculator";
+import { KeyStats } from "@/components/KeyStats";
+import { ProCompanyResearch } from "@/components/ProCompanyResearch";
+import { BarsSilhouette } from "@/components/ProFeatures";
+import { ProFinancials } from "@/components/ProFinancials";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { dcfCopy } from "@/lib/dcf-copy";
+import type { Lang } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Lock, Sparkles } from "lucide-react";
-import { Card } from "@/components/AppShell";
-import { CompanyOverview } from "@/components/CompanyOverview";
-import { DcfCalculator, dcfCopy } from "@/components/DcfCalculator";
-import { KeyStats } from "@/components/KeyStats";
-import { ProCompanyResearch } from "@/components/ProCompanyResearch";
-import { ProFinancials } from "@/components/ProFinancials";
-import { BarsSilhouette } from "@/components/ProFeatures";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import type { Lang } from "@/lib/i18n";
+import type { ReactNode } from "react";
 
 const COPY: Record<
   Lang,

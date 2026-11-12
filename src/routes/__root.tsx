@@ -1,19 +1,20 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet,
+  HeadContent,
   Link,
+  Outlet,
+  Scripts,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Toaster } from "sonner";
 import { AppShell } from "../components/AppShell";
-import { PortfolioProvider, usePortfolio } from "../lib/store";
+import { PortfolioProvider } from "../lib/PortfolioProvider";
 import { isLang, type Lang } from "../lib/i18n";
+import { usePortfolio } from "../lib/store";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {

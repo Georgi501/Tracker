@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { parsePortfolioBackup } from "@/lib/backup";
+import { describe, expect, it } from "vitest";
 
 const backup = {
   assets: [{ id: "asset-1", symbol: "AAPL", name: "Apple Inc.", type: "stock" }],
@@ -17,7 +17,7 @@ const backup = {
 };
 
 describe("parsePortfolioBackup", () => {
-  it("maps a Capispot backup into USD transaction import rows", () => {
+  it("maps a CapiSpot backup into USD transaction import rows", () => {
     expect(parsePortfolioBackup(backup)).toEqual([
       {
         symbol: "AAPL",

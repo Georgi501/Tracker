@@ -1,23 +1,23 @@
-import { ListSkeleton } from "@/components/SectionState";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
-import { PortfolioSnapshot, type SnapshotRow } from "@/components/PortfolioSnapshot";
 import { ChatThread } from "@/components/ChatThread";
-import { usePortfolio } from "@/lib/store";
 import { CommunityUpsell } from "@/components/CommunityGate";
+import { PortfolioSnapshot, type SnapshotRow } from "@/components/PortfolioSnapshot";
+import { ListSkeleton } from "@/components/SectionState";
+import { supabase } from "@/integrations/supabase/client";
 import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/community/$userId")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Investor profile — Capispot" },
+      { title: "Investor profile — CapiSpot" },
       { name: "description", content: "Investor profile, shared portfolio and chat." },
-      { property: "og:title", content: "Investor profile — Capispot" },
+      { property: "og:title", content: "Investor profile — CapiSpot" },
       { property: "og:description", content: "See a member's profile and portfolio" },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary" },

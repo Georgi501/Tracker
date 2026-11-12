@@ -1,14 +1,8 @@
-import { profileStatusCopy } from "@/lib/profile-status-copy";
-import { ListSkeleton } from "@/components/SectionState";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Camera } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
-import { usePortfolio } from "@/lib/store";
 import { CommunityUpsell } from "@/components/CommunityGate";
+import { ListSkeleton } from "@/components/SectionState";
+import { supabase } from "@/integrations/supabase/client";
 import {
   avatarUrls,
   cc,
@@ -17,14 +11,20 @@ import {
   SHARE_LEVELS,
   type MemberProfile,
 } from "@/lib/community";
+import { profileStatusCopy } from "@/lib/profile-status-copy";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Camera } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "My profile — Capispot" },
+      { title: "My profile — CapiSpot" },
       { name: "description", content: "Your photo, bio and sharing settings." },
-      { property: "og:title", content: "My profile — Capispot" },
+      { property: "og:title", content: "My profile — CapiSpot" },
       { property: "og:description", content: "Your investor profile." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

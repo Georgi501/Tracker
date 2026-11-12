@@ -1,29 +1,15 @@
+import { useThreads } from "@/hooks/use-threads";
+import { supabase } from "@/integrations/supabase/client";
+import { advisorCopy } from "@/lib/advisor-i18n";
+import { planCopy } from "@/lib/plan-i18n";
+import { usePortfolio } from "@/lib/store";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { usePortfolio } from "@/lib/store";
-import { advisorCopy } from "@/lib/advisor-i18n";
-import { planCopy } from "@/lib/plan-i18n";
 import { Card } from "./AppShell";
 import { Button } from "./ui/button";
-
-export function useThreads(enabled: boolean) {
-  return useQuery({
-    queryKey: ["ai-threads"],
-    enabled,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ai_threads")
-        .select("id,title,updated_at")
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
 
 export function AdvisorLayout({ activeId, children }: { activeId?: string; children: ReactNode }) {
   const p = usePortfolio();

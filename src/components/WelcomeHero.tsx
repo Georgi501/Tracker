@@ -1,11 +1,10 @@
-import { SamplePortfolioPreview } from "./SamplePortfolioPreview";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, Eye, Search, Upload, PlusCircle, LineChart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { experienceCopy } from "@/lib/experience-i18n";
+import { type Lang } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/store";
-import { languageLocale, type Lang } from "@/lib/i18n";
-import { isQuoteStale } from "@/lib/portfolio";
-import { QuoteFreshness } from "@/components/QuoteFreshness";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Eye, LineChart, PlusCircle, Search, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { SamplePortfolioPreview } from "./SamplePortfolioPreview";
 
 type Copy = {
   morning: string;
@@ -280,10 +279,10 @@ export function WelcomeHero() {
       <section className="rise hover-lift-card grid items-center gap-6 rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <h1 className="font-display max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-            {c.guestTitle}
+            {experienceCopy[p.lang].heroTitle}
           </h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
-            {c.guestSub}
+            {experienceCopy[p.lang].heroSub}
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5">
             <Link
@@ -299,16 +298,6 @@ export function WelcomeHero() {
               {c.sampleLink}
             </Link>
           </div>
-          <p className="mt-4 max-w-xl text-xs leading-relaxed text-muted-foreground">
-            {c.dataTrust}{" "}
-            <Link
-              to="/features"
-              hash="methodology"
-              className="font-semibold text-primary underline-offset-4 hover:underline"
-            >
-              {c.dataTrustLink}
-            </Link>
-          </p>
         </div>
         <SamplePortfolioPreview lang={p.lang} />
       </section>
@@ -364,34 +353,6 @@ export function WelcomeHero() {
       </section>
     );
 
-  const marketHoldings = p.holdings.filter(
-    (holding) =>
-      holding.asset.type === "stock" ||
-      holding.asset.type === "etf" ||
-      holding.asset.type === "crypto",
-  );
-  const quotedHoldings = marketHoldings.filter(
-    (holding) =>
-      !!holding.asset.quoteAt &&
-      Number.isFinite(Date.parse(holding.asset.quoteAt)) &&
-      Number.isFinite(holding.asset.price),
-  );
-  const latestQuote = quotedHoldings
-    .map((holding) => holding.asset.quoteAt)
-    .filter((at): at is string => !!at)
-    .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
-  const staleQuotes = quotedHoldings.filter((holding) =>
-    isQuoteStale(holding.asset.quoteAt),
-  ).length;
-  const quoteIssues = marketHoldings.filter((holding) => {
-    const at = holding.asset.quoteAt;
-    return (
-      !Number.isFinite(holding.asset.price) ||
-      !at ||
-      !Number.isFinite(Date.parse(at)) ||
-      isQuoteStale(at)
-    );
-  });
   return (
     <section className="rise flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
@@ -400,56 +361,6 @@ export function WelcomeHero() {
           {name ? `, ${name}` : ""}
         </h1>
         <p className="text-sm text-muted-foreground">{c.activeSub}</p>
-        {marketHoldings.length > 0 && (
-          <div className="mt-1 space-y-0.5">
-            {latestQuote && <QuoteFreshness at={latestQuote} lang={p.lang} compact />}
-            <p className="text-[10px] text-muted-foreground">
-              {c.quoteCoverage(quotedHoldings.length, marketHoldings.length)}
-              {quotedHoldings.length < marketHoldings.length && ` ${c.quoteGap}`}
-            </p>
-            {staleQuotes > 0 && (
-              <p
-                role="status"
-                className="text-[10px] font-medium text-amber-700 dark:text-amber-300"
-              >
-                {c.staleQuoteCount(staleQuotes)}
-              </p>
-            )}
-            {quoteIssues.length > 0 && (
-              <details className="text-[10px] text-muted-foreground">
-                <summary className="w-fit cursor-pointer font-semibold text-primary">
-                  {c.quoteIssueSummary}
-                </summary>
-                <ul className="mt-1 space-y-0.5">
-                  {quoteIssues.map((holding) => {
-                    const at = holding.asset.quoteAt;
-                    const stale = isQuoteStale(at);
-                    return (
-                      <li key={holding.asset.id} className="flex flex-wrap gap-x-1">
-                        <span className="font-semibold">{holding.asset.symbol}:</span>
-                        <span>{stale ? c.quoteStaleFor : c.quoteUnavailableFor}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </details>
-            )}
-            {p.priceNote && (
-              <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
-                <span role={p.priceNote === "error" ? "alert" : "status"}>
-                  {p.priceNote === "error" ? c.quoteError : c.quoteUnavailable}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void p.reload()}
-                  className="font-semibold text-primary hover:underline"
-                >
-                  {c.refreshQuotes}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link to="/markets" className={chip}>

@@ -1,27 +1,26 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { Card } from "@/components/AppShell";
-import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
 import { Input } from "@/components/ui/input";
-import { marketStats, marketDcf, searchMarket } from "@/lib/market.functions";
 import { dcfAnalysis, hasUsableDcfFundamentals, potentialUpside, scenario } from "@/lib/dcf";
-import { usePortfolio } from "@/lib/store";
 import { languageLocale, type Lang } from "@/lib/i18n";
+import { marketDcf, marketStats, searchMarket } from "@/lib/market.functions";
 import { isUsableQuote } from "@/lib/portfolio";
+import { usePortfolio } from "@/lib/store";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({
     meta: [
-      { title: "Compare stocks & ETFs head-to-head — Capispot" },
+      { title: "Compare stocks & ETFs head-to-head — CapiSpot" },
       {
         name: "description",
         content:
           "Put two stocks or ETFs side by side: valuation, P/E, dividends, beta and 52-week range from real market data, with no estimates for missing figures.",
       },
-      { property: "og:title", content: "Head-to-head asset comparison — Capispot" },
+      { property: "og:title", content: "Head-to-head asset comparison — CapiSpot" },
       {
         property: "og:description",
         content: "Compare two companies or ETFs side by side with real market data.",

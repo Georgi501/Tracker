@@ -1,5 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Card } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,9 +9,11 @@ import {
   writeAllocationTargets,
   type AllocationTargets,
 } from "@/lib/allocation-alerts";
-import { usePortfolio } from "@/lib/store";
-import type { AssetType } from "@/lib/portfolio";
 import type { Lang } from "@/lib/i18n";
+import type { AssetType } from "@/lib/portfolio";
+import { usePortfolio } from "@/lib/store";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type Copy = {
   title: string;
@@ -50,7 +50,7 @@ const COPY: Record<Lang, Copy> = {
     balanced: "All configured classes are within your tolerance.",
     noValues: "Add positions with current values to compare your allocation.",
     local:
-      "These preferences are stored locally on this device. In-app alerts appear when you open Capispot.",
+      "These preferences are stored locally on this device. In-app alerts appear when you open CapiSpot.",
     signIn: "Sign in to save allocation preferences.",
   },
   bg: {
@@ -68,7 +68,7 @@ const COPY: Record<Lang, Copy> = {
     balanced: "Всички настроени класове са в допустимото отклонение.",
     noValues: "Добави позиции с текущи стойности, за да сравниш разпределението.",
     local:
-      "Настройките се пазят локално на това устройство. Известието в приложението се показва при отваряне на Capispot.",
+      "Настройките се пазят локално на това устройство. Известието в приложението се показва при отваряне на CapiSpot.",
     signIn: "Влез в профила си, за да запазиш настройките за разпределение.",
   },
   de: {
@@ -86,7 +86,7 @@ const COPY: Record<Lang, Copy> = {
     balanced: "Alle festgelegten Klassen liegen innerhalb der Toleranz.",
     noValues: "Füge Positionen mit aktuellen Werten hinzu, um die Aufteilung zu vergleichen.",
     local:
-      "Diese Einstellungen werden lokal auf diesem Gerät gespeichert. In-App-Hinweise erscheinen beim Öffnen von Capispot.",
+      "Diese Einstellungen werden lokal auf diesem Gerät gespeichert. In-App-Hinweise erscheinen beim Öffnen von CapiSpot.",
     signIn: "Melde dich an, um Allokationseinstellungen zu speichern.",
   },
   es: {
@@ -105,7 +105,7 @@ const COPY: Record<Lang, Copy> = {
     balanced: "Todas las clases configuradas están dentro de la tolerancia.",
     noValues: "Añade posiciones con valores actuales para comparar la asignación.",
     local:
-      "Estas preferencias se guardan localmente en este dispositivo. Los avisos aparecen al abrir Capispot.",
+      "Estas preferencias se guardan localmente en este dispositivo. Los avisos aparecen al abrir CapiSpot.",
     signIn: "Inicia sesión para guardar las preferencias de asignación.",
   },
   it: {
@@ -124,7 +124,7 @@ const COPY: Record<Lang, Copy> = {
     balanced: "Tutte le classi configurate sono entro la tolleranza.",
     noValues: "Aggiungi posizioni con valori attuali per confrontare l'allocazione.",
     local:
-      "Queste preferenze sono salvate localmente su questo dispositivo. Gli avvisi appaiono all'apertura di Capispot.",
+      "Queste preferenze sono salvate localmente su questo dispositivo. Gli avvisi appaiono all'apertura di CapiSpot.",
     signIn: "Accedi per salvare le preferenze di allocazione.",
   },
 };

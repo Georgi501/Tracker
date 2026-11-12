@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -17,11 +17,11 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Import Interactive Brokers (IBKR) history into a portfolio tracker",
     intro:
-      "Bring your Interactive Brokers trades into Capispot to see your holdings and dividends alongside transactions from your other brokers.",
+      "Bring your Interactive Brokers trades into CapiSpot to see your holdings and dividends alongside transactions from your other brokers.",
     sections: [
       [
         "CSV import",
-        "Export your activity from IBKR as a CSV file, open Brokers in Capispot, choose Interactive Brokers and upload it. The format is detected from the headers and the original currency is kept.",
+        "Export your activity from IBKR as a CSV file, open Brokers in CapiSpot, choose Interactive Brokers and upload it. The format is detected from the headers and the original currency is kept.",
       ],
       [
         "Check before saving",
@@ -38,16 +38,16 @@ const GUIDE: Record<"en" | "bg", Guide> = {
     ],
     cta: "Open Brokers and import",
     sampleCta: "Try a sample CSV",
-    note: "General information, not tax or investment advice. Capispot is not affiliated with Interactive Brokers.",
+    note: "General information, not tax or investment advice. CapiSpot is not affiliated with Interactive Brokers.",
   },
   bg: {
     title: "Как да импортираш историята от Interactive Brokers (IBKR) в тракер за портфолио",
     intro:
-      "Добави сделките си от Interactive Brokers в Capispot, за да виждаш позициите и дивидентите заедно със сделките от другите си брокери.",
+      "Добави сделките си от Interactive Brokers в CapiSpot, за да виждаш позициите и дивидентите заедно със сделките от другите си брокери.",
     sections: [
       [
         "CSV импорт",
-        "Експортирай активността си от IBKR като CSV, отвори „Брокери“ в Capispot, избери Interactive Brokers и качи файла. Форматът се разпознава от заглавията, а оригиналната валута се запазва.",
+        "Експортирай активността си от IBKR като CSV, отвори „Брокери“ в CapiSpot, избери Interactive Brokers и качи файла. Форматът се разпознава от заглавията, а оригиналната валута се запазва.",
       ],
       [
         "Проверка преди запис",
@@ -64,11 +64,11 @@ const GUIDE: Record<"en" | "bg", Guide> = {
     ],
     cta: "Отвори „Брокери“ и импортирай",
     sampleCta: "Пробвай примерен CSV",
-    note: "Обща информация, не е данъчен или инвестиционен съвет. Capispot не е свързан с Interactive Brokers.",
+    note: "Обща информация, не е данъчен или инвестиционен съвет. CapiSpot не е свързан с Interactive Brokers.",
   },
 };
 
-const TITLE = "Import Interactive Brokers (IBKR) history — Capispot";
+const TITLE = "Import Interactive Brokers (IBKR) history — CapiSpot";
 const DESCRIPTION =
   "Import your IBKR activity as CSV or connect read-only with Pro, check duplicates and see all brokers in one portfolio.";
 

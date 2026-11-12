@@ -1,23 +1,22 @@
-import { languageLocale } from "@/lib/i18n";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card } from "@/components/AppShell";
-import { pct, usePortfolio } from "@/lib/store";
-import { totalDividends } from "@/lib/portfolio";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getDividendEvents } from "@/lib/dividends.functions";
-import { toolsCopy } from "@/lib/tools-i18n";
-import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
-import { proCopy } from "@/lib/pro-i18n";
-import { monthlyIncome } from "@/lib/pro";
-import { useEffect, useState } from "react";
-import { DividendTable } from "@/components/Insights";
-import { dividendRows } from "@/lib/insights";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
+import { DividendTable } from "@/components/Insights";
+import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
+import { getDividendEvents } from "@/lib/dividends.functions";
 import type { Lang } from "@/lib/i18n";
-import { useId } from "react";
+import { languageLocale } from "@/lib/i18n";
+import { dividendRows } from "@/lib/insights";
+import { totalDividends } from "@/lib/portfolio";
+import { monthlyIncome } from "@/lib/pro";
+import { proCopy } from "@/lib/pro-i18n";
+import { pct, usePortfolio } from "@/lib/store";
+import { toolsCopy } from "@/lib/tools-i18n";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useId, useState } from "react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const EMPTY_COPY: Record<
   Lang,
@@ -63,13 +62,13 @@ const EMPTY_COPY: Record<
 export const Route = createFileRoute("/dividends")({
   head: () => ({
     meta: [
-      { title: "Dividends — Capispot Portfolio Tracker" },
+      { title: "Dividends — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content:
           "Dividend calendar, projected annual income and dividend yield for your holdings, based only on confirmed dividend events, never estimates.",
       },
-      { property: "og:title", content: "Dividends — Capispot" },
+      { property: "og:title", content: "Dividends — CapiSpot" },
       {
         property: "og:description",
         content: "Upcoming and past dividend payouts with yield analytics.",

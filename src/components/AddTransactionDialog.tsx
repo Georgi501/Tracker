@@ -1,21 +1,22 @@
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Landmark, X } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
-import { usePortfolio } from "@/lib/store";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import type { Lang } from "@/lib/i18n";
 import { localDateString } from "@/lib/local-date";
-import { type AssetType, type Currency } from "@/lib/portfolio";
 import {
-  searchCatalog,
   groupMarketListings,
-  marketListingDetails,
   MARKET_ASSETS,
+  marketListingDetails,
+  searchCatalog,
   type MarketAsset,
 } from "@/lib/market-search";
-import { searchMarket, marketQuote } from "@/lib/market.functions";
-import { CompanyLogo } from "@/components/CompanyLogo";
+import { marketQuote, searchMarket } from "@/lib/market.functions";
+import { type AssetType, type Currency } from "@/lib/portfolio";
+import { usePortfolio } from "@/lib/store";
+import { nativeCurrency, resolveAsset } from "@/lib/transaction-entry";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Landmark, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring";
@@ -50,26 +51,6 @@ export interface TxPreset {
   type: AssetType;
   price?: number | undefined;
   currency?: Currency;
-}
-
-/** Native trading currency guess: European listings trade in EUR, everything else (US stocks, crypto) in USD. */
-export function nativeCurrency(symbol: string, quoteCurrency?: string): Currency {
-  if (quoteCurrency === "EUR" || quoteCurrency === "USD") return quoteCurrency;
-  return /\.(DE|F|PA|AS|MI|MC|BR|LS|VI|HE|IR)$/i.test(symbol.trim()) ? "EUR" : "USD";
-}
-
-/** Fill a missing name or ticker from the catalog; either one alone is enough. */
-export function resolveAsset(name: string, symbol: string) {
-  const n = name.trim(),
-    s = symbol.trim().toUpperCase();
-  if (!n && !s) return null;
-  if (s && n) return { name: n, symbol: s };
-  if (s) return { symbol: s, name: MARKET_ASSETS.find((a) => a.symbol === s)?.name ?? s };
-  const hit = searchCatalog(n)[0]; // also resolves an ISIN to its UCITS ticker
-  return {
-    name: hit?.name ?? n,
-    symbol: hit?.symbol ?? n.toUpperCase().replace(/\s+/g, "").slice(0, 12),
-  };
 }
 
 type Pick = { symbol: string; name: string; type: AssetType };

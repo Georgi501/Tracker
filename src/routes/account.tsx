@@ -1,24 +1,24 @@
+import { Card } from "@/components/AppShell";
+import { Avatar } from "@/components/Avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import { removeOwnAvatar, uploadOwnAvatar, useOwnAvatar } from "@/lib/own-avatar";
+import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Card } from "@/components/AppShell";
-import { supabase } from "@/integrations/supabase/client";
-import { usePortfolio } from "@/lib/store";
-import { Avatar } from "@/components/Avatar";
-import { removeOwnAvatar, uploadOwnAvatar, useOwnAvatar } from "@/lib/own-avatar";
-import { languageLocale, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Account & billing — Capispot" },
+      { title: "Account & billing — CapiSpot" },
       {
         name: "description",
         content: "Manage your subscription, export your portfolio data, or delete your account.",
       },
-      { property: "og:title", content: "Account & billing — Capispot" },
-      { property: "og:description", content: "Manage your Capispot account and subscription." },
+      { property: "og:title", content: "Account & billing — CapiSpot" },
+      { property: "og:description", content: "Manage your CapiSpot account and subscription." },
       { property: "og:type", content: "website" },
     ],
   }),

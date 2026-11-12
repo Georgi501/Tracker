@@ -1,23 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { Bell, CalendarDays, RefreshCw } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
-import { languageLocale, type Lang } from "@/lib/i18n";
+import { UnifiedPortfolioCalendar } from "@/components/UnifiedPortfolioCalendar";
+import { useWatchState } from "@/hooks/use-watch-state";
 import { CRYPTO_SYMBOLS } from "@/lib/crypto-assets";
+import { getCorporateActions, type CorporateActions } from "@/lib/dividends.functions";
+import { earningsSurprisePercent, type EarningsCalendarData } from "@/lib/earnings";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketEarningsCalendar } from "@/lib/market.functions";
-import { getCorporateActions, type CorporateActions } from "@/lib/dividends.functions";
-import { UnifiedPortfolioCalendar } from "@/components/UnifiedPortfolioCalendar";
-import { earningsSurprisePercent, type EarningsCalendarData } from "@/lib/earnings";
+import { usePortfolio } from "@/lib/store";
 import { writeEarningsReminders } from "@/lib/watchlist";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Bell, CalendarDays, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/earnings")({
   head: () => ({
-    meta: [{ title: "Earnings calendar — Capispot" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Earnings calendar — CapiSpot" }, { name: "robots", content: "noindex" }],
   }),
   component: EarningsCalendar,
 });
@@ -87,7 +87,7 @@ const COPY: Record<
       "Upcoming report dates and earnings surprises for your portfolio and Watchlist.",
     reminderOn: "Reminder on",
     reminderOff: "Remind me",
-    reminderHelp: "Reminders appear only while Capispot is open.",
+    reminderHelp: "Reminders appear only while CapiSpot is open.",
   },
   bg: {
     title: "Календар на отчетите",
@@ -120,7 +120,7 @@ const COPY: Record<
       "Предстоящи дати на отчети и изненади в печалбите за портфолиото и Watchlist-а ти.",
     reminderOn: "Напомнянето е включено",
     reminderOff: "Напомни ми",
-    reminderHelp: "Напомнянията се показват само докато Capispot е отворен.",
+    reminderHelp: "Напомнянията се показват само докато CapiSpot е отворен.",
   },
   de: {
     title: "Berichtskalender",
@@ -153,7 +153,7 @@ const COPY: Record<
       "Anstehende Berichtstermine und Gewinnüberraschungen für Portfolio und Watchlist.",
     reminderOn: "Erinnerung aktiv",
     reminderOff: "Erinnern",
-    reminderHelp: "Erinnerungen erscheinen nur, solange Capispot geöffnet ist.",
+    reminderHelp: "Erinnerungen erscheinen nur, solange CapiSpot geöffnet ist.",
   },
   es: {
     title: "Calendario de resultados",
@@ -184,7 +184,7 @@ const COPY: Record<
     lockedDescription: "Próximas fechas de resultados y sorpresas para tu cartera y watchlist.",
     reminderOn: "Aviso activado",
     reminderOff: "Recordarme",
-    reminderHelp: "Los avisos solo aparecen mientras Capispot está abierto.",
+    reminderHelp: "Los avisos solo aparecen mientras CapiSpot está abierto.",
   },
   it: {
     title: "Calendario degli utili",
@@ -216,7 +216,7 @@ const COPY: Record<
       "Prossime date dei report e sorprese sugli utili per portafoglio e watchlist.",
     reminderOn: "Promemoria attivo",
     reminderOff: "Ricordami",
-    reminderHelp: "I promemoria appaiono solo mentre Capispot è aperto.",
+    reminderHelp: "I promemoria appaiono solo mentre CapiSpot è aperto.",
   },
 };
 

@@ -1,26 +1,26 @@
-import { EmptyState, ListSkeleton } from "@/components/SectionState";
-import { uiStateCopy } from "@/lib/ui-state-copy";
-import { createFileRoute, Link, Outlet, useMatch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { MessageCircle, Newspaper, UserRound } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { Avatar } from "@/components/Avatar";
-import { usePortfolio } from "@/lib/store";
 import { CommunityUpsell } from "@/components/CommunityGate";
+import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { supabase } from "@/integrations/supabase/client";
 import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
+import { usePortfolio } from "@/lib/store";
+import { uiStateCopy } from "@/lib/ui-state-copy";
+import { createFileRoute, Link, Outlet, useMatch } from "@tanstack/react-router";
+import { MessageCircle, Newspaper, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Community — Capispot" },
+      { title: "Community — CapiSpot" },
       {
         name: "description",
         content:
-          "Capispot Pro community: meet other investors, view opt-in shared portfolios as percentages only, and chat one-to-one.",
+          "CapiSpot Pro community: meet other investors, view opt-in shared portfolios as percentages only, and chat one-to-one.",
       },
-      { property: "og:title", content: "Community — Capispot" },
+      { property: "og:title", content: "Community — CapiSpot" },
       { property: "og:description", content: "Investor profiles and private chat." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

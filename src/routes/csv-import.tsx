@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -17,15 +17,15 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Import your broker CSV into a portfolio tracker for free",
     intro:
-      "Bring your whole transaction history into one portfolio without retyping a single trade. CSV import is free in Capispot.",
+      "Bring your whole transaction history into one portfolio without retyping a single trade. CSV import is free in CapiSpot.",
     sections: [
       [
         "1. Export a CSV from your broker",
         "Most brokers let you download your transaction history as a CSV file from the reports or statements section. Choose the full period so no early purchases are missing.",
       ],
       [
-        "2. Upload it in Capispot",
-        "Open the Brokers page and drop in the file. Capispot recognises the layout of supported brokers automatically, so you do not have to map columns by hand.",
+        "2. Upload it in CapiSpot",
+        "Open the Brokers page and drop in the file. CapiSpot recognises the layout of supported brokers automatically, so you do not have to map columns by hand.",
       ],
       [
         "3. Review before saving",
@@ -37,7 +37,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Free import, optional sync",
-        "CSV import is free. If you want automatic updates, Pro adds read-only sync for Interactive Brokers and Trading 212. Capispot never places orders.",
+        "CSV import is free. If you want automatic updates, Pro adds read-only sync for Interactive Brokers and Trading 212. CapiSpot never places orders.",
       ],
     ],
     cta: "Import a CSV",
@@ -47,15 +47,15 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   bg: {
     title: "Импортирай CSV от брокера си в портфолио тракер безплатно",
     intro:
-      "Прехвърли цялата история на сделките си в едно портфолио, без да въвеждаш ръчно нито една сделка. CSV импортът в Capispot е безплатен.",
+      "Прехвърли цялата история на сделките си в едно портфолио, без да въвеждаш ръчно нито една сделка. CSV импортът в CapiSpot е безплатен.",
     sections: [
       [
         "1. Изтегли CSV от брокера си",
         "Повечето брокери позволяват да свалиш историята на сделките като CSV файл от раздела с отчети или извлечения. Избери целия период, за да не липсват ранни покупки.",
       ],
       [
-        "2. Качи го в Capispot",
-        "Отвори страницата „Брокери“ и качи файла. Capispot разпознава автоматично формата на поддържаните брокери, така че не е нужно да нагласяш колоните ръчно.",
+        "2. Качи го в CapiSpot",
+        "Отвори страницата „Брокери“ и качи файла. CapiSpot разпознава автоматично формата на поддържаните брокери, така че не е нужно да нагласяш колоните ръчно.",
       ],
       [
         "3. Прегледай преди запис",
@@ -67,7 +67,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Безплатен импорт, по избор синхронизация",
-        "CSV импортът е безплатен. Ако искаш автоматично обновяване, Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. Capispot никога не подава поръчки.",
+        "CSV импортът е безплатен. Ако искаш автоматично обновяване, Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. CapiSpot никога не подава поръчки.",
       ],
     ],
     cta: "Импортирай CSV",
@@ -76,7 +76,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "Import your broker CSV into a portfolio tracker for free — Capispot";
+const TITLE = "Import your broker CSV into a portfolio tracker for free — CapiSpot";
 const DESCRIPTION =
   "Import a Trading 212, Interactive Brokers or Revolut CSV into one portfolio for free: automatic format detection, duplicate checks, original currencies and a preview before saving.";
 

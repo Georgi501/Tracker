@@ -1,50 +1,52 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
-import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/AppShell";
 import { BrokerTransferForm } from "@/components/BrokerTransferForm";
+import { FirstImportWizard } from "@/components/FirstImportWizard";
 import { ProBadge } from "@/components/ProFeatures";
-import { usePortfolio } from "@/lib/store";
-import { useState } from "react";
-import {
-  BROKER_FORMATS,
-  GENERIC_TEMPLATE,
-  detectFeeColumns,
-  parseBrokerCsv,
-  detectBrokerFormat,
-  reconciliationTotals,
-  rejectedCsvRows,
-  rowsForImport,
-  splitDuplicates,
-  existingImportTransactions,
-  type BrokerFormat,
-  type CsvRejection,
-  type ImportedTx,
-} from "@/lib/csv-import";
-import type { Lang } from "@/lib/i18n";
-import { proCopy } from "@/lib/pro-i18n";
+import { supabase } from "@/integrations/supabase/client";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { notifyImportWithUndo } from "@/lib/import-undo";
 import {
   brokerConnectionStates,
   connectDirectBroker,
   disconnectDirectBroker,
   syncDirectBroker,
 } from "@/lib/brokers.functions";
+import {
+  BROKER_FORMATS,
+  detectBrokerFormat,
+  detectFeeColumns,
+  existingImportTransactions,
+  GENERIC_TEMPLATE,
+  parseBrokerCsv,
+  reconciliationTotals,
+  rejectedCsvRows,
+  rowsForImport,
+  splitDuplicates,
+  type BrokerFormat,
+  type CsvRejection,
+  type ImportedTx,
+} from "@/lib/csv-import";
+import type { Lang } from "@/lib/i18n";
+import { notifyImportWithUndo } from "@/lib/import-undo";
+import { proCopy } from "@/lib/pro-i18n";
+import { usePortfolio } from "@/lib/store";
+import { trustCopy } from "@/lib/trust-i18n";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/brokers")({
   head: () => ({
     meta: [
-      { title: "Brokers — Capispot CSV import" },
+      { title: "Brokers — CapiSpot CSV import" },
       {
         name: "description",
         content:
           "Import your transactions for free from a broker CSV: Trading 212, Interactive Brokers, Revolut or a generic template. Pro adds read-only IBKR and Trading 212 sync.",
       },
-      { property: "og:title", content: "Brokers — Capispot" },
+      { property: "og:title", content: "Brokers — CapiSpot" },
       { property: "og:description", content: "Import your broker transactions from CSV." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -90,7 +92,7 @@ const DIRECT_BROKER_COPY = {
     ibkrHelp:
       "Enable Flex Web Service and create a Flex Query with Trades and dividend cash transactions. Choose a token expiry longer than the default 6 hours; renew it when IBKR expires it.",
     privacy:
-      "Credentials are encrypted on our server. Capispot uses read requests only and never places orders.",
+      "Credentials are encrypted on our server. CapiSpot uses read requests only and never places orders.",
     symbolHelp:
       "Review tickers in the import preview and correct them if the broker's symbol differs from the market symbol.",
     fetchError: "Could not connect or sync this broker.",
@@ -113,7 +115,7 @@ const DIRECT_BROKER_COPY = {
     ibkrHelp:
       "Активирай Flex Web Service и създай Flex Query с Trades и dividend cash transactions. Избери срок на token-а над стандартните 6 часа; поднови го при изтичане.",
     privacy:
-      "Данните за достъп се криптират на сървъра. Capispot използва само заявки за четене и никога не подава поръчки.",
+      "Данните за достъп се криптират на сървъра. CapiSpot използва само заявки за четене и никога не подава поръчки.",
     symbolHelp:
       "Провери тикерите в прегледа на импорта и ги коригирай, ако символът на брокера се различава от пазарния.",
     fetchError: "Брокерът не можа да се свърже или синхронизира.",
@@ -136,7 +138,7 @@ const DIRECT_BROKER_COPY = {
     ibkrHelp:
       "Aktiviere Flex Web Service und erstelle eine Flex Query mit Trades und Dividend Cash Transactions. Wähle eine längere Token-Laufzeit als die voreingestellten 6 Stunden.",
     privacy:
-      "Zugangsdaten werden serverseitig verschlüsselt. Capispot verwendet nur Leseanfragen und platziert keine Orders.",
+      "Zugangsdaten werden serverseitig verschlüsselt. CapiSpot verwendet nur Leseanfragen und platziert keine Orders.",
     symbolHelp:
       "Prüfe die Ticker in der Importvorschau und korrigiere sie, falls das Brokersymbol vom Marktsymbol abweicht.",
     fetchError: "Broker konnte nicht verbunden oder synchronisiert werden.",
@@ -159,7 +161,7 @@ const DIRECT_BROKER_COPY = {
     ibkrHelp:
       "Activa Flex Web Service y crea una consulta Flex con Trades y dividend cash transactions. Elige una duración superior a las 6 horas predeterminadas.",
     privacy:
-      "Las credenciales se cifran en el servidor. Capispot solo usa solicitudes de lectura y nunca envía órdenes.",
+      "Las credenciales se cifran en el servidor. CapiSpot solo usa solicitudes de lectura y nunca envía órdenes.",
     symbolHelp:
       "Revisa los símbolos en la vista previa y corrígelos si el símbolo del bróker difiere del símbolo de mercado.",
     fetchError: "No se pudo conectar o sincronizar el bróker.",
@@ -182,7 +184,7 @@ const DIRECT_BROKER_COPY = {
     ibkrHelp:
       "Attiva Flex Web Service e crea una Flex Query con Trades e dividend cash transactions. Scegli una scadenza superiore alle 6 ore predefinite.",
     privacy:
-      "Le credenziali sono cifrate sul server. Capispot usa solo richieste di lettura e non invia mai ordini.",
+      "Le credenziali sono cifrate sul server. CapiSpot usa solo richieste di lettura e non invia mai ordini.",
     symbolHelp:
       "Controlla i ticker nell'anteprima e correggili se il simbolo del broker è diverso da quello di mercato.",
     fetchError: "Impossibile collegare o sincronizzare il broker.",
@@ -207,6 +209,7 @@ function Brokers() {
   const [preview, setPreview] = useState<StagedImport | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
 
   if (!p.user)
     return (
@@ -280,14 +283,19 @@ function Brokers() {
     await p.reload();
   };
   const upload = async (brokerId: string, fmt: string, file: File) => {
+    if (preparing || busy) return;
+    setPreparing(true);
+    setPreview(null);
     setImportResult(null);
     trackAnalyticsEvent("csv_import_started");
     try {
+      if (file.size > 10 * 1024 * 1024) throw new Error(trustCopy[p.lang].fileError);
       const text = await file.text();
       const detected = detectBrokerFormat(text);
-      if (!detected) throw new Error("CSV format not recognized");
+      if (!detected) throw new Error(trustCopy[p.lang].fileError);
       const rows = parseBrokerCsv(detected, text);
       const rejectedRows = rejectedCsvRows(detected, text);
+      if (rows.length + rejectedRows.length > 10000) throw new Error(trustCopy[p.lang].fileError);
       const existing = existingImportTransactions(p.transactions, p.assets, brokerId);
       const normalized = await p.normalizeImportRows(rows);
       setPreview({
@@ -300,7 +308,13 @@ function Brokers() {
         ...splitDuplicates(rows, existing, normalized),
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error");
+      toast.error(
+        err instanceof Error && err.message === trustCopy[p.lang].fileError
+          ? err.message
+          : trustCopy[p.lang].fileError,
+      );
+    } finally {
+      setPreparing(false);
     }
   };
   const confirmImport = async () => {
@@ -385,6 +399,15 @@ function Brokers() {
         <h1 className="font-display text-2xl font-bold">{p.t("brokers")}</h1>
         <span className="text-sm text-muted-foreground">{p.isPro ? p.t("pro") : p.t("free")}</span>
       </div>
+      <FirstImportWizard
+        lang={p.lang}
+        brokers={p.brokers}
+        onCreate={add}
+        onUpload={upload}
+        preview={!!preview}
+        completed={!!importResult}
+        preparing={preparing || busy}
+      />
       {importResult && (
         <ImportResultCard
           lang={p.lang}
@@ -534,7 +557,7 @@ const IMPORT_GUIDE = {
       "Importing the same file twice is safe: duplicates are detected.",
       "If a ticker is not recognised, correct it in the preview so live prices can be found.",
       "To update later, export a fresh CSV and import it again: only new rows are added.",
-      "Pro adds read-only sync for Interactive Brokers and Trading 212. Capispot never places orders.",
+      "Pro adds read-only sync for Interactive Brokers and Trading 212. CapiSpot never places orders.",
     ],
   },
   bg: {
@@ -569,7 +592,7 @@ const IMPORT_GUIDE = {
       "Импортът на един и същ файл два пъти е безопасен: дубликатите се откриват.",
       "Ако тикер не е разпознат, поправи го в прегледа, за да се намерят живи цени.",
       "За обновяване по-късно експортирай нов CSV и го импортирай: добавят се само новите редове.",
-      "Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. Capispot никога не подава поръчки.",
+      "Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. CapiSpot никога не подава поръчки.",
     ],
   },
 };
@@ -936,7 +959,11 @@ function ImportPreview({
                 {preview.rejectedRows.slice(0, 50).map((rejected) => (
                   <tr key={rejected.row}>
                     <td className="px-2 py-1.5 tabular-nums">{rejected.row}</td>
-                    <td className="max-w-72 truncate px-2 py-1.5 font-mono" title={rejected.raw}>
+                    <td
+                      data-private="raw"
+                      className="max-w-72 truncate px-2 py-1.5 font-mono"
+                      title={rejected.raw}
+                    >
                       {rejected.raw}
                     </td>
                     <td className="px-2 py-1.5">{c.rejectionReasons[rejected.reason]}</td>
@@ -1078,15 +1105,15 @@ function ImportResultCard({
             <h2 className="font-display font-semibold">{c.title}</h2>
             <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
               <div className="rounded-xl bg-background/70 p-3">
-                <dt className="text-muted-foreground">{c.imported}</dt>
+                <dt className="text-muted-foreground">{trustCopy[lang].summary[0]}</dt>
                 <dd className="mt-0.5 font-semibold tabular-nums">{result.imported}</dd>
               </div>
               <div className="rounded-xl bg-background/70 p-3">
-                <dt className="text-muted-foreground">{c.duplicates}</dt>
+                <dt className="text-muted-foreground">{trustCopy[lang].summary[1]}</dt>
                 <dd className="mt-0.5 font-semibold tabular-nums">{result.duplicates}</dd>
               </div>
               <div className="rounded-xl bg-background/70 p-3">
-                <dt className="text-muted-foreground">{c.ignored}</dt>
+                <dt className="text-muted-foreground">{trustCopy[lang].summary[2]}</dt>
                 <dd className="mt-0.5 font-semibold tabular-nums">{result.ignoredRows}</dd>
               </div>
             </dl>

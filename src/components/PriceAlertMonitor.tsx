@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
-import { marketQuote } from "@/lib/market.functions";
-import { alertCrossed, alertKey } from "@/lib/watchlist";
+import { useWatchState } from "@/hooks/use-watch-state";
 import { priceAlertCopy } from "@/lib/extras-i18n";
 import { languageLocale } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
+import { marketQuote } from "@/lib/market.functions";
+import { usePortfolio } from "@/lib/store";
+import { alertCrossed, alertKey } from "@/lib/watchlist";
+import { useQueries } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 
 const CRYPTO = new Set(
   MARKET_ASSETS.filter((asset) => asset.type === "crypto").map((a) => a.symbol),

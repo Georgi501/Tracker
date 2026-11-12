@@ -1,6 +1,6 @@
+import { isIsin, searchCatalog, ucitsInfo } from "@/lib/market-search";
+import { nativeCurrency, resolveAsset } from "@/lib/transaction-entry";
 import { describe, expect, it } from "vitest";
-import { searchCatalog, ucitsInfo, isIsin } from "@/lib/market-search";
-import { nativeCurrency, resolveAsset } from "@/components/AddTransactionDialog";
 describe("UCITS ETFs", () => {
   it("finds VWCE by ISIN", () => {
     expect(searchCatalog("IE00BK5BQT80")[0]?.symbol).toBe("VWCE.DE");

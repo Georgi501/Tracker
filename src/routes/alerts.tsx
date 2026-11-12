@@ -1,30 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { Bell, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 import { Card } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
+import { useWatchState } from "@/hooks/use-watch-state";
+import { languageLocale } from "@/lib/i18n";
+import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketQuote } from "@/lib/market.functions";
+import { usePortfolio } from "@/lib/store";
 import {
   alertKey,
   alertTriggered,
   readAlerts,
   readWatchlist,
+  SYMBOL_RE,
   writeAlerts,
   writeWatchlist,
-  SYMBOL_RE,
 } from "@/lib/watchlist";
-import { MARKET_ASSETS } from "@/lib/market-search";
-import { languageLocale } from "@/lib/i18n";
+import { useQueries } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Bell, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/alerts")({
   head: () => ({
-    meta: [{ title: "Price alerts — Capispot" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Price alerts — CapiSpot" }, { name: "robots", content: "noindex" }],
   }),
   component: Alerts,
 });

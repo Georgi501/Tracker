@@ -1,20 +1,20 @@
-import type { ReactNode } from "react";
-import { useState } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { BarChart3, Building2, ChartNoAxesCombined, UsersRound } from "lucide-react";
+import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QuoteFreshness } from "@/components/QuoteFreshness";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import type { MarketAsset } from "@/lib/market-search";
 import {
   marketCompanyResearch,
   marketDetails,
   marketStats,
   searchMarket,
 } from "@/lib/market.functions";
-import { languageLocale, type Lang } from "@/lib/i18n";
-import { ProGate, BarsSilhouette } from "@/components/ProFeatures";
-import type { MarketAsset } from "@/lib/market-search";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { BarChart3, Building2, ChartNoAxesCombined, UsersRound } from "lucide-react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 const COPY = {
   en: {
@@ -700,7 +700,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
     icon: ReactNode,
     items: { label: string; value: string; help?: string }[],
   ) => (
-    <section className="rounded-xl border border-border bg-background/70 p-4">
+    <section key={title} className="rounded-xl border border-border bg-background/70 p-4">
       <h4 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold">
         <span className="text-primary">{icon}</span>
         {title}

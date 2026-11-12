@@ -1,16 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowUpRight,
-  BookmarkCheck,
-  ChevronDown,
-  Newspaper,
-  RefreshCw,
-  Search,
-  Star,
-} from "lucide-react";
-import { toast } from "sonner";
+import { Card, Delta } from "@/components/AppShell";
+import { AssetExtras } from "@/components/AssetExtras";
+import { CompanyLogo } from "@/components/CompanyLogo";
+import { CompanyOverview } from "@/components/CompanyOverview";
+import { KeyStats } from "@/components/KeyStats";
+import { ProCompanyResearch } from "@/components/ProCompanyResearch";
+import { ProFinancials } from "@/components/ProFinancials";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,31 +14,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, Delta } from "@/components/AppShell";
-import { usePortfolio, pct } from "@/lib/store";
+import { useWatchState } from "@/hooks/use-watch-state";
+import { CRYPTO_ASSETS } from "@/lib/crypto-assets";
 import { languageLocale } from "@/lib/i18n";
 import { marketCopy } from "@/lib/market-i18n";
 import {
-  MARKET_ASSETS,
   filterAndSortMarketAssets,
   groupMarketListings,
+  MARKET_ASSETS,
   marketListingDetails,
   marketSearchSchema,
   searchCatalog,
   ucitsInfo,
+  type MarketAsset,
   type MarketAssetSort,
   type MarketAssetTypeFilter,
-  type MarketAsset,
 } from "@/lib/market-search";
-import { CRYPTO_ASSETS } from "@/lib/crypto-assets";
 import { marketQuote, searchMarket, type MarketNews } from "@/lib/market.functions";
-import { AssetExtras, useWatchState } from "@/components/AssetExtras";
-import { CompanyLogo } from "@/components/CompanyLogo";
-import { KeyStats } from "@/components/KeyStats";
-import { CompanyOverview } from "@/components/CompanyOverview";
-import { ProCompanyResearch } from "@/components/ProCompanyResearch";
-import { ProFinancials } from "@/components/ProFinancials";
+import { pct, usePortfolio } from "@/lib/store";
 import { writeWatchlist } from "@/lib/watchlist";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  ArrowUpRight,
+  BookmarkCheck,
+  ChevronDown,
+  Newspaper,
+  RefreshCw,
+  Search,
+  Star,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const NEWS_LABEL = {
@@ -77,13 +78,13 @@ const BROWSE_CATEGORIES: BrowseCategory[] = ["featured", "stocks", "etfs", "cryp
 export const Route = createFileRoute("/markets")({
   head: () => ({
     meta: [
-      { title: "Asset search — Capispot Portfolio Tracker" },
+      { title: "Asset search — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content:
           "Search stocks, ETFs and crypto by company name or ticker, then open the latest available quote, price chart and company details in one place.",
       },
-      { property: "og:title", content: "Asset search — Capispot" },
+      { property: "og:title", content: "Asset search — CapiSpot" },
       {
         property: "og:description",
         content: "Find Meta, Netflix and other assets with market quote details.",

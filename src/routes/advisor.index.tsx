@@ -1,20 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Card } from "@/components/AppShell";
 import { AdvisorLayout } from "@/components/AdvisorLayout";
-import { usePortfolio } from "@/lib/store";
+import { Card } from "@/components/AppShell";
 import { advisorCopy } from "@/lib/advisor-i18n";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/advisor/")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "AI Advisor — Capispot Ask about your portfolio" },
+      { title: "AI Advisor — CapiSpot Ask about your portfolio" },
       {
         name: "description",
         content:
           "Pro: ask questions about your positions and transactions and get answers based on your real portfolio data.",
       },
-      { property: "og:title", content: "AI Advisor — Capispot" },
+      { property: "og:title", content: "AI Advisor — CapiSpot" },
       {
         property: "og:description",
         content: "Personalized answers about your own portfolio, for Pro members.",

@@ -1,25 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AdvisorLayout } from "@/components/AdvisorLayout";
+import { Card } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { advisorCopy } from "@/lib/advisor-i18n";
+import { usePortfolio } from "@/lib/store";
 import { useChat } from "@ai-sdk/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { ArrowUp, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { ArrowUp, Square } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/AppShell";
-import { AdvisorLayout } from "@/components/AdvisorLayout";
-import { Button } from "@/components/ui/button";
-import { usePortfolio } from "@/lib/store";
-import { advisorCopy } from "@/lib/advisor-i18n";
 
 export const Route = createFileRoute("/advisor/$threadId")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Conversation — Capispot AI Advisor" },
+      { title: "Conversation — CapiSpot AI Advisor" },
       { name: "description", content: "Your saved AI Advisor conversation about your portfolio" },
-      { property: "og:title", content: "AI Advisor conversation — Capispot" },
+      { property: "og:title", content: "AI Advisor conversation — CapiSpot" },
       {
         property: "og:description",
         content: "Answers grounded in your real positions and transactions.",

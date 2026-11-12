@@ -1,22 +1,22 @@
+import { Card } from "@/components/AppShell";
+import { Avatar } from "@/components/Avatar";
+import { CommunityUpsell } from "@/components/CommunityGate";
 import { EmptyState, ListSkeleton } from "@/components/SectionState";
+import { supabase } from "@/integrations/supabase/client";
+import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/store";
 import { uiStateCopy } from "@/lib/ui-state-copy";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/AppShell";
-import { Avatar } from "@/components/Avatar";
-import { usePortfolio } from "@/lib/store";
-import { languageLocale, type Lang } from "@/lib/i18n";
-import { CommunityUpsell } from "@/components/CommunityGate";
-import { avatarUrls, cc, PROFILE_COLS, type MemberProfile } from "@/lib/community";
 
 export const Route = createFileRoute("/messages")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Messages — Capispot" },
+      { title: "Messages — CapiSpot" },
       { name: "description", content: "Your private conversations with other investors." },
-      { property: "og:title", content: "Messages — Capispot" },
+      { property: "og:title", content: "Messages — CapiSpot" },
       { property: "og:description", content: "Private investor chat." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

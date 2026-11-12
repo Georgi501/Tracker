@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -73,7 +73,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "ETFs vs individual stocks: key differences — Capispot";
+const TITLE = "ETFs vs individual stocks: key differences — CapiSpot";
 const DESCRIPTION =
   "Compare ETFs and individual stocks by diversification, risk, costs, effort and tax considerations.";
 

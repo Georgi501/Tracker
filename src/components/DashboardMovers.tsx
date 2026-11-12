@@ -1,15 +1,15 @@
-import { Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
 import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
-import { useWatchState } from "@/components/AssetExtras";
-import { usePortfolio } from "@/lib/store";
+import { useWatchState } from "@/hooks/use-watch-state";
 import { languageLocale } from "@/lib/i18n";
 import { MARKET_ASSETS } from "@/lib/market-search";
 import { marketDetails, type ChartRange } from "@/lib/market.functions";
+import { usePortfolio } from "@/lib/store";
 import { rangeChange, sharedSparklineScale, sparklineReturns } from "@/lib/ticker-movement";
+import { useQueries } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useRef, useState } from "react";
 
 const POPULAR = [
   "AAPL",

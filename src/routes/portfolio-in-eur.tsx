@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -73,7 +73,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "Track an investment portfolio in EUR — Capispot";
+const TITLE = "Track an investment portfolio in EUR — CapiSpot";
 const DESCRIPTION =
   "Learn how EUR portfolio reporting works, how exchange rates affect values and why display currency is not tax advice.";
 

@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { articleJsonLd } from "@/lib/seo";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { articleJsonLd } from "@/lib/seo";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 type Guide = {
   title: string;
@@ -16,7 +16,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
     title: "Track dividends across all your brokers",
     intro:
-      "Dividends are easy to lose track of when you invest through several brokers. Here is how Capispot keeps them in one place.",
+      "Dividends are easy to lose track of when you invest through several brokers. Here is how CapiSpot keeps them in one place.",
     sections: [
       [
         "Received dividends",
@@ -24,7 +24,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Upcoming payments",
-        "Upcoming dividends come only from confirmed events published by the data provider. Capispot does not estimate or invent payments; if an event is not confirmed, nothing is shown.",
+        "Upcoming dividends come only from confirmed events published by the data provider. CapiSpot does not estimate or invent payments; if an event is not confirmed, nothing is shown.",
       ],
       [
         "Why it matters",
@@ -41,7 +41,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   bg: {
     title: "Следи дивидентите си от всички брокери",
     intro:
-      "Лесно е да изпуснеш дивидентите, когато инвестираш през няколко брокера. Ето как Capispot ги събира на едно място.",
+      "Лесно е да изпуснеш дивидентите, когато инвестираш през няколко брокера. Ето как CapiSpot ги събира на едно място.",
     sections: [
       [
         "Получени дивиденти",
@@ -49,7 +49,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
       ],
       [
         "Предстоящи плащания",
-        "Предстоящите дивиденти идват само от потвърдени събития, публикувани от доставчика на данни. Capispot не прави оценки и не измисля плащания; ако събитието не е потвърдено, нищо не се показва.",
+        "Предстоящите дивиденти идват само от потвърдени събития, публикувани от доставчика на данни. CapiSpot не прави оценки и не измисля плащания; ако събитието не е потвърдено, нищо не се показва.",
       ],
       [
         "Защо е важно",
@@ -65,7 +65,7 @@ const GUIDE: Record<"en" | "bg", Guide> = {
   },
 };
 
-const TITLE = "Track dividends across all your brokers — Capispot";
+const TITLE = "Track dividends across all your brokers — CapiSpot";
 const DESCRIPTION =
   "See received and confirmed upcoming dividends from all your brokers in one place. No estimates, only confirmed events.";
 

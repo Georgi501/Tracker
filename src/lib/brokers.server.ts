@@ -282,7 +282,7 @@ async function ibkrRequest(token: string, query: Record<string, string>) {
   url.searchParams.set("t", token);
   url.searchParams.set("v", "3");
   return fetch(url, {
-    headers: { "User-Agent": "Capispot/1.0 (read-only portfolio import)" },
+    headers: { "User-Agent": "CapiSpot/1.0 (read-only portfolio import)" },
     signal: AbortSignal.timeout(20_000),
   });
 }

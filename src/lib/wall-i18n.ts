@@ -50,7 +50,7 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Публикувай",
     moods: { brag: "Хваля се", vent: "Оплаквам се", question: "Въпрос", chat: "Разговор" },
     empty: "Още няма публикации. Бъди първият!",
-    team: "Екип Capispot",
+    team: "Екип CapiSpot",
     example: "Пример",
     exampleBody:
       "Така изглежда публикация: текст, настроение, етикети, реакции и по желание снимка на портфолиото ти — само до нивото, което избереш.",
@@ -92,7 +92,7 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Post",
     moods: { brag: "Bragging", vent: "Venting", question: "Question", chat: "Chat" },
     empty: "No posts yet. Be the first!",
-    team: "Capispot team",
+    team: "CapiSpot team",
     example: "Example",
     exampleBody:
       "This is what a post looks like: text, mood, tags, reactions and an optional portfolio snapshot — shared only up to the level you choose.",
@@ -134,7 +134,7 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Veröffentlichen",
     moods: { brag: "Angeben", vent: "Frust", question: "Frage", chat: "Plausch" },
     empty: "Noch keine Beiträge. Sei der Erste!",
-    team: "Capispot-Team",
+    team: "CapiSpot-Team",
     example: "Beispiel",
     exampleBody:
       "So sieht ein Beitrag aus: Text, Stimmung, Tags, Reaktionen und optional eine Portfolio-Momentaufnahme — nur bis zu der Stufe, die du wählst.",
@@ -176,7 +176,7 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Publicar",
     moods: { brag: "Presumo", vent: "Me quejo", question: "Pregunta", chat: "Charla" },
     empty: "Aún no hay publicaciones. ¡Sé el primero!",
-    team: "Equipo Capispot",
+    team: "Equipo CapiSpot",
     example: "Ejemplo",
     exampleBody:
       "Así se ve una publicación: texto, ánimo, etiquetas, reacciones y, si quieres, una instantánea de tu cartera — solo hasta el nivel que elijas.",
@@ -218,7 +218,7 @@ export const wallCopy: Record<Lang, WallCopy> = {
     post: "Pubblica",
     moods: { brag: "Mi vanto", vent: "Mi sfogo", question: "Domanda", chat: "Chiacchiere" },
     empty: "Ancora nessun post. Sii il primo!",
-    team: "Team Capispot",
+    team: "Team CapiSpot",
     example: "Esempio",
     exampleBody:
       "Ecco come appare un post: testo, umore, tag, reazioni e, se vuoi, un'istantanea del portafoglio — solo fino al livello che scegli.",

@@ -659,13 +659,6 @@ body::before {
   z-index: -1;
   pointer-events: none;
 }
-.dark body::before {
-  background-image:
-    radial-gradient(ellipse 100% 40% at 48% 0%, oklch(0.42 0.14 265 / 55%), transparent 72%),
-    radial-gradient(ellipse 90% 38% at 100% 22%, oklch(0.52 0.2 355 / 60%), transparent 70%),
-    radial-gradient(ellipse 90% 38% at 0% 58%, oklch(0.5 0.18 295 / 55%), transparent 70%),
-    radial-gradient(ellipse 90% 36% at 90% 100%, oklch(0.7 0.17 90 / 42%), transparent 70%);
-}
 .dark main .card-interactive.dashboard-primary-card {
   background-image: linear-gradient(
     155deg,
@@ -895,14 +888,6 @@ main .card-interactive.dashboard-primary-card {
 .dark main textarea {
   border-color: oklch(1 0 0 / 22%);
 }
-
-:root:not(.dark) body::before {
-  background-image:
-    radial-gradient(ellipse 80% 40% at 12% 0%, oklch(0.9 0.06 265 / 60%), transparent 70%),
-    radial-gradient(ellipse 70% 38% at 100% 8%, oklch(0.92 0.07 355 / 55%), transparent 70%),
-    radial-gradient(ellipse 70% 38% at 0% 60%, oklch(0.92 0.06 295 / 45%), transparent 70%),
-    radial-gradient(ellipse 70% 36% at 95% 100%, oklch(0.94 0.09 92 / 60%), transparent 70%);
-}
 :root:not(.dark) main .card-interactive.dashboard-primary-card {
   background-image: linear-gradient(
     155deg,
@@ -1003,9 +988,7 @@ main textarea {
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero-shot {
-    animation:
-      rise 0.7s ease-out both,
-      hero-float 7s ease-in-out 0.8s infinite;
+    animation: rise 0.7s ease-out both;
   }
   html {
     scroll-behavior: smooth;
@@ -1026,11 +1009,6 @@ main textarea {
   }
   details[open]::details-content {
     block-size: auto;
-  }
-}
-@keyframes hero-float {
-  50% {
-    translate: 0 -6px;
   }
 }
 @keyframes scroll-reveal {
@@ -1188,13 +1166,51 @@ main :is(h1, h2, h3) {
 
 /* Portfolio analytics: stable surfaces, with depth that works in both themes. */
 .analytics-surface {
-  background: linear-gradient(145deg, color-mix(in oklab,var(--card) 97%,var(--primary) 3%), var(--card));
-  box-shadow: inset 0 1px 0 color-mix(in oklab,var(--foreground) 4%,transparent),0 12px 32px -24px oklch(0 0 0 / 35%);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--card) 97%, var(--primary) 3%),
+    var(--card)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--foreground) 4%, transparent),
+    0 12px 32px -24px oklch(0 0 0 / 35%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
-.analytics-surface:hover {border-color:color-mix(in oklab,var(--primary) 35%,var(--border));}
-.metric-positive {border-top-color:color-mix(in oklab,var(--success) 45%,var(--border));}
-.metric-negative {border-top-color:color-mix(in oklab,var(--destructive) 45%,var(--border));}
-@media (prefers-reduced-motion:reduce) {.analytics-surface {transition:none;transform:none !important;}}
+@media (hover: hover) {
+  .analytics-surface:hover {
+    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+  }
+}
+.metric-positive {
+  border-top-color: color-mix(in oklab, var(--success) 45%, var(--border));
+}
+.metric-negative {
+  border-top-color: color-mix(in oklab, var(--destructive) 45%, var(--border));
+}
+@media (prefers-reduced-motion: reduce) {
+  .analytics-surface {
+    transition: none;
+    transform: none !important;
+  }
+}
 
-@media (prefers-reduced-motion: reduce) {main .card-interactive:hover,.hover-lift-card:hover {transform:none;}}
+@media (prefers-reduced-motion: reduce) {
+  main .card-interactive:hover,
+  .hover-lift-card:hover {
+    transform: none;
+  }
+}
+
+/* One page gutter token also respects landscape display cutouts. */
+
+.app-main {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+/* Screen privacy never changes financial inputs or exported source data. */
+.privacy-mode input[data-private-input] {
+  -webkit-text-security: disc;
+}

@@ -1,13 +1,13 @@
-import { SamplePortfolioPreview } from "@/components/SamplePortfolioPreview";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Info } from "lucide-react";
-import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { ProBadge } from "@/components/ProFeatures";
-import { dcfCopy } from "@/components/DcfCalculator";
+import { SamplePortfolioPreview } from "@/components/SamplePortfolioPreview";
 import { dcfAnalysis, scenario } from "@/lib/dcf";
-import { usePortfolio } from "@/lib/store";
+import { dcfCopy } from "@/lib/dcf-copy";
+import { experienceCopy } from "@/lib/experience-i18n";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { SAMPLE_DIVIDENDS, SAMPLE_HOLDINGS } from "@/lib/sample-portfolio";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Info } from "lucide-react";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -211,12 +211,14 @@ const usd = (n: number, locale: string) =>
   new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
 
 function DemoPage() {
   const p = usePortfolio();
   const c = COPY[p.lang];
+  const ux = experienceCopy[p.lang];
   const locale = languageLocale(p.lang);
   const rows = SAMPLE_HOLDINGS.map((r) => ({
     ...r,
@@ -274,14 +276,6 @@ function DemoPage() {
         <h1 className="font-display mt-3 text-balance text-2xl font-bold md:text-4xl">{c.title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{c.note}</p>
         <div className="mt-4 flex flex-wrap gap-2.5">
-          <Link
-            to="/demo"
-            hash="portfolio-preview"
-            className="press inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground"
-          >
-            {c.tryDemo}
-            <ArrowRight className="size-4" />
-          </Link>
           {p.user ? (
             <Link
               to="/holdings"
@@ -300,63 +294,33 @@ function DemoPage() {
               <ArrowRight className="size-4" />
             </Link>
           )}
-          <Link
-            to="/import-demo"
-            className="press inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
-          >
-            {c.sampleCsv}
-          </Link>
-          <Link
-            to="/markets"
-            className="press inline-flex min-h-11 items-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
-          >
-            {c.explore}
-          </Link>
         </div>
       </section>
 
-      <div id="portfolio-preview" className="grid scroll-mt-24 gap-4 md:grid-cols-3">
-        <div className="card-interactive rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">{c.value}</p>
-          <p className="numeric-display mt-1 text-2xl font-bold sm:text-3xl">
-            {usd(totalValue, locale)}
-          </p>
-        </div>
-        <div className="card-interactive rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">{c.costBasis}</p>
-          <p className="numeric-display mt-1 text-2xl font-bold sm:text-3xl">
-            {usd(totalCost, locale)}
-          </p>
-        </div>
-        <div className="card-interactive rounded-2xl border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">{c.gain}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <p
-              className={`numeric-display text-2xl font-bold sm:text-3xl ${
-                gain >= 0 ? "text-success" : "text-destructive"
-              }`}
-            >
-              {gain >= 0 ? "+" : "−"}
-              {usd(Math.abs(gain), locale)}
-            </p>
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums sm:text-sm ${
-                gain >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-              }`}
-            >
-              {gain >= 0 ? "+" : "−"}
-              {new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
-                Math.abs(gainPercent),
-              )}
-              %
+      <nav aria-label={ux.demoGuide} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {ux.steps.map((step, index) => (
+          <a
+            key={step}
+            href={["#demo-performance", "#demo-holdings", "#demo-import"][index]}
+            className="flex min-h-14 items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold hover:border-primary"
+          >
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              {index + 1}
             </span>
-          </div>
-        </div>
-      </div>
+            {step}
+          </a>
+        ))}
+      </nav>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.65fr)]">
-        <section aria-labelledby="sample-history-title">
-          <h2 id="sample-history-title" className="font-display mb-3 text-lg font-semibold">{c.historyTitle}</h2>
+        <section
+          id="demo-performance"
+          className="scroll-mt-40"
+          aria-labelledby="sample-history-title"
+        >
+          <h2 id="sample-history-title" className="font-display mb-3 text-lg font-semibold">
+            {c.historyTitle}
+          </h2>
           <SamplePortfolioPreview lang={p.lang} />
         </section>
 
@@ -392,18 +356,10 @@ function DemoPage() {
         </section>
       </div>
 
-      <section className="card-interactive rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <h2 className="font-display mb-3 text-lg font-semibold">{c.alloc}</h2>
-        <AllocationBreakdown
-          locale={languageLocale(p.lang)}
-          data={byClass}
-          totalLabel={c.totalValue}
-          formatValue={(value) => usd(value, locale)}
-        />
-      </section>
-
       <section className="card-interactive rounded-2xl border border-border bg-card p-3 sm:p-4">
-        <h2 className="font-display mb-3 text-lg font-semibold">{c.holdings}</h2>
+        <h2 id="demo-holdings" className="font-display mb-3 scroll-mt-40 text-lg font-semibold">
+          {c.holdings}
+        </h2>
         <table className="w-full table-fixed text-xs sm:text-sm">
           <thead className="text-left text-muted-foreground">
             <tr>
@@ -468,6 +424,19 @@ function DemoPage() {
         </table>
       </section>
 
+      <section
+        id="demo-import"
+        className="scroll-mt-40 rounded-2xl border border-primary/30 bg-primary/5 p-5"
+      >
+        <h2 className="font-display text-lg font-semibold">3. {ux.steps[2]}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{ux.importHint}</p>
+        <Link
+          to="/import-demo"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          {c.sampleCsv}
+        </Link>
+      </section>
       <section
         id="pro-preview"
         className="card-interactive scroll-mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5"

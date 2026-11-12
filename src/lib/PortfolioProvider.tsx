@@ -1,15 +1,15 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { trackAnalyticsEvent } from "./analytics";
+import { isValidIsoDate } from "./history";
+import { convertImport } from "./history.functions";
+import { dictionaries, isLang, languageLocale, translateLabel, type Lang } from "./i18n";
+import { currentUsdPrice, formatUsdAmount, type LiveFx } from "./live-fx";
+import { localDateString } from "./local-date";
+import { getExchangeRate } from "./market.functions";
 import {
   FX,
   brokerHoldings,
@@ -21,93 +21,15 @@ import {
   type Currency,
   type Transaction,
 } from "./portfolio";
-import { dictionaries, isLang, languageLocale, translateLabel, type Lang, type TKey } from "./i18n";
-import { useServerFn } from "@tanstack/react-start";
-import { useRouterState } from "@tanstack/react-router";
-import { getExchangeRate } from "./market.functions";
-import { getQuotes } from "./quotes.functions";
-import { convertImport } from "./history.functions";
-import type { ImportedTx } from "./csv-import";
-import { trackAnalyticsEvent } from "./analytics";
 import { increasesOversellAmount } from "./quality";
-import { isValidIsoDate } from "./history";
-import { localDateString } from "./local-date";
-import { currentUsdPrice, formatUsdAmount, type LiveFx } from "./live-fx";
-
-export interface Broker {
-  id: string;
-  name: string;
-  format: string;
-}
-
-export interface ManualAssetValuation {
-  id: string;
-  assetId: string;
-  date: string;
-  priceUsd: number;
-  note: string;
-}
-
-interface State {
-  lang: Lang;
-  setLang: (l: Lang) => void;
-  currency: Currency;
-  setCurrency: (c: Currency) => void;
-  theme: "light" | "dark";
-  toggleTheme: () => void;
-  user: User | null;
-  authReady: boolean;
-  authError: boolean;
-  accessReady: boolean;
-  portfolioReady: boolean;
-  dataUpdatedAt: number | null;
-  isPro: boolean;
-  isAdmin: boolean;
-  displayName: string;
-  assets: Asset[];
-  transactions: Transaction[];
-  brokers: Broker[];
-  brokerTransfers: BrokerTransfer[];
-  corporateActions: CorporateAction[];
-  manualValuations: ManualAssetValuation[];
-  dataError: boolean;
-  pricesLive: boolean;
-  priceNote: string | null;
-  eurPerUsd: number | null;
-  liveFx: LiveFx | null;
-  addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
-  createBrokerTransfer: (transfer: Omit<BrokerTransfer, "id" | "createdAt">) => Promise<void>;
-  updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;
-  saveManualValuation: (
-    assetId: string,
-    date: string,
-    priceUsd: number,
-    note: string,
-  ) => Promise<void>;
-  updateTransaction: (transaction: Transaction) => Promise<void>;
-  restoreTransaction: (transaction: Transaction) => Promise<void>;
-  deleteTransactions: (ids: string[]) => Promise<number>;
-  importTransactions: (
-    brokerId: string | null,
-    rows: ImportedTx[],
-  ) => Promise<{ count: number; transactionIds: string[]; createdAssetIds: string[] }>;
-  normalizeImportRows: (rows: ImportedTx[]) => Promise<ImportedTx[]>;
-  undoImport: (transactionIds: string[], createdAssetIds: string[]) => Promise<number>;
-  reload: () => Promise<void>;
-  t: (k: TKey) => string;
-  label: (s: string) => string;
-  money: (usd: number, opts?: { sign?: boolean; compact?: boolean }) => string;
-  /** Formats a USD amount in the asset's own quote currency; falls back to the base currency. */
-  moneyFor: (
-    usd: number,
-    asset: Asset | undefined,
-    opts?: { sign?: boolean; compact?: boolean },
-  ) => string;
-  holdings: ReturnType<typeof computeHoldings>;
-}
-// Keep one context instance across hot reloads so provider and consumers never diverge.
-const g = globalThis as { __folioCtx?: React.Context<State | null> };
-const Ctx = (g.__folioCtx ??= createContext<State | null>(null));
+import { getQuotes } from "./quotes.functions";
+import {
+  Ctx,
+  isPrerenderedPath,
+  type Broker,
+  type ManualAssetValuation,
+  type State,
+} from "./store";
 const KEY = "folio-state-v2";
 
 type AssetRow = {
@@ -124,34 +46,6 @@ type AssetRow = {
   bond_maturity_date: string | null;
   bond_face_value: number | null;
 };
-
-// Static public pages that must be present in the server HTML for search engines.
-export const PRERENDERED_PATHS: ReadonlySet<string> = new Set([
-  "/",
-  "/demo",
-  "/import-demo",
-  "/markets",
-  "/compare",
-  "/features",
-  "/fifo-guide",
-  "/trading212-import",
-  "/capital-gains-tax",
-  "/ibkr-import",
-  "/dividend-tracker",
-  "/average-cost",
-  "/etf-vs-stocks",
-  "/portfolio-in-eur",
-  "/csv-import",
-  "/revolut-import",
-  "/pricing",
-  "/terms",
-  "/privacy",
-  "/refund",
-  "/disclaimer",
-]);
-
-export const isPrerenderedPath = (pathname: string) =>
-  PRERENDERED_PATHS.has(pathname.replace(/\/+$/, "") || "/");
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -1026,12 +920,3 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     </Ctx.Provider>
   );
 }
-
-export function usePortfolio() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error("usePortfolio outside provider");
-  return c;
-}
-
-export const pct = (n: number, sign = true) =>
-  Number.isFinite(n) ? `${sign && n > 0 ? "+" : ""}${n.toFixed(2)}%` : "—";

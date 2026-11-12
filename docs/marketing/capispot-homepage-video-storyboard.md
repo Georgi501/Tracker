@@ -1,21 +1,21 @@
-# Capispot homepage video storyboard
+# CapiSpot homepage video storyboard
 
 ## Creative direction
 
 Produce two English cuts from one product-footage session:
 
-- **Visitor cut (60 seconds):** introduce Capispot's core portfolio tracking, then show what Pro adds.
+- **Visitor cut (60 seconds):** introduce CapiSpot's core portfolio tracking, then show what Pro adds.
 - **Signed-in cut (35 seconds):** focus only on Pro analysis and planning features.
 
 Use a 16:9 master with important UI kept inside a centered mobile-safe area. Capture the public sample portfolio and clearly retain its sample-data label. Never record a user's real account. Use controlled screen captures, quiet music, English captions, and no autoplay with sound.
 
-The [interactive product walkthrough](./capispot-video-preview.html) is embedded on the homepage. Visitors see the portfolio tour; signed-in users see the Pro tools tour. It uses screen captures from Capispot's real public pages, including the clearly labelled sample portfolio and the Free-vs-Pro comparison. The visitor cut runs for 36 seconds; the Pro cut runs for 30 seconds. Chapter controls and optional quiet ambient sound make it easy to review; the captures contain no personal portfolio data and are not the final voiced video.
+The [interactive product walkthrough](./capispot-video-preview.html) is embedded on the homepage. Visitors see the portfolio tour; signed-in users see the Pro tools tour. It uses screen captures from CapiSpot's real public pages, including the clearly labelled sample portfolio and the Free-vs-Pro comparison. The visitor cut runs for 36 seconds; the Pro cut runs for 30 seconds. Chapter controls and optional quiet ambient sound make it easy to review; the captures contain no personal portfolio data and are not the final voiced video.
 
 ## Visitor cut — 60 seconds
 
 | Time   | Picture and edit                                                                                                                   | Voiceover                                                                                                         | On-screen text                                              |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 0–4s   | Capispot logo; scattered asset names resolve into a clean portfolio view.                                                          | “Your investments deserve a clearer picture.”                                                                     | **Your investments, in one clear view.**                    |
+| 0–4s   | CapiSpot logo; scattered asset names resolve into a clean portfolio view.                                                          | “Your investments deserve a clearer picture.”                                                                     | **Your investments, in one clear view.**                    |
 | 4–12s  | Show the add/import flow, then a short manual transaction entry. Avoid showing credentials or broker account screens.              | “Bring your activity together with supported CSV imports or manual transactions.”                                 | **Import or add transactions**                              |
 | 12–21s | Pan through holdings and allocation across stocks, ETFs, crypto, bonds, cash, and real estate. Keep the sample-data label visible. | “See different asset types, holdings, and allocation together in one portfolio.”                                  | **One portfolio. Multiple asset types.**                    |
 | 21–31s | Open dated portfolio history; switch from net worth to performance and select an index.                                            | “Follow dated portfolio history and compare cash-flow-adjusted performance with a market index.”                  | **Real dated history** · **Cash-flow-adjusted performance** |
@@ -41,10 +41,10 @@ Small end-card disclosure: “Analysis and scenarios are informational, not pers
 
 ## Footage and publication checklist
 
-- Record using the clearly labeled sample portfolio or a dedicated test account with no personal information. The local walkthrough uses only public Capispot pages and illustrative sample data.
+- Record using the clearly labeled sample portfolio or a dedicated test account with no personal information. The local walkthrough uses only public CapiSpot pages and illustrative sample data.
 - Keep sample figures visibly identified as illustrative; do not present them as live performance.
 - Describe only the supported read-only IBKR and Trading 212 sync; do not imply other brokerage integrations, guaranteed returns, or that a rebalance preview executes trades.
 - Keep the index disclosure visible where comparison is shown: index lines represent price return, not total return.
 - Provide captions matching the English voiceover and a transcript for accessibility.
 - For the final video, use a poster image and `preload="none"`; require an explicit play action and provide keyboard-accessible native controls. Keep sound off until the visitor starts playback.
-- The homepage embeds the visitor cut for signed-out visitors and only the Pro cut for signed-in users. The walkthrough is lazy-loaded and keeps the original Capispot screens unmodified.
+- The homepage embeds the visitor cut for signed-out visitors and only the Pro cut for signed-in users. The walkthrough is lazy-loaded and keeps the original CapiSpot screens unmodified.

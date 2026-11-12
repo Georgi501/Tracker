@@ -1,20 +1,13 @@
+import { AllocationBreakdown } from "@/components/AllocationBreakdown";
+import { Card } from "@/components/AppShell";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { EtfOverlapCard } from "@/components/EtfOverlapCard";
+import { PerformanceAttribution } from "@/components/PerformanceAttribution";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
-import { proCopy } from "@/lib/pro-i18n";
-import { languageLocale } from "@/lib/i18n";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
-import { AllocationBreakdown } from "@/components/AllocationBreakdown";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getPortfolioHistory } from "@/lib/history.functions";
-import { confirmPortfolioSplit } from "@/lib/corporate-actions.functions";
-import { getBenchmarkHistory } from "@/lib/benchmark.functions";
-import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
-import { riskMetrics } from "@/lib/tools";
-import type { PortfolioPoint } from "@/lib/history";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { analyticsCopy } from "@/lib/analytics-i18n";
 import {
   analyticsReportCsv,
@@ -22,7 +15,34 @@ import {
   type AnalyticsReport,
   type AnalyticsReportSection,
 } from "@/lib/analytics-report";
-import { toast } from "sonner";
+import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
+import { getBenchmarkHistory } from "@/lib/benchmark.functions";
+import { confirmPortfolioSplit } from "@/lib/corporate-actions.functions";
+import type { PortfolioPoint } from "@/lib/history";
+import { getPortfolioHistory } from "@/lib/history.functions";
+import type { Lang } from "@/lib/i18n";
+import { languageLocale } from "@/lib/i18n";
+import { accountValues, assetCurrency, groupBy } from "@/lib/portfolio";
+import { proCopy } from "@/lib/pro-i18n";
+import {
+  comparisonReturns,
+  cumulativeReturns,
+  customRange,
+  dateInput,
+  DAY,
+  periodRange,
+  previousRange,
+  rangeReturn,
+  RETURN_BUCKETS,
+  RETURN_PERIODS,
+  type ReturnPeriod,
+} from "@/lib/return-periods";
+import { pct, usePortfolio } from "@/lib/store";
+import { riskMetrics } from "@/lib/tools";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useId, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -30,32 +50,13 @@ import {
   Legend,
   Line,
   LineChart,
-  ResponsiveContainer,
   ReferenceLine,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { Card } from "@/components/AppShell";
-import { pct, usePortfolio } from "@/lib/store";
-import { accountValues, assetCurrency, groupBy } from "@/lib/portfolio";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  comparisonReturns,
-  customRange,
-  dateInput,
-  DAY,
-  periodRange,
-  previousRange,
-  rangeReturn,
-  cumulativeReturns,
-  RETURN_BUCKETS,
-  RETURN_PERIODS,
-  type ReturnPeriod,
-} from "@/lib/return-periods";
-import type { Lang } from "@/lib/i18n";
+import { toast } from "sonner";
 
 const EMPTY_COPY: Record<
   Lang,
@@ -102,12 +103,12 @@ export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Analytics — Capispot Portfolio Tracker" },
+      { title: "Analytics — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content: "Portfolio returns by period and breakdown by asset, currency and asset class.",
       },
-      { property: "og:title", content: "Analytics — Capispot" },
+      { property: "og:title", content: "Analytics — CapiSpot" },
       {
         property: "og:description",
         content: "Returns by period, plus breakdowns by asset, currency and class.",
@@ -556,6 +557,7 @@ function Analytics() {
   return (
     <div className="grid gap-5 lg:grid-cols-3">
       <h1 className="font-display text-2xl font-bold lg:col-span-3">{p.t("analytics")}</h1>
+
       <Card className="lg:col-span-3">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display font-semibold">{p.t("returnsByPeriod")}</h3>
@@ -794,6 +796,14 @@ function Analytics() {
           />
         )}
       </Card>
+      <PerformanceAttribution
+        days={historyQuery.data?.attribution}
+        start={range?.start ?? 0}
+        end={range?.end ?? 0}
+        lang={p.lang}
+        currency={p.currency}
+        pending={historyQuery.isFetching}
+      />
       <Breakdown
         title={p.t("byAsset")}
         colorOffset={4}

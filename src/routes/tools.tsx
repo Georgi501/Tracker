@@ -1,24 +1,38 @@
-import { CompoundCalculator } from "@/components/CompoundCalculator";
-import { SnapshotCard } from "@/components/SnapshotCard";
-import { ScenarioStudio } from "@/components/ScenarioStudio";
 import { AllocationTargetsCard } from "@/components/AllocationTargetsCard";
-import { AssetRiskAnalysis } from "@/components/AssetRiskAnalysis";
-import { DividendIncomeDashboard } from "@/components/DividendIncomeDashboard";
-import { RecurringReminders } from "@/components/RecurringReminders";
-import { PortfolioReview, DataQuality, proToolsCopy } from "@/components/ProTools";
-import { CurveSilhouette, FireCalculator, ProGate } from "@/components/ProFeatures";
-import { DcfCalculator, dcfCopy } from "@/components/DcfCalculator";
-import { ThesisCheck, thesisCopy } from "@/components/ThesisCheck";
-import { proCopy } from "@/lib/pro-i18n";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
 import { Card, Delta } from "@/components/AppShell";
+import { AssetRiskAnalysis } from "@/components/AssetRiskAnalysis";
+import { CompoundCalculator } from "@/components/CompoundCalculator";
+import { DcfCalculator } from "@/components/DcfCalculator";
+import { DividendIncomeDashboard } from "@/components/DividendIncomeDashboard";
+import { ConcentrationCard, GoalsCard } from "@/components/Insights";
+import { CurveSilhouette, FireCalculator, ProGate } from "@/components/ProFeatures";
+import { DataQuality, PortfolioReview } from "@/components/ProTools";
+import { RecurringReminders } from "@/components/RecurringReminders";
+import { ScenarioStudio } from "@/components/ScenarioStudio";
+import { SnapshotCard } from "@/components/SnapshotCard";
+import { ThesisCheck } from "@/components/ThesisCheck";
 import { Button } from "@/components/ui/button";
+import { useWatchState } from "@/hooks/use-watch-state";
+import { parsePortfolioBackup } from "@/lib/backup";
+import {
+  detectBrokerFormat,
+  parseBrokerCsv,
+  rejectedCsvRows,
+  splitDuplicates,
+  type ImportedTx,
+} from "@/lib/csv-import";
+import { dcfCopy } from "@/lib/dcf-copy";
+import { extrasCopy } from "@/lib/extras-i18n";
+import { getPortfolioHistory } from "@/lib/history.functions";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import { notifyImportWithUndo } from "@/lib/import-undo";
+import { insightsCopy } from "@/lib/insights-i18n";
+import { MARKET_ASSETS } from "@/lib/market-search";
+import { marketQuote } from "@/lib/market.functions";
+import { proCopy } from "@/lib/pro-i18n";
+import { proToolsCopy } from "@/lib/pro-tools-copy";
 import { pct, usePortfolio } from "@/lib/store";
-import { toolsCopy } from "@/lib/tools-i18n";
+import { thesisCopy } from "@/lib/thesis-copy";
 import {
   classValues,
   exportCsv,
@@ -28,45 +42,33 @@ import {
   riskMetrics,
   taxReportCsv,
 } from "@/lib/tools";
-import { extrasCopy } from "@/lib/extras-i18n";
+import { toolsCopy } from "@/lib/tools-i18n";
 import {
   alertTriggered,
   readAlerts as readAlertsNow,
   readWatchlist,
+  SYMBOL_RE,
   writeAlerts,
   writeWatchlist,
-  SYMBOL_RE,
 } from "@/lib/watchlist";
-import { useWatchState } from "@/components/AssetExtras";
-import { Bell } from "lucide-react";
-import { getPortfolioHistory } from "@/lib/history.functions";
-import { marketQuote } from "@/lib/market.functions";
-import { ConcentrationCard, GoalsCard } from "@/components/Insights";
-import { insightsCopy } from "@/lib/insights-i18n";
-import { MARKET_ASSETS } from "@/lib/market-search";
-import { parsePortfolioBackup } from "@/lib/backup";
-import {
-  detectBrokerFormat,
-  parseBrokerCsv,
-  rejectedCsvRows,
-  splitDuplicates,
-  type ImportedTx,
-} from "@/lib/csv-import";
-import { languageLocale, type Lang } from "@/lib/i18n";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Bell, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { notifyImportWithUndo } from "@/lib/import-undo";
 const CRYPTO_SYMBOLS = MARKET_ASSETS.filter((a) => a.type === "crypto").map((a) => a.symbol);
 
 export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
-      { title: "Tools — Capispot Rebalancing, FIFO tax report & risk" },
+      { title: "Tools — CapiSpot Rebalancing, FIFO tax report & risk" },
       {
         name: "description",
         content:
           "Investor tools: buy-only rebalancing calculator, FIFO realized gains report, risk metrics from real history, watchlist, price alerts and portfolio export.",
       },
-      { property: "og:title", content: "Investor tools — Capispot" },
+      { property: "og:title", content: "Investor tools — CapiSpot" },
       {
         property: "og:description",
         content: "Rebalance, report realized gains with FIFO, measure risk and export your data.",
@@ -113,8 +115,8 @@ const BACKUP_COPY: Record<
     description: "Exports contain transaction details. Store backup files securely.",
     restore: "Restore from backup",
     restoreNote:
-      "Choose a Capispot JSON backup or generic transaction CSV. Existing data is not overwritten.",
-    csvFormat: "Choose a generic transaction CSV or a Capispot JSON backup.",
+      "Choose a CapiSpot JSON backup or generic transaction CSV. Existing data is not overwritten.",
+    csvFormat: "Choose a generic transaction CSV or a CapiSpot JSON backup.",
     csvRejected: (count) =>
       `${count} CSV rows could not be read. Review the file before restoring.`,
     empty: "The backup contains no transactions to restore.",
@@ -133,8 +135,8 @@ const BACKUP_COPY: Record<
     description: "Експортът съдържа подробности за сделките. Съхранявай архивите сигурно.",
     restore: "Възстанови от архив",
     restoreNote:
-      "Избери JSON архив от Capispot или общ CSV със сделки. Съществуващите данни няма да бъдат презаписани.",
-    csvFormat: "Избери общ CSV със сделки или JSON архив от Capispot.",
+      "Избери JSON архив от CapiSpot или общ CSV със сделки. Съществуващите данни няма да бъдат презаписани.",
+    csvFormat: "Избери общ CSV със сделки или JSON архив от CapiSpot.",
     csvRejected: (count) =>
       `${count} CSV реда не могат да бъдат прочетени. Провери файла преди възстановяване.`,
     empty: "Архивът няма сделки за възстановяване.",
@@ -153,8 +155,8 @@ const BACKUP_COPY: Record<
     description: "Exporte enthalten Transaktionsdetails. Bewahre Sicherungsdateien sicher auf.",
     restore: "Aus Sicherung wiederherstellen",
     restoreNote:
-      "Capispot-JSON-Sicherung oder generische Transaktions-CSV wählen. Bestehende Daten werden nicht überschrieben.",
-    csvFormat: "Generische Transaktions-CSV oder Capispot-JSON-Sicherung wählen.",
+      "CapiSpot-JSON-Sicherung oder generische Transaktions-CSV wählen. Bestehende Daten werden nicht überschrieben.",
+    csvFormat: "Generische Transaktions-CSV oder CapiSpot-JSON-Sicherung wählen.",
     csvRejected: (count) =>
       `${count} CSV-Zeilen konnten nicht gelesen werden. Prüfe die Datei vor der Wiederherstellung.`,
     empty: "Die Sicherung enthält keine wiederherzustellenden Transaktionen.",
@@ -174,8 +176,8 @@ const BACKUP_COPY: Record<
       "Las exportaciones contienen detalles de las operaciones. Guarda las copias de forma segura.",
     restore: "Restaurar desde copia",
     restoreNote:
-      "Elige una copia JSON de Capispot o un CSV genérico de operaciones. No se sobrescribirán datos.",
-    csvFormat: "Elige un CSV genérico de operaciones o una copia JSON de Capispot.",
+      "Elige una copia JSON de CapiSpot o un CSV genérico de operaciones. No se sobrescribirán datos.",
+    csvFormat: "Elige un CSV genérico de operaciones o una copia JSON de CapiSpot.",
     csvRejected: (count) =>
       `No se pudieron leer ${count} filas CSV. Revisa el archivo antes de restaurar.`,
     empty: "La copia no contiene operaciones para restaurar.",
@@ -195,8 +197,8 @@ const BACKUP_COPY: Record<
       "Le esportazioni contengono i dettagli delle operazioni. Conserva i backup in modo sicuro.",
     restore: "Ripristina da backup",
     restoreNote:
-      "Scegli un backup JSON Capispot o un CSV generico. I dati esistenti non verranno sovrascritti.",
-    csvFormat: "Scegli un CSV generico o un backup JSON Capispot.",
+      "Scegli un backup JSON CapiSpot o un CSV generico. I dati esistenti non verranno sovrascritti.",
+    csvFormat: "Scegli un CSV generico o un backup JSON CapiSpot.",
     csvRejected: (count) =>
       `${count} righe CSV non sono state lette. Controlla il file prima di ripristinare.`,
     empty: "Il backup non contiene operazioni da ripristinare.",
@@ -281,7 +283,7 @@ function Tools() {
         <h2 id="free-tools" className="mb-3 font-display text-lg font-semibold">
           {toolGroups.free}
         </h2>
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
           <CompoundCalculator />
           <Watchlist />
         </div>
@@ -290,7 +292,7 @@ function Tools() {
         <h2 id="portfolio-tools" className="mb-3 font-display text-lg font-semibold">
           {toolGroups.portfolio}
         </h2>
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
           {p.user && (
             <Card>
               <h3 className="font-display mb-3 font-semibold">{proToolsCopy[p.lang].quality}</h3>
@@ -307,7 +309,7 @@ function Tools() {
         <h2 id="pro-tools" className="mb-3 font-display text-lg font-semibold">
           {toolGroups.pro}
         </h2>
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
           <ProGate
             title={proCopy[p.lang].fire}
             desc={proCopy[p.lang].fireDesc}
@@ -401,7 +403,7 @@ function Tools() {
           </ProGate>
         </div>
       </section>
-      <div className="grid gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-5">
         <Card>
           <h3 className="font-display mb-3 font-semibold">{c.exportTitle}</h3>
           <p className="mb-3 text-xs leading-relaxed text-muted-foreground">

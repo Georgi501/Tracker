@@ -1,8 +1,11 @@
+import { supabase } from "@/integrations/supabase/client";
+import { trackAnalyticsEvent } from "@/lib/analytics";
+import { authCopy, authErrorKey } from "@/lib/auth-i18n";
+import { loadGoogleIdentityScript } from "@/lib/google-identity";
+import { usePortfolio } from "@/lib/store";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { usePortfolio } from "@/lib/store";
 
 const AUTH_CONTINUATION_KEY = "capispot-auth-continuation";
 
@@ -26,15 +29,12 @@ function safeAuthContinuation(value: string | null): string | null {
     return null;
   }
 }
-import { authCopy, authErrorKey } from "@/lib/auth-i18n";
-import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
 
 const GOOGLE_WEB_CLIENT_ID =
   "306300201431-r984q2kfae6tm75kt29htl8npnajbjh0.apps.googleusercontent.com";
-const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
 
 type GoogleCredentialResponse = { credential?: string };
 type GoogleButtonOptions = {
@@ -62,26 +62,6 @@ declare global {
       };
     };
   }
-}
-
-let googleScriptPromise: Promise<void> | null = null;
-
-function loadGoogleIdentityScript(): Promise<void> {
-  if (window.google?.accounts.id) return Promise.resolve();
-  if (googleScriptPromise) return googleScriptPromise;
-
-  googleScriptPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = GOOGLE_IDENTITY_SCRIPT;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => {
-      googleScriptPromise = null;
-      reject(new Error("Unable to load Google Identity Services"));
-    };
-    document.head.append(script);
-  });
-  return googleScriptPromise;
 }
 
 function createGoogleNonce(): string {
@@ -251,7 +231,7 @@ export function AuthForm({
     setGoogleReady(false);
     setGoogleLoadFailed(false);
 
-    void loadGoogleIdentityScript()
+    void loadGoogleIdentityScript(p.lang)
       .then(() => {
         if (!active) return;
         const googleIdentity = window.google?.accounts.id;

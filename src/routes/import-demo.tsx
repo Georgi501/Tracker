@@ -1,8 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CircleAlert, CircleCheck, Upload } from "lucide-react";
 import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { useEffect, useRef, useState } from "react";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   detectBrokerFormat,
   parseBrokerCsv,
@@ -12,7 +9,10 @@ import {
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
 import { SAMPLE_IBKR_CSV, SAMPLE_IMPORT_CSV, SAMPLE_TRADING212_CSV } from "@/lib/sample-import";
-import { trackAnalyticsEvent } from "@/lib/analytics";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, CircleAlert, CircleCheck, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
 const SAMPLE_CSVS: Record<BrokerFormat, string> = {
@@ -27,11 +27,11 @@ export const Route = createFileRoute("/import-demo")({
     z.object({ broker: z.string().optional().catch(undefined) }).parse(search),
   head: () => ({
     meta: [
-      { title: "Try a sample CSV import — Capispot" },
+      { title: "Try a sample CSV import — CapiSpot" },
       {
         name: "description",
         content:
-          "Preview how Capispot recognizes CSV transactions, detects duplicates and flags rows that need attention. The sample stays in your browser.",
+          "Preview how CapiSpot recognizes CSV transactions, detects duplicates and flags rows that need attention. The sample stays in your browser.",
       },
     ],
   }),

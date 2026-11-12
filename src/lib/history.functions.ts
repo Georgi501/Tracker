@@ -1,6 +1,6 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   buildPortfolioHistory,
   closeAt,
@@ -10,6 +10,7 @@ import {
   periodStart,
   type HistoryAsset,
 } from "./history";
+import { dailyAttribution } from "./performance-attribution";
 import {
   normalizeTransactionsForSplits,
   type CorporateAction,
@@ -58,6 +59,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
     }));
     if (!txs.length)
       return {
+        attribution: null,
         points: [],
         unavailable: false,
         assetReturns: [],
@@ -155,6 +157,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       );
       if (pendingSplits.length)
         return {
+          attribution: null,
           points: [],
           unavailable: true,
           assetReturns: [],
@@ -186,7 +189,8 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         gbp.prices,
         splitActions,
       );
-      if (history.unavailable) return { ...history, assetReturns: [], pendingSplits: [] };
+      if (history.unavailable)
+        return { ...history, attribution: null, assetReturns: [], pendingSplits: [] };
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
         .toISOString()
         .slice(0, 10);
@@ -228,10 +232,24 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           ? [{ assetId: asset.id, returnPct: (endValue / startValue - 1) * 100 }]
           : [];
       });
-      return { ...history, assetReturns, pendingSplits: [] };
+      return {
+        ...history,
+        attribution: dailyAttribution(
+          assets,
+          txs,
+          history.points,
+          data.currency,
+          eur.prices,
+          gbp.prices,
+          splitActions,
+        ),
+        assetReturns,
+        pendingSplits: [],
+      };
     } catch (error) {
       console.error("Could not build portfolio history", error);
       return {
+        attribution: null,
         points: [],
         unavailable: true,
         assetReturns: [],

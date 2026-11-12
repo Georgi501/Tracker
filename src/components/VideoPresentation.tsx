@@ -1,6 +1,6 @@
+import type { Lang } from "@/lib/i18n";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Lang } from "@/lib/i18n";
 
 type VideoMode = "visitor" | "pro";
 type AppTheme = "light" | "dark";
@@ -18,48 +18,48 @@ const COPY: Record<
 > = {
   en: {
     label: "PRODUCT WALKTHROUGH",
-    title: "See Capispot in action.",
+    title: "See CapiSpot in action.",
     description:
       "Explore real screens, from portfolio tracking to market context and Pro insights.",
     fullWalkthrough: "Open the full walkthrough",
-    visitorFrame: "Capispot portfolio walkthrough",
-    proFrame: "Capispot Pro tools walkthrough",
+    visitorFrame: "CapiSpot portfolio walkthrough",
+    proFrame: "CapiSpot Pro tools walkthrough",
   },
   bg: {
     label: "РАЗГЛЕДАЙ ПРОДУКТА",
-    title: "Виж Capispot в действие.",
+    title: "Виж CapiSpot в действие.",
     description:
       "Разгледай реални екрани — от проследяването на портфейл до пазарния контекст и Pro анализите.",
     fullWalkthrough: "Отвори пълното представяне",
-    visitorFrame: "Представяне на портфейла в Capispot",
-    proFrame: "Представяне на Pro инструментите в Capispot",
+    visitorFrame: "Представяне на портфейла в CapiSpot",
+    proFrame: "Представяне на Pro инструментите в CapiSpot",
   },
   de: {
     label: "PRODUKTEINBLICK",
-    title: "Capispot in Aktion erleben.",
+    title: "CapiSpot in Aktion erleben.",
     description:
       "Entdecke echte Ansichten – von der Portfolioübersicht bis zu Marktdaten und Pro-Analysen.",
     fullWalkthrough: "Vollständigen Rundgang öffnen",
-    visitorFrame: "Capispot-Portfolio-Rundgang",
-    proFrame: "Rundgang durch die Capispot-Pro-Tools",
+    visitorFrame: "CapiSpot-Portfolio-Rundgang",
+    proFrame: "Rundgang durch die CapiSpot-Pro-Tools",
   },
   es: {
     label: "RECORRIDO DEL PRODUCTO",
-    title: "Descubre Capispot en acción.",
+    title: "Descubre CapiSpot en acción.",
     description:
       "Explora pantallas reales, desde el seguimiento de cartera hasta el contexto de mercado y los análisis Pro.",
     fullWalkthrough: "Abrir el recorrido completo",
-    visitorFrame: "Recorrido por la cartera de Capispot",
-    proFrame: "Recorrido por las herramientas Pro de Capispot",
+    visitorFrame: "Recorrido por la cartera de CapiSpot",
+    proFrame: "Recorrido por las herramientas Pro de CapiSpot",
   },
   it: {
     label: "PANORAMICA DEL PRODOTTO",
-    title: "Scopri Capispot in azione.",
+    title: "Scopri CapiSpot in azione.",
     description:
       "Esplora schermate reali, dal monitoraggio del portafoglio al contesto di mercato e alle analisi Pro.",
     fullWalkthrough: "Apri la panoramica completa",
-    visitorFrame: "Panoramica del portafoglio Capispot",
-    proFrame: "Panoramica degli strumenti Pro di Capispot",
+    visitorFrame: "Panoramica del portafoglio CapiSpot",
+    proFrame: "Panoramica degli strumenti Pro di CapiSpot",
   },
 };
 
@@ -134,7 +134,6 @@ export function VideoPresentation({
           src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}&lang=${lang}`}
           className="block w-full border-0"
           style={{ height }}
-          allow="fullscreen"
           allowFullScreen
           loading="lazy"
         />

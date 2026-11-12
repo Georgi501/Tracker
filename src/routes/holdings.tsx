@@ -1,9 +1,22 @@
+import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
+import { AllocationCard } from "@/components/AllocationCard";
+import { Card, Delta } from "@/components/AppShell";
+import { CompanyLogo } from "@/components/CompanyLogo";
+import { HoldingValue } from "@/components/HoldingValue";
+import { EmptyIllustration, Sparkline } from "@/components/Motion";
+import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { EmptyState } from "@/components/SectionState";
-import { uiStateCopy } from "@/lib/ui-state-copy";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import { languageLocale, type Lang } from "@/lib/i18n";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
+import { marketQuote, searchMarket } from "@/lib/market.functions";
+import { isQuoteStale, type Asset, type AssetType } from "@/lib/portfolio";
+import { getSparklines } from "@/lib/sparklines.functions";
+import { pct, usePortfolio } from "@/lib/store";
+import { uiStateCopy } from "@/lib/ui-state-copy";
 import { useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowDown,
@@ -18,33 +31,20 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { CompanyLogo } from "@/components/CompanyLogo";
-import { HoldingValue } from "@/components/HoldingValue";
-import { QuoteFreshness } from "@/components/QuoteFreshness";
-import { Card, Delta } from "@/components/AppShell";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AddTransactionDialog, type TxPreset } from "@/components/AddTransactionDialog";
-import { pct, usePortfolio } from "@/lib/store";
-import { isQuoteStale, type Asset, type AssetType } from "@/lib/portfolio";
-import { marketQuote, searchMarket } from "@/lib/market.functions";
-import { getSparklines } from "@/lib/sparklines.functions";
-import { EmptyIllustration, Sparkline } from "@/components/Motion";
-import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
-import { AllocationCard } from "@/components/AllocationCard";
 
 export const Route = createFileRoute("/holdings")({
   head: () => ({
     meta: [
       { name: "robots", content: "noindex" },
-      { title: "Holdings — Capispot Portfolio Tracker" },
+      { title: "Holdings — CapiSpot Portfolio Tracker" },
       {
         name: "description",
         content:
           "Every position with quantity, price, average cost, market value and unrealised P/L, plus market quote search.",
       },
-      { property: "og:title", content: "Holdings — Capispot" },
+      { property: "og:title", content: "Holdings — CapiSpot" },
       {
         property: "og:description",
         content: "Search your positions and market quotes, then add a buy in one click.",

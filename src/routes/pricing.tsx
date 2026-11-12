@@ -1,33 +1,34 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { isCreemTestMode } from "@/lib/creem";
-import { paymentsCopy } from "@/lib/payments-i18n";
-import { Check, Bot, Flame, LayoutGrid, CalendarRange, RefreshCw } from "lucide-react";
-import { proCopy } from "@/lib/pro-i18n";
+import { Card } from "@/components/AppShell";
 import {
   BarsSilhouette,
   CurveSilhouette,
   HeatmapSilhouette,
   ProBadge,
 } from "@/components/ProFeatures";
-import { Card } from "@/components/AppShell";
-import { usePortfolio } from "@/lib/store";
-import { planCopy } from "@/lib/plan-i18n";
-import type { Lang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { isCreemTestMode } from "@/lib/creem";
+import { experienceCopy } from "@/lib/experience-i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
+import { paymentsCopy } from "@/lib/payments-i18n";
+import { planCopy } from "@/lib/plan-i18n";
+import { proCopy } from "@/lib/pro-i18n";
+import { usePortfolio } from "@/lib/store";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Bot, CalendarRange, Check, Flame, LayoutGrid, RefreshCw } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Capispot Free & Pro plans" },
+      { title: "Pricing — CapiSpot Free & Pro plans" },
       {
         name: "description",
         content:
           "Explore full company profiles for 2 companies per calendar week with a free account; each includes that company's DCF calculator in the same view, without using an extra view. The standalone DCF tool is Pro. Pro is €4.99/month or €49.99/year including VAT.",
       },
-      { property: "og:title", content: "Pricing — Capispot" },
+      { property: "og:title", content: "Pricing — CapiSpot" },
       {
         property: "og:description",
         content:
@@ -64,6 +65,7 @@ function Pricing() {
   const [promo, setPromo] = useState("");
   const promoValid = /^[A-Za-z0-9_-]{3,32}$/.test(promo.trim());
   const c = paymentsCopy[p.lang];
+  const ux = experienceCopy[p.lang];
   const pc = proCopy[p.lang];
   const { isPro, reload } = p;
   useEffect(() => {
@@ -230,14 +232,17 @@ function Pricing() {
         <Card className="hover-lift-card cq-card p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("free")}</h2>
           <p className="font-display my-3 text-4xl font-bold">€0</p>
-          <ul className="space-y-2">
-            <Feature>{p.t("freeF1")}</Feature>
-            <Feature>{p.t("freeF2")}</Feature>
-            <Feature>{p.t("freeF3")}</Feature>
-            {[5, 6, 7].map((i) => (
-              <Feature key={i}>{planCopy[p.lang].groups[i]?.free ?? ""}</Feature>
+          <ul className="space-y-3">
+            {ux.freeBenefits.map((benefit) => (
+              <Feature key={benefit}>{benefit}</Feature>
             ))}
           </ul>
+          <a
+            href="#plan-comparison"
+            className="mt-3 inline-flex min-h-11 items-center text-xs font-semibold text-primary underline underline-offset-4"
+          >
+            {ux.planDetails}
+          </a>
           <div className="mt-6">
             {p.user ? (
               <span className="text-sm text-muted-foreground">
@@ -257,27 +262,26 @@ function Pricing() {
         <Card className="hover-lift-card cq-card border-primary p-7">
           <h2 className="font-display text-xl font-semibold">{p.t("pro")}</h2>
           <p className="font-display my-3 text-4xl font-bold">
-            {yearly ? "€49.99" : "€4.99"}
+            {new Intl.NumberFormat(languageLocale(p.lang), {
+              style: "currency",
+              currency: "EUR",
+            }).format(yearly ? 49.99 : 4.99)}
             <span className="text-base font-medium text-muted-foreground">
               {" "}
               {yearly ? p.t("perYear") : p.t("perMonth")}
             </span>
           </p>
-          <ul className="space-y-2">
-            <Feature>{p.t("proF1")}</Feature>
-            <Feature>{p.t("proF2")}</Feature>
-            <Feature>{planCopy[p.lang].groups[1]?.pro ?? ""}</Feature>
-            <Feature>{planCopy[p.lang].groups[5]?.pro ?? ""}</Feature>
-            <Feature>{pc.heatmap}</Feature>
-            <Feature>{pc.income}</Feature>
-            <Feature>{pc.fire}</Feature>
-            <Feature>{pc.advisor}</Feature>
-            <Feature>{planCopy[p.lang].watchlist}</Feature>
-            <Feature>{pc.scenarioStudio}</Feature>
-            <Feature>{pc.allocationAlerts}</Feature>
-            <Feature>{pc.taxAwareRebalancing}</Feature>
-            <Feature>{pc.monthlyReport}</Feature>
+          <ul className="space-y-3">
+            {ux.proBenefits.map((benefit) => (
+              <Feature key={benefit}>{benefit}</Feature>
+            ))}
           </ul>
+          <a
+            href="#plan-comparison"
+            className="mt-3 inline-flex min-h-11 items-center text-xs font-semibold text-primary underline underline-offset-4"
+          >
+            {ux.planDetails}
+          </a>
           {yearly && p.user && !p.isPro && !activating && (
             <div className="mt-5">
               <label htmlFor="promo-code" className="text-xs font-semibold">
