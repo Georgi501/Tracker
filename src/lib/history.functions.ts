@@ -258,6 +258,8 @@ export const convertImport = createServerFn({ method: "POST" })
               fee: z.number().nonnegative().default(0),
               date: z.string().refine(isValidIsoDate, "Invalid transaction date"),
               currency: z.enum(["USD", "EUR", "BGN", "GBX", "GBP"]).default("USD"),
+              sourceTransactionId: z.string().max(512).optional(),
+              sourceExecutedAt: z.string().max(128).optional(),
               feeCurrency: z.enum(["USD", "EUR", "BGN", "GBX", "GBP"]).optional(),
               bondCouponRate: z.number().nonnegative().optional(),
               bondMaturityDate: z

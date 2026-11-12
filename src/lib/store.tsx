@@ -467,6 +467,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       fee: Number(r.fee ?? 0),
       date: r.date,
       ...(r.source_transaction_id ? { sourceTransactionId: r.source_transaction_id } : {}),
+      ...(r.source_executed_at ? { sourceExecutedAt: r.source_executed_at } : {}),
     }));
     const rows = (a.data ?? []) as AssetRow[];
     const latestValuationByAsset = new Map<string, (typeof valuationRows)[number]>();
@@ -843,6 +844,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         });
         const converted = normalized.map((row, index) => ({
           ...row,
+          ...(rows[index]?.sourceExecutedAt
+            ? { sourceExecutedAt: rows[index]!.sourceExecutedAt }
+            : {}),
           ...(rows[index]?.sourceTransactionId
             ? { sourceTransactionId: rows[index]!.sourceTransactionId }
             : {}),
@@ -900,6 +904,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                 fee: r.fee ?? 0,
                 date: r.date,
                 ...(r.sourceTransactionId ? { source_transaction_id: r.sourceTransactionId } : {}),
+                ...(r.sourceExecutedAt ? { source_executed_at: r.sourceExecutedAt } : {}),
               };
             }),
           )

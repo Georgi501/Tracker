@@ -19,6 +19,7 @@ import {
   rejectedCsvRows,
   rowsForImport,
   splitDuplicates,
+  existingImportTransactions,
   type BrokerFormat,
   type CsvRejection,
   type ImportedTx,
@@ -287,15 +288,7 @@ function Brokers() {
       if (!detected) throw new Error("CSV format not recognized");
       const rows = parseBrokerCsv(detected, text);
       const rejectedRows = rejectedCsvRows(detected, text);
-      const sym = new Map(p.assets.map((a) => [a.id, a.symbol]));
-      const existing = p.transactions.map((t) => ({
-        symbol: sym.get(t.assetId) ?? "",
-        kind: t.kind,
-        date: t.date,
-        quantity: t.quantity,
-        price: t.price,
-        fee: t.fee ?? 0,
-      }));
+      const existing = existingImportTransactions(p.transactions, p.assets, brokerId);
       const normalized = await p.normalizeImportRows(rows);
       setPreview({
         brokerId,
@@ -314,17 +307,11 @@ function Brokers() {
     if (!preview) return;
     setBusy(true);
     try {
-      const currentExisting = p.transactions.map((transaction) => ({
-        symbol: p.assets.find((asset) => asset.id === transaction.assetId)?.symbol ?? "",
-        kind: transaction.kind,
-        date: transaction.date,
-        quantity: transaction.quantity,
-        price: transaction.price,
-        fee: transaction.fee ?? 0,
-        ...(transaction.sourceTransactionId
-          ? { sourceTransactionId: transaction.sourceTransactionId }
-          : {}),
-      }));
+      const currentExisting = existingImportTransactions(
+        p.transactions,
+        p.assets,
+        preview.brokerId,
+      );
       const normalized = await p.normalizeImportRows(preview.fresh);
       const split = splitDuplicates(preview.fresh, currentExisting, normalized);
       if (split.duplicates.length) {
@@ -377,18 +364,7 @@ function Brokers() {
       );
       return;
     }
-    const sym = new Map(p.assets.map((asset) => [asset.id, asset.symbol]));
-    const existing = p.transactions.map((transaction) => ({
-      symbol: sym.get(transaction.assetId) ?? "",
-      kind: transaction.kind,
-      date: transaction.date,
-      quantity: transaction.quantity,
-      price: transaction.price,
-      fee: transaction.fee ?? 0,
-      ...(transaction.sourceTransactionId
-        ? { sourceTransactionId: transaction.sourceTransactionId }
-        : {}),
-    }));
+    const existing = existingImportTransactions(p.transactions, p.assets, brokerId);
     const normalized = await p.normalizeImportRows(rows);
     const split = splitDuplicates(rows, existing, normalized);
     setPreview({

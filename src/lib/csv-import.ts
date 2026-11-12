@@ -1,4 +1,4 @@
-import type { AssetType, TxKind } from "./portfolio";
+import type { AssetType, TxKind, Transaction } from "./portfolio";
 import { CRYPTO_SYMBOLS } from "./crypto-assets";
 import { isValidIsoDate } from "./history";
 
@@ -12,6 +12,7 @@ export const BROKER_FORMATS: { id: BrokerFormat; label: string }[] = [
 
 export interface ImportedTx {
   sourceTransactionId?: string | undefined;
+  sourceExecutedAt?: string | undefined; // Provider time, without inventing a timezone.
   symbol: string;
   name: string;
   assetType: AssetType;
@@ -175,6 +176,12 @@ const day = (s: string) => {
   }
   throw new Error(`Invalid transaction date: ${s}`);
 };
+const executionTime = (value: string): string | undefined =>
+  /\d{2}:\d{2}/.test(value) ? value.trim().replace(/^(\d{4}-\d{2}-\d{2})[T, ]+/, "$1 ") : undefined;
+const sourceIdentity = (id: string, prefix: string, time: string) => ({
+  ...(id.trim() ? { sourceTransactionId: prefix + id.trim() } : {}),
+  ...(executionTime(time) ? { sourceExecutedAt: executionTime(time) } : {}),
+});
 const CRYPTO = new Set([...CRYPTO_SYMBOLS, "MATIC"]);
 const guessType = (sym: string): AssetType => (CRYPTO.has(sym.toUpperCase()) ? "crypto" : "stock");
 const parseSafely = (parse: () => ImportedTx[]) => {
@@ -198,6 +205,7 @@ function generic(text: string): ImportedTx[] {
     price: ["price", "unitprice", "pricepershare", "priceperunit", "executionprice"],
     currency: ["currency", "pricecurrency", "settlementcurrency"],
     fee: ["fee", "fees", "commission", "transactionfee", "commissionamount"],
+    source_id: ["sourcetransactionid", "transactionid", "tradeid", "executionid", "id"],
   };
   const value = (row: string[], key: string) => {
     const index = headers.findIndex((header) => aliases[key]?.includes(header));
@@ -233,6 +241,7 @@ function generic(text: string): ImportedTx[] {
       return [
         {
           symbol,
+          ...sourceIdentity(value(row, "source_id"), "", value(row, "date")),
           name: value(row, "name") || symbol,
           assetType: at,
           kind,
@@ -263,6 +272,11 @@ function trading212(text: string): ImportedTx[] {
         name: g("name") || symbol,
         assetType: "stock" as AssetType,
         date: day(g("time")),
+        ...sourceIdentity(
+          g("id"),
+          a.includes("dividend") ? "t212:dividend:" : "t212:fill:",
+          g("time"),
+        ),
       };
       if (a.includes("dividend")) {
         const total = num(g("total")) || num(g("no. of shares")) * num(g("price / share"));
@@ -312,6 +326,7 @@ function revolut(text: string): ImportedTx[] {
         assetType: guessType(symbol),
         currency: currency(cur || "USD"),
         date: day(g("date")),
+        ...sourceIdentity(g("transaction id") || g("id"), "revolut:transaction:", g("date")),
       };
       if (t.includes("DIVIDEND"))
         return [
@@ -370,6 +385,7 @@ function ibkr(text: string): ImportedTx[] {
           price: toUsd(num(g("t. price"))),
           fee: Math.abs(num(g("comm/f"))),
           date: day(g("date/time")),
+          ...sourceIdentity(g("trade id") || g("transaction id"), "ibkr:trade:", g("date/time")),
         });
       } catch {
         continue;
@@ -391,6 +407,7 @@ function ibkr(text: string): ImportedTx[] {
           price: toUsd(amt),
           fee: 0,
           date: day(g("date")),
+          ...sourceIdentity(g("transaction id"), "ibkr:dividend:", g("date")),
         });
       } catch {
         continue;
@@ -518,42 +535,66 @@ export function detectBrokerFormat(text: string): BrokerFormat | null {
   return null;
 }
 
-/** Split parsed rows into new vs. existing transactions using the converted USD unit/total price. */
+/** All import entry points compare only the selected brokerage account. */
+export function existingImportTransactions(
+  transactions: Transaction[],
+  assets: { id: string; symbol: string }[],
+  brokerId: string,
+) {
+  const symbols = new Map(assets.map((asset) => [asset.id, asset.symbol]));
+  return transactions
+    .filter((transaction) => transaction.brokerId === brokerId)
+    .map((transaction) => ({
+      ...transaction,
+      symbol: symbols.get(transaction.assetId) ?? "",
+    }));
+}
+
+type ComparisonTransaction = Pick<
+  ImportedTx,
+  "symbol" | "date" | "quantity" | "price" | "fee" | "sourceTransactionId" | "sourceExecutedAt"
+> & { kind: string };
+
+/** Provider IDs are authoritative; legacy matches remain reviewable possible duplicates. */
 export function splitDuplicates(
   rows: ImportedTx[],
-  existing: {
-    symbol: string;
-    kind: string;
-    date: string;
-    quantity: number;
-    price: number;
-    fee?: number;
-    sourceTransactionId?: string;
-  }[],
+  existing: ComparisonTransaction[],
   normalizedRows: ImportedTx[] = rows,
 ) {
   if (rows.length !== normalizedRows.length)
     throw new Error("Duplicate comparison rows must match the imported rows.");
-  const key = (s: string, k: string, d: string, q: number, p: number, fee = 0) =>
-    `${s.toUpperCase()}|${k}|${d.slice(0, 10)}|${k === "dividend" ? 1 : q.toFixed(8)}|${p.toFixed(8)}|${fee.toFixed(8)}`;
-  const seen = new Set(
-    existing.map((e) => key(e.symbol, e.kind, e.date, e.quantity, e.price, e.fee ?? 0)),
-  );
-  const seenSourceIds = new Set(
-    existing.flatMap((transaction) =>
-      transaction.sourceTransactionId ? [transaction.sourceTransactionId] : [],
-    ),
-  );
+  const key = (r: ComparisonTransaction) =>
+    `${r.symbol.toUpperCase()}|${r.kind}|${r.date.slice(0, 10)}|${r.kind === "dividend" ? 1 : r.quantity.toFixed(8)}|${r.price.toFixed(8)}|${(r.fee ?? 0).toFixed(8)}`;
+  const seen = new Map<string, ComparisonTransaction[]>();
+  const sourceIds = new Set<string>();
+  const remember = (row: ComparisonTransaction) => {
+    const k = key(row);
+    const matches = seen.get(k) ?? [];
+    matches.push(row);
+    seen.set(k, matches);
+    if (row.sourceTransactionId) sourceIds.add(row.sourceTransactionId);
+  };
+  existing.forEach(remember);
   const fresh: ImportedTx[] = [];
   const duplicates: ImportedTx[] = [];
-  for (const [index, r] of rows.entries()) {
-    const normalized = normalizedRows[index]!;
-    const k = key(r.symbol, r.kind, r.date, r.quantity, normalized.price, normalized.fee);
+  for (const [index, row] of rows.entries()) {
+    const comparison = {
+      ...row,
+      price: normalizedRows[index]!.price,
+      fee: normalizedRows[index]!.fee,
+    };
     const duplicate =
-      seen.has(k) || (!!r.sourceTransactionId && seenSourceIds.has(r.sourceTransactionId));
-    (duplicate ? duplicates : fresh).push(r);
-    seen.add(k);
-    if (r.sourceTransactionId) seenSourceIds.add(r.sourceTransactionId);
+      (row.sourceTransactionId && sourceIds.has(row.sourceTransactionId)) ||
+      (seen.get(key(comparison)) ?? []).some((candidate) => {
+        if (row.sourceTransactionId && candidate.sourceTransactionId) return false;
+        return (
+          !row.sourceExecutedAt ||
+          !candidate.sourceExecutedAt ||
+          row.sourceExecutedAt === candidate.sourceExecutedAt
+        );
+      });
+    (duplicate ? duplicates : fresh).push(row);
+    remember(comparison);
   }
   return { fresh, duplicates };
 }

@@ -66,6 +66,7 @@ export interface Transaction {
   fee?: number; // USD
   date: string; // ISO date
   sourceTransactionId?: string;
+  sourceExecutedAt?: string;
 }
 
 export interface BrokerTransfer {

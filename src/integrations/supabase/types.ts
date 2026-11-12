@@ -668,6 +668,7 @@ export type Database = {
           price: number;
           quantity: number;
           source_transaction_id: string | null;
+          source_executed_at: string | null;
           user_id: string;
         };
         Insert: {
@@ -681,6 +682,7 @@ export type Database = {
           price: number;
           quantity: number;
           source_transaction_id?: string | null;
+          source_executed_at?: string | null;
           user_id?: string;
         };
         Update: {
@@ -694,6 +696,7 @@ export type Database = {
           price?: number;
           quantity?: number;
           source_transaction_id?: string | null;
+          source_executed_at?: string | null;
           user_id?: string;
         };
         Relationships: [
