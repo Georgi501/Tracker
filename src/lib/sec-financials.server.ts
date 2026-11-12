@@ -1,4 +1,5 @@
 ﻿import { z } from "zod";
+import { extractNvdaFinancedAssetPayments, NVDA_FINANCED_ASSET_TAG } from "./sec-nvda-fcf";
 import { extractSecAnnualHistory, type SecAnnualRow } from "./sec-financials";
 
 const tickerSchema = z.record(
@@ -22,7 +23,7 @@ export function createSecFinancialService({
   let lastRequest = -Infinity;
   let tickers: { expires: number; value: Promise<Map<string, number>> } | null = null;
   const histories = new Map<string, { expires: number; value: Promise<History> }>();
-  async function request(url: string) {
+  async function request(url: string, text = false) {
     const task = queue.then(async () => {
       await wait(Math.max(0, 500 - (now() - lastRequest)));
       lastRequest = now();
@@ -31,7 +32,7 @@ export function createSecFinancialService({
         signal: AbortSignal.timeout(15000),
       });
       if (!response.ok) throw new Error(`SEC financial data HTTP ${response.status}`);
-      return response.json() as Promise<unknown>;
+      return text ? response.text() : (response.json() as Promise<unknown>);
     });
     queue = task.catch(() => undefined);
     return task;
@@ -66,8 +67,51 @@ export function createSecFinancialService({
     if (!cached || cached.expires <= now()) {
       const value = request(
         `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, "0")}.json`,
-      ).then((payload) => {
-        const history = extractSecAnnualHistory(payload, { asOf, years: 10 });
+      ).then(async (payload) => {
+        let history = extractSecAnnualHistory(payload, { asOf, years: 10 });
+        if (history.cik !== cik) throw new Error("SEC company identity mismatch.");
+        if (cik === 1045810) {
+          const filings = new Map(
+            history.rows.flatMap((row) => {
+              const source = row.sources.operatingCashFlow;
+              return source ? [[source.accession, source] as const] : [];
+            }),
+          );
+          const payments: ReturnType<typeof extractNvdaFinancedAssetPayments> = [];
+          for (const [accession, source] of filings) {
+            try {
+              const base = `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replaceAll("-", "")}/`;
+              const index = z
+                .object({ directory: z.object({ item: z.array(z.object({ name: z.string() })) }) })
+                .parse(await request(base + "index.json"));
+              const documents = index.directory.item.filter((item) =>
+                /^nvda-\d{8}\.htm$/.test(item.name),
+              );
+              if (documents.length !== 1) continue;
+              const html = await request(base + documents[0]!.name, true);
+              if (typeof html !== "string") continue;
+              payments.push(
+                ...extractNvdaFinancedAssetPayments(html, { accession, filed: source.filed }),
+              );
+            } catch {
+              // Preserve other financial metrics; missing/unverified payments suppress FCF.
+            }
+          }
+          const enriched = z
+            .object({ facts: z.record(z.string(), z.unknown()) })
+            .passthrough()
+            .parse(payload);
+          history = extractSecAnnualHistory(
+            {
+              ...enriched,
+              facts: {
+                ...enriched.facts,
+                nvda: { [NVDA_FINANCED_ASSET_TAG]: { units: { USD: payments } } },
+              },
+            },
+            { asOf, years: 10 },
+          );
+        }
         if (history.cik !== cik) throw new Error("SEC company identity mismatch.");
         return history;
       });
