@@ -64,5 +64,4 @@ Fiscal 2026 reconciliation (USD millions): 102,718 operating cash flow minus
 6,042 productive-asset purchases minus 101 financed-asset principal payments
 = 96,575 free cash flow, matching NVIDIA's published reconciliation:
 https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Fourth-Quarter-and-Fiscal-2026/
-No missing payment is treated as zero. Broader productive-asset tags are not
-used as generic aliases for other companies.
+No missing payment is treated as zero. Productive-asset purchases are now handled as a distinct component with an explicitly labelled calculation, rather than as a PP&E alias. See [current validation coverage](financial-data-validation.md).

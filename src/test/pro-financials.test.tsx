@@ -304,6 +304,7 @@ describe("SEC financial source display", () => {
       currency: "USD",
       source: "SEC EDGAR",
       epsHistoryUnavailable: true,
+      fcfMethods: { "2026-05-31": "cash-ppe" },
       filings: {
         "2026-05-31": "https://www.sec.gov/Archives/edgar/data/1341439/example-index.html",
       },
@@ -325,4 +326,32 @@ describe("SEC financial source display", () => {
     expect(eps.queryByLabelText(/Change between/)).not.toBeInTheDocument();
     expect(screen.getByText(/FCF = operating cash flow/)).toBeInTheDocument();
   });
+});
+
+it("shows the issuer-specific FCF calculation instead of the generic PP&E formula", async () => {
+  state.financials.mockResolvedValue({
+    rows: [row("2026-01-25", { revenue: 215938000000, freeCashFlow: 96575000000 })],
+    currency: "USD",
+    source: "SEC EDGAR",
+    fcfMethods: { "2026-01-25": "nvda-reconciled" },
+  });
+  renderFinancials();
+  expect(await screen.findByText(/NVIDIA FCF = operating cash flow/)).toHaveTextContent(
+    "financed-asset principal payments",
+  );
+  expect(screen.queryByText(/FCF = operating cash flow − cash purchases/)).not.toBeInTheDocument();
+});
+
+it("does not show FCF growth across different calculation methods", async () => {
+  state.financials.mockResolvedValue({
+    rows: [row("2025-01-25", { freeCashFlow: 100 }), row("2026-01-25", { freeCashFlow: 200 })],
+    currency: "USD",
+    source: "SEC EDGAR",
+    fcfMethods: { "2025-01-25": "cash-ppe", "2026-01-25": "cash-productive-assets" },
+  });
+  renderFinancials();
+  const title = await screen.findByRole("heading", { name: "Free cash flow" });
+  const card = within(title.closest(".group")!);
+  expect(card.queryByLabelText(/Change between/)).not.toBeInTheDocument();
+  expect(await screen.findByText(/including software and intangibles/)).toBeInTheDocument();
 });

@@ -1,5 +1,6 @@
 ﻿import { z } from "zod";
-import { extractNvdaFinancedAssetPayments, NVDA_FINANCED_ASSET_TAG } from "./sec-nvda-fcf";
+import { extractSecInlinePayments } from "./sec-inline-payments";
+import { NVDA_FINANCED_ASSET_TAG } from "./sec-nvda-fcf";
 import { extractSecAnnualHistory, type SecAnnualRow } from "./sec-financials";
 
 const tickerSchema = z.record(
@@ -70,14 +71,24 @@ export function createSecFinancialService({
       ).then(async (payload) => {
         let history = extractSecAnnualHistory(payload, { asOf, years: 10 });
         if (history.cik !== cik) throw new Error("SEC company identity mismatch.");
-        if (cik === 1045810) {
+        const extension =
+          cik === 1045810
+            ? { namespace: "nvda", tag: NVDA_FINANCED_ASSET_TAG, document: /^nvda-\d{8}\.htm$/ }
+            : cik === 1018724
+              ? {
+                  namespace: "amzn",
+                  tag: "ProceedsFromPropertyPlantAndEquipmentSalesAndIncentives",
+                  document: /^amzn-\d{8}\.htm$/,
+                }
+              : null;
+        if (extension) {
           const filings = new Map(
             history.rows.flatMap((row) => {
               const source = row.sources.operatingCashFlow;
               return source ? [[source.accession, source] as const] : [];
             }),
           );
-          const payments: ReturnType<typeof extractNvdaFinancedAssetPayments> = [];
+          const payments: ReturnType<typeof extractSecInlinePayments> = [];
           for (const [accession, source] of filings) {
             try {
               const base = `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replaceAll("-", "")}/`;
@@ -85,13 +96,18 @@ export function createSecFinancialService({
                 .object({ directory: z.object({ item: z.array(z.object({ name: z.string() })) }) })
                 .parse(await request(base + "index.json"));
               const documents = index.directory.item.filter((item) =>
-                /^nvda-\d{8}\.htm$/.test(item.name),
+                extension.document.test(item.name),
               );
               if (documents.length !== 1) continue;
               const html = await request(base + documents[0]!.name, true);
               if (typeof html !== "string") continue;
               payments.push(
-                ...extractNvdaFinancedAssetPayments(html, { accession, filed: source.filed }),
+                ...extractSecInlinePayments(html, {
+                  accession,
+                  filed: source.filed,
+                  cik,
+                  tag: `${extension.namespace}:${extension.tag}`,
+                }),
               );
             } catch {
               // Preserve other financial metrics; missing/unverified payments suppress FCF.
@@ -106,7 +122,7 @@ export function createSecFinancialService({
               ...enriched,
               facts: {
                 ...enriched.facts,
-                nvda: { [NVDA_FINANCED_ASSET_TAG]: { units: { USD: payments } } },
+                [extension.namespace]: { [extension.tag]: { units: { USD: payments } } },
               },
             },
             { asOf, years: 10 },
@@ -133,10 +149,12 @@ export function createSecFinancialService({
     // Retain the latest reported EPS only. A dated, split-reconciled history is required before
     // comparing EPS across filings; do not join raw and split-adjusted share bases.
     const latestEps = [...history.rows].reverse().find((row) => row.dilutedEps != null)?.date;
-    const rows = history.rows.map(({ sources: _sources, start: _start, ...row }) => ({
-      ...row,
-      dilutedEps: row.date === latestEps ? row.dilutedEps : null,
-    }));
+    const rows = history.rows.map(
+      ({ sources: _sources, start: _start, fcfMethod: _fcfMethod, ...row }) => ({
+        ...row,
+        dilutedEps: row.date === latestEps ? row.dilutedEps : null,
+      }),
+    );
     const filing = (row: SecAnnualRow) =>
       row.sources.revenue ?? row.sources.netIncome ?? row.sources.operatingCashFlow;
     const filings = Object.fromEntries(
@@ -147,6 +165,9 @@ export function createSecFinancialService({
     );
     return {
       rows,
+      fcfMethods: Object.fromEntries(
+        history.rows.flatMap((row) => (row.fcfMethod ? [[row.date, row.fcfMethod]] : [])),
+      ),
       currency: history.currency,
       source: "SEC EDGAR" as const,
       epsHistoryUnavailable: true,

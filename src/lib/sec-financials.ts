@@ -16,7 +16,10 @@ const aliases = {
   netIncome: ["NetIncomeLoss"],
   dilutedEps: ["EarningsPerShareDiluted"],
   operatingCashFlow: ["NetCashProvidedByUsedInOperatingActivities"],
-  capex: ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"],
+  capex: ["PaymentsToAcquirePropertyPlantAndEquipment"],
+  productiveCapex: ["PaymentsToAcquireProductiveAssets"],
+  leasePrincipal: ["FinanceLeasePrincipalPayments"],
+  assetSaleProceeds: ["ProceedsFromPropertyPlantAndEquipmentSalesAndIncentives"],
   financedAssetPayments: [
     "PaymentsForFinancedPropertyPlantAndEquipmentAndIntangibleAssetsFinancingActivities",
   ],
@@ -41,14 +44,10 @@ const factSchema = z.object({
 const companySchema = z.object({
   cik: z.number().int().positive(),
   entityName: z.string(),
-  facts: z.object({
-    nvda: z
-      .record(z.string(), z.object({ units: z.record(z.string(), z.array(z.unknown())) }))
-      .optional(),
-    "us-gaap": z
-      .record(z.string(), z.object({ units: z.record(z.string(), z.array(z.unknown())) }))
-      .optional(),
-  }),
+  facts: z.record(
+    z.string(),
+    z.record(z.string(), z.object({ units: z.record(z.string(), z.array(z.unknown())) })),
+  ),
 });
 
 export interface SecEvidence {
@@ -61,12 +60,16 @@ export interface SecEvidence {
   filingUrl: string;
   derived: boolean;
 }
+export type SecFcfMethod =
+  "cash-ppe" | "cash-productive-assets" | "nvda-reconciled" | "amzn-reconciled" | "meta-reconciled";
+
 export interface SecAnnualRow extends FinancialSeriesRow {
+  fcfMethod?: SecFcfMethod;
   start: string;
   sources: Partial<Record<Metric, SecEvidence>>;
 }
 type Candidate = z.infer<typeof factSchema> & {
-  namespace: "us-gaap" | "nvda";
+  namespace: "us-gaap" | "nvda" | "amzn";
   tag: string;
   unit: "USD" | "USD/shares";
 };
@@ -74,7 +77,7 @@ type Candidate = z.infer<typeof factSchema> & {
 /**
  * Latest disclosed annual 10-K facts as of a fixed date, shared by the app and audit runner.
  * Fiscal periods come from start/end, never fy/frame (comparatives reuse the filing's fy).
- * Only the audited NVIDIA financed-asset extension is supported; other custom tags,
+ * Only audited issuer extensions are supported; other custom tags,
  * non-USD facts, quarterly/YTD and transition periods stay unavailable.
  */
 export function extractSecAnnualHistory(
@@ -89,7 +92,6 @@ export function extractSecAnnualHistory(
     .max(40)
     .parse(options.years ?? 10);
   const company = companySchema.parse(payload);
-  const concepts = company.facts["us-gaap"] ?? {};
   const candidates = new Map<string, Map<DirectMetric, Candidate[]>>();
   const starts = new Map<string, Set<string>>();
   const issues: string[] = [];
@@ -97,14 +99,15 @@ export function extractSecAnnualHistory(
     const metric = metricName as DirectMetric;
     const unit = metric === "dilutedEps" ? "USD/shares" : "USD";
     for (const tag of tags) {
-      // ProductiveAssets is broader than PP&E: use only for NVIDIA's audited FCF definition.
-      if (
-        (metric === "financedAssetPayments" || tag === "PaymentsToAcquireProductiveAssets") &&
-        company.cik !== 1045810
-      )
-        continue;
-      const namespace = metric === "financedAssetPayments" ? "nvda" : "us-gaap";
-      const concept = namespace === "nvda" ? company.facts.nvda?.[tag] : concepts[tag];
+      if (metric === "financedAssetPayments" && company.cik !== 1045810) continue;
+      if (metric === "assetSaleProceeds" && company.cik !== 1018724) continue;
+      const namespace =
+        metric === "financedAssetPayments"
+          ? "nvda"
+          : metric === "assetSaleProceeds"
+            ? "amzn"
+            : "us-gaap";
+      const concept = company.facts[namespace]?.[tag];
       for (const raw of concept?.units[unit] ?? []) {
         const parsed = factSchema.safeParse(raw);
         if (!parsed.success) continue;
@@ -178,9 +181,18 @@ export function extractSecAnnualHistory(
           (aliases[metric] as readonly string[]).indexOf(b.tag),
       )[0]!;
       picked.set(metric, preferred);
-      if (metric !== "capex" && metric !== "financedAssetPayments") {
-        row[metric] = preferred.val;
-        row.sources[metric] = evidence(preferred);
+      if (
+        ![
+          "capex",
+          "productiveCapex",
+          "leasePrincipal",
+          "assetSaleProceeds",
+          "financedAssetPayments",
+        ].includes(metric)
+      ) {
+        const displayedMetric = metric as Metric;
+        row[displayedMetric] = preferred.val;
+        row.sources[displayedMetric] = evidence(preferred);
       }
     }
     const derive = (
@@ -203,35 +215,68 @@ export function extractSecAnnualHistory(
         issues.push(`${end}: negative capex outflow; FCF omitted.`);
         return;
       }
-      const principal =
-        company.cik === 1045810 && metric === "freeCashFlow"
-          ? picked.get("financedAssetPayments")
-          : undefined;
-      if (
-        company.cik === 1045810 &&
-        metric === "freeCashFlow" &&
-        (!principal ||
-          principal.accn !== left.accn ||
-          principal.start !== left.start ||
-          principal.end !== left.end ||
-          principal.val < 0)
-      ) {
-        issues.push(`${end}: verified NVIDIA financed-asset payments unavailable; FCF omitted.`);
-        return;
-      }
-      row[metric] = left.val - right.val - (principal?.val ?? 0);
+      row[metric] = left.val - right.val;
       row.sources[metric] = {
         ...evidence(left),
-        tags: [
-          `${left.namespace}:${left.tag}`,
-          `${right.namespace}:${right.tag}`,
-          ...(principal ? [`${principal.namespace}:${principal.tag}`] : []),
-        ],
+        tags: [`${left.namespace}:${left.tag}`, `${right.namespace}:${right.tag}`],
         derived: true,
       };
     };
     derive("grossProfit", "revenue", "costOfRevenue");
-    derive("freeCashFlow", "operatingCashFlow", "capex");
+    // FCF has no universal issuer definition. Always retain the exact calculation method.
+    let method: SecFcfMethod = period.has("capex") ? "cash-ppe" : "cash-productive-assets";
+    let terms: [DirectMetric, number][] = [
+      ["operatingCashFlow", 1],
+      [period.has("capex") ? "capex" : "productiveCapex", -1],
+    ];
+    if (company.cik === 1045810) {
+      method = "nvda-reconciled";
+      terms = [
+        ["operatingCashFlow", 1],
+        ["productiveCapex", -1],
+        ["financedAssetPayments", -1],
+      ];
+    } else if (company.cik === 1018724) {
+      method = "amzn-reconciled";
+      terms = [
+        ["operatingCashFlow", 1],
+        ["productiveCapex", -1],
+        ["assetSaleProceeds", 1],
+      ];
+    } else if (company.cik === 1326801) {
+      method = "meta-reconciled";
+      terms = [
+        ["operatingCashFlow", 1],
+        ["capex", -1],
+        ["leasePrincipal", -1],
+      ];
+    }
+    const components = terms.map(([metric, sign]) => ({ fact: picked.get(metric), metric, sign }));
+    const base = components[0]!.fact;
+    if (
+      base &&
+      components.every(
+        ({ fact, metric }) =>
+          fact &&
+          fact.accn === base.accn &&
+          fact.start === base.start &&
+          fact.end === base.end &&
+          (metric === "operatingCashFlow" || fact.val >= 0),
+      )
+    ) {
+      row.freeCashFlow = components.reduce((sum, { fact, sign }) => sum + fact!.val * sign, 0);
+      row.fcfMethod = method;
+      row.sources.freeCashFlow = {
+        ...evidence(base),
+        derived: true,
+        tags: components.map(({ fact }) => `${fact!.namespace}:${fact!.tag}`),
+      };
+    } else if (base) {
+      issues.push(
+        `${end}: missing, conflicting or mismatched FCF components (${method}); FCF omitted.`,
+      );
+    }
+
     allRows.push(row);
   }
   const last = allRows.at(-1);

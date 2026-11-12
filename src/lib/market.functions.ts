@@ -372,6 +372,7 @@ export type { FinancialSeriesRow } from "./financial-series";
 export interface FinancialSeries {
   source?: "SEC EDGAR" | "Yahoo Finance";
   epsHistoryUnavailable?: boolean;
+  fcfMethods?: Record<string, import("./sec-financials").SecFcfMethod>;
   filings?: Record<string, string>;
   rows: FinancialSeriesRow[];
   currency: string | null;

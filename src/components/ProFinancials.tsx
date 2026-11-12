@@ -1,3 +1,4 @@
+import { secFcfLabels } from "@/lib/sec-fcf-labels";
 import { useId, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -37,7 +38,7 @@ const COPY = {
     availability: (available: number, total: number) => `${available} of ${total} years with data`,
     noData: "No data",
     secNote:
-      "GAAP financials from SEC filings. FCF = operating cash flow minus cash purchases of property, plant and equipment. Missing items are not estimated.",
+      "SEC financial statements. FCF is calculated from reported cash flows using the formulas below; it may differ from a company's adjusted non-GAAP figure. Missing items are not estimated.",
     epsUnavailable: "Historical EPS is hidden until stock split adjustments are verified.",
     historyQuarterly: (available: number) =>
       `${available} quarterly period${available === 1 ? "" : "s"} available`,
@@ -87,7 +88,7 @@ const COPY = {
     availability: (available: number, total: number) => `${available} от ${total} години с данни`,
     noData: "Няма данни",
     secNote:
-      "GAAP показатели от отчетите в SEC. FCF = оперативен паричен поток минус парични разходи за имоти, машини и оборудване. Липсващите данни не се оценяват.",
+      "Финансови отчети от SEC. FCF се изчислява от отчетените парични потоци по формулите по-долу и може да се различава от коригирания показател на компанията. Липсващите данни не се оценяват.",
     epsUnavailable: "Историческият EPS е скрит до потвърждение на корекциите за сплитове.",
     historyQuarterly: (available: number) => `Налични са ${available} тримесечни периода.`,
     historyTtm: (available: number) => `Налични са ${available} TTM периода.`,
@@ -138,7 +139,7 @@ const COPY = {
       `${available} von ${total} Jahren mit Daten`,
     noData: "Keine Daten",
     secNote:
-      "GAAP-Daten aus SEC-Berichten. FCF = operativer Cashflow minus Barzahlungen für Sachanlagen. Fehlende Werte werden nicht geschätzt.",
+      "SEC-Abschlüsse. FCF wird aus berichteten Zahlungsströmen nach den folgenden Formeln berechnet und kann vom bereinigten Unternehmenswert abweichen. Fehlende Werte werden nicht geschätzt.",
     epsUnavailable:
       "Historische EPS-Werte bleiben bis zur Prüfung der Aktiensplit-Anpassungen ausgeblendet.",
     historyQuarterly: (available: number) => `${available} Quartalsperioden verfügbar`,
@@ -190,7 +191,7 @@ const COPY = {
     availability: (available: number, total: number) => `${available} de ${total} años con datos`,
     noData: "Sin datos",
     secNote:
-      "Datos GAAP de informes SEC. FCF = flujo operativo menos pagos en efectivo por inmovilizado material. No se estiman datos ausentes.",
+      "Estados financieros SEC. El FCF se calcula con los flujos declarados y las fórmulas indicadas; puede diferir de la cifra ajustada de la empresa. No se estiman datos ausentes.",
     epsUnavailable: "El BPA histórico se oculta hasta verificar los ajustes por desdoblamientos.",
     historyQuarterly: (available: number) => `${available} períodos trimestrales disponibles`,
     historyTtm: (available: number) => `${available} períodos TTM disponibles`,
@@ -240,7 +241,7 @@ const COPY = {
     availability: (available: number, total: number) => `${available} su ${total} anni con dati`,
     noData: "Nessun dato",
     secNote:
-      "Dati GAAP dai bilanci SEC. FCF = flusso operativo meno acquisti in contanti di immobili, impianti e macchinari. I dati mancanti non sono stimati.",
+      "Bilanci SEC. Il FCF è calcolato dai flussi dichiarati con le formule indicate e può differire dal dato rettificato della società. I dati mancanti non sono stimati.",
     epsUnavailable:
       "L'EPS storico è nascosto finché non sono verificati gli aggiustamenti per frazionamenti.",
     historyQuarterly: (available: number) => `${available} periodi trimestrali disponibili`,
@@ -431,6 +432,18 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
                 locale={locale}
                 period={period}
                 axis={axis}
+                growthComparable={
+                  metric.key !== "freeCashFlow" ||
+                  query.data?.source !== "SEC EDGAR" ||
+                  (rows
+                    .filter((row) => row.freeCashFlow != null)
+                    .every((row) => Boolean(query.data?.fcfMethods?.[row.date])) &&
+                    new Set(
+                      rows
+                        .filter((row) => row.freeCashFlow != null)
+                        .map((row) => query.data?.fcfMethods?.[row.date]),
+                    ).size === 1)
+                }
                 historyUnavailable={
                   metric.key === "dilutedEps" && query.data?.epsHistoryUnavailable === true
                 }
@@ -454,7 +467,22 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
             period={period}
           />
           {query.data?.source === "SEC EDGAR" && (
-            <p className="text-xs text-muted-foreground">{c.secNote}</p>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <p>{c.secNote}</p>
+              {Object.entries(secFcfLabels[lang]).map(([method, label]) => {
+                const dates = rows
+                  .filter(
+                    (row) =>
+                      row.freeCashFlow != null && query.data?.fcfMethods?.[row.date] === method,
+                  )
+                  .map((row) => row.date);
+                return dates.length ? (
+                  <p key={method}>
+                    {dates.join(", ")}: {label}
+                  </p>
+                ) : null;
+              })}
+            </div>
           )}
           <p className="text-xs text-muted-foreground">
             {c.source.replace("Yahoo Finance", query.data?.source ?? "Yahoo Finance")}
@@ -554,6 +582,7 @@ function MetricCard({
   locale,
   period,
   axis,
+  growthComparable = true,
   historyUnavailable = false,
   copy,
 }: {
@@ -564,6 +593,7 @@ function MetricCard({
   locale: string;
   period: Period;
   axis: AnnualSlot[] | null;
+  growthComparable?: boolean;
   historyUnavailable?: boolean;
   copy: FinancialCopy;
 }) {
@@ -577,7 +607,12 @@ function MetricCard({
   const firstDate = values[0]?.date;
   const lastDate = values.at(-1)?.date;
   const change =
-    values.length >= 2 && first != null && first > 0 && last != null && last >= 0
+    growthComparable &&
+    values.length >= 2 &&
+    first != null &&
+    first > 0 &&
+    last != null &&
+    last >= 0
       ? (last / first - 1) * 100
       : null;
   const periodLabel = period === "quarterly" ? "short" : "medium";

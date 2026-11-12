@@ -75,8 +75,11 @@ it("suppresses FCF for negative, conflicting or mismatched principal payment evi
     ).toBeNull();
   }
 });
-it("does not treat broader productive assets as generic company capex", () => {
+it("labels a generic productive-assets calculation without applying NVIDIA adjustments", () => {
   const data = payload();
   data.cik = 1341439;
-  expect(extractSecAnnualHistory(data, options).rows[0]!.freeCashFlow).toBeNull();
+  expect(extractSecAnnualHistory(data, options).rows[0]).toMatchObject({
+    freeCashFlow: 96676000000,
+    fcfMethod: "cash-productive-assets",
+  });
 });

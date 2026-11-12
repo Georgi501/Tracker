@@ -1,0 +1,1866 @@
+[
+  {
+    "symbol": "AAPL",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 320193,
+      "entityName": "Apple Inc.",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 478834000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "CostOfGoodsAndServicesSold": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 245232000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 233602000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 158063000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "OperatingExpenses": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 75539000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 132175000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 8.98,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 145097000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-09-28",
+                  "end": "2026-09-26",
+                  "val": 9041000000,
+                  "accn": "0000320193-26-000026",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-11-03",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2026-09-26",
+      "revenue": 478834000000,
+      "netIncome": 132175000000,
+      "operatingCashFlow": 145097000000,
+      "freeCashFlow": 136056000000
+    }
+  },
+  {
+    "symbol": "MSFT",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 789019,
+      "entityName": "MICROSOFT CORP",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 331839000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "CostOfGoodsAndServicesSold": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 106374000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 225465000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 155237000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "OperatingExpenses": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 70228000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 133749000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 17.95,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 182935000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 115948000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-07-01",
+                  "end": "2026-06-30",
+                  "val": 3101000000,
+                  "accn": "0001193125-26-323660",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-07-29",
+                  "frame": "CY2026"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2026-06-30",
+      "revenue": 331839000000,
+      "netIncome": 133749000000,
+      "operatingCashFlow": 182935000000,
+      "freeCashFlow": 66987000000
+    }
+  },
+  {
+    "symbol": "AMZN",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001018724.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 1018724,
+      "entityName": "AMAZON.COM, INC.",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 716924000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfGoodsAndServicesSold": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 356414000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 79975000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 77670000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 7.17,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 139514000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquireProductiveAssets": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 131819000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 1557000000,
+                  "accn": "0001018724-26-000004",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-06",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 716924000000,
+      "netIncome": 77670000000,
+      "operatingCashFlow": 139514000000,
+      "freeCashFlow": null
+    }
+  },
+  {
+    "symbol": "GOOGL",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 1652044,
+      "entityName": "Alphabet Inc.",
+      "facts": {
+        "us-gaap": {
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 402836000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfRevenue": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 162535000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 129039000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 132170000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 10.81,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 164713000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 91447000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 1988000000,
+                  "accn": "0001652044-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-05",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 402836000000,
+      "netIncome": 132170000000,
+      "operatingCashFlow": 164713000000,
+      "freeCashFlow": 73266000000
+    }
+  },
+  {
+    "symbol": "META",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001326801.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 1326801,
+      "entityName": "Meta Platforms, Inc.",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 200966000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfRevenue": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 36175000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 83276000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 60458000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 23.49,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 115800000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 69691000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 2524000000,
+                  "accn": "0001628280-26-003942",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 200966000000,
+      "netIncome": 60458000000,
+      "operatingCashFlow": 115800000000,
+      "freeCashFlow": 43585000000
+    }
+  },
+  {
+    "symbol": "TSLA",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001318605.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 1318605,
+      "entityName": "Tesla, Inc.",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 94827000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 94827000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfRevenue": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 77733000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 17094000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 4355000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingExpenses": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 12739000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 3794000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 1.08,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 14747000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 8527000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 104000000,
+                  "accn": "0001628280-26-003952",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-01-29",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 94827000000,
+      "netIncome": 3794000000,
+      "operatingCashFlow": 14747000000,
+      "freeCashFlow": 6220000000
+    }
+  },
+  {
+    "symbol": "AMD",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000002488.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 2488,
+      "entityName": "ADVANCED MICRO DEVICES, INC",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 34639000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfGoodsAndServicesSold": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 17487000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 17152000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 3694000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingExpenses": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 13458000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 4335000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 2.65,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 7709000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2024-12-29",
+                  "end": "2025-12-27",
+                  "val": 974000000,
+                  "accn": "0000002488-26-000018",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-04",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-27",
+      "revenue": 34639000000,
+      "netIncome": 4335000000,
+      "operatingCashFlow": 7709000000,
+      "freeCashFlow": 6735000000
+    }
+  },
+  {
+    "symbol": "ORCL",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001341439.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 1341439,
+      "entityName": "ORACLE CORP",
+      "facts": {
+        "us-gaap": {
+          "RevenueFromContractWithCustomerExcludingAssessedTax": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 67357000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 67357000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 20606000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 17087000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 5.83,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 31977000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-06-01",
+                  "end": "2026-05-31",
+                  "val": 55663000000,
+                  "accn": "0001193125-26-277521",
+                  "fy": 2026,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-06-22",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2026-05-31",
+      "revenue": 67357000000,
+      "netIncome": 17087000000,
+      "operatingCashFlow": 31977000000,
+      "freeCashFlow": -23686000000
+    }
+  },
+  {
+    "symbol": "JPM",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000019617.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 19617,
+      "entityName": "JPMORGAN CHASE & CO",
+      "facts": {
+        "us-gaap": {
+          "RevenuesNetOfInterestExpense": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 182447000000,
+                  "accn": "0001628280-26-008131",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-13",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 182447000000,
+                  "accn": "0001628280-26-008131",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-13",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 57048000000,
+                  "accn": "0001628280-26-008131",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-13"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 20.02,
+                  "accn": "0001628280-26-008131",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-13",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": -147782000000,
+                  "accn": "0001628280-26-008131",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-13",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 182447000000,
+      "netIncome": 57048000000,
+      "operatingCashFlow": -147782000000,
+      "freeCashFlow": null
+    }
+  },
+  {
+    "symbol": "KO",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000021344.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 21344,
+      "entityName": "COCA COLA CO",
+      "facts": {
+        "us-gaap": {
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 47941000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfGoodsAndServicesSold": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 18397000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 29544000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "OperatingIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 13762000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 13107000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 3.04,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 7408000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 2112000000,
+                  "accn": "0001628280-26-010047",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-20",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 47941000000,
+      "netIncome": 13107000000,
+      "operatingCashFlow": 7408000000,
+      "freeCashFlow": 5296000000
+    }
+  },
+  {
+    "symbol": "XOM",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000034088.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 34088,
+      "entityName": "Exxon Mobil Corporation",
+      "facts": {
+        "us-gaap": {
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 332238000000,
+                  "accn": "0000034088-26-000045",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-18",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 28844000000,
+                  "accn": "0000034088-26-000045",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-18"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 6.7,
+                  "accn": "0000034088-26-000045",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-18",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 51970000000,
+                  "accn": "0000034088-26-000045",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-18",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 28358000000,
+                  "accn": "0000034088-26-000045",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-18",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 332238000000,
+      "netIncome": 28844000000,
+      "operatingCashFlow": 51970000000,
+      "freeCashFlow": 23612000000
+    }
+  },
+  {
+    "symbol": "IBM",
+    "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000051143.json",
+    "asOf": "2026-11-12",
+    "payload": {
+      "cik": 51143,
+      "entityName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+      "facts": {
+        "us-gaap": {
+          "Revenues": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 67535000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "CostOfRevenue": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 28239000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "GrossProfit": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 39297000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetIncomeLoss": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 10593000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "EarningsPerShareDiluted": {
+            "units": {
+              "USD/shares": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 11.17,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "NetCashProvidedByUsedInOperatingActivities": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 13193000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 1091000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          },
+          "FinanceLeasePrincipalPayments": {
+            "units": {
+              "USD": [
+                {
+                  "start": "2025-01-01",
+                  "end": "2025-12-31",
+                  "val": 280000000,
+                  "accn": "0000051143-26-000010",
+                  "fy": 2025,
+                  "fp": "FY",
+                  "form": "10-K",
+                  "filed": "2026-02-24",
+                  "frame": "CY2025"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "date": "2025-12-31",
+      "revenue": 67535000000,
+      "netIncome": 10593000000,
+      "operatingCashFlow": 13193000000,
+      "freeCashFlow": 12102000000
+    }
+  }
+]
