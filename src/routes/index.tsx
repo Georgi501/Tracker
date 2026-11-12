@@ -1,5 +1,5 @@
 import { languageLocale } from "@/lib/i18n";
-import { softwareJsonLd } from "@/lib/seo";
+import { siteIdentityJsonLd, softwareJsonLd } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -114,13 +114,13 @@ const EMPTY_HISTORY_POINTS: PortfolioPoint[] = [];
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Investment portfolio tracker — Capispot" },
+      { title: "CapiSpot — Investment Portfolio Tracker" },
       {
         name: "description",
         content:
           "Track stocks, ETFs and crypto with clear portfolio value, cash-flow-adjusted performance, allocation and dividend insights.",
       },
-      { property: "og:title", content: "Capispot — Investment portfolio tracker" },
+      { property: "og:title", content: "CapiSpot — Investment Portfolio Tracker" },
       {
         property: "og:description",
         content:
@@ -130,6 +130,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     scripts: [
+      siteIdentityJsonLd(),
       softwareJsonLd(
         "Track stocks, ETFs and crypto with portfolio value, cash-flow-adjusted performance, allocation and dividend insights. Free broker CSV import.",
       ),

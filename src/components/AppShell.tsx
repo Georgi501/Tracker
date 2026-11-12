@@ -1009,7 +1009,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="footer-bottom">
           <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-4 text-xs opacity-70">
             <span>
-              © {new Date().getFullYear()} Capispot. {legalCopy(p.lang).footer.rights}
+              © {new Date().getFullYear()} CapiSpot. {legalCopy(p.lang).footer.rights}
             </span>
             <span>{legalCopy(p.lang).footer.notAdvice}</span>
           </div>
