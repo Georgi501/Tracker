@@ -46,9 +46,58 @@ it("records onboarding funnel events after consent", () => {
   );
 });
 
+it("records CSV demo steps with only their page path after consent", () => {
+  setAnalyticsConsent(true);
+  trackAnalyticsEvent("csv_demo_view", undefined, "/import-demo");
+  trackAnalyticsEvent("csv_demo_import_click", undefined, "/import-demo");
+
+  expect(fetch).toHaveBeenNthCalledWith(
+    1,
+    "/api/public/analytics",
+    expect.objectContaining({
+      body: JSON.stringify({
+        sessionId,
+        visitorId: sessionId,
+        event: "csv_demo_view",
+        pagePath: "/import-demo",
+      }),
+    }),
+  );
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/api/public/analytics",
+    expect.objectContaining({
+      body: JSON.stringify({
+        sessionId,
+        visitorId: sessionId,
+        event: "csv_demo_import_click",
+        pagePath: "/import-demo",
+      }),
+    }),
+  );
+});
+
+it("records confirmed sign-ups with the auth page after consent", () => {
+  setAnalyticsConsent(true);
+  trackAnalyticsEvent("signup_confirmed", undefined, "/auth");
+
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/public/analytics",
+    expect.objectContaining({
+      body: JSON.stringify({
+        sessionId,
+        visitorId: sessionId,
+        event: "signup_confirmed",
+        pagePath: "/auth",
+      }),
+    }),
+  );
+});
+
 it("stops recording events after consent is rejected", () => {
   setAnalyticsConsent(true);
   setAnalyticsConsent(false);
   trackAnalyticsEvent("checkout_started");
+  trackAnalyticsEvent("csv_demo_view", undefined, "/import-demo");
   expect(fetch).not.toHaveBeenCalled();
 });

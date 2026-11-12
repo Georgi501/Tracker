@@ -187,6 +187,7 @@ export function AuthForm({
           return;
         }
         if (data.user) trackAnalyticsEvent("signup_completed");
+        if (data.session) trackAnalyticsEvent("signup_confirmed", undefined, "/auth");
         if (!data.session) setSentTo(email.trim());
         else onSignedIn?.();
       } else {
@@ -207,7 +208,7 @@ export function AuthForm({
     if (!sentTo) return;
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       email: sentTo,
       token: code.trim(),
       type: "signup",
@@ -217,6 +218,7 @@ export function AuthForm({
       setError(c.invalidCode);
       return;
     }
+    if (data.session) trackAnalyticsEvent("signup_confirmed", undefined, "/auth");
     setCode("");
     setSentTo(null);
     onSignedIn?.();

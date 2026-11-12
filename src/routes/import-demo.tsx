@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CircleAlert, CircleCheck, Upload } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   detectBrokerFormat,
   parseBrokerCsv,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
 import { SAMPLE_IBKR_CSV, SAMPLE_IMPORT_CSV, SAMPLE_TRADING212_CSV } from "@/lib/sample-import";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { z } from "zod";
 
 const SAMPLE_CSVS: Record<BrokerFormat, string> = {
@@ -189,9 +190,15 @@ function ImportDemo() {
   const [selectedFormat, setSelectedFormat] = useState<BrokerFormat>(() =>
     formatFromBroker(broker),
   );
+  const viewTracked = useRef(false);
   useEffect(() => {
     setSelectedFormat(formatFromBroker(broker));
   }, [broker]);
+  useEffect(() => {
+    if (viewTracked.current) return;
+    viewTracked.current = true;
+    trackAnalyticsEvent("csv_demo_view", undefined, "/import-demo");
+  }, []);
   const csv = SAMPLE_CSVS[selectedFormat];
   const format = detectBrokerFormat(csv);
   const rows = format ? parseBrokerCsv(format, csv) : [];
@@ -342,6 +349,9 @@ function ImportDemo() {
           {p.user ? (
             <Link
               to="/brokers"
+              onClick={() =>
+                trackAnalyticsEvent("csv_demo_import_click", undefined, "/import-demo")
+              }
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               <Upload size={16} aria-hidden />
@@ -351,6 +361,9 @@ function ImportDemo() {
             <Link
               to="/auth"
               search={{ mode: "signup", next: "/brokers" }}
+              onClick={() =>
+                trackAnalyticsEvent("csv_demo_import_click", undefined, "/import-demo")
+              }
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               <Upload size={16} aria-hidden />

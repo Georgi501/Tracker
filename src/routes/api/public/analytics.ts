@@ -6,12 +6,16 @@ const eventSchema = z
     sessionId: z.string().uuid(),
     visitorId: z.string().uuid().optional(),
     durationSeconds: z.number().int().min(1).max(86400).optional(),
+    pagePath: z.enum(["/import-demo", "/auth"]).optional(),
     event: z.enum([
       "site_visit",
       "visit_end",
       "pricing_view",
       "signup_completed",
+      "signup_confirmed",
       "first_holding_added",
+      "csv_demo_view",
+      "csv_demo_import_click",
       "manual_entry_started",
       "csv_import_started",
       "csv_import_completed",
@@ -20,7 +24,22 @@ const eventSchema = z
       "referral_link_copied",
     ]),
   })
-  .strict();
+  .strict()
+  .superRefine(({ event, pagePath }, context) => {
+    const expectedPath =
+      event === "signup_confirmed"
+        ? "/auth"
+        : event === "csv_demo_view" || event === "csv_demo_import_click"
+          ? "/import-demo"
+          : undefined;
+    if (pagePath !== expectedPath) {
+      context.addIssue({
+        code: "custom",
+        message: "Invalid analytics page path",
+        path: ["pagePath"],
+      });
+    }
+  });
 
 export const Route = createFileRoute("/api/public/analytics")({
   server: {
@@ -44,6 +63,7 @@ export const Route = createFileRoute("/api/public/analytics")({
           ...(parsed.data.durationSeconds
             ? { _duration_seconds: parsed.data.durationSeconds }
             : {}),
+          ...(parsed.data.pagePath ? { _page_path: parsed.data.pagePath } : {}),
         });
         if (error) {
           console.error("Unable to record analytics event", error);

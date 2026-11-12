@@ -541,18 +541,21 @@ export type Database = {
           created_at: string;
           event_name: string;
           id: string;
+          page_path: string | null;
           session_id: string;
         };
         Insert: {
           created_at?: string;
           event_name: string;
           id?: string;
+          page_path?: string | null;
           session_id: string;
         };
         Update: {
           created_at?: string;
           event_name?: string;
           id?: string;
+          page_path?: string | null;
           session_id?: string;
         };
         Relationships: [];
@@ -767,6 +770,7 @@ export type Database = {
           _event_name: string;
           _visitor_id?: string;
           _duration_seconds?: number;
+          _page_path?: string;
         };
         Returns: boolean;
       };

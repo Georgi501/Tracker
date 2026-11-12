@@ -4,7 +4,10 @@ const DAY = 86_400_000;
 const EVENTS = [
   "pricing_view",
   "signup_completed",
+  "signup_confirmed",
   "first_holding_added",
+  "csv_demo_view",
+  "csv_demo_import_click",
   "csv_import_started",
   "csv_import_completed",
   "checkout_started",

@@ -493,12 +493,26 @@ $$;
 CREATE TABLE public.analytics_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL,
+  visitor_id uuid,
+  duration_seconds integer CHECK (duration_seconds IS NULL OR duration_seconds BETWEEN 1 AND 86400),
+  page_path text,
   event_name text NOT NULL CHECK (event_name IN (
-    'pricing_view', 'signup_completed', 'first_holding_added',
-    'manual_entry_started', 'csv_import_started', 'csv_import_completed',
-    'checkout_started', 'checkout_completed', 'referral_link_copied'
+    'site_visit', 'visit_end', 'pricing_view', 'signup_completed',
+    'signup_confirmed', 'first_holding_added', 'csv_demo_view',
+    'csv_demo_import_click', 'manual_entry_started', 'csv_import_started',
+    'csv_import_completed', 'checkout_started', 'checkout_completed',
+    'referral_link_copied'
   )),
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT analytics_events_page_path_check
+    CHECK (
+      page_path IS NULL
+      OR (
+        event_name IN ('csv_demo_view', 'csv_demo_import_click')
+        AND page_path = '/import-demo'
+      )
+      OR (event_name = 'signup_confirmed' AND page_path = '/auth')
+    )
 );
 
 GRANT ALL ON public.analytics_events TO service_role;
@@ -507,18 +521,41 @@ CREATE INDEX analytics_events_session_time_idx
   ON public.analytics_events (session_id, created_at);
 CREATE INDEX analytics_events_created_at_idx
   ON public.analytics_events (created_at);
+CREATE INDEX analytics_events_visitor_idx
+  ON public.analytics_events (visitor_id, created_at);
 
-CREATE OR REPLACE FUNCTION public.record_analytics_event(_session_id uuid, _event_name text)
+CREATE OR REPLACE FUNCTION public.record_analytics_event(
+  _session_id uuid,
+  _event_name text,
+  _visitor_id uuid DEFAULT NULL,
+  _duration_seconds integer DEFAULT NULL,
+  _page_path text DEFAULT NULL
+)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   _count integer;
 BEGIN
   IF _event_name NOT IN (
-    'pricing_view', 'signup_completed', 'first_holding_added',
-    'manual_entry_started', 'csv_import_started', 'csv_import_completed',
-    'checkout_started', 'checkout_completed', 'referral_link_copied'
+    'site_visit', 'visit_end', 'pricing_view', 'signup_completed',
+    'signup_confirmed', 'first_holding_added', 'csv_demo_view',
+    'csv_demo_import_click', 'manual_entry_started', 'csv_import_started',
+    'csv_import_completed', 'checkout_started', 'checkout_completed',
+    'referral_link_copied'
   ) THEN
     RAISE EXCEPTION 'Unsupported analytics event';
+  END IF;
+
+  IF (
+    _event_name IN ('csv_demo_view', 'csv_demo_import_click')
+    AND _page_path IS DISTINCT FROM '/import-demo'
+  ) OR (
+    _event_name = 'signup_confirmed'
+    AND _page_path IS DISTINCT FROM '/auth'
+  ) OR (
+    _event_name NOT IN ('csv_demo_view', 'csv_demo_import_click', 'signup_confirmed')
+    AND _page_path IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Invalid analytics page path';
   END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(_session_id::text, 0));
@@ -537,12 +574,18 @@ BEGIN
     RETURN false;
   END IF;
 
-  INSERT INTO public.analytics_events (session_id, event_name) VALUES (_session_id, _event_name);
+  INSERT INTO public.analytics_events (
+    session_id, event_name, visitor_id, duration_seconds, page_path
+  ) VALUES (
+    _session_id, _event_name, _visitor_id, _duration_seconds, _page_path
+  );
   RETURN true;
 END $$;
 
-REVOKE EXECUTE ON FUNCTION public.record_analytics_event(uuid, text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.record_analytics_event(uuid, text) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.record_analytics_event(uuid, text, uuid, integer, text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_analytics_event(uuid, text, uuid, integer, text)
+  TO service_role;
 
 -- Source: 0010_account_management.sql
 DO $$
@@ -616,7 +659,8 @@ CREATE POLICY "authorized members view public avatars" ON storage.objects
       )
     )
   );
-
+
+
 -- Source: 0026_remove_broker_limit.sql
 DROP TRIGGER IF EXISTS broker_limit ON public.brokers;
 DROP FUNCTION IF EXISTS public.enforce_broker_limit();

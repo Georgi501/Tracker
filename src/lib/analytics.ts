@@ -3,7 +3,10 @@ export type AnalyticsEvent =
   | "visit_end"
   | "pricing_view"
   | "signup_completed"
+  | "signup_confirmed"
   | "first_holding_added"
+  | "csv_demo_view"
+  | "csv_demo_import_click"
   | "manual_entry_started"
   | "csv_import_started"
   | "csv_import_completed"
@@ -74,7 +77,11 @@ export function openAnalyticsPreferences(): void {
   window.dispatchEvent(new Event("folio-open-analytics-preferences"));
 }
 
-export function trackAnalyticsEvent(event: AnalyticsEvent, durationSeconds?: number): void {
+export function trackAnalyticsEvent(
+  event: AnalyticsEvent,
+  durationSeconds?: number,
+  pagePath?: "/import-demo" | "/auth",
+): void {
   if (!hasAnalyticsConsent()) return;
 
   try {
@@ -92,11 +99,13 @@ export function trackAnalyticsEvent(event: AnalyticsEvent, durationSeconds?: num
     void fetch("/api/public/analytics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        durationSeconds
-          ? { sessionId, visitorId, event, durationSeconds }
-          : { sessionId, visitorId, event },
-      ),
+      body: JSON.stringify({
+        sessionId,
+        visitorId,
+        event,
+        ...(durationSeconds ? { durationSeconds } : {}),
+        ...(pagePath ? { pagePath } : {}),
+      }),
       keepalive: true,
     })
       .then((response) => {
