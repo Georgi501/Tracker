@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildAnnualAxis,
   filterFinancialRows,
   toTrailingFinancialRows,
   type FinancialSeriesRow,
@@ -65,5 +66,48 @@ describe("financial history ranges", () => {
 
     expect(trailing).toHaveLength(1);
     expect(trailing[0]).toMatchObject({ date: "2026-05-31", revenue: 100, freeCashFlow: null });
+  });
+
+  it("keeps TTM points per metric when Yahoo omits different quarterly values", () => {
+    const rows = [
+      row("2025-06-30", 10),
+      row("2025-09-30", 20),
+      row("2025-12-31", 30),
+      row("2026-03-31", 40),
+      row("2026-06-30", 50),
+    ];
+    rows[0]!.revenue = null;
+    rows[0]!.freeCashFlow = null;
+
+    const trailing = toTrailingFinancialRows(rows);
+
+    expect(trailing).toHaveLength(2);
+    expect(trailing[0]).toMatchObject({
+      date: "2026-03-31",
+      revenue: null,
+      dilutedEps: 10,
+      freeCashFlow: null,
+    });
+    expect(trailing[1]).toMatchObject({
+      date: "2026-06-30",
+      revenue: 140,
+      dilutedEps: 14,
+      freeCashFlow: 17.5,
+    });
+  });
+});
+
+describe("annual fiscal-year axis", () => {
+  it("returns one slot per year and leaves missing years empty", () => {
+    const axis = buildAnnualAxis(
+      [row("2023-05-31", 1), row("2024-05-31", 2), row("2026-05-31", 4)],
+      5,
+    );
+    expect(axis.map((slot) => slot.year)).toEqual([2022, 2023, 2024, 2025, 2026]);
+    expect(axis.map((slot) => slot.row?.revenue ?? null)).toEqual([null, 1, 2, null, 4]);
+  });
+
+  it("returns an empty axis without rows", () => {
+    expect(buildAnnualAxis([], 10)).toEqual([]);
   });
 });

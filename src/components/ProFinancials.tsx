@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
@@ -7,6 +7,7 @@ import {
   BarChart,
   CartesianGrid,
   ResponsiveContainer,
+  ReferenceLine,
   Sankey,
   Tooltip,
   XAxis,
@@ -14,6 +15,8 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/AppShell";
+import { FinancialBarChart, type ChartPoint } from "@/components/FinancialBarChart";
+import { buildAnnualAxis, type AnnualSlot } from "@/lib/financial-series";
 import { marketFinancialSeries, type FinancialSeriesRow } from "@/lib/market.functions";
 import { languageLocale, type Lang } from "@/lib/i18n";
 
@@ -30,8 +33,13 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Statement period",
     rangeLabel: "History range",
-    historyLimited: (available: number, requested: number) =>
-      `Yahoo Finance returned ${available} of ${requested} requested periods for this asset.`,
+    fiscalYear: (year: number) => `FY ${year}`,
+    availability: (available: number, total: number) => `${available} of ${total} years with data`,
+    noData: "No data",
+    historyQuarterly: (available: number) =>
+      `${available} quarterly period${available === 1 ? "" : "s"} available`,
+    historyTtm: (available: number) =>
+      `${available} TTM period${available === 1 ? "" : "s"} available`,
     history: "Reported financial history",
     period: "Period",
     years: (n: number) => `${n}Y`,
@@ -41,8 +49,14 @@ const COPY = {
     dilutedEps: "Diluted EPS",
     operatingCashFlow: "Operating cash flow",
     freeCashFlow: "Free cash flow",
-    change: (n: number, years: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}% · ${years}Y`,
-    unavailable: "Reported financial data is not available for this period.",
+    change: (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`,
+    changeLabel: "Change between the first and last available values",
+    changeUnavailable: "A percentage needs a positive start and a non-negative end.",
+    previous: "Previous",
+    latest: "Latest",
+    showValues: "View values",
+    noMetricData: "No data for this period.",
+    unavailable: "No data for this period.",
     loadFailed: "Could not load financial data.",
     retry: "Try again",
     breakdown: "Revenue & expense breakdown",
@@ -66,8 +80,11 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Период на отчета",
     rangeLabel: "Исторически период",
-    historyLimited: (available: number, requested: number) =>
-      `Yahoo Finance предоставя само ${available} от заявените ${requested} отчетни периода за този актив.`,
+    fiscalYear: (year: number) => `Фин. г. ${year}`,
+    availability: (available: number, total: number) => `${available} от ${total} години с данни`,
+    noData: "Няма данни",
+    historyQuarterly: (available: number) => `Налични са ${available} тримесечни периода.`,
+    historyTtm: (available: number) => `Налични са ${available} TTM периода.`,
     history: "Исторически финансови отчети",
     period: "Период",
     years: (n: number) => `${n} г.`,
@@ -77,8 +94,14 @@ const COPY = {
     dilutedEps: "Разредена печалба на акция",
     operatingCashFlow: "Паричен поток от дейността",
     freeCashFlow: "Свободен паричен поток",
-    change: (n: number, years: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}% · ${years} г.`,
-    unavailable: "Няма отчетени финансови данни за този период.",
+    change: (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`,
+    changeLabel: "Промяна между първата и последната налична стойност",
+    changeUnavailable: "За процент е нужна положителна начална и неотрицателна крайна стойност.",
+    previous: "Предишна",
+    latest: "Последна",
+    showValues: "Виж стойностите",
+    noMetricData: "Няма данни за този период.",
+    unavailable: "Няма данни за този период.",
     loadFailed: "Финансовите данни не се заредиха.",
     retry: "Опитай отново",
     breakdown: "Разбивка на приходите и разходите",
@@ -104,8 +127,12 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Berichtszeitraum",
     rangeLabel: "Historischer Zeitraum",
-    historyLimited: (available: number, requested: number) =>
-      `Yahoo Finance liefert für diesen Wert nur ${available} von ${requested} angeforderten Berichtszeiträumen.`,
+    fiscalYear: (year: number) => `GJ ${year}`,
+    availability: (available: number, total: number) =>
+      `${available} von ${total} Jahren mit Daten`,
+    noData: "Keine Daten",
+    historyQuarterly: (available: number) => `${available} Quartalsperioden verfügbar`,
+    historyTtm: (available: number) => `${available} TTM-Zeiträume verfügbar`,
     history: "Gemeldete Finanzhistorie",
     period: "Zeitraum",
     years: (n: number) => `${n}J`,
@@ -115,8 +142,15 @@ const COPY = {
     dilutedEps: "Verwässertes EPS",
     operatingCashFlow: "Operativer Cashflow",
     freeCashFlow: "Free Cashflow",
-    change: (n: number, years: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}% · ${years}J`,
-    unavailable: "Für diesen Zeitraum sind keine Finanzdaten verfügbar.",
+    change: (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`,
+    changeLabel: "Veränderung zwischen dem ersten und letzten verfügbaren Wert",
+    changeUnavailable:
+      "Ein Prozentvergleich braucht einen positiven Start und einen nicht negativen Endwert.",
+    previous: "Vorheriger",
+    latest: "Aktuell",
+    showValues: "Werte anzeigen",
+    noMetricData: "Keine Daten für diesen Zeitraum.",
+    unavailable: "Keine Daten für diesen Zeitraum.",
     loadFailed: "Finanzdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     breakdown: "Umsatz- und Kostenaufteilung",
@@ -142,8 +176,11 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Período del informe",
     rangeLabel: "Período histórico",
-    historyLimited: (available: number, requested: number) =>
-      `Yahoo Finance solo ofrece ${available} de los ${requested} períodos solicitados para este activo.`,
+    fiscalYear: (year: number) => `AF ${year}`,
+    availability: (available: number, total: number) => `${available} de ${total} años con datos`,
+    noData: "Sin datos",
+    historyQuarterly: (available: number) => `${available} períodos trimestrales disponibles`,
+    historyTtm: (available: number) => `${available} períodos TTM disponibles`,
     history: "Historial financiero publicado",
     period: "Período",
     years: (n: number) => `${n}A`,
@@ -153,8 +190,14 @@ const COPY = {
     dilutedEps: "BPA diluido",
     operatingCashFlow: "Flujo de caja operativo",
     freeCashFlow: "Flujo de caja libre",
-    change: (n: number, years: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}% · ${years}A`,
-    unavailable: "No hay datos financieros publicados para este período.",
+    change: (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`,
+    changeLabel: "Cambio entre el primer y el último valor disponible",
+    changeUnavailable: "El porcentaje requiere un inicio positivo y un final no negativo.",
+    previous: "Anterior",
+    latest: "Último",
+    showValues: "Ver valores",
+    noMetricData: "No hay datos para este período.",
+    unavailable: "No hay datos para este período.",
     loadFailed: "No se pudieron cargar los datos financieros.",
     retry: "Intentar de nuevo",
     breakdown: "Desglose de ingresos y gastos",
@@ -180,8 +223,11 @@ const COPY = {
     trailing: "TTM",
     periodLabel: "Periodo del bilancio",
     rangeLabel: "Intervallo storico",
-    historyLimited: (available: number, requested: number) =>
-      `Yahoo Finance fornisce solo ${available} dei ${requested} periodi richiesti per questo asset.`,
+    fiscalYear: (year: number) => `Eserc. ${year}`,
+    availability: (available: number, total: number) => `${available} su ${total} anni con dati`,
+    noData: "Nessun dato",
+    historyQuarterly: (available: number) => `${available} periodi trimestrali disponibili`,
+    historyTtm: (available: number) => `${available} periodi TTM disponibili`,
     history: "Storico finanziario dichiarato",
     period: "Periodo",
     years: (n: number) => `${n}A`,
@@ -191,8 +237,15 @@ const COPY = {
     dilutedEps: "EPS diluito",
     operatingCashFlow: "Flusso di cassa operativo",
     freeCashFlow: "Flusso di cassa libero",
-    change: (n: number, years: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}% · ${years}A`,
-    unavailable: "Dati finanziari dichiarati non disponibili per questo periodo.",
+    change: (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`,
+    changeLabel: "Variazione tra il primo e l'ultimo valore disponibile",
+    changeUnavailable:
+      "La percentuale richiede un valore iniziale positivo e uno finale non negativo.",
+    previous: "Precedente",
+    latest: "Ultimo",
+    showValues: "Mostra valori",
+    noMetricData: "Nessun dato per questo periodo.",
+    unavailable: "Nessun dato per questo periodo.",
     loadFailed: "Impossibile caricare i dati finanziari.",
     retry: "Riprova",
     breakdown: "Ripartizione di ricavi e spese",
@@ -261,8 +314,14 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
     staleTime: 30 * 60_000,
   });
   const locale = languageLocale(lang);
-  const rows = query.data?.rows ?? [];
-  const requestedPeriods = period === "annual" ? years : years * 4;
+  const axis = useMemo(
+    () => (period === "annual" && query.data ? buildAnnualAxis(query.data.rows, years) : null),
+    [period, years, query.data],
+  );
+  const rows = axis
+    ? axis.flatMap((slot) => (slot.row ? [slot.row] : []))
+    : (query.data?.rows ?? []);
+  const requestedPeriods = years * 4;
   const compact = (value: number, digits = 1) =>
     new Intl.NumberFormat(locale, {
       notation: "compact",
@@ -289,7 +348,7 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div role="group" aria-label={c.periodLabel} className="flex rounded-lg bg-secondary p-1">
           {periods.map(([value, label]) => (
             <button
@@ -319,9 +378,9 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
         </div>
       </div>
 
-      {rows.length > 0 && rows.length < requestedPeriods && (
+      {period !== "annual" && rows.length > 0 && rows.length < requestedPeriods && (
         <p role="status" className="text-xs text-muted-foreground">
-          {c.historyLimited(rows.length, requestedPeriods)}
+          {period === "quarterly" ? c.historyQuarterly(rows.length) : c.historyTtm(rows.length)}
         </p>
       )}
 
@@ -354,6 +413,8 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
                 format={(value) => formatMetric(metric.key, value)}
                 locale={locale}
                 period={period}
+                axis={axis}
+                copy={c}
               />
             ))}
           </div>
@@ -451,6 +512,8 @@ function MetricCard({
   format,
   locale,
   period,
+  axis,
+  copy,
 }: {
   rows: FinancialSeriesRow[];
   metric: { key: MetricKey; label: MetricKey };
@@ -458,8 +521,9 @@ function MetricCard({
   format: (value: number) => string;
   locale: string;
   period: Period;
+  axis: AnnualSlot[] | null;
+  copy: FinancialCopy;
 }) {
-  const gradientId = useId().replaceAll(":", "");
   const color = METRIC_CHART_COLORS[metric.key];
   const values = rows.flatMap((row) => {
     const value = row[metric.key];
@@ -470,7 +534,7 @@ function MetricCard({
   const firstDate = values[0]?.date;
   const lastDate = values.at(-1)?.date;
   const change =
-    values.length > 1 && first != null && first > 0 && last != null
+    values.length >= 2 && first != null && first > 0 && last != null && last >= 0
       ? (last / first - 1) * 100
       : null;
   const periodLabel = period === "quarterly" ? "short" : "medium";
@@ -480,86 +544,133 @@ function MetricCard({
       ? date
       : parsed.toLocaleDateString(locale, { dateStyle: periodLabel });
   };
+  const chartPoints: ChartPoint[] = axis
+    ? axis.map((slot) => ({
+        key: `${slot.year}-${slot.expectedDate}`,
+        heading: copy.fiscalYear(slot.year),
+        axisLabel: `’${String(slot.year).slice(-2)}`,
+        value: slot.row?.[metric.key] ?? null,
+      }))
+    : values.map((point) => ({
+        key: point.date,
+        heading: formatDate(point.date),
+        value: point.value,
+      }));
   const dateRange =
     firstDate && lastDate
       ? firstDate === lastDate
         ? formatDate(lastDate)
         : `${formatDate(firstDate)} – ${formatDate(lastDate)}`
       : "";
+  const changeDescription =
+    change == null ? copy.changeUnavailable : `${copy.changeLabel}: ${dateRange}`;
+
+  if (!values.length) {
+    return (
+      <Card className="border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4">
+        <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+        <p className="mt-2 text-sm text-muted-foreground">{copy.noMetricData}</p>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="group relative overflow-hidden border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
-      <div className="flex min-h-12 items-start justify-between gap-2">
-        <div>
+    <Card className="group relative overflow-hidden border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
-          <p className="mt-1 font-display text-2xl font-bold tabular-nums tracking-tight">
-            {last == null ? "—" : format(last)}
-          </p>
+          {(axis ? values.length >= 1 : values.length >= 3) && last != null && (
+            <p className="mt-1 font-display text-2xl font-bold tabular-nums tracking-tight">
+              {format(last)}
+            </p>
+          )}
         </div>
-        {change != null && (
+        {values.length >= 2 && (
           <span
-            className={`rounded-md px-2 py-1 text-xs font-semibold ${change >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
+            aria-label={changeDescription}
+            title={changeDescription}
+            className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${change == null ? "bg-secondary text-muted-foreground" : change >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
           >
-            {change > 0 ? "+" : ""}
-            {change.toFixed(1)}%
+            {change == null ? "—" : copy.change(change)}
           </span>
         )}
       </div>
-      <div className="mt-4 h-20" aria-label={`${title} historical chart`}>
-        {values.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={values}>
-              <defs>
-                <linearGradient id={`${gradientId}-financial`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={color} stopOpacity={0.95} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.35} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                stroke="var(--border)"
-                strokeDasharray="3 3"
-                vertical={false}
-                strokeOpacity={0.45}
-              />
-              <XAxis dataKey="date" type="category" hide />
-              <YAxis hide domain={["auto", "auto"]} />
-              <Tooltip
-                content={(props) => (
-                  <ChartTooltipContent
-                    {...props}
-                    formatLabel={(_, payload) => {
-                      const row = payload[0]?.payload;
-                      const date =
-                        row &&
-                        typeof row === "object" &&
-                        "date" in row &&
-                        typeof row.date === "string"
-                          ? row.date
-                          : null;
-                      return date ? formatDate(date) : null;
-                    }}
-                    formatValue={(value) => format(Number(value))}
-                  />
-                )}
-              />
-              <Bar
-                dataKey="value"
-                name={title}
-                fill={`url(#${gradientId}-financial)`}
-                maxBarSize={36}
-                radius={[4, 4, 4, 4]}
-                activeBar={{ filter: "brightness(1.15)" }}
-                isAnimationActive={false}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="pt-4 text-xs text-muted-foreground">—</p>
-        )}
-      </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        {dateRange}
-        {change != null && ` · ${change > 0 ? "+" : ""}${change.toFixed(1)}%`}
-      </p>
+
+      {!axis && values.length === 1 && lastDate && last != null ? (
+        <div className="mt-2 flex items-baseline justify-between gap-3">
+          <p className="font-display text-xl font-bold tabular-nums tracking-tight">
+            {format(last)}
+          </p>
+          <time dateTime={lastDate} className="text-xs text-muted-foreground">
+            {formatDate(lastDate)}
+          </time>
+        </div>
+      ) : !axis && values.length === 2 ? (
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground">{copy.previous}</p>
+            <p className="truncate font-display text-lg font-bold tabular-nums tracking-tight">
+              {format(values[0]!.value)}
+            </p>
+            <time
+              dateTime={values[0]!.date}
+              className="block truncate text-xs text-muted-foreground"
+            >
+              {formatDate(values[0]!.date)}
+            </time>
+          </div>
+          <span aria-hidden="true" className="text-sm text-muted-foreground">
+            →
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground">{copy.latest}</p>
+            <p className="truncate font-display text-lg font-bold tabular-nums tracking-tight">
+              {format(values[1]!.value)}
+            </p>
+            <time
+              dateTime={values[1]!.date}
+              className="block truncate text-xs text-muted-foreground"
+            >
+              {formatDate(values[1]!.date)}
+            </time>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="mt-1 text-[11px] text-muted-foreground">{dateRange}</p>
+          {axis && (
+            <p className="text-[11px] text-muted-foreground">
+              {copy.availability(values.length, axis.length)}
+            </p>
+          )}
+          <FinancialBarChart
+            points={chartPoints}
+            color={color}
+            name={title}
+            ariaLabel={`${title} historical chart`}
+            noDataLabel={copy.noData}
+            format={format}
+          />
+          <details className="mt-1 text-xs">
+            <summary className="w-fit cursor-pointer rounded text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              {copy.showValues}
+            </summary>
+            <ol
+              aria-label={`${title} values by date`}
+              className="mt-2 max-h-28 space-y-1 overflow-y-auto"
+            >
+              {chartPoints.map((point) => (
+                <li key={point.key} className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">{point.heading}</span>
+                  <span className="font-medium tabular-nums">
+                    {point.value == null ? copy.noData : format(point.value)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </>
+      )}
     </Card>
   );
 }

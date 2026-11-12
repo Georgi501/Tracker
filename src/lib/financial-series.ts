@@ -25,6 +25,46 @@ const FINANCIAL_METRICS: FinancialMetricKey[] = [
   "freeCashFlow",
 ];
 
+export interface AnnualSlot {
+  year: number;
+  expectedDate: string;
+  row: FinancialSeriesRow | null;
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * One slot per fiscal year, ending at the latest reported year, so every metric shares the same axis.
+ * A slot is matched by period-end date (±45 days covers 52/53-week years); unmatched slots stay empty.
+ */
+export function buildAnnualAxis(rows: FinancialSeriesRow[], years: number): AnnualSlot[] {
+  const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
+  const anchor =
+    [...sorted].reverse().find((row) => FINANCIAL_METRICS.some((metric) => row[metric] != null)) ??
+    sorted.at(-1);
+  if (!anchor) return [];
+  const end = new Date(`${anchor.date}T00:00:00Z`);
+  if (Number.isNaN(end.getTime())) return [];
+
+  const slots: AnnualSlot[] = [];
+  for (let offset = years - 1; offset >= 0; offset -= 1) {
+    const expected = new Date(
+      Date.UTC(end.getUTCFullYear() - offset, end.getUTCMonth(), end.getUTCDate()),
+    );
+    const row =
+      sorted.find(
+        (candidate) =>
+          Math.abs(Date.parse(`${candidate.date}T00:00:00Z`) - expected.getTime()) <= 45 * DAY_MS,
+      ) ?? null;
+    slots.push({
+      year: expected.getUTCFullYear(),
+      expectedDate: expected.toISOString().slice(0, 10),
+      row,
+    });
+  }
+  return slots;
+}
+
 export function filterFinancialRows(
   rows: FinancialSeriesRow[],
   startDate: Date,

@@ -391,11 +391,18 @@ export const marketFinancialSeries = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<FinancialSeries> => {
     const { yahooClient } = await import("./prices.server");
     const yf = yahooClient();
-    const periodStart = new Date(Date.now() - data.years * 365.25 * 24 * 60 * 60 * 1000);
+    // Annual gets one extra year of margin: a fiscal year ending just before the cutoff must not be cut,
+    // because the chart axis (buildAnnualAxis) selects exactly the requested number of fiscal years.
+    const yearsBack = data.period === "annual" ? data.years + 1 : data.years;
+    const periodStart = new Date(Date.now() - yearsBack * 365.25 * 24 * 60 * 60 * 1000);
     const period1 =
       data.period === "trailing"
         ? new Date(periodStart.getTime() - 365.25 * 24 * 60 * 60 * 1000)
         : periodStart;
+    if (data.period === "annual") {
+      const { fetchAnnualFinancialHistory } = await import("./financial-history.server");
+      return fetchAnnualFinancialHistory(data.symbol, periodStart);
+    }
     const sourcePeriod = data.period === "trailing" ? "quarterly" : data.period;
     const [income, cashFlow, quote] = await Promise.all([
       yf.fundamentalsTimeSeries(data.symbol, {

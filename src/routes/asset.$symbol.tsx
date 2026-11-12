@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,6 +26,7 @@ import { projectedBondCoupon } from "@/lib/portfolio";
 import type { Lang } from "@/lib/i18n";
 import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
 import { z } from "zod";
+import { useSectionAnchor } from "@/lib/use-section-anchor";
 
 export const Route = createFileRoute("/asset/$symbol")({
   validateSearch: (search) =>
@@ -357,7 +358,9 @@ function AssetPage() {
   const p = usePortfolio();
   const c = C[p.lang];
   const today = new Date().toISOString().slice(0, 10);
-  const [activeResearchSection, setActiveResearchSection] = useState("overview");
+  const hash = useLocation({ select: (location) => location.hash });
+  const sectionRef = useSectionAnchor(hash, symbol);
+  const activeResearchSection = hash || "overview";
   const [bondPrice, setBondPrice] = useState("");
   const [savingBondPrice, setSavingBondPrice] = useState(false);
   const [valuationDate, setValuationDate] = useState(() => today);
@@ -416,7 +419,7 @@ function AssetPage() {
   const projectedCoupon = h && bondAsset ? projectedBondCoupon(bondAsset, h.quantity) : undefined;
 
   return (
-    <div className="page-enter space-y-5">
+    <div ref={sectionRef} className="page-enter space-y-5">
       <Link
         to={h ? "/holdings" : "/markets"}
         search={!h && from === "markets" && q ? { q } : {}}
@@ -468,11 +471,13 @@ function AssetPage() {
                 !p.isPro && ["statistics", "analysis", "holders"].includes(id) ? "research" : id;
               const active = activeResearchSection === id;
               return (
-                <a
+                <Link
                   key={id}
-                  href={`#${target}`}
+                  to="/asset/$symbol"
+                  params={{ symbol }}
+                  search={{ from, q }}
+                  hash={target}
                   aria-current={active ? "location" : undefined}
-                  onClick={() => setActiveResearchSection(id)}
                   className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
                     active
                       ? "bg-primary/10 text-primary shadow-sm"
@@ -481,7 +486,7 @@ function AssetPage() {
                 >
                   <Icon size={16} aria-hidden />
                   {label}
-                </a>
+                </Link>
               );
             })}
           </div>

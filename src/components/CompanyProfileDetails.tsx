@@ -235,7 +235,7 @@ export function CompanyProfileDetails({
       <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
         <KeyStats symbol={symbol} lang={lang} />
       </div>
-      <div id="financials" className="scroll-mt-24">
+      <div id="financials" className="scroll-mt-36">
         <ProFinancials symbol={symbol} lang={lang} />
       </div>
       <div id="valuation" className="scroll-mt-24">
@@ -304,7 +304,7 @@ function LockedProfile({
 
 function ProfileSectionAnchors({ children }: { children: ReactNode }) {
   return (
-    <div id="financials" className="scroll-mt-24">
+    <div id="financials" className="scroll-mt-36">
       <div id="research" className="scroll-mt-24">
         <div id="news" className="scroll-mt-24">
           <div id="valuation" className="scroll-mt-24">
