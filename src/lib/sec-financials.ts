@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import type { FinancialSeriesRow } from "./financial-series";
 
 type Metric = Exclude<keyof FinancialSeriesRow, "date">;
@@ -62,7 +62,7 @@ export interface SecAnnualRow extends FinancialSeriesRow {
 type Candidate = z.infer<typeof factSchema> & { tag: string; unit: "USD" | "USD/shares" };
 
 /**
- * Research prototype only. Latest disclosed annual 10-K facts as of a fixed date.
+ * Latest disclosed annual 10-K facts as of a fixed date, shared by the app and audit runner.
  * Fiscal periods come from start/end, never fy/frame (comparatives reuse the filing's fy).
  * Custom tags, non-USD facts, quarterly/YTD and transition periods stay unavailable.
  */

@@ -30,3 +30,6 @@
 - Home-screen install is manifest-only (no service worker), to avoid stale caches in preview.
 - Community (profiles with photo, member directory, opt-in portfolio showcase as cost-weight percentages via public_portfolio(), 1:1 realtime chat in direct_messages) is enforced Pro-only in RLS via is_pro() and in UI via CommunityUpsell; avatars sit in a private bucket served by signed URLs because public buckets are blocked.
 - Investing journal notes live in public.journal_notes (RLS by user_id, one row per symbol) so theses follow the account; snapshots share only class percentages to protect privacy.
+
+- Annual company Financials prefer server-only SEC EDGAR USD US-GAAP 10-K/10-K/A facts, resolved through the official ticker-to-CIK map. Unsupported companies use a separately labelled Yahoo series; never stitch providers or silently fall back on SEC outages. Public company history is cached; portfolio/account data never enters that cache.
+- SEC FCF is explicitly CFO minus cash PP&E purchases from the same filing and period. Unreconciled historical EPS is withheld, retaining only the latest reported value; do not enable EPS growth comparisons until split adjustments are verified. Annual table dates link to source SEC filings.

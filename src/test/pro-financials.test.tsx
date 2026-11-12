@@ -289,3 +289,40 @@ describe("financial statement controls and metric changes", () => {
     expect(live).toBeEmptyDOMElement();
   });
 });
+
+describe("SEC financial source display", () => {
+  it("shows ten annual slots with SEC attribution, filing links and no fabricated EPS comparison", async () => {
+    const rows = Array.from({ length: 10 }, (_, index) =>
+      row(`${2017 + index}-05-31`, {
+        revenue: 100 + index,
+        freeCashFlow: index === 0 ? 0 : 10,
+        dilutedEps: index === 9 ? 3 : null,
+      }),
+    );
+    state.financials.mockResolvedValue({
+      rows,
+      currency: "USD",
+      source: "SEC EDGAR",
+      epsHistoryUnavailable: true,
+      filings: {
+        "2026-05-31": "https://www.sec.gov/Archives/edgar/data/1341439/example-index.html",
+      },
+    });
+    renderFinancials();
+    fireEvent.click(await screen.findByRole("button", { name: "10Y" }));
+    const revenue = await screen.findByRole("group", { name: "Revenue historical chart" });
+    expect(within(revenue).getAllByTestId("financial-slot")).toHaveLength(10);
+    expect(await screen.findByText(/Source: SEC EDGAR/)).toBeInTheDocument();
+    expect(screen.queryByText(/Source: Yahoo Finance/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "2026-05-31" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("sec.gov"),
+    );
+    const eps = within(screen.getByRole("heading", { name: "Diluted EPS" }).closest(".group")!);
+    expect(
+      eps.getByText("Historical EPS is hidden until stock split adjustments are verified."),
+    ).toBeInTheDocument();
+    expect(eps.queryByLabelText(/Change between/)).not.toBeInTheDocument();
+    expect(screen.getByText(/FCF = operating cash flow/)).toBeInTheDocument();
+  });
+});

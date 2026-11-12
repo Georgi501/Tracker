@@ -370,6 +370,9 @@ export interface KeyStats {
 export type { FinancialSeriesRow } from "./financial-series";
 
 export interface FinancialSeries {
+  source?: "SEC EDGAR" | "Yahoo Finance";
+  epsHistoryUnavailable?: boolean;
+  filings?: Record<string, string>;
   rows: FinancialSeriesRow[];
   currency: string | null;
 }
@@ -400,8 +403,14 @@ export const marketFinancialSeries = createServerFn({ method: "POST" })
         ? new Date(periodStart.getTime() - 365.25 * 24 * 60 * 60 * 1000)
         : periodStart;
     if (data.period === "annual") {
+      const { fetchSecAnnualFinancials } = await import("./sec-financials.server");
+      const sec = await fetchSecAnnualFinancials(data.symbol);
+      if (sec) return sec;
       const { fetchAnnualFinancialHistory } = await import("./financial-history.server");
-      return fetchAnnualFinancialHistory(data.symbol, periodStart);
+      return {
+        ...(await fetchAnnualFinancialHistory(data.symbol, periodStart)),
+        source: "Yahoo Finance",
+      };
     }
     const sourcePeriod = data.period === "trailing" ? "quarterly" : data.period;
     const [income, cashFlow, quote] = await Promise.all([

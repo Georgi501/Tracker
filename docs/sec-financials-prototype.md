@@ -1,7 +1,7 @@
-﻿# SEC Financials research prototype
+# SEC Financials research prototype
 
-This prototype audits annual US company financials without changing CapiSpot's market provider.
-It is intentionally not imported by app routes or server functions.
+This command audits annual US company financials independently of the application.
+The audit runner is not imported by the app. Its parser is shared with the server-only Annual provider in src/lib/sec-financials.server.ts. The app uses SEC for supported USD US-GAAP companies and a separately labelled Yahoo series for unsupported companies. SEC request failures remain errors; data providers are never stitched. Historical EPS is withheld in the app until split adjustments are verified; the audit retains raw EPS with filing provenance. Quarterly and TTM remain Yahoo-backed.
 
 ## Run locally
 

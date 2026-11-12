@@ -787,7 +787,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         <SectionHeading icon={<ChartNoAxesCombined size={18} />} title={c.statistics} />
         <QuoteFreshness at={stats?.quoteAt} lang={lang} marketState={stats?.marketState} />
         <p className="text-xs text-muted-foreground">{c.ratioNote}</p>
-        <div className="grid gap-3 lg:grid-cols-2">{statGroups}</div>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{statGroups}</div>
         <PeerComparison
           symbol={symbol}
           lang={lang}
@@ -810,7 +810,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
 
       <section id="analysis" className="scroll-mt-24 space-y-3">
         <SectionHeading icon={<BarChart3 size={18} />} title={c.analysts} />
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <section className="rounded-xl border border-border bg-background/70 p-4">
             <h4 className="mb-3 font-display text-sm font-semibold">{c.target}</h4>
             <p className="mb-3 text-xs text-muted-foreground">{c.targetNote}</p>
@@ -976,7 +976,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
             <p className="py-4 text-sm text-muted-foreground">{c.unavailable}</p>
           )}
         </section>
-        <section className="grid gap-3 lg:grid-cols-2">
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <section className="rounded-xl border border-border bg-background/70 p-4">
             <h4 className="mb-3 font-display text-sm font-semibold">{c.revisions}</h4>
             {estimates.length ? (
@@ -1073,7 +1073,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
             value={number(research?.ownership.institutionsCount, 0)}
           />
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <HolderTable
             title={c.institutions}
             headers={[c.holder, c.percentHeld, c.value, c.reported]}

@@ -36,6 +36,9 @@ const COPY = {
     fiscalYear: (year: number) => `FY ${year}`,
     availability: (available: number, total: number) => `${available} of ${total} years with data`,
     noData: "No data",
+    secNote:
+      "GAAP financials from SEC filings. FCF = operating cash flow minus cash purchases of property, plant and equipment. Missing items are not estimated.",
+    epsUnavailable: "Historical EPS is hidden until stock split adjustments are verified.",
     historyQuarterly: (available: number) =>
       `${available} quarterly period${available === 1 ? "" : "s"} available`,
     historyTtm: (available: number) =>
@@ -83,6 +86,9 @@ const COPY = {
     fiscalYear: (year: number) => `Фин. г. ${year}`,
     availability: (available: number, total: number) => `${available} от ${total} години с данни`,
     noData: "Няма данни",
+    secNote:
+      "GAAP показатели от отчетите в SEC. FCF = оперативен паричен поток минус парични разходи за имоти, машини и оборудване. Липсващите данни не се оценяват.",
+    epsUnavailable: "Историческият EPS е скрит до потвърждение на корекциите за сплитове.",
     historyQuarterly: (available: number) => `Налични са ${available} тримесечни периода.`,
     historyTtm: (available: number) => `Налични са ${available} TTM периода.`,
     history: "Исторически финансови отчети",
@@ -131,6 +137,10 @@ const COPY = {
     availability: (available: number, total: number) =>
       `${available} von ${total} Jahren mit Daten`,
     noData: "Keine Daten",
+    secNote:
+      "GAAP-Daten aus SEC-Berichten. FCF = operativer Cashflow minus Barzahlungen für Sachanlagen. Fehlende Werte werden nicht geschätzt.",
+    epsUnavailable:
+      "Historische EPS-Werte bleiben bis zur Prüfung der Aktiensplit-Anpassungen ausgeblendet.",
     historyQuarterly: (available: number) => `${available} Quartalsperioden verfügbar`,
     historyTtm: (available: number) => `${available} TTM-Zeiträume verfügbar`,
     history: "Gemeldete Finanzhistorie",
@@ -179,6 +189,9 @@ const COPY = {
     fiscalYear: (year: number) => `AF ${year}`,
     availability: (available: number, total: number) => `${available} de ${total} años con datos`,
     noData: "Sin datos",
+    secNote:
+      "Datos GAAP de informes SEC. FCF = flujo operativo menos pagos en efectivo por inmovilizado material. No se estiman datos ausentes.",
+    epsUnavailable: "El BPA histórico se oculta hasta verificar los ajustes por desdoblamientos.",
     historyQuarterly: (available: number) => `${available} períodos trimestrales disponibles`,
     historyTtm: (available: number) => `${available} períodos TTM disponibles`,
     history: "Historial financiero publicado",
@@ -226,6 +239,10 @@ const COPY = {
     fiscalYear: (year: number) => `Eserc. ${year}`,
     availability: (available: number, total: number) => `${available} su ${total} anni con dati`,
     noData: "Nessun dato",
+    secNote:
+      "Dati GAAP dai bilanci SEC. FCF = flusso operativo meno acquisti in contanti di immobili, impianti e macchinari. I dati mancanti non sono stimati.",
+    epsUnavailable:
+      "L'EPS storico è nascosto finché non sono verificati gli aggiustamenti per frazionamenti.",
     historyQuarterly: (available: number) => `${available} periodi trimestrali disponibili`,
     historyTtm: (available: number) => `${available} periodi TTM disponibili`,
     history: "Storico finanziario dichiarato",
@@ -414,12 +431,16 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
                 locale={locale}
                 period={period}
                 axis={axis}
+                historyUnavailable={
+                  metric.key === "dilutedEps" && query.data?.epsHistoryUnavailable === true
+                }
                 copy={c}
               />
             ))}
           </div>
           <FinancialHistoryTable
             rows={rows}
+            filings={query.data?.filings}
             copy={c}
             format={(key, value) =>
               key === "dilutedEps" ? formatMetric("dilutedEps", value) : compact(value)
@@ -432,7 +453,12 @@ function Financials({ symbol, lang }: { symbol: string; lang: Lang }) {
             copy={c}
             period={period}
           />
-          <p className="text-xs text-muted-foreground">{c.source}</p>
+          {query.data?.source === "SEC EDGAR" && (
+            <p className="text-xs text-muted-foreground">{c.secNote}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {c.source.replace("Yahoo Finance", query.data?.source ?? "Yahoo Finance")}
+          </p>
         </>
       )}
     </div>
@@ -453,10 +479,12 @@ function FinancialHistoryTable({
   rows,
   copy,
   format,
+  filings,
 }: {
   rows: FinancialSeriesRow[];
   copy: FinancialCopy;
   format: (key: StatementKey, value: number) => string;
+  filings?: Record<string, string> | undefined;
 }) {
   const columns: { key: StatementKey; label: string }[] = [
     { key: "revenue", label: copy.revenue },
@@ -487,7 +515,20 @@ function FinancialHistoryTable({
           <tbody className="divide-y divide-border/70">
             {[...rows].reverse().map((row) => (
               <tr key={row.date} className="hover:bg-secondary/40">
-                <th className="sticky left-0 bg-card px-3 py-2.5 font-semibold">{row.date}</th>
+                <th className="sticky left-0 bg-card px-3 py-2.5 font-semibold">
+                  {filings?.[row.date] ? (
+                    <a
+                      href={filings[row.date]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline decoration-dotted underline-offset-4"
+                    >
+                      {row.date}
+                    </a>
+                  ) : (
+                    row.date
+                  )}
+                </th>
                 {columns.map((column) => (
                   <td
                     key={column.key}
@@ -513,6 +554,7 @@ function MetricCard({
   locale,
   period,
   axis,
+  historyUnavailable = false,
   copy,
 }: {
   rows: FinancialSeriesRow[];
@@ -522,6 +564,7 @@ function MetricCard({
   locale: string;
   period: Period;
   axis: AnnualSlot[] | null;
+  historyUnavailable?: boolean;
   copy: FinancialCopy;
 }) {
   const color = METRIC_CHART_COLORS[metric.key];
@@ -569,6 +612,9 @@ function MetricCard({
     return (
       <Card className="border-border/70 bg-gradient-to-br from-card via-card to-secondary/20 p-4">
         <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+        {historyUnavailable && (
+          <p className="mt-1 text-xs text-muted-foreground">{copy.epsUnavailable}</p>
+        )}
         <p className="mt-2 text-sm text-muted-foreground">{copy.noMetricData}</p>
       </Card>
     );
@@ -579,6 +625,9 @@ function MetricCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+          {historyUnavailable && (
+            <p className="mt-1 text-xs text-muted-foreground">{copy.epsUnavailable}</p>
+          )}
           {(axis ? values.length >= 1 : values.length >= 3) && last != null && (
             <p className="mt-1 font-display text-2xl font-bold tabular-nums tracking-tight">
               {format(last)}
@@ -648,7 +697,7 @@ function MetricCard({
             color={color}
             name={title}
             ariaLabel={`${title} historical chart`}
-            noDataLabel={copy.noData}
+            noDataLabel={historyUnavailable ? copy.epsUnavailable : copy.noData}
             format={format}
           />
           <details className="mt-1 text-xs">
