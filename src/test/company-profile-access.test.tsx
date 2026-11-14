@@ -53,7 +53,10 @@ vi.mock("@/components/DcfCalculator", () => ({
   dcfCopy: { en: { intrinsic: "DCF estimate" } },
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  document.querySelectorAll("[data-snapshot-target]").forEach((node) => node.remove());
+});
 beforeEach(() => {
   state.rpc.mockReset();
 });
@@ -68,9 +71,19 @@ function renderProfile({
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
+  const snapshotTarget = document.createElement("div");
+  snapshotTarget.dataset["snapshotTarget"] = "true";
+  document.body.append(snapshotTarget);
   return render(
     <QueryClientProvider client={queryClient}>
-      <CompanyProfileDetails symbol="AAPL" name="Apple" lang="en" userId={userId} isPro={isPro} />
+      <CompanyProfileDetails
+        symbol="AAPL"
+        name="Apple"
+        lang="en"
+        userId={userId}
+        isPro={isPro}
+        snapshotTarget={snapshotTarget}
+      />
     </QueryClientProvider>,
   );
 }
@@ -98,6 +111,9 @@ describe("company profile access", () => {
     renderProfile();
 
     expect(await screen.findByText("Statistics for AAPL")).toBeInTheDocument();
+    expect(document.querySelector("[data-snapshot-target]")).toHaveTextContent(
+      "Statistics for AAPL",
+    );
     expect(screen.getByText("Financial statements")).toBeInTheDocument();
     expect(screen.getByText("DCF estimate (DCF)")).toBeInTheDocument();
     expect(

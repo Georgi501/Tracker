@@ -1,5 +1,7 @@
 import { BarsSilhouette, ProGate } from "@/components/ProFeatures";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
+import { KeyStats } from "@/components/KeyStats";
+import { RecommendationTrend } from "@/components/RecommendationTrend";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { languageLocale, type Lang } from "@/lib/i18n";
@@ -592,7 +594,13 @@ export function ProCompanyResearch({
 }) {
   const c = COPY[lang];
   return (
-    <ProGate title={c.title} desc={c.desc} preview={<BarsSilhouette />} unlocked={unlocked}>
+    <ProGate
+      title={c.title}
+      desc={c.desc}
+      preview={<BarsSilhouette />}
+      unlocked={unlocked}
+      className="company-research cq-card"
+    >
       <ResearchPanels symbol={symbol} lang={lang} />
     </ProGate>
   );
@@ -649,10 +657,16 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
     : null;
 
   if (statsQuery.isLoading || researchQuery.isLoading)
-    return <p className="py-6 text-sm text-muted-foreground">{c.loading}</p>;
+    return (
+      <section id="statistics" tabIndex={-1} className="scroll-mt-36 space-y-3">
+        <KeyStats symbol={symbol} lang={lang} display="details" />
+        <p className="py-6 text-sm text-muted-foreground">{c.loading}</p>
+      </section>
+    );
   if (statsQuery.isError || researchQuery.isError)
     return (
-      <div className="space-y-3 py-4">
+      <section id="statistics" tabIndex={-1} className="scroll-mt-36 space-y-3 py-4">
+        <KeyStats symbol={symbol} lang={lang} display="details" />
         <p role="alert" className="text-sm text-destructive">
           {c.loadFailed}
         </p>
@@ -662,7 +676,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
         >
           {c.retry}
         </Button>
-      </div>
+      </section>
     );
   const hasOwnershipData =
     !!research &&
@@ -709,19 +723,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
     </section>
   );
   const recommendations = research?.recommendations ?? [];
-  const latestRecommendation = recommendations[0];
-  const voteLabels = ["strongBuy", "buy", "hold", "sell", "strongSell"] as const;
-  const voteColors = [
-    "bg-success",
-    "bg-success/65",
-    "bg-muted-foreground/50",
-    "bg-destructive/65",
-    "bg-destructive",
-  ];
   const voteNames = [c.strongBuy, c.buy, c.hold, c.sell, c.strongSell];
-  const totalVotes = latestRecommendation
-    ? voteLabels.reduce((sum, key) => sum + latestRecommendation[key], 0)
-    : 0;
   const targetLow = stats?.targetLow;
   const targetHigh = stats?.targetHigh;
   const currentPrice = stats?.currentPrice;
@@ -783,10 +785,13 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
 
   return (
     <div className="space-y-8">
-      <section id="statistics" className="scroll-mt-24 space-y-3">
+      <section id="statistics" tabIndex={-1} className="scroll-mt-36 space-y-3">
         <SectionHeading icon={<ChartNoAxesCombined size={18} />} title={c.statistics} />
         <QuoteFreshness at={stats?.quoteAt} lang={lang} marketState={stats?.marketState} />
         <p className="text-xs text-muted-foreground">{c.ratioNote}</p>
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+          <KeyStats symbol={symbol} lang={lang} display="details" />
+        </div>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{statGroups}</div>
         <PeerComparison
           symbol={symbol}
@@ -810,7 +815,7 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
 
       <section id="analysis" className="scroll-mt-24 space-y-3">
         <SectionHeading icon={<BarChart3 size={18} />} title={c.analysts} />
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="analyst-cards grid grid-cols-1 items-start gap-3">
           <section className="rounded-xl border border-border bg-background/70 p-4">
             <h4 className="mb-3 font-display text-sm font-semibold">{c.target}</h4>
             <p className="mb-3 text-xs text-muted-foreground">{c.targetNote}</p>
@@ -882,44 +887,14 @@ function ResearchPanels({ symbol, lang }: { symbol: string; lang: Lang }) {
               <p className="py-4 text-sm text-muted-foreground">{c.unavailable}</p>
             )}
           </section>
-          <section className="rounded-xl border border-border bg-background/70 p-4">
+          <section className="recommendation-card cq-card rounded-xl border border-border bg-background/70 p-4">
             <h4 className="mb-3 font-display text-sm font-semibold">{c.consensus}</h4>
-            {latestRecommendation && totalVotes > 0 ? (
-              <>
-                <div className="flex h-3 overflow-hidden rounded-full bg-secondary">
-                  {voteLabels.map((key, index) =>
-                    latestRecommendation[key] > 0 ? (
-                      <span
-                        key={key}
-                        className={voteColors[index]}
-                        style={{ width: `${(latestRecommendation[key] / totalVotes) * 100}%` }}
-                        title={`${voteNames[index]}: ${latestRecommendation[key]}`}
-                      />
-                    ) : null,
-                  )}
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-                  {voteLabels.map((key, index) => (
-                    <div key={key} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <i className={`h-2 w-2 rounded-full ${voteColors[index]}`} />
-                        {voteNames[index]}
-                      </span>
-                      <strong className="tabular-nums">{latestRecommendation[key]}</strong>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {recommendations.slice(0, 4).map((item) => (
-                    <span key={item.period} className="mr-3">
-                      {item.period}: {voteLabels.reduce((sum, key) => sum + item[key], 0)}
-                    </span>
-                  ))}
-                </p>
-              </>
-            ) : (
-              <p className="py-4 text-sm text-muted-foreground">{c.unavailable}</p>
-            )}
+            <RecommendationTrend
+              recommendations={recommendations}
+              names={voteNames}
+              lang={lang}
+              unavailable={c.unavailable}
+            />
           </section>
         </div>
 

@@ -66,6 +66,65 @@ async function renderTrailing() {
 }
 
 describe("financial statement controls and metric changes", () => {
+  it("keeps all six revenue flows accessible with their calculated values", async () => {
+    state.financials.mockResolvedValue({
+      currency: "USD",
+      rows: [
+        {
+          ...row("2025-01-31", { revenue: 100 }),
+          grossProfit: 75,
+          operatingIncome: 50,
+          netIncome: 40,
+        },
+      ],
+    });
+    renderFinancials();
+    const list = await screen.findByRole("list", { name: "Revenue & expense breakdown" });
+    const items = within(list).getAllByRole("listitem");
+    expect(items).toHaveLength(6);
+    const diagramToggle = screen.getByRole("button", { name: "Flow diagram" });
+    expect(diagramToggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(diagramToggle);
+    expect(diagramToggle).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(diagramToggle.getAttribute("aria-controls")!)).toHaveAttribute(
+      "aria-label",
+      "Flow diagram",
+    );
+    fireEvent.click(diagramToggle);
+    expect(diagramToggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(6);
+    for (const [name, value] of [
+      ["Revenue → Gross profit", "$75"],
+      ["Revenue → Cost of revenue", "$25"],
+      ["Gross profit → Operating income", "$50"],
+      ["Gross profit → Operating expenses", "$25"],
+      ["Operating income → Net income", "$40"],
+      ["Operating income → Other & taxes", "$10"],
+    ]) {
+      expect(within(list).getByText(name!).closest("li")).toHaveTextContent(value!);
+    }
+  });
+  it.each([null, -10])(
+    "withholds the flow chart when reported net income is %s",
+    async (netIncome) => {
+      state.financials.mockResolvedValue({
+        currency: "USD",
+        rows: [
+          {
+            ...row("2025-01-31", { revenue: 100 }),
+            grossProfit: 75,
+            operatingIncome: 50,
+            netIncome,
+          },
+        ],
+      });
+      renderFinancials();
+      expect(await screen.findByText(/A revenue breakdown is unavailable/)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("list", { name: "Revenue & expense breakdown" }),
+      ).not.toBeInTheDocument();
+    },
+  );
   it("requests and marks each selected period and range", async () => {
     renderFinancials();
 

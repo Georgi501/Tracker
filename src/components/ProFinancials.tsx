@@ -64,6 +64,7 @@ const COPY = {
     loadFailed: "Could not load financial data.",
     retry: "Try again",
     breakdown: "Revenue & expense breakdown",
+    flowDiagram: "Flow diagram",
     breakdownSubtitle: "Follow reported revenue through costs to operating and net income.",
     breakdownPeriod: "Breakdown period",
     costOfRevenue: "Cost of revenue",
@@ -112,6 +113,7 @@ const COPY = {
     loadFailed: "Финансовите данни не се заредиха.",
     retry: "Опитай отново",
     breakdown: "Разбивка на приходите и разходите",
+    flowDiagram: "Диаграма на потоците",
     breakdownSubtitle:
       "Виж как отчетените приходи преминават през разходите до оперативната и нетната печалба.",
     breakdownPeriod: "Период на разбивката",
@@ -165,6 +167,7 @@ const COPY = {
     loadFailed: "Finanzdaten konnten nicht geladen werden.",
     retry: "Erneut versuchen",
     breakdown: "Umsatz- und Kostenaufteilung",
+    flowDiagram: "Flussdiagramm",
     breakdownSubtitle:
       "Verfolge den gemeldeten Umsatz über die Kosten bis zum Betriebs- und Nettogewinn.",
     breakdownPeriod: "Zeitraum der Aufteilung",
@@ -215,6 +218,7 @@ const COPY = {
     loadFailed: "No se pudieron cargar los datos financieros.",
     retry: "Intentar de nuevo",
     breakdown: "Desglose de ingresos y gastos",
+    flowDiagram: "Diagrama de flujos",
     breakdownSubtitle:
       "Sigue los ingresos declarados a través de los gastos hasta el beneficio operativo y neto.",
     breakdownPeriod: "Período del desglose",
@@ -267,6 +271,7 @@ const COPY = {
     loadFailed: "Impossibile caricare i dati finanziari.",
     retry: "Riprova",
     breakdown: "Ripartizione di ricavi e spese",
+    flowDiagram: "Diagramma dei flussi",
     breakdownSubtitle:
       "Segui i ricavi dichiarati attraverso i costi fino al reddito operativo e netto.",
     breakdownPeriod: "Periodo della ripartizione",
@@ -306,6 +311,16 @@ type FlowNodeProps = {
   height?: number;
   index?: number;
   payload?: { name?: string; color?: string; value?: number };
+};
+type FlowLinkProps = {
+  sourceX?: number;
+  sourceY?: number;
+  targetX?: number;
+  targetY?: number;
+  sourceControlX?: number;
+  targetControlX?: number;
+  linkWidth?: number;
+  payload?: { source?: FlowNode; target?: FlowNode; value?: number };
 };
 
 export function ProFinancials({ symbol, lang }: { symbol: string; lang: Lang }) {
@@ -773,6 +788,8 @@ function RevenueBreakdown({
   period: Period;
 }) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [diagramExpanded, setDiagramExpanded] = useState(false);
+  const diagramId = useId();
   const periods = [...rows].reverse().filter(
     (
       item,
@@ -819,30 +836,30 @@ function RevenueBreakdown({
       : new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(parsed);
   };
   const nodes: FlowNode[] = [
-    { name: copy.revenue, color: "var(--chart-2)" },
-    { name: copy.costOfRevenue, color: "var(--chart-4)" },
-    { name: copy.grossProfit, color: "var(--chart-1)" },
-    { name: copy.operatingExpenseLabel, color: "var(--chart-4)" },
-    { name: copy.operatingIncome, color: "var(--success)" },
-    { name: copy.otherTaxes, color: "var(--chart-4)" },
-    { name: copy.netIncome, color: "var(--success)" },
+    { name: copy.revenue, color: "var(--flow-revenue)" },
+    { name: copy.grossProfit, color: "var(--flow-gross)" },
+    { name: copy.operatingIncome, color: "var(--flow-operating)" },
+    { name: copy.netIncome, color: "var(--flow-net)" },
+    { name: copy.otherTaxes, color: "var(--flow-tax)" },
+    { name: copy.operatingExpenseLabel, color: "var(--flow-expense)" },
+    { name: copy.costOfRevenue, color: "var(--flow-cost)" },
   ];
   const highlights = [
-    { name: copy.revenue, value: revenue, color: "var(--chart-2)" },
-    { name: copy.grossProfit, value: grossProfit, color: "var(--chart-1)" },
-    { name: copy.operatingIncome, value: operatingIncome, color: "var(--success)" },
-    { name: copy.netIncome, value: netIncome, color: "var(--success)" },
+    { name: copy.revenue, value: revenue, color: nodes[0]!.color },
+    { name: copy.grossProfit, value: grossProfit, color: nodes[1]!.color },
+    { name: copy.operatingIncome, value: operatingIncome, color: nodes[2]!.color },
+    { name: copy.netIncome, value: netIncome, color: nodes[3]!.color },
   ];
   const flow: FlowData = {
     nodes,
     links: row
       ? [
-          { source: 0, target: 1, value: row.revenue - row.grossProfit },
-          { source: 0, target: 2, value: row.grossProfit },
-          { source: 2, target: 3, value: row.grossProfit - row.operatingIncome },
-          { source: 2, target: 4, value: row.operatingIncome },
-          { source: 4, target: 5, value: row.operatingIncome - row.netIncome },
-          { source: 4, target: 6, value: row.netIncome },
+          { source: 0, target: 1, value: row.grossProfit },
+          { source: 0, target: 6, value: row.revenue - row.grossProfit },
+          { source: 1, target: 2, value: row.operatingIncome },
+          { source: 1, target: 5, value: row.grossProfit - row.operatingIncome },
+          { source: 2, target: 3, value: row.netIncome },
+          { source: 2, target: 4, value: row.operatingIncome - row.netIncome },
         ].filter((link) => link.value > 0)
       : [],
   };
@@ -853,7 +870,10 @@ function RevenueBreakdown({
     const height = props.height ?? 0;
     const name = props.payload?.name ?? "";
     const value = props.payload?.value;
-    const right = (props.index ?? 0) % 2 === 1;
+    const source = props.index === 0;
+    const terminal = (props.index ?? 0) >= 3;
+    const labelX = source ? x - 8 : terminal ? x + width + 8 : x + width / 2;
+    const labelY = source || terminal ? y + Math.max(12, height / 2) : y - 24;
     return (
       <g>
         <title>
@@ -871,21 +891,42 @@ function RevenueBreakdown({
           strokeWidth={1.5}
         />
         <text
-          x={right ? x + width + 6 : x - 6}
-          y={y + Math.max(12, height / 2)}
-          textAnchor={right ? "start" : "end"}
+          x={labelX}
+          y={labelY}
+          textAnchor={source ? "end" : terminal ? "start" : "middle"}
           fill="var(--foreground)"
           fontSize={11}
           fontWeight={500}
         >
-          {name}
+          <tspan x={labelX}>{name}</tspan>
+          <tspan x={labelX} dy={15} fill="var(--muted-foreground)">
+            {value == null ? "" : format(value)}
+          </tspan>
         </text>
       </g>
     );
   };
+  const renderLink = (props: FlowLinkProps) => {
+    const label = `${props.payload?.source?.name} → ${props.payload?.target?.name}: ${format(props.payload?.value ?? 0)}`;
+    return (
+      <path
+        className="financial-flow-link"
+        d={`M${props.sourceX},${props.sourceY} C${props.sourceControlX},${props.sourceY} ${props.targetControlX},${props.targetY} ${props.targetX},${props.targetY}`}
+        fill="none"
+        stroke={props.payload?.target?.color}
+        strokeWidth={props.linkWidth}
+        strokeOpacity={0.35}
+        tabIndex={0}
+        role="img"
+        aria-label={label}
+      >
+        <title>{label}</title>
+      </path>
+    );
+  };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[0.06] p-4 shadow-md shadow-primary/[0.04] sm:p-5">
+    <section className="revenue-breakdown overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[0.06] p-4 shadow-md shadow-primary/[0.04] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h4 className="font-display font-semibold">{copy.breakdown}</h4>
@@ -941,59 +982,104 @@ function RevenueBreakdown({
                 key={item.name}
                 className="min-w-0 rounded-xl border border-border/60 bg-background/55 px-3 py-2.5"
               >
-                <p className="flex items-center gap-2 truncate text-xs text-muted-foreground">
+                <p className="flex items-start gap-2 text-xs text-muted-foreground">
                   <span
                     aria-hidden
-                    className="size-2 shrink-0 rounded-full"
+                    className="mt-1 size-2 shrink-0 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
                   {item.name}
                 </p>
-                <p className="mt-1 truncate font-display text-base font-semibold tabular-nums tracking-tight sm:text-lg">
+                <p
+                  className="mt-1 break-words font-display text-base font-semibold tabular-nums tracking-tight sm:text-lg"
+                  style={{ color: item.color }}
+                >
                   {item.value == null ? "—" : format(item.value)}
                 </p>
               </div>
             ))}
           </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-border/50 bg-background/45 p-2 sm:p-3">
-            <div
-              className="h-[300px] min-w-[620px] sm:h-[330px] sm:min-w-0"
-              role="img"
-              aria-label={`${copy.breakdown} · ${row.date}`}
+          <div
+            className="financial-flow-diagram mt-3 rounded-xl border border-border/50 bg-background/45 p-2 sm:p-3"
+            data-expanded={diagramExpanded}
+          >
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2 text-sm font-semibold text-primary md:hidden"
+              aria-expanded={diagramExpanded}
+              aria-controls={diagramId}
+              onClick={() => setDiagramExpanded((expanded) => !expanded)}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <Sankey
-                  data={flow}
-                  node={renderNode}
-                  link={{
-                    fill: "var(--primary)",
-                    fillOpacity: 0.16,
-                    stroke: "var(--primary)",
-                    strokeOpacity: 0.28,
-                  }}
-                  nodeWidth={14}
-                  nodePadding={26}
-                  margin={{ top: 18, right: 118, bottom: 18, left: 118 }}
-                  iterations={24}
-                >
-                  <Tooltip
-                    formatter={(value) => format(Number(value))}
-                    contentStyle={{
-                      background: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                </Sankey>
-              </ResponsiveContainer>
+              {copy.flowDiagram}
+              <span aria-hidden>{diagramExpanded ? "−" : "+"}</span>
+            </button>
+            <div
+              id={diagramId}
+              className="financial-flow-canvas overflow-x-auto"
+              role="region"
+              aria-label={copy.flowDiagram}
+              tabIndex={0}
+            >
+              <div className="h-[380px] min-w-[840px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <Sankey
+                    data={flow}
+                    node={renderNode}
+                    link={renderLink}
+                    nodeWidth={14}
+                    nodePadding={38}
+                    margin={{ top: 48, right: 170, bottom: 28, left: 115 }}
+                    iterations={0}
+                    sort={false}
+                  >
+                    <Tooltip
+                      formatter={(value) => format(Number(value))}
+                      contentStyle={{
+                        background: "var(--popover)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                    />
+                  </Sankey>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
+          <ul
+            aria-label={copy.breakdown}
+            className="financial-flow-values mt-3 grid gap-x-6 gap-y-2 text-sm md:grid-cols-2"
+          >
+            {flow.links.map((link) => (
+              <li
+                key={`${link.source}-${link.target}`}
+                data-flow-value
+                className="flex items-start justify-between gap-3 border-t border-border/60 py-2"
+              >
+                <span className="flex min-w-0 items-start gap-2">
+                  <i
+                    aria-hidden
+                    className="mt-1.5 size-2 shrink-0 rounded-full"
+                    style={{ background: nodes[link.target]!.color }}
+                  />
+                  <span>
+                    {nodes[link.source]!.name} → {nodes[link.target]!.name}
+                  </span>
+                </span>
+                <strong
+                  className="shrink-0 tabular-nums"
+                  style={{ color: nodes[link.target]!.color }}
+                >
+                  {format(link.value)}
+                </strong>
+              </li>
+            ))}
+          </ul>
         </>
       ) : (
         <p className="py-6 text-sm text-muted-foreground">{copy.breakdownUnavailable}</p>
       )}
-      <p className="mt-2 text-xs text-muted-foreground">{copy.breakdownNote}</p>
+      <p className="financial-flow-note mt-2 text-xs text-muted-foreground">{copy.breakdownNote}</p>
     </section>
   );
 }

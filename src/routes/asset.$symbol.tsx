@@ -362,6 +362,7 @@ function AssetPage() {
   const sectionRef = useSectionAnchor(hash, symbol);
   const activeResearchSection = hash || "overview";
   const [bondPrice, setBondPrice] = useState("");
+  const [snapshotTarget, setSnapshotTarget] = useState<HTMLDivElement | null>(null);
   const [savingBondPrice, setSavingBondPrice] = useState(false);
   const [valuationDate, setValuationDate] = useState(() => today);
   const [valuationPrice, setValuationPrice] = useState("");
@@ -419,7 +420,7 @@ function AssetPage() {
   const projectedCoupon = h && bondAsset ? projectedBondCoupon(bondAsset, h.quantity) : undefined;
 
   return (
-    <div ref={sectionRef} className="page-enter space-y-5">
+    <div ref={sectionRef} className="asset-page page-enter space-y-5">
       <Link
         to={h ? "/holdings" : "/markets"}
         search={!h && from === "markets" && q ? { q } : {}}
@@ -436,6 +437,7 @@ function AssetPage() {
             type={type}
             lang={p.lang}
             showStats={type !== "stock"}
+            snapshotRef={type === "stock" ? setSnapshotTarget : undefined}
           />
         ) : (
           <Card>
@@ -463,7 +465,7 @@ function AssetPage() {
       {type === "stock" && (
         <nav
           aria-label={p.lang === "bg" ? "Раздели за проучване" : "Research sections"}
-          className="sticky top-16 z-20 -mx-1 overflow-x-auto rounded-2xl border border-border/80 bg-card/90 p-1.5 shadow-lg shadow-black/5 backdrop-blur-xl"
+          className="asset-section-tabs sticky z-20 -mx-1 overflow-x-auto rounded-2xl border border-border/80 bg-card/90 p-1.5 shadow-lg shadow-black/5 backdrop-blur-xl"
         >
           <div className="flex min-w-max gap-1">
             {RESEARCH_NAV[p.lang].map(([id, label, Icon]) => {
@@ -728,6 +730,7 @@ function AssetPage() {
       {asset && <Journal symbol={symbol.toUpperCase()} c={c} />}
       {type === "stock" && asset && (
         <CompanyProfileDetails
+          snapshotTarget={snapshotTarget}
           symbol={symbol.toUpperCase()}
           name={asset.name ?? symbol.toUpperCase()}
           lang={p.lang}

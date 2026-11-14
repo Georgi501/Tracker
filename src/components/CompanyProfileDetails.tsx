@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Lock, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const COPY: Record<
   Lang,
@@ -143,12 +144,14 @@ export function CompanyProfileDetails({
   lang,
   userId,
   isPro,
+  snapshotTarget,
 }: {
   symbol: string;
   name: string;
   lang: Lang;
   userId: string | null;
   isPro: boolean;
+  snapshotTarget?: HTMLDivElement | null;
 }) {
   const c = COPY[lang];
   const weekStart = currentUtcWeekStart();
@@ -233,9 +236,8 @@ export function CompanyProfileDetails({
           </Link>
         </div>
       )}
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-        <KeyStats symbol={symbol} lang={lang} />
-      </div>
+      {snapshotTarget &&
+        createPortal(<KeyStats symbol={symbol} lang={lang} display="snapshot" />, snapshotTarget)}
       <div id="financials" className="scroll-mt-36">
         <ProFinancials symbol={symbol} lang={lang} />
       </div>

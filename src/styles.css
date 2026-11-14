@@ -2,6 +2,117 @@
 @source "../src";
 @import "tw-animate-css";
 
+:root {
+  --flow-revenue: oklch(0.5 0.095 190);
+  --flow-gross: oklch(0.51 0.16 255);
+  --flow-operating: oklch(0.49 0.12 145);
+  --flow-net: oklch(0.43 0.085 170);
+  --flow-cost: oklch(0.55 0.14 65);
+  --flow-expense: oklch(0.55 0.16 40);
+  --flow-tax: oklch(0.49 0.14 25);
+}
+.dark {
+  --flow-revenue: oklch(0.75 0.11 190);
+  --flow-gross: oklch(0.74 0.13 255);
+  --flow-operating: oklch(0.77 0.15 145);
+  --flow-net: oklch(0.67 0.11 170);
+  --flow-cost: oklch(0.8 0.14 65);
+  --flow-expense: oklch(0.73 0.15 40);
+  --flow-tax: oklch(0.65 0.14 25);
+}
+.recommendation-summary {
+  display: grid;
+  gap: 1.5rem;
+}
+/* Split only when the research card has enough content width for the price
+   chart's 560px minimum plus its padding and a readable recommendation card. */
+@container (min-width: 70rem) {
+  .company-research .analyst-cards {
+    grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.85fr);
+  }
+}
+@container (min-width: 30rem) {
+  .recommendation-summary {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: center;
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+}
+.financial-flow-link:focus {
+  outline: none;
+  stroke-opacity: 0.8;
+  filter: drop-shadow(0 0 2px var(--foreground));
+}
+.revenue-breakdown {
+  display: grid;
+}
+.financial-flow-values {
+  grid-row: 4;
+}
+.financial-flow-diagram {
+  grid-row: 5;
+}
+.financial-flow-canvas {
+  display: none;
+}
+.financial-flow-diagram[data-expanded="true"] .financial-flow-canvas {
+  display: block;
+}
+.financial-flow-note {
+  grid-row: 6;
+}
+@media (min-width: 768px) {
+  .financial-flow-canvas {
+    display: block;
+  }
+  .financial-flow-diagram {
+    grid-row: 4;
+  }
+  .financial-flow-values {
+    grid-row: 5;
+  }
+}
+
+/* The holdings table needs room for monetary values, row actions and the 30d
+   column. Query the Card's content box so page/card gutters count toward fit. */
+.holdings-table {
+  display: none;
+}
+@container (min-width: 60rem) {
+  .holdings-positions .holdings-card-sort,
+  .holdings-positions .holdings-mobile-list {
+    display: none;
+  }
+  .holdings-positions .holdings-table {
+    display: block;
+  }
+}
+
+/* Use the actual sticky stack, including mobile header rows and tab scrollbars.
+   One page scroll inset serves anchors and keyboard focus without double offsets. */
+html[data-asset-navigation] {
+  scroll-padding-top: calc(var(--asset-header-height, 4rem) + var(--asset-tabs-height, 0px) + 1rem);
+}
+.asset-section-tabs {
+  top: var(--asset-header-height, 4rem);
+}
+.asset-page [id] {
+  scroll-margin-top: 0;
+}
+.asset-page :is(button, a, input, textarea, select) {
+  scroll-margin-block: 1rem;
+}
+
+/* Only reserve a sidebar when usable snapshot content has actually mounted.
+   Keep tablet charts full width; desktop leaves room for all nine ranges and axes. */
+@media (min-width: 1280px) {
+  .quote-overview:has(> .quote-snapshot > section) {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 20rem);
+    gap: 1.5rem;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*

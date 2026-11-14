@@ -143,10 +143,12 @@ export function KeyStats({
   symbol,
   lang,
   variant = "company",
+  display = "default",
 }: {
   symbol: string;
   lang: Lang;
   variant?: "company" | "index";
+  display?: "default" | "snapshot" | "details";
 }) {
   const fetchStats = useServerFn(marketStats);
   const { data, isLoading } = useQuery({
@@ -158,6 +160,16 @@ export function KeyStats({
   const loc = languageLocale(lang);
   if (isLoading) return <p className="mt-4 text-sm text-muted-foreground">…</p>;
   if (!data) return <p className="mt-4 text-sm text-muted-foreground">{c.none}</p>;
+  if (
+    display === "snapshot" &&
+    ![
+      data.marketCap,
+      data.pe,
+      data.target,
+      data.low52 != null && data.high52 != null ? data.low52 : null,
+    ].some((value) => value != null && Number.isFinite(value))
+  )
+    return null;
   const num = (v: number | null, d = 2) =>
     v == null
       ? "—"
@@ -216,48 +228,113 @@ export function KeyStats({
         ];
   const visibleRows: { label: string; value: string; help?: string }[] =
     variant === "index" ? indexRows : rows;
-  return (
-    <section aria-label={variant === "index" ? c.indexSnapshot : c.snapshot} className="space-y-3">
-      <h2 className="font-display text-sm font-semibold">
-        {variant === "index" ? c.indexSnapshot : c.snapshot}
-      </h2>
-      <div className="grid grid-cols-2 gap-2">
-        {featured.map(({ label, value }) => (
-          <div key={label} className="min-w-0 rounded-xl border border-border/70 bg-card/70 p-3">
-            <p className="truncate text-[11px] leading-4 text-muted-foreground">{label}</p>
-            <p className="mt-1 truncate text-sm font-semibold tabular-nums">{value}</p>
-          </div>
-        ))}
-      </div>
-      <details className="group rounded-xl border border-border/70 bg-card/40">
-        <summary className="cursor-pointer list-none rounded-xl px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center justify-between gap-2">
-            {c.more}
-            <ChevronDown
-              aria-hidden
-              size={15}
-              className="text-primary transition group-open:rotate-180"
-            />
-          </span>
-        </summary>
-        <dl className="grid gap-x-4 px-3 pb-2 sm:grid-cols-2">
+  if (display === "details")
+    return (
+      <section aria-label={c.more} className="space-y-3">
+        <h2 className="font-display text-sm font-semibold">{c.more}</h2>
+        <dl className="grid gap-x-6 sm:grid-cols-2">
           {visibleRows.map(({ label, value, help }) => (
             <div
               key={label}
-              className="flex items-center justify-between gap-3 border-t border-border/60 py-2 text-xs"
+              className="flex items-start justify-between gap-3 border-t border-border/60 py-2.5 text-sm"
             >
-              <dt
-                className="text-muted-foreground"
-                title={help}
-                aria-label={help ? `${label}. ${help}` : undefined}
-              >
+              <dt className="text-muted-foreground" title={help}>
                 {label}
               </dt>
               <dd className="text-right font-semibold tabular-nums">{value}</dd>
             </div>
           ))}
         </dl>
-      </details>
+      </section>
+    );
+  return (
+    <section
+      aria-label={variant === "index" ? c.indexSnapshot : c.snapshot}
+      className={
+        display === "snapshot"
+          ? "space-y-4 rounded-xl border border-border bg-background/45 p-4"
+          : "space-y-3"
+      }
+    >
+      <h2 className="font-display text-sm font-semibold">
+        {variant === "index" ? c.indexSnapshot : c.snapshot}
+      </h2>
+      <dl
+        className={
+          display === "snapshot" ? "grid grid-cols-2 gap-x-4 gap-y-4" : "grid grid-cols-2 gap-2"
+        }
+      >
+        {featured.map(({ label, value }) => (
+          <div
+            key={label}
+            className={
+              display === "snapshot"
+                ? "min-w-0"
+                : "min-w-0 rounded-xl border border-border/70 bg-card/70 p-3"
+            }
+          >
+            <dt
+              className={
+                display === "snapshot"
+                  ? "text-xs leading-5 text-muted-foreground"
+                  : "truncate text-[11px] leading-4 text-muted-foreground"
+              }
+            >
+              {label}
+            </dt>
+            <dd
+              className={
+                display === "snapshot"
+                  ? "mt-1 break-words text-base font-semibold tabular-nums"
+                  : "mt-1 truncate text-sm font-semibold tabular-nums"
+              }
+            >
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {display === "snapshot" ? (
+        <a
+          href="#statistics"
+          className="inline-flex min-h-11 items-center rounded-md text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+        >
+          {c.more}{" "}
+          <span aria-hidden className="ml-2">
+            →
+          </span>
+        </a>
+      ) : (
+        <details className="group rounded-xl border border-border/70 bg-card/40">
+          <summary className="cursor-pointer list-none rounded-xl px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between gap-2">
+              {c.more}
+              <ChevronDown
+                aria-hidden
+                size={15}
+                className="text-primary transition group-open:rotate-180"
+              />
+            </span>
+          </summary>
+          <dl className="grid gap-x-4 px-3 pb-2 sm:grid-cols-2">
+            {visibleRows.map(({ label, value, help }) => (
+              <div
+                key={label}
+                className="flex items-center justify-between gap-3 border-t border-border/60 py-2 text-xs"
+              >
+                <dt
+                  className="text-muted-foreground"
+                  title={help}
+                  aria-label={help ? `${label}. ${help}` : undefined}
+                >
+                  {label}
+                </dt>
+                <dd className="text-right font-semibold tabular-nums">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      )}
     </section>
   );
 }

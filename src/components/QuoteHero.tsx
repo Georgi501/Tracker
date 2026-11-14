@@ -175,6 +175,7 @@ export function QuoteHero({
   kindLabel,
   showStats = type !== "crypto",
   statsVariant = "company",
+  snapshotRef,
 }: {
   symbol: string;
   name: string;
@@ -183,6 +184,7 @@ export function QuoteHero({
   kindLabel?: string;
   showStats?: boolean;
   statsVariant?: "company" | "index";
+  snapshotRef?: ((node: HTMLDivElement | null) => void) | undefined;
 }) {
   const c = L[lang];
   const loc = languageLocale(lang);
@@ -346,7 +348,7 @@ export function QuoteHero({
           </div>
         )}
       </div>
-      <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,0.85fr)]">
+      <div className="quote-overview mt-4 grid items-start gap-4">
         <div className="min-w-0">
           <div className="rounded-xl border border-border p-3">
             <div role="group" className="mb-2 flex flex-wrap items-center gap-1">
@@ -530,8 +532,9 @@ export function QuoteHero({
             />
           )}
         </div>
+        {snapshotRef && <div ref={snapshotRef} className="quote-snapshot min-w-0 empty:hidden" />}
         {showStats && type !== "crypto" && (
-          <div className="min-w-0 rounded-xl border border-border bg-background/45 p-3 sm:p-4">
+          <div className="quote-snapshot min-w-0 rounded-xl border border-border bg-background/45 p-3 empty:hidden sm:p-4">
             <KeyStats symbol={symbol} lang={lang} variant={statsVariant} />
           </div>
         )}

@@ -653,7 +653,7 @@ function Holdings() {
           );
         })()}
       {p.holdings.length > 0 && <AllocationCard />}
-      <Card>
+      <Card className="holdings-positions cq-card">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="font-display mr-auto text-2xl font-bold">{p.t("holdings")}</h1>
           <Link
@@ -788,7 +788,7 @@ function Holdings() {
           </div>
         ) : (
           <>
-            <div className="mb-3 flex items-center gap-2 md:hidden">
+            <div className="holdings-card-sort mb-3 flex items-center gap-2">
               <ArrowUpDown size={14} className="text-muted-foreground" />
               <select
                 value={sort.key}
@@ -810,20 +810,20 @@ function Holdings() {
                 {sort.dir === 1 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
               </button>
             </div>
-            <ul className="holdings-mobile-list space-y-2.5 md:hidden">
+            <ul className="holdings-mobile-list space-y-2.5">
               {rows.map((h, i) => (
                 <li
                   key={h.asset.id}
                   style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
                   className="rise-in rounded-2xl border border-border bg-background/60 p-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-3 gap-y-3">
                     <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
                     <div className="min-w-0 flex-1">
                       <Link
                         to="/asset/$symbol"
                         params={{ symbol: h.asset.symbol }}
-                        className="block truncate font-semibold hover:text-primary"
+                        className="block break-words font-semibold hover:text-primary"
                       >
                         {h.asset.name}
                       </Link>
@@ -839,7 +839,7 @@ function Holdings() {
                         compact
                       />
                     </div>
-                    <div className="text-right">
+                    <div className="col-span-full row-start-2 min-w-0 border-t border-border/60 pt-3 text-right">
                       <HoldingValue
                         asset={h.asset}
                         quantity={h.quantity}
@@ -888,7 +888,7 @@ function Holdings() {
                 />
               )}
             </ul>
-            <div className="hidden overflow-x-auto md:block">
+            <div className="holdings-table overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
                 <thead className="text-left text-xs text-muted-foreground">
                   <tr className="border-b border-border">
