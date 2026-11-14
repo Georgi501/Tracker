@@ -478,14 +478,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
       <header className="header-as sticky top-0 z-30">
-        <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center gap-2 px-4 py-2 sm:h-16 sm:flex-nowrap sm:py-0 lg:gap-4">
+        <div className="header-layout mx-auto flex min-h-14 flex-wrap items-center gap-2 px-4 py-2 lg:gap-x-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <span className="brand-wordmark font-display text-lg font-bold tracking-tight sm:text-xl">
               <span className="b1">Capi</span>
               <span className="b2">Spot</span>
             </span>
           </Link>
-          <nav className="ml-2 hidden items-center lg:flex">
+          <nav className="header-main-nav ml-2 hidden min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden lg:flex">
             {mainNav.map((n) => (
               <Link
                 key={n.to}
@@ -529,10 +529,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenu>
             )}
           </nav>
-          <div className="order-last min-w-0 w-full basis-full flex-1 sm:order-none sm:w-auto sm:basis-auto lg:max-w-md">
+          <div className="header-search-slot order-last min-w-0 w-full basis-full">
             <HeaderSearch />
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1 sm:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <CommandMenu onAddTx={openTransactionDialog} />
             <PrivacyToggle lang={p.lang} />
             {p.authReady &&
