@@ -1,7 +1,6 @@
+import { userClient } from "@/integrations/supabase/user-client.server";
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { Database } from "@/integrations/supabase/types";
 
 const LANG_NAMES = {
   en: "English",
@@ -15,21 +14,6 @@ const Body = z.object({
   thesis: z.string().trim().min(10).max(3000),
   lang: z.enum(["en", "bg", "de", "es", "it"]),
 });
-
-function userClient(token: string) {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      headers: { Authorization: `Bearer ${token}` },
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
-}
 
 /** Pro-only: real Yahoo company data + user's thesis → streamed company summary and verification questions. */
 export const Route = createFileRoute("/api/thesis")({

@@ -1,5 +1,5 @@
-import type { Database } from "@/integrations/supabase/types";
-import { createClient } from "@supabase/supabase-js";
+import { userClient } from "@/integrations/supabase/user-client.server";
+import { buildAdvisorPortfolioPayload, loadValuedPortfolio } from "@/lib/ai-portfolio.server";
 import { createFileRoute } from "@tanstack/react-router";
 
 const INSTRUCTIONS = `You are CapiSpot Advisor, an assistant inside a portfolio tracker. Answer questions about the user's own portfolio using ONLY the portfolio data provided below (positions, transactions, available market quotes).
@@ -10,62 +10,9 @@ Rules:
 - Do not provide financial, investment, tax or legal advice, predictions or guarantees. State that responses are informational, may be inaccurate and must be independently verified.
 - Answer in the same language the user writes in. Use concise markdown.`;
 
-function userClient(token: string) {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      headers: { Authorization: `Bearer ${token}` },
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
-}
-
 async function portfolioContext(sb: ReturnType<typeof userClient>) {
-  const [a, t] = await Promise.all([
-    sb.from("assets").select("id,symbol,name,type,sector,region"),
-    sb.from("transactions").select("asset_id,kind,quantity,price,date").order("date"),
-  ]);
-  if (a.error || t.error) throw new Error("Portfolio unavailable");
-  const { fetchLiveQuote } = await import("@/lib/prices.server");
-  const quotes = await Promise.all(
-    (a.data ?? []).map(async (x) =>
-      x.type === "cash"
-        ? { symbol: x.symbol, price: 1, currency: "USD", change: 0 }
-        : { symbol: x.symbol, ...(await fetchLiveQuote(x.symbol, x.type)) },
-    ),
-  );
-  const qty = new Map<string, number>();
-  for (const r of t.data ?? [])
-    if (r.kind !== "dividend")
-      qty.set(
-        r.asset_id,
-        (qty.get(r.asset_id) ?? 0) + (r.kind === "buy" ? 1 : -1) * Number(r.quantity),
-      );
-  return JSON.stringify({
-    today: new Date().toISOString().slice(0, 10),
-    note: "Transaction prices are stored in USD. Live quote prices are in the quote currency shown; null price means unavailable.",
-    positions: (a.data ?? []).map((x, i) => ({
-      symbol: x.symbol,
-      name: x.name,
-      type: x.type,
-      sector: x.sector,
-      region: x.region,
-      quantity: qty.get(x.id) ?? 0,
-      liveQuote: quotes[i] && "price" in quotes[i]! ? quotes[i] : null,
-    })),
-    transactions: (t.data ?? []).map((r) => ({
-      symbol: a.data?.find((x) => x.id === r.asset_id)?.symbol,
-      kind: r.kind,
-      quantity: Number(r.quantity),
-      priceUsd: Number(r.price),
-      date: r.date,
-    })),
-  });
+  const summary = await loadValuedPortfolio(sb);
+  return JSON.stringify(buildAdvisorPortfolioPayload(summary));
 }
 
 export const Route = createFileRoute("/api/advisor")({
