@@ -1,5 +1,6 @@
 import { Card } from "@/components/AppShell";
 import { RelatedGuides } from "@/components/RelatedGuides";
+import { Button } from "@/components/ui/button";
 import { articleJsonLd } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -7,78 +8,162 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 type Guide = {
   title: string;
   intro: string;
-  sections: [string, string][];
-  cta: string;
   sampleCta: string;
+  importCta: string;
+  sampleNote: string;
+  exportTitle: string;
+  exportSteps: string[];
+  exportNote: string;
+  source: string;
+  newTab: string;
+  reviewTitle: string;
+  reviewIntro: string;
+  reviewItems: [string, string][];
+  plansTitle: string;
+  freeTitle: string;
+  free: string;
+  proTitle: string;
+  pro: string;
+  pricing: string;
+  faqTitle: string;
+  questions: [string, string][];
+  resultTitle: string;
+  result: string;
+  demo: string;
   note: string;
 };
 
 const GUIDE: Record<"en" | "bg", Guide> = {
   en: {
-    title: "Import Trading 212 history into a portfolio tracker",
+    title: "Import your Trading 212 CSV into CapiSpot",
     intro:
-      "Export your Trading 212 history as a CSV file and bring it into CapiSpot to see holdings and dividends from all your brokers in one place.",
-    sections: [
+      "Turn your transaction history into a portfolio you can follow. Try the Trading 212 sample first, then import your own trades and dividends with a preview before saving.",
+    sampleCta: "Try a Trading 212 CSV — no account needed",
+    importCta: "I already have a CSV",
+    sampleNote:
+      "The sample stays in your browser. No broker connection or account is needed to try it.",
+    exportTitle: "1. Download your Trading 212 transaction history",
+    exportSteps: [
+      "Open the menu in Trading 212 and go to History.",
+      "Use the export control and choose the period and activity types you need, including orders and dividends.",
+      "Download the CSV to your device. Keep its original column headers and currencies.",
+      "Include the history from your first purchase. If it takes several exports, review the date ranges so earlier trades are not missed.",
+    ],
+    exportNote:
+      "Use the transaction-history CSV, rather than a PDF statement or a pie/holdings export. Those are different file formats.",
+    source: "Trading 212’s official export instructions",
+    newTab: "opens in a new tab",
+    reviewTitle: "2. Review the rows before adding them",
+    reviewIntro:
+      "In CapiSpot, open Brokers, choose Trading 212, create or select its broker account and choose your CSV. Check the preview before confirming the import.",
+    reviewItems: [
       [
-        "1. Export from Trading 212",
-        "In Trading 212 open the history section and export the full period as CSV. If your history is long, export it in several date ranges so no transactions are missed.",
+        "Trades and dividends",
+        "Review the dates, tickers, quantities, prices and fees. Original currencies remain visible in the preview.",
       ],
       [
-        "2. Import into CapiSpot",
-        "Open Brokers, choose Trading 212 and upload the file. The format is detected from the headers and the original transaction currency is kept.",
+        "Possible duplicates",
+        "Rows already recorded are skipped by default. Review a flagged row before choosing to include it.",
       ],
       [
-        "3. Review before saving",
-        "A preview shows possible duplicates and a report by currency, fees and transaction type, so you can check the rows before anything is added.",
-      ],
-      [
-        "4. Review the results",
-        "Free includes the import preview and duplicate checks. The annual FIFO report of realized gains and losses is a separate Pro feature; analytics show the split across brokers.",
-      ],
-      [
-        "Direct sync with Pro",
-        "Pro accounts can also connect Trading 212 with a read-only API key instead of uploading files. The key needs read permissions only; it cannot place orders.",
+        "Rows that need attention",
+        "Unsupported actions, such as interest on cash, and incomplete rows are listed for review instead of silently becoming trades.",
       ],
     ],
-    cta: "Open Brokers and import",
-    sampleCta: "Try a sample CSV",
+    plansTitle: "CSV import is Free. Direct sync is Pro.",
+    freeTitle: "Free · CSV import",
+    free: "Upload a compatible CSV, review the transactions and duplicates, then confirm the import. To leave out a new row, correct the CSV and upload it again.",
+    proTitle: "Pro · Read-only sync and FIFO reports",
+    pro: "Connect a read-only Trading 212 API for trades and dividends. Annual FIFO reports of realized gains and losses are also Pro features.",
+    pricing: "Compare Free and Pro",
+    faqTitle: "Before your first import",
+    questions: [
+      [
+        "Why does the sample show a duplicate and a row to review?",
+        "They are deliberately included so you can see how the preview handles them. They do not mean the sample file failed.",
+      ],
+      [
+        "Do I need a Trading 212 API key?",
+        "Not for a CSV import. Download your history from Trading 212 and upload the file. The read-only API connection is a separate Pro option.",
+      ],
+      [
+        "When are my transactions saved?",
+        "The sample does not save portfolio data. Your own import requires a CapiSpot account, and transactions are saved when you confirm the preview.",
+      ],
+    ],
+    resultTitle: "3. Open your portfolio after import",
+    result:
+      "The import summary shows what was added, skipped or needs review. Use View holdings to open your positions, or explore an example portfolio before signing up.",
+    demo: "See an example portfolio",
     note: "General information, not tax or investment advice. CapiSpot is not affiliated with Trading 212.",
   },
   bg: {
-    title: "Как да импортираш историята от Trading 212 в тракер за портфолио",
+    title: "Импортирай своя Trading 212 CSV в CapiSpot",
     intro:
-      "Експортирай историята си от Trading 212 като CSV файл и я качи в CapiSpot, за да виждаш позициите и дивидентите от всичките си брокери на едно място.",
-    sections: [
+      "Превърни историята на сделките си в портфолио, което можеш да следиш. Първо пробвай примера за Trading 212, после импортирай своите сделки и дивиденти с преглед преди запис.",
+    sampleCta: "Пробвай Trading 212 CSV — без акаунт",
+    importCta: "Вече имам CSV файл",
+    sampleNote: "Примерът остава в браузъра. За пробата не са нужни акаунт или връзка с брокера.",
+    exportTitle: "1. Изтегли историята си от Trading 212",
+    exportSteps: [
+      "Отвори менюто в Trading 212 и избери History (История).",
+      "Избери експорта, периода и видовете записи, включително поръчките и дивидентите.",
+      "Изтегли CSV файла на устройството си. Запази оригиналните заглавия на колоните и валутите.",
+      "Включи историята от първата покупка. Ако са нужни няколко файла, провери периодите, за да не пропуснеш ранни сделки.",
+    ],
+    exportNote:
+      "Използвай CSV с историята на сделките, а не PDF извлечение или експорт на пай/позиции. Те са в различен формат.",
+    source: "Официалните инструкции за експорт на Trading 212",
+    newTab: "отваря се в нов раздел",
+    reviewTitle: "2. Прегледай редовете преди запис",
+    reviewIntro:
+      "В CapiSpot отвори „Брокери“, избери Trading 212, създай или избери брокерската сметка и посочи CSV файла. Провери прегледа, преди да потвърдиш импорта.",
+    reviewItems: [
       [
-        "1. Експорт от Trading 212",
-        "В Trading 212 отвори историята и експортирай целия период като CSV. Ако историята е дълга, експортирай я на няколко периода, за да не пропуснеш сделки.",
+        "Сделки и дивиденти",
+        "Провери датите, тикерите, количествата, цените и таксите. Оригиналните валути остават видими в прегледа.",
       ],
       [
-        "2. Импорт в CapiSpot",
-        "Отвори „Брокери“, избери Trading 212 и качи файла. Форматът се разпознава от заглавията, а оригиналната валута на сделките се запазва.",
+        "Възможни дубликати",
+        "Вече записаните редове се пропускат по подразбиране. Прегледай отбелязания ред, преди да избереш да го включиш.",
       ],
       [
-        "3. Преглед преди запис",
-        "Преди да се добави нещо, виждаш преглед с възможни дубликати и отчет по валути, такси и вид сделки, за да провериш редовете.",
-      ],
-      [
-        "4. Разгледай резултатите",
-        "В безплатния план CSV импортът включва преглед и проверка за дублирани сделки. Годишната FIFO справка за реализираните печалби и загуби е отделна Pro функция; анализите показват разпределението по брокери.",
-      ],
-      [
-        "Директна връзка с Pro",
-        "Pro акаунтите могат да свържат Trading 212 и с API ключ само за четене, вместо да качват файлове. Ключът е с права само за четене и не може да подава поръчки.",
+        "Редове за проверка",
+        "Неподдържаните действия, например лихви по свободни средства, и непълните редове се показват за проверка, вместо да се превръщат в сделки.",
       ],
     ],
-    cta: "Отвори „Брокери“ и импортирай",
-    sampleCta: "Пробвай примерен CSV",
+    plansTitle: "CSV импортът е Free. Директната връзка е Pro.",
+    freeTitle: "Free · CSV импорт",
+    free: "Качи съвместим CSV, прегледай транзакциите и дубликатите, после потвърди импорта. За да изключиш нов ред, коригирай CSV файла и го качи отново.",
+    proTitle: "Pro · Връзка само за четене и FIFO справки",
+    pro: "Свържи Trading 212 чрез API само за четене на сделки и дивиденти. Годишните FIFO справки за реализирани печалби и загуби също са Pro функции.",
+    pricing: "Сравни Free и Pro",
+    faqTitle: "Преди първия импорт",
+    questions: [
+      [
+        "Защо примерът има дубликат и ред за проверка?",
+        "Те са добавени умишлено, за да видиш как прегледът ги обработва. Това не означава, че примерният файл е неуспешен.",
+      ],
+      [
+        "Нужен ли е API ключ от Trading 212?",
+        "Не и за CSV импорт. Изтегли историята от Trading 212 и качи файла. API връзката само за четене е отделна Pro възможност.",
+      ],
+      [
+        "Кога се записват транзакциите ми?",
+        "Примерът не записва данни за портфолио. За собствен импорт е нужен CapiSpot акаунт, а транзакциите се записват при потвърждение на прегледа.",
+      ],
+    ],
+    resultTitle: "3. Отвори портфолиото след импорта",
+    result:
+      "Обобщението показва добавените и пропуснатите редове и тези за проверка. Отвори позициите си от бутона в обобщението или разгледай примерно портфолио преди регистрация.",
+    demo: "Виж примерно портфолио",
     note: "Обща информация, не е данъчен или инвестиционен съвет. CapiSpot не е свързан с Trading 212.",
   },
 };
 
-const TITLE = "Import Trading 212 history (CSV) — CapiSpot";
+const TITLE = "Trading 212 CSV Import & Portfolio Tracker | CapiSpot";
 const DESCRIPTION =
-  "Step-by-step: export your Trading 212 CSV, import it for free, review duplicates and learn which annual FIFO reports are included with Pro.";
+  "Import your Trading 212 CSV for free. Preview trades and dividends, check duplicates, then save to your portfolio. Try a sample without an account.";
 
 export const Route = createFileRoute("/trading212-import")({
   head: () => ({
@@ -96,39 +181,122 @@ export const Route = createFileRoute("/trading212-import")({
 });
 
 function Trading212Import() {
-  const p = usePortfolio();
-  const g = p.lang === "bg" ? GUIDE.bg : GUIDE.en;
+  const { lang } = usePortfolio();
+  const g = lang === "bg" ? GUIDE.bg : GUIDE.en;
+  const sampleButton = (
+    <Button
+      asChild
+      className="h-auto min-h-11 whitespace-normal rounded-full px-5 py-3 text-center leading-snug"
+    >
+      <Link to="/import-demo" search={{ broker: "trading212" }}>
+        {g.sampleCta}
+      </Link>
+    </Button>
+  );
+
   return (
-    <div className="page-enter mx-auto max-w-3xl space-y-4">
-      <h1 className="font-display text-balance text-3xl font-bold">{g.title}</h1>
-      <p className="text-muted-foreground">{g.intro}</p>
-      <Card>
-        <div className="space-y-5">
-          {g.sections.map(([h, body]) => (
-            <section key={h}>
-              <h2 className="font-display text-lg font-semibold">{h}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
-            </section>
-          ))}
+    <article className="page-enter mx-auto max-w-3xl space-y-6">
+      <header className="space-y-4">
+        <h1 className="font-display text-balance text-3xl font-bold">{g.title}</h1>
+        <p className="text-base leading-relaxed text-muted-foreground">{g.intro}</p>
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          {sampleButton}
+          <Button asChild variant="outline" className="h-auto min-h-11 rounded-full px-5 py-3">
+            <Link to="/brokers">{g.importCta}</Link>
+          </Button>
         </div>
+        <p className="text-sm leading-relaxed text-muted-foreground">{g.sampleNote}</p>
+      </header>
+
+      <Card>
+        <section aria-labelledby="trading212-export-heading">
+          <h2 id="trading212-export-heading" className="font-display text-xl font-semibold">
+            {g.exportTitle}
+          </h2>
+          <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm leading-relaxed">
+            {g.exportSteps.map((step) => (
+              <li key={step} className="pl-1">
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{g.exportNote}</p>
+          <a
+            href="https://helpcentre.trading212.com/hc/en-us/articles/360016898917-Can-I-export-the-trading-data-from-my-account"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex min-h-11 items-center rounded-md text-sm font-semibold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <span>
+              {g.source}
+              <span className="sr-only"> ({g.newTab})</span>
+            </span>
+          </a>
+        </section>
       </Card>
-      <div className="flex flex-wrap items-center gap-3">
-        <Link
-          to="/brokers"
-          className="press inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          {g.cta}
-        </Link>
-        <Link
-          to="/import-demo"
-          search={{ broker: "trading212" }}
-          className="press inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-accent"
-        >
-          {g.sampleCta}
-        </Link>
-        <p className="text-xs text-muted-foreground">{g.note}</p>
-      </div>
+
+      <Card>
+        <section aria-labelledby="trading212-review-heading">
+          <h2 id="trading212-review-heading" className="font-display text-xl font-semibold">
+            {g.reviewTitle}
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{g.reviewIntro}</p>
+          <dl className="mt-4 space-y-4">
+            {g.reviewItems.map(([title, body]) => (
+              <div key={title}>
+                <dt className="font-semibold">{title}</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </Card>
+
+      <section aria-labelledby="trading212-plans-heading" className="space-y-4">
+        <h2 id="trading212-plans-heading" className="font-display text-xl font-semibold">
+          {g.plansTitle}
+        </h2>
+        <div className="grid items-start gap-4 sm:grid-cols-2">
+          <Card>
+            <h3 className="font-semibold">{g.freeTitle}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{g.free}</p>
+          </Card>
+          <Card>
+            <h3 className="font-semibold">{g.proTitle}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{g.pro}</p>
+          </Card>
+        </div>
+        <Button asChild variant="outline" className="h-auto min-h-11 rounded-full px-4 py-3">
+          <Link to="/pricing">{g.pricing}</Link>
+        </Button>
+      </section>
+
+      <section aria-labelledby="trading212-faq-heading" className="space-y-4">
+        <h2 id="trading212-faq-heading" className="font-display text-xl font-semibold">
+          {g.faqTitle}
+        </h2>
+        {g.questions.map(([question, answer]) => (
+          <div key={question}>
+            <h3 className="font-semibold">{question}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{answer}</p>
+          </div>
+        ))}
+      </section>
+
+      <section aria-labelledby="trading212-result-heading" className="space-y-4">
+        <h2 id="trading212-result-heading" className="font-display text-xl font-semibold">
+          {g.resultTitle}
+        </h2>
+        <p className="text-sm leading-relaxed text-muted-foreground">{g.result}</p>
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          {sampleButton}
+          <Button asChild variant="outline" className="h-auto min-h-11 rounded-full px-5 py-3">
+            <Link to="/demo">{g.demo}</Link>
+          </Button>
+        </div>
+      </section>
+      <p className="text-xs leading-relaxed text-muted-foreground">{g.note}</p>
       <RelatedGuides current="/trading212-import" />
-    </div>
+    </article>
   );
 }
