@@ -32,6 +32,115 @@ import {
 } from "./store";
 const KEY = "folio-state-v2";
 
+const PROVIDER_MESSAGES: Record<
+  Lang,
+  {
+    transferWouldInvalidate: string;
+    transferValidation: string;
+    insufficientBrokerShares: string;
+    insufficientBrokerSharesOnDate: string;
+    invalidTransferOwner: string;
+    invalidPrice: string;
+    bondNotFound: string;
+    invalidValuation: string;
+    assetNotFound: string;
+    transactionNotFound: string;
+    oversellError: string;
+    restoreOversellError: string;
+  }
+> = {
+  en: {
+    transferWouldInvalidate:
+      "This change would invalidate a recorded broker transfer. Review the transactions and dates.",
+    transferValidation: "Check the asset, brokers, quantity, and transfer date.",
+    insufficientBrokerShares: "The selected broker does not hold enough shares.",
+    insufficientBrokerSharesOnDate: "The selected broker does not hold enough shares on that date.",
+    invalidTransferOwner: "The selected asset or broker account could not be verified.",
+    invalidPrice: "Enter a valid price.",
+    bondNotFound: "Bond not found.",
+    invalidValuation:
+      "Enter a valid date, a positive USD value, and a note of at most 500 characters.",
+    assetNotFound: "Asset not found.",
+    transactionNotFound: "Transaction not found.",
+    oversellError: "This change would result in selling more shares than are available.",
+    restoreOversellError:
+      "This transaction can no longer be restored because holdings have changed.",
+  },
+  bg: {
+    transferWouldInvalidate:
+      "Промяната би направила записан трансфер невъзможен. Провери сделките и датите.",
+    transferValidation: "Провери актива, брокерите, количеството и датата на трансфера.",
+    insufficientBrokerShares: "Няма достатъчно налични бройки при избрания брокер.",
+    insufficientBrokerSharesOnDate:
+      "Няма достатъчно налични бройки при избрания брокер към тази дата.",
+    invalidTransferOwner: "Избраният актив или брокерска сметка не може да бъде потвърдена.",
+    invalidPrice: "Въведи валидна цена.",
+    bondNotFound: "Облигацията не е намерена.",
+    invalidValuation: "Въведи валидна дата, положителна стойност в USD и бележка до 500 знака.",
+    assetNotFound: "Активът не е намерен.",
+    transactionNotFound: "Сделката не е намерена.",
+    oversellError: "Промяната би довела до продажба на повече налични акции.",
+    restoreOversellError:
+      "Сделката не може да бъде възстановена, защото наличността вече е променена.",
+  },
+  de: {
+    transferWouldInvalidate:
+      "Diese Änderung würde einen erfassten Broker-Transfer ungültig machen. Prüfe die Transaktionen und Daten.",
+    transferValidation: "Prüfe Anlage, Broker, Menge und Transferdatum.",
+    insufficientBrokerShares: "Der ausgewählte Broker hält nicht genügend Anteile.",
+    insufficientBrokerSharesOnDate:
+      "Der ausgewählte Broker hält an diesem Datum nicht genügend Anteile.",
+    invalidTransferOwner:
+      "Die ausgewählte Anlage oder das Brokerkonto konnte nicht bestätigt werden.",
+    invalidPrice: "Gib einen gültigen Preis ein.",
+    bondNotFound: "Anleihe nicht gefunden.",
+    invalidValuation:
+      "Gib ein gültiges Datum, einen positiven USD-Wert und eine Notiz mit maximal 500 Zeichen ein.",
+    assetNotFound: "Anlage nicht gefunden.",
+    transactionNotFound: "Transaktion nicht gefunden.",
+    oversellError: "Diese Änderung würde zum Verkauf von mehr Anteilen führen, als verfügbar sind.",
+    restoreOversellError:
+      "Diese Transaktion kann nicht mehr wiederhergestellt werden, da sich der Bestand geändert hat.",
+  },
+  es: {
+    transferWouldInvalidate:
+      "Este cambio invalidaría una transferencia de bróker registrada. Revisa las transacciones y fechas.",
+    transferValidation:
+      "Comprueba el activo, los brókers, la cantidad y la fecha de transferencia.",
+    insufficientBrokerShares: "El bróker seleccionado no tiene suficientes participaciones.",
+    insufficientBrokerSharesOnDate:
+      "El bróker seleccionado no tiene suficientes participaciones en esa fecha.",
+    invalidTransferOwner: "No se pudo verificar el activo o la cuenta de bróker seleccionada.",
+    invalidPrice: "Introduce un precio válido.",
+    bondNotFound: "Bono no encontrado.",
+    invalidValuation:
+      "Introduce una fecha válida, un valor positivo en USD y una nota de hasta 500 caracteres.",
+    assetNotFound: "Activo no encontrado.",
+    transactionNotFound: "Transacción no encontrada.",
+    oversellError: "Este cambio provocaría vender más participaciones de las disponibles.",
+    restoreOversellError:
+      "Esta transacción ya no se puede restaurar porque las posiciones han cambiado.",
+  },
+  it: {
+    transferWouldInvalidate:
+      "Questa modifica renderebbe non valido un trasferimento broker registrato. Controlla le transazioni e le date.",
+    transferValidation: "Controlla attivo, broker, quantità e data del trasferimento.",
+    insufficientBrokerShares: "Il broker selezionato non detiene abbastanza quote.",
+    insufficientBrokerSharesOnDate:
+      "Il broker selezionato non detiene abbastanza quote in quella data.",
+    invalidTransferOwner: "Impossibile verificare l'attivo o il conto broker selezionato.",
+    invalidPrice: "Inserisci un prezzo valido.",
+    bondNotFound: "Obbligazione non trovata.",
+    invalidValuation:
+      "Inserisci una data valida, un valore USD positivo e una nota di massimo 500 caratteri.",
+    assetNotFound: "Attivo non trovato.",
+    transactionNotFound: "Transazione non trovata.",
+    oversellError: "Questa modifica comporterebbe la vendita di più quote di quelle disponibili.",
+    restoreOversellError:
+      "Questa transazione non può più essere ripristinata perché le posizioni sono cambiate.",
+  },
+};
+
 type AssetRow = {
   id: string;
   symbol: string;
@@ -100,11 +209,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       brokerHoldings(assetsRef.current, nextTransactions, brokerTransfers, corporateActions);
     } catch (error) {
       if (error instanceof Error && error.message === "Broker transfer exceeds available holdings")
-        throw new Error(
-          lang === "bg"
-            ? "Промяната би направила записан трансфер невъзможен. Провери сделките и датите."
-            : "This change would invalidate a recorded broker transfer. Review the transactions and dates.",
-        );
+        throw new Error(PROVIDER_MESSAGES[lang].transferWouldInvalidate);
       throw error;
     }
   };
@@ -533,6 +638,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       createBrokerTransfer: async (transfer) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        const msg = PROVIDER_MESSAGES[lang];
         const today = localDateString();
         if (
           !isValidIsoDate(transfer.date) ||
@@ -544,11 +650,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           !brokers.some((broker) => broker.id === transfer.fromBrokerId) ||
           !brokers.some((broker) => broker.id === transfer.toBrokerId)
         )
-          throw new Error(
-            lang === "bg"
-              ? "Провери актива, брокерите, количеството и датата на трансфера."
-              : "Check the asset, brokers, quantity, and transfer date.",
-          );
+          throw new Error(msg.transferValidation);
         const source = brokerHoldings(
           assetsRef.current,
           transactionsRef.current,
@@ -560,11 +662,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             holding.brokerId === transfer.fromBrokerId && holding.asset.id === transfer.assetId,
         );
         if (!source || transfer.quantity > source.quantity + 1e-9)
-          throw new Error(
-            lang === "bg"
-              ? "Няма достатъчно налични бройки при избрания брокер."
-              : "The selected broker does not hold enough shares.",
-          );
+          throw new Error(msg.insufficientBrokerShares);
         const { data, error } = await supabase.rpc("create_broker_transfer", {
           p_asset_id: transfer.assetId,
           p_from_broker_id: transfer.fromBrokerId,
@@ -573,30 +671,21 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           p_transfer_date: transfer.date,
         });
         if (error) {
-          const knownMessages: Record<string, { en: string; bg: string }> = {
-            BROKER_TRANSFER_INSUFFICIENT_SHARES: {
-              en: "The selected broker does not hold enough shares on that date.",
-              bg: "Няма достатъчно налични бройки при избрания брокер към тази дата.",
-            },
-            BROKER_TRANSFER_INVALID_OWNER: {
-              en: "The selected asset or broker account could not be verified.",
-              bg: "Избраният актив или брокерска сметка не може да бъде потвърдена.",
-            },
+          const knownMessages: Record<string, string> = {
+            BROKER_TRANSFER_INSUFFICIENT_SHARES: msg.insufficientBrokerSharesOnDate,
+            BROKER_TRANSFER_INVALID_OWNER: msg.invalidTransferOwner,
           };
-          throw new Error(
-            knownMessages[error.message]?.[lang === "bg" ? "bg" : "en"] ?? error.message,
-          );
+          throw new Error(knownMessages[error.message] ?? error.message);
         }
         if (!data) throw new Error("The broker transfer could not be confirmed.");
         await reload();
       },
       updateBondPrice: async (assetId, priceUsd) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
-        if (!Number.isFinite(priceUsd) || priceUsd <= 0)
-          throw new Error(lang === "bg" ? "Въведи валидна цена." : "Enter a valid price.");
+        const msg = PROVIDER_MESSAGES[lang];
+        if (!Number.isFinite(priceUsd) || priceUsd <= 0) throw new Error(msg.invalidPrice);
         const asset = assetsRef.current.find((item) => item.id === assetId);
-        if (!asset || asset.type !== "bond")
-          throw new Error(lang === "bg" ? "Облигацията не е намерена." : "Bond not found.");
+        if (!asset || asset.type !== "bond") throw new Error(msg.bondNotFound);
         const { error } = await supabase.from("asset_valuations").upsert(
           {
             user_id: user.id,
@@ -613,6 +702,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       saveManualValuation: async (assetId, date, priceUsd, note) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        const msg = PROVIDER_MESSAGES[lang];
         if (
           !isValidIsoDate(date) ||
           date > new Date().toISOString().slice(0, 10) ||
@@ -620,14 +710,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           priceUsd <= 0 ||
           note.length > 500
         )
-          throw new Error(
-            lang === "bg"
-              ? "Въведи валидна дата, положителна стойност в USD и бележка до 500 знака."
-              : "Enter a valid date, a positive USD value, and a note of at most 500 characters.",
-          );
+          throw new Error(msg.invalidValuation);
         const asset = assetsRef.current.find((item) => item.id === assetId);
         if (!asset || (asset.type !== "bond" && asset.type !== "realEstate"))
-          throw new Error(lang === "bg" ? "Активът не е намерен." : "Asset not found.");
+          throw new Error(msg.assetNotFound);
         const { error } = await supabase.from("asset_valuations").upsert(
           {
             user_id: user.id,
@@ -644,18 +730,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       updateTransaction: async (transaction) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        const msg = PROVIDER_MESSAGES[lang];
         const currentTransactions = transactionsRef.current;
         const nextTransactions = currentTransactions.map((item) =>
           item.id === transaction.id ? transaction : item,
         );
         if (nextTransactions.every((item) => item.id !== transaction.id))
-          throw new Error(lang === "bg" ? "Сделката не е намерена." : "Transaction not found.");
+          throw new Error(msg.transactionNotFound);
         if (increasesOversellAmount(currentTransactions, nextTransactions, corporateActions))
-          throw new Error(
-            lang === "bg"
-              ? "Промяната би довела до продажба на повече налични акции."
-              : "This change would result in selling more shares than are available.",
-          );
+          throw new Error(msg.oversellError);
         validateBrokerTransfers(nextTransactions);
         const { data, error } = await supabase
           .from("transactions")
@@ -670,12 +753,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           .select("id")
           .maybeSingle();
         if (error) throw error;
-        if (!data)
-          throw new Error(lang === "bg" ? "Сделката не е намерена." : "Transaction not found.");
+        if (!data) throw new Error(msg.transactionNotFound);
         await reload();
       },
       restoreTransaction: async (transaction) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        const msg = PROVIDER_MESSAGES[lang];
         if (
           increasesOversellAmount(
             transactionsRef.current,
@@ -683,11 +766,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             corporateActions,
           )
         )
-          throw new Error(
-            lang === "bg"
-              ? "Сделката не може да бъде възстановена, защото наличността вече е променена."
-              : "This transaction can no longer be restored because holdings have changed.",
-          );
+          throw new Error(msg.restoreOversellError);
         validateBrokerTransfers([...transactionsRef.current, transaction]);
         const { error } = await supabase.from("transactions").insert({
           asset_id: transaction.assetId,

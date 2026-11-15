@@ -99,6 +99,139 @@
       "when": 1793300000000,
       "tag": "0013_owner_admin_access",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793303600000,
+      "tag": "0014_onboarding_analytics_funnel",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793307200000,
+      "tag": "0015_transaction_fees_and_bonds",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793310800000,
+      "tag": "0016_direct_broker_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793314400000,
+      "tag": "0017_reviewable_splits_and_asset_valuations",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793318000000,
+      "tag": "0018_community_wall_and_share_levels",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793321600000,
+      "tag": "0019_more_wall_reactions",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793325200000,
+      "tag": "0020_wall_tags_and_editing",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793328800000,
+      "tag": "0021_wall_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793332400000,
+      "tag": "0022_wall_follows_blocks_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793336000000,
+      "tag": "0023_wall_team_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793339600000,
+      "tag": "0024_wall_team_posts_en",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793343200000,
+      "tag": "0025_weekly_company_profile_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793346800000,
+      "tag": "0026_remove_broker_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793350400000,
+      "tag": "0027_site_visit_event",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793354000000,
+      "tag": "0028_visitor_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793357600000,
+      "tag": "0029_broker_transfers",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793361200000,
+      "tag": "0030_live_exchange_rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793364800000,
+      "tag": "0031_onboarding_page_analytics",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793368400000,
+      "tag": "0032_csv_transaction_execution_time",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 const actionSchema = z
   .object({
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/api/moderation")({
       GET: async ({ request }) => {
         const auth = await guard(request);
         if ("response" in auth) return auth.response;
-        const db = auth.supabaseAdmin as unknown as SupabaseClient;
+        const db = auth.supabaseAdmin;
         const { data: reports, error } = await db
           .from("wall_reports")
           .select("post_id, created_at")
@@ -77,7 +76,7 @@ export const Route = createFileRoute("/api/moderation")({
         const parsed = actionSchema.safeParse(payload);
         if (!parsed.success) return json({ error: "Invalid request" }, 400);
         const { action, postId } = parsed.data;
-        const db = auth.supabaseAdmin as unknown as SupabaseClient;
+        const db = auth.supabaseAdmin;
         const result =
           action === "hide"
             ? await db

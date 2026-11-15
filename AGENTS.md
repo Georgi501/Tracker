@@ -7,7 +7,7 @@
 
 - User portfolio rows are RLS-scoped in Supabase; only preferences persist locally. Transaction costs are stored in USD; display FX must come from the market provider, never fixed rates.
 - PortfolioProvider renders children only after mount, to avoid SSR hydration mismatches from locale/time-dependent output.
-- Signed-out visitors see an empty portfolio; signed-in users read/write their own rows (RLS by user_id). Broker limits remain enforced by the is_pro() database trigger.
+- Signed-out visitors see an empty portfolio; signed-in users read/write their own rows (RLS by user_id). CSV imports for any number of brokers are free; direct broker API sync is Pro-only via is_pro().
 - Live quotes use shared server-only yahoo-finance2 chart metadata for stocks/ETFs and Yahoo USD pairs for crypto; missing quotes remain unavailable and are never replaced by transaction costs.
 - Historical portfolio valuation replays actual dated transactions against provider daily closes and dated FX in the selected base currency; missing data and unreconciled stock splits suppress the chart instead of fabricating points. Dividend forecasts require confirmed event data.
 - Crypto history uses Yahoo USD pairs for all ranges so each chart uses one provider without stitched data.
@@ -20,7 +20,7 @@
 - Benchmark selection is a validated local preference restored after mount, so it survives visits without storing private portfolio data or creating hydration mismatches.
 - Investor tools (FIFO tax, buy-only rebalancing, risk metrics) are pure functions in src/lib/tools.ts with tests; risk uses only real flow-adjusted daily history.
 - Watchlist is a local preference (tickers only, restored after mount); dividend data comes only from confirmed Yahoo events, never estimates.
-- Pro access is granted only by signature-verified payment webhooks writing public.subscriptions; is_pro() is the single entitlement check used by the UI and the broker-limit trigger.
+- Pro access is granted only by signature-verified payment webhooks writing public.subscriptions (or admin grants in pro_access_grants); is_pro() is the single entitlement check used by the UI, RLS policies, and server routes.
 - AI Advisor streams via the /api/advisor server route: verifies the bearer, requires is_pro(), loads the user's portfolio through RLS, and persists UIMessage parts per thread (ai_threads/ai_messages).
 - Pro-only sections use ProGate (src/components/ProFeatures.tsx): free users see a blurred, number-free silhouette with an upgrade link; never preview with fabricated figures.
 - Investment goals are stored per user in public.goals (RLS by user_id) so they follow the account across devices; projections are pure helpers in src/lib/insights.ts.

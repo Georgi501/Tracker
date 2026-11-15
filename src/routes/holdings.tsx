@@ -111,7 +111,30 @@ const COPY: Record<
     | "popular"
     | "remove"
     | "lots"
-    | "confirmRemove",
+    | "confirmRemove"
+    | "txNotFound"
+    | "lotDeleted"
+    | "undo"
+    | "lotRestored"
+    | "invalidValues"
+    | "lotUpdated"
+    | "prevLotRestored"
+    | "buy"
+    | "sell"
+    | "dividend"
+    | "date"
+    | "quantity"
+    | "priceUsd"
+    | "save"
+    | "cancel"
+    | "editLot"
+    | "deleteLot"
+    | "transferHistoryError"
+    | "hasBrokerTransfers"
+    | "assetRemoved"
+    | "assetRestored"
+    | "holdingsSummary"
+    | "dayChange",
     string
   >
 > = {
@@ -135,6 +158,30 @@ const COPY: Record<
     remove: "Delete position",
     lots: "Lots",
     confirmRemove: "Delete {s} and all its transactions?",
+    txNotFound: "Transaction not found",
+    lotDeleted: "Lot deleted",
+    undo: "Undo",
+    lotRestored: "Lot restored",
+    invalidValues: "Invalid values",
+    lotUpdated: "Lot updated",
+    prevLotRestored: "Previous lot restored",
+    buy: "Buy",
+    sell: "Sell",
+    dividend: "Dividend",
+    date: "Date",
+    quantity: "Quantity",
+    priceUsd: "Price (USD)",
+    save: "Save",
+    cancel: "Cancel",
+    editLot: "Edit lot",
+    deleteLot: "Delete lot",
+    transferHistoryError:
+      "Account data could not be loaded, so transfer history cannot be checked.",
+    hasBrokerTransfers: "This asset has recorded broker transfers and cannot be removed.",
+    assetRemoved: "{s} removed",
+    assetRestored: "{s} restored",
+    holdingsSummary: "Holdings Summary",
+    dayChange: "Day Change",
   },
   bg: {
     placeholder: "Търси позиции или тикер (META, VWCE.DE, BTC)…",
@@ -158,6 +205,30 @@ const COPY: Record<
     remove: "Изтрий позиция",
     lots: "Лотове",
     confirmRemove: "Да изтрия ли {s} и всички негови трансакции?",
+    txNotFound: "Сделката не е намерена",
+    lotDeleted: "Лотът е изтрит",
+    undo: "Отмени",
+    lotRestored: "Лотът е възстановен",
+    invalidValues: "Невалидни стойности",
+    lotUpdated: "Лотът е обновен",
+    prevLotRestored: "Предишният лот е възстановен",
+    buy: "Покупка",
+    sell: "Продажба",
+    dividend: "Дивидент",
+    date: "Дата",
+    quantity: "Количество",
+    priceUsd: "Цена (USD)",
+    save: "Запази",
+    cancel: "Отказ",
+    editLot: "Редактирай лота",
+    deleteLot: "Изтрий лота",
+    transferHistoryError: "Данните не са заредени. Не мога да проверя историята на трансферите.",
+    hasBrokerTransfers:
+      "Този актив участва в трансфер. Не може да бъде премахнат, докато трансферите са записани.",
+    assetRemoved: "{s} е премахнат",
+    assetRestored: "{s} е възстановен",
+    holdingsSummary: "Обща стойност",
+    dayChange: "Дневна промяна",
   },
   de: {
     placeholder: "Positionen oder Ticker suchen (META, VWCE.DE, BTC)…",
@@ -181,6 +252,31 @@ const COPY: Record<
     remove: "Position löschen",
     lots: "Kauflots",
     confirmRemove: "{s} und alle Transaktionen löschen?",
+    txNotFound: "Transaktion nicht gefunden",
+    lotDeleted: "Lot gelöscht",
+    undo: "Rückgängig",
+    lotRestored: "Lot wiederhergestellt",
+    invalidValues: "Ungültige Werte",
+    lotUpdated: "Lot aktualisiert",
+    prevLotRestored: "Vorheriges Lot wiederhergestellt",
+    buy: "Kauf",
+    sell: "Verkauf",
+    dividend: "Dividende",
+    date: "Datum",
+    quantity: "Menge",
+    priceUsd: "Preis (USD)",
+    save: "Speichern",
+    cancel: "Abbrechen",
+    editLot: "Lot bearbeiten",
+    deleteLot: "Lot löschen",
+    transferHistoryError:
+      "Kontodaten konnten nicht geladen werden, daher kann die Transferhistorie nicht geprüft werden.",
+    hasBrokerTransfers:
+      "Für diese Anlage sind Broker-Transfers erfasst; sie kann nicht entfernt werden.",
+    assetRemoved: "{s} entfernt",
+    assetRestored: "{s} wiederhergestellt",
+    holdingsSummary: "Gesamtwert",
+    dayChange: "Tagesänderung",
   },
   es: {
     placeholder: "Busca posiciones o un ticker (META, VWCE.DE, BTC)…",
@@ -202,6 +298,31 @@ const COPY: Record<
     remove: "Eliminar posición",
     lots: "Lotes",
     confirmRemove: "¿Eliminar {s} y todas sus transacciones?",
+    txNotFound: "Transacción no encontrada",
+    lotDeleted: "Lote eliminado",
+    undo: "Deshacer",
+    lotRestored: "Lote restaurado",
+    invalidValues: "Valores no válidos",
+    lotUpdated: "Lote actualizado",
+    prevLotRestored: "Lote anterior restaurado",
+    buy: "Compra",
+    sell: "Venta",
+    dividend: "Dividendo",
+    date: "Fecha",
+    quantity: "Cantidad",
+    priceUsd: "Precio (USD)",
+    save: "Guardar",
+    cancel: "Cancelar",
+    editLot: "Editar lote",
+    deleteLot: "Eliminar lote",
+    transferHistoryError:
+      "No se pudieron cargar los datos de la cuenta para comprobar el historial de transferencias.",
+    hasBrokerTransfers:
+      "Este activo tiene transferencias de bróker registradas y no se puede eliminar.",
+    assetRemoved: "{s} eliminado",
+    assetRestored: "{s} restaurado",
+    holdingsSummary: "Resumen de posiciones",
+    dayChange: "Cambio diario",
   },
   it: {
     placeholder: "Cerca posizioni o un ticker (META, VWCE.DE, BTC)…",
@@ -225,6 +346,31 @@ const COPY: Record<
     remove: "Elimina posizione",
     lots: "Lotti",
     confirmRemove: "Eliminare {s} e tutte le sue transazioni?",
+    txNotFound: "Transazione non trovata",
+    lotDeleted: "Lotto eliminato",
+    undo: "Annulla",
+    lotRestored: "Lotto ripristinato",
+    invalidValues: "Valori non validi",
+    lotUpdated: "Lotto aggiornato",
+    prevLotRestored: "Lotto precedente ripristinato",
+    buy: "Acquisto",
+    sell: "Vendita",
+    dividend: "Dividendo",
+    date: "Data",
+    quantity: "Quantità",
+    priceUsd: "Prezzo (USD)",
+    save: "Salva",
+    cancel: "Annulla",
+    editLot: "Modifica lotto",
+    deleteLot: "Elimina lotto",
+    transferHistoryError:
+      "Impossibile caricare i dati dell'account per verificare lo storico dei trasferimenti.",
+    hasBrokerTransfers:
+      "Questo attivo ha trasferimenti broker registrati e non può essere rimosso.",
+    assetRemoved: "{s} rimosso",
+    assetRestored: "{s} ripristinato",
+    holdingsSummary: "Riepilogo posizioni",
+    dayChange: "Variazione giornaliera",
   },
 };
 
@@ -370,10 +516,9 @@ function Holdings() {
     });
   const lotsLabel = c.lots;
   const removeLot = async (id: string) => {
-    const bg = p.lang === "bg";
     const transaction = p.transactions.find((item) => item.id === id);
     if (!transaction) {
-      toast.error(bg ? "Сделката не е намерена" : "Transaction not found");
+      toast.error(c.txNotFound);
       return;
     }
     try {
@@ -382,15 +527,15 @@ function Holdings() {
       toast.error(error instanceof Error ? error.message : "Error");
       return;
     }
-    toast(bg ? "Лотът е изтрит" : "Lot deleted", {
+    toast(c.lotDeleted, {
       duration: 8000,
       action: {
-        label: bg ? "Отмени" : "Undo",
+        label: c.undo,
         onClick: () => {
           void (async () => {
             try {
               await p.restoreTransaction(transaction);
-              toast.success(bg ? "Лотът е възстановен" : "Lot restored");
+              toast.success(c.lotRestored);
             } catch (error) {
               toast.error(error instanceof Error ? error.message : "Error");
             }
@@ -408,7 +553,6 @@ function Holdings() {
   } | null>(null);
   const saveLot = async () => {
     if (!editing) return;
-    const bg = p.lang === "bg";
     const quantity = Number(editing.quantity);
     const price = Number(editing.price);
     if (
@@ -417,12 +561,12 @@ function Holdings() {
       !editing.date ||
       (editing.editPrice && (!Number.isFinite(price) || price < 0))
     ) {
-      toast.error(bg ? "Невалидни стойности" : "Invalid values");
+      toast.error(c.invalidValues);
       return;
     }
     const transaction = p.transactions.find((item) => item.id === editing.id);
     if (!transaction) {
-      toast.error(bg ? "Сделката не е намерена" : "Transaction not found");
+      toast.error(c.txNotFound);
       return;
     }
     try {
@@ -433,16 +577,14 @@ function Holdings() {
         ...(editing.editPrice ? { price } : {}),
       });
       setEditing(null);
-      toast.success(bg ? "Лотът е обновен" : "Lot updated", {
+      toast.success(c.lotUpdated, {
         duration: 10_000,
         action: {
-          label: bg ? "Отмени" : "Undo",
+          label: c.undo,
           onClick: () => {
             void p
               .updateTransaction(transaction)
-              .then(() =>
-                toast.success(bg ? "Предишният лот е възстановен" : "Previous lot restored"),
-              )
+              .then(() => toast.success(c.prevLotRestored))
               .catch((error: unknown) =>
                 toast.error(error instanceof Error ? error.message : "Error"),
               );
@@ -454,14 +596,13 @@ function Holdings() {
     }
   };
   const lotsPanel = (assetId: string) => {
-    const bg = p.lang === "bg";
     const lotAsset = p.assets.find((a) => a.id === assetId);
     // Stored prices are USD, so they are only edited directly when the asset is quoted in USD.
     const priceEditable = !lotAsset?.quoteCurrency || lotAsset.quoteCurrency === "USD";
     const lots = p.transactions
       .filter((t) => t.assetId === assetId)
       .sort((a, b) => b.date.localeCompare(a.date));
-    const kindLabel = { buy: bg ? "Покупка" : "Buy", sell: bg ? "Продажба" : "Sell" } as const;
+    const kindLabel = { buy: c.buy, sell: c.sell } as const;
     const field = "rounded-lg border border-input bg-background px-2 py-1 text-sm";
     return (
       <div className="rounded-xl border border-border bg-background/60 p-3">
@@ -476,7 +617,7 @@ function Holdings() {
                   type="date"
                   value={editing.date}
                   onChange={(e) => setEditing({ ...editing, date: e.target.value })}
-                  aria-label={bg ? "Дата" : "Date"}
+                  aria-label={c.date}
                   className={field}
                 />
                 <input
@@ -485,7 +626,7 @@ function Holdings() {
                   step="any"
                   value={editing.quantity}
                   onChange={(e) => setEditing({ ...editing, quantity: e.target.value })}
-                  aria-label={bg ? "Количество" : "Quantity"}
+                  aria-label={c.quantity}
                   className={`${field} w-24`}
                 />
                 {editing.editPrice && (
@@ -495,7 +636,7 @@ function Holdings() {
                     step="any"
                     value={editing.price}
                     onChange={(e) => setEditing({ ...editing, price: e.target.value })}
-                    aria-label={bg ? "Цена (USD)" : "Price (USD)"}
+                    aria-label={c.priceUsd}
                     className={`${field} w-28`}
                   />
                 )}
@@ -503,13 +644,13 @@ function Holdings() {
                   onClick={() => void saveLot()}
                   className="min-h-11 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {bg ? "Запази" : "Save"}
+                  {c.save}
                 </button>
                 <button
                   onClick={() => setEditing(null)}
                   className="min-h-11 rounded-full border border-border px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {bg ? "Отказ" : "Cancel"}
+                  {c.cancel}
                 </button>
               </li>
             ) : (
@@ -518,7 +659,7 @@ function Holdings() {
                   {new Date(t.date).toLocaleDateString(languageLocale(p.lang))}
                 </span>
                 <span className="w-24 font-medium">
-                  {t.kind === "dividend" ? (bg ? "Дивидент" : "Dividend") : kindLabel[t.kind]}
+                  {t.kind === "dividend" ? c.dividend : kindLabel[t.kind]}
                 </span>
                 <span className="flex-1">
                   {t.kind === "dividend"
@@ -536,8 +677,8 @@ function Holdings() {
                         editPrice: priceEditable,
                       })
                     }
-                    aria-label={bg ? "Редактирай лота" : "Edit lot"}
-                    title={bg ? "Редактирай лота" : "Edit lot"}
+                    aria-label={c.editLot}
+                    title={c.editLot}
                     className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Pencil size={16} />
@@ -545,8 +686,8 @@ function Holdings() {
                 )}
                 <button
                   onClick={() => void removeLot(t.id)}
-                  aria-label={bg ? "Изтрий лота" : "Delete lot"}
-                  title={bg ? "Изтрий лота" : "Delete lot"}
+                  aria-label={c.deleteLot}
+                  title={c.deleteLot}
                   className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Trash2 size={16} />
@@ -574,21 +715,12 @@ function Holdings() {
     </button>
   );
   const removeAsset = async (id: string, symbol: string) => {
-    const bg = p.lang === "bg";
     if (p.dataError) {
-      toast.error(
-        bg
-          ? "Данните не са заредени. Не мога да проверя историята на трансферите."
-          : "Account data could not be loaded, so transfer history cannot be checked.",
-      );
+      toast.error(c.transferHistoryError);
       return;
     }
     if (p.brokerTransfers.some((transfer) => transfer.assetId === id)) {
-      toast.error(
-        bg
-          ? "Този актив участва в трансфер. Не може да бъде премахнат, докато трансферите са записани."
-          : "This asset has recorded broker transfers and cannot be removed.",
-      );
+      toast.error(c.hasBrokerTransfers);
       return;
     }
     const [assetRow, txRows] = await Promise.all([
@@ -610,10 +742,10 @@ function Holdings() {
       return;
     }
     await p.reload();
-    toast(bg ? `${symbol} е премахнат` : `${symbol} removed`, {
+    toast(c.assetRemoved.replace("{s}", symbol), {
       duration: 8000,
       action: {
-        label: bg ? "Отмени" : "Undo",
+        label: c.undo,
         onClick: () => {
           void (async () => {
             const a = await supabase.from("assets").insert(assetRow.data);
@@ -621,7 +753,7 @@ function Holdings() {
               ? await supabase.from("transactions").insert(txRows.data)
               : { error: null };
             if (a.error || t.error) toast.error((a.error ?? t.error)?.message ?? "Error");
-            else toast.success(bg ? `${symbol} е възстановен` : `${symbol} restored`);
+            else toast.success(c.assetRestored.replace("{s}", symbol));
             await p.reload();
           })();
         },
@@ -636,19 +768,18 @@ function Holdings() {
           const total = p.holdings.reduce((s, h) => s + h.value, 0);
           const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
           const prev = total - day;
-          const bg = p.lang === "bg";
           return (
             <Card>
               <div className="flex flex-wrap items-end gap-x-10 gap-y-3">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {bg ? "Обща стойност" : "Holdings Summary"}
+                    {c.holdingsSummary}
                   </p>
                   <p className="numeric-display mt-1 text-3xl font-bold">{p.money(total)}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {bg ? "Дневна промяна" : "Day Change"}
+                    {c.dayChange}
                   </p>
                   <p className="numeric-display mt-1 text-lg font-semibold">
                     <Delta value={day}>

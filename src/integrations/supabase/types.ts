@@ -539,26 +539,218 @@ export type Database = {
       analytics_events: {
         Row: {
           created_at: string;
+          duration_seconds: number | null;
           event_name: string;
           id: string;
           page_path: string | null;
           session_id: string;
+          visitor_id: string | null;
         };
         Insert: {
           created_at?: string;
+          duration_seconds?: number | null;
           event_name: string;
           id?: string;
           page_path?: string | null;
           session_id: string;
+          visitor_id?: string | null;
         };
         Update: {
           created_at?: string;
+          duration_seconds?: number | null;
           event_name?: string;
           id?: string;
           page_path?: string | null;
           session_id?: string;
+          visitor_id?: string | null;
         };
         Relationships: [];
+      };
+      company_profile_weekly_views: {
+        Row: {
+          created_at: string;
+          symbol: string;
+          user_id: string;
+          week_start: string;
+        };
+        Insert: {
+          created_at?: string;
+          symbol: string;
+          user_id: string;
+          week_start: string;
+        };
+        Update: {
+          created_at?: string;
+          symbol?: string;
+          user_id?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
+      wall_posts: {
+        Row: {
+          body: string;
+          created_at: string;
+          edited_at: string | null;
+          hidden_at: string | null;
+          id: string;
+          is_team: boolean;
+          mood: string;
+          share_level: string | null;
+          snapshot: Json | null;
+          tags: string[];
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          edited_at?: string | null;
+          hidden_at?: string | null;
+          id?: string;
+          is_team?: boolean;
+          mood: string;
+          share_level?: string | null;
+          snapshot?: Json | null;
+          tags?: string[];
+          user_id?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          edited_at?: string | null;
+          hidden_at?: string | null;
+          id?: string;
+          is_team?: boolean;
+          mood?: string;
+          share_level?: string | null;
+          snapshot?: Json | null;
+          tags?: string[];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      wall_reactions: {
+        Row: {
+          created_at: string;
+          emoji: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          emoji: string;
+          post_id: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          emoji?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wall_reactions_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "wall_posts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      wall_comments: {
+        Row: {
+          body: string;
+          created_at: string;
+          id: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          id?: string;
+          post_id: string;
+          user_id?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          id?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wall_comments_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "wall_posts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      wall_follows: {
+        Row: {
+          created_at: string;
+          followee_id: string;
+          follower_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          followee_id: string;
+          follower_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          followee_id?: string;
+          follower_id?: string;
+        };
+        Relationships: [];
+      };
+      wall_blocks: {
+        Row: {
+          blocked_id: string;
+          blocker_id: string;
+          created_at: string;
+        };
+        Insert: {
+          blocked_id: string;
+          blocker_id?: string;
+          created_at?: string;
+        };
+        Update: {
+          blocked_id?: string;
+          blocker_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      wall_reports: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          reporter_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          reporter_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          reporter_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wall_reports_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "wall_posts";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       subscriptions: {
         Row: {
@@ -786,6 +978,48 @@ export type Database = {
           weight: number | null;
           quantity: number | null;
           cost_usd: number | null;
+        }[];
+      };
+      create_wall_post: {
+        Args: {
+          _body: string;
+          _mood: string;
+          _level?: string | null;
+          _tags?: string[];
+        };
+        Returns: string;
+      };
+      edit_wall_post: {
+        Args: {
+          _id: string;
+          _body: string;
+          _tags?: string[];
+        };
+        Returns: undefined;
+      };
+      wall_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          posts: number;
+          members: number;
+        }[];
+      };
+      wall_blocked: {
+        Args: {
+          _a: string;
+          _b: string;
+        };
+        Returns: boolean;
+      };
+      admin_visitor_stats: {
+        Args: { _days: number };
+        Returns: {
+          unique_visitors: number;
+          sessions: number;
+          returning_visitors: number;
+          avg_session_seconds: number;
+          visitors_pricing: number;
+          visitors_signup: number;
         }[];
       };
     };
