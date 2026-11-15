@@ -4,7 +4,7 @@ import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
 import { QuoteHero } from "@/components/QuoteHero";
 import { Button } from "@/components/ui/button";
 import { InvestmentJournal } from "@/components/InvestmentJournal";
-import type { Lang } from "@/lib/i18n";
+import { languageLocale, type Lang } from "@/lib/i18n";
 import { assetSummary } from "@/lib/journey";
 import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
@@ -423,7 +423,7 @@ function AssetPage() {
       <Link
         to={h ? "/holdings" : "/markets"}
         search={!h && from === "markets" && q ? { q } : {}}
-        className="inline-flex min-h-9 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="-ml-2.5 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         {h ? c.back : c.backMarkets}
@@ -507,7 +507,9 @@ function AssetPage() {
           ].map(([k, v]) => (
             <Card key={k} className="p-4">
               <p className="text-xs text-muted-foreground">{k}</p>
-              <p className="mt-1 font-semibold">{v}</p>
+              <p className="numeric-display mt-1 text-base font-bold tracking-tight tabular-nums sm:text-lg">
+                {v}
+              </p>
             </Card>
           ))}
         </div>
@@ -516,7 +518,7 @@ function AssetPage() {
           <p className="text-sm text-muted-foreground">{c.none}</p>
           <Link
             to={p.user ? "/holdings" : "/auth"}
-            className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            className="press mt-3 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
           >
             {p.user ? c.add : p.t("signIn")}
           </Link>
@@ -683,14 +685,14 @@ function AssetPage() {
               <ul className="mt-2 divide-y divide-border text-sm">
                 {assetValuations.map((valuation) => (
                   <li key={valuation.id} className="flex flex-wrap justify-between gap-2 py-2">
-                    <span>
+                    <span className="tabular-nums">
                       {valuation.date}
                       {valuation.note && (
                         <span className="ml-2 text-muted-foreground">{valuation.note}</span>
                       )}
                     </span>
-                    <span className="font-medium">
-                      {new Intl.NumberFormat(p.lang, {
+                    <span className="numeric-display font-semibold tabular-nums">
+                      {new Intl.NumberFormat(languageLocale(p.lang), {
                         style: "currency",
                         currency: "USD",
                       }).format(valuation.priceUsd)}
@@ -707,16 +709,16 @@ function AssetPage() {
           <h2 className="mb-3 font-display font-semibold">{c.history}</h2>
           <ul className="divide-y divide-border text-sm">
             {txs.map((t) => (
-              <li key={t.id} className="flex justify-between py-2">
-                <span>
-                  {t.date} · {c[t.kind]}
+              <li key={t.id} className="flex justify-between gap-3 py-2.5">
+                <span className="tabular-nums">
+                  {t.date} · <span className="font-medium">{c[t.kind]}</span>
                 </span>
-                <span>
+                <span className="numeric-display text-right font-semibold tabular-nums">
                   {t.kind === "dividend"
                     ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), h?.asset)
                     : `${t.quantity} × ${p.moneyFor(t.price, h?.asset)}`}
                   {(t.fee ?? 0) > 0 && (
-                    <span className="ml-1 block text-xs text-muted-foreground">
+                    <span className="ml-1 block font-sans text-xs font-normal text-muted-foreground">
                       {p.t("fee")}: {p.money(t.fee ?? 0)}
                     </span>
                   )}

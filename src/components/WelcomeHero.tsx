@@ -276,24 +276,24 @@ export function WelcomeHero() {
 
   if (!p.user)
     return (
-      <section className="rise hover-lift-card grid items-center gap-4 rounded-3xl border border-border bg-card p-4 sm:p-5 lg:grid-cols-[1.05fr_1fr]">
-        <div>
-          <h1 className="font-display max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+      <section className="rise hover-lift-card grid items-center gap-3.5 rounded-3xl border border-border bg-card p-3.5 sm:gap-4 sm:p-4 lg:grid-cols-[1.05fr_1fr] lg:px-5 lg:py-4 xl:p-5">
+        <div className="min-w-0">
+          <h1 className="font-display max-w-4xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-[2rem] xl:text-4xl">
             {experienceCopy[p.lang].heroTitle}
           </h1>
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:mt-2.5 sm:text-[15px] xl:text-base">
             {experienceCopy[p.lang].heroSub}
           </p>
-          <div className="mt-5 flex flex-wrap gap-2.5">
+          <div className="mt-3.5 flex flex-wrap gap-2 sm:mt-4 sm:gap-2.5">
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="hero-cta press inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2 font-semibold transition-[transform,box-shadow,filter] hover:-translate-y-0.5"
+              className="hero-cta press inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-[transform,box-shadow,filter] hover:-translate-y-0.5 sm:px-5"
             >
               {c.signUp}
               <ArrowRight className="size-4" />
             </Link>
-            <Link to="/demo" className={`${chip} min-h-11 px-5`}>
+            <Link to="/demo" className={`${chip} min-h-11 px-4 sm:px-5`}>
               <Eye className="size-4" />
               {c.sampleLink}
             </Link>

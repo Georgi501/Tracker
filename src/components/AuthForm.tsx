@@ -294,7 +294,7 @@ export function AuthForm({
   };
   if (sentTo)
     return (
-      <div className="rounded-2xl border border-border bg-card p-7 text-center shadow-lg">
+      <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-lg sm:p-7">
         <h1 className="font-display text-2xl font-bold">{p.t("checkEmail")}</h1>
         <p className="mt-3 text-sm text-muted-foreground">{c.sent(sentTo)}</p>
         <form onSubmit={verifyCode} className="mt-5 space-y-3">
@@ -322,7 +322,7 @@ export function AuthForm({
           )}
           <button
             disabled={busy || code.length < 6}
-            className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            className="min-h-11 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {c.verify}
           </button>
@@ -334,7 +334,7 @@ export function AuthForm({
             setError(null);
             switchMode("in");
           }}
-          className="mt-3 w-full text-sm text-muted-foreground"
+          className="mt-3 min-h-10 w-full text-sm text-muted-foreground hover:text-foreground"
         >
           {c.back}
         </button>
@@ -342,7 +342,7 @@ export function AuthForm({
     );
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-7 shadow-lg">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-lg sm:p-7">
       <h1 className="font-display text-2xl font-bold">
         {mode === "in" ? p.t("signIn") : p.t("signUp")}
       </h1>
@@ -413,7 +413,7 @@ export function AuthForm({
         )}
         <button
           disabled={busy}
-          className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          className="min-h-11 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {mode === "in" ? p.t("signIn") : p.t("signUp")}
         </button>
@@ -454,12 +454,15 @@ export function AuthForm({
       <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
         <button
           onClick={() => switchMode(mode === "in" ? "up" : "in")}
-          className="font-semibold text-primary"
+          className="inline-flex min-h-10 items-center font-semibold text-primary hover:underline"
         >
           {mode === "in" ? c.noAccount : c.haveAccount}
         </button>
         {mode === "in" && (
-          <button onClick={forgot} className="text-muted-foreground">
+          <button
+            onClick={forgot}
+            className="inline-flex min-h-10 items-center text-muted-foreground hover:text-foreground"
+          >
             {p.t("forgot")}
           </button>
         )}

@@ -729,7 +729,7 @@ function Dashboard() {
 
   return (
     <DashboardMotion>
-      <div className="dashboard-grid grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
+      <div className="dashboard-grid grid grid-cols-1 gap-3.5 sm:gap-4 lg:grid-cols-3">
         <div className="lg:col-span-3">
           {p.user && !p.portfolioReady ? (
             <Skeleton className="h-36 w-full rounded-2xl" />
@@ -1282,8 +1282,10 @@ function Dashboard() {
                             <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
                           </div>
                           <div className="text-right text-sm">
-                            <p className="font-semibold">{p.money(h.value)}</p>
-                            <div className="flex items-center justify-end gap-2 text-xs">
+                            <p className="numeric-display font-semibold tabular-nums">
+                              {p.money(h.value)}
+                            </p>
+                            <div className="flex items-center justify-end gap-2 text-xs tabular-nums">
                               <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
                               <span className="text-muted-foreground">
                                 {portfolioValue > 0 && Number.isFinite(h.value)

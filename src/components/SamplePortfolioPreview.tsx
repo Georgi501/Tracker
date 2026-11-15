@@ -78,23 +78,29 @@ export function SamplePortfolioPreview({
   return (
     <DashboardMotion>
       <figure
-        className={`hero-shot analytics-surface min-w-0 overflow-hidden rounded-2xl border border-border/80 shadow-xl shadow-black/10 ${compact ? "p-3 sm:p-4" : "p-4 sm:p-5"}`}
+        className={`hero-shot analytics-surface min-w-0 overflow-hidden rounded-2xl border border-border/80 shadow-xl shadow-black/10 ${compact ? "p-3 sm:p-3.5" : "p-4 sm:p-5"}`}
       >
-        <figcaption className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+        <figcaption
+          className={`inline-flex items-center gap-2 rounded-full bg-primary/10 font-semibold text-primary ${compact ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs"}`}
+        >
           <Layers3 size={14} aria-hidden />
           {c.badge}
         </figcaption>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+        <div
+          className={`flex flex-wrap items-end justify-between gap-3 ${compact ? "mt-2 sm:mt-2.5" : "mt-4"}`}
+        >
           <div>
             <p className="text-xs text-muted-foreground">{c.value}</p>
-            <p className="numeric-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+            <p
+              className={`numeric-display font-bold tracking-tight ${compact ? "mt-0.5 text-2xl sm:text-3xl" : "mt-1 text-3xl sm:text-4xl"}`}
+            >
               {money(selected?.value ?? SAMPLE_TOTAL_VALUE)}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-muted-foreground">{c.periodReturn}</p>
             <p
-              className={`numeric-display mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${series.change >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
+              className={`numeric-display inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${compact ? "mt-0.5" : "mt-1"} ${series.change >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
             >
               {series.change >= 0 ? (
                 <ArrowUpRight size={13} aria-hidden />
@@ -108,7 +114,7 @@ export function SamplePortfolioPreview({
         <div
           role="group"
           aria-label={c.range}
-          className="mt-4 grid grid-cols-5 gap-1 rounded-full bg-secondary/65 p-1"
+          className={`grid grid-cols-5 gap-1 rounded-full bg-secondary/65 ${compact ? "mt-2.5 p-0.5 sm:mt-3" : "mt-4 p-1"}`}
         >
           {SAMPLE_PERIODS.map((range) => (
             <m.button
@@ -127,7 +133,7 @@ export function SamplePortfolioPreview({
           ))}
         </div>
         <div
-          className={`mt-3 touch-pan-y ${compact ? "h-28 sm:h-32" : "h-40 sm:h-44"}`}
+          className={`touch-pan-y ${compact ? "mt-2 h-24 sm:h-24 xl:h-28" : "mt-3 h-40 sm:h-44"}`}
           role="group"
           aria-label={`${c.badge}, ${period}`}
         >
@@ -208,7 +214,9 @@ export function SamplePortfolioPreview({
             </svg>
           )}
         </div>
-        <div className="mb-4 flex justify-between text-[10px] tabular-nums text-muted-foreground">
+        <div
+          className={`flex justify-between text-[10px] tabular-nums text-muted-foreground ${compact ? "mb-1.5" : "mb-4"}`}
+        >
           <span>{date(series.points[0]!.t, true)}</span>
           <span>{date(series.points.at(-1)!.t, true)}</span>
         </div>
@@ -312,16 +320,28 @@ export function SamplePortfolioPreview({
             ))}
           </div>
         </div>
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-controls={`${detailsId} ${detailsId}-holdings ${detailsId}-allocation`}
-          onClick={() => setExpanded((value) => !value)}
-          className="mt-3 min-h-11 w-full rounded-xl border border-border px-3 text-xs font-semibold text-primary hover:bg-secondary"
+        <div
+          className={
+            compact
+              ? "mt-2 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+              : "mt-3 space-y-3"
+          }
         >
-          {expanded ? experienceCopy[lang].hideDetails : experienceCopy[lang].showDetails}
-        </button>
-        <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">{c.note}</p>
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={`${detailsId} ${detailsId}-holdings ${detailsId}-allocation`}
+            onClick={() => setExpanded((value) => !value)}
+            className={`min-h-11 rounded-xl border border-border px-3 text-xs font-semibold text-primary hover:bg-secondary ${
+              compact ? "w-full shrink-0 sm:w-auto sm:px-3.5" : "w-full"
+            }`}
+          >
+            {expanded ? experienceCopy[lang].hideDetails : experienceCopy[lang].showDetails}
+          </button>
+          <p className="text-[10px] leading-snug text-muted-foreground sm:leading-relaxed">
+            {c.note}
+          </p>
+        </div>
       </figure>
     </DashboardMotion>
   );

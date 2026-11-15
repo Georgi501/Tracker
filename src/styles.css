@@ -813,13 +813,7 @@ body::before {
   z-index: -1;
   pointer-events: none;
 }
-.dark main .card-interactive.dashboard-primary-card {
-  background-image: linear-gradient(
-    155deg,
-    color-mix(in oklab, var(--primary) 7%, var(--card)),
-    color-mix(in oklab, var(--blossom) 4%, var(--card)) 70%
-  );
-}
+  /* Consolidated in the unified surface system below */
 @media (hover: hover) {
   main .card-interactive {
     transition:
@@ -934,19 +928,27 @@ main h3 {
 main .card-interactive.dashboard-primary-card {
   background-image: linear-gradient(
     155deg,
-    color-mix(in oklab, var(--primary) 5%, var(--card)),
-    var(--card) 58%
+    color-mix(in oklab, var(--primary) 6%, var(--card)),
+    var(--card) 62%
   );
-  border-color: color-mix(in oklab, var(--primary) 24%, var(--border));
-  box-shadow: var(--shadow-card);
+  border-color: color-mix(in oklab, var(--primary) 26%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 10%, transparent),
+    var(--shadow-card);
 }
 .dark main .card-interactive.dashboard-primary-card {
+  background-image: linear-gradient(
+    155deg,
+    color-mix(in oklab, var(--primary) 8%, var(--card)),
+    color-mix(in oklab, var(--blossom) 3.5%, var(--card)) 68%
+  );
   box-shadow:
-    0 1px 2px oklch(0 0 0 / 20%),
+    inset 0 1px 0 oklch(1 0 0 / 8%),
+    0 1px 2px oklch(0 0 0 / 24%),
     0 16px 36px -28px color-mix(in oklab, var(--primary) 45%, transparent);
 }
 .dashboard-metric {
-  background-color: color-mix(in oklab, var(--card) 92%, var(--background));
+  background-color: color-mix(in oklab, var(--card) 94%, var(--background));
 }
 .market-ticker {
   overflow: hidden;
@@ -1035,34 +1037,38 @@ main .card-interactive.dashboard-primary-card {
 }
 
 .dark .dashboard-metric {
-  background-color: color-mix(in oklab, var(--card) 88%, white);
+  background-color: color-mix(in oklab, var(--card) 90%, white);
 }
 .dark main input:not([type="checkbox"]):not([type="radio"]),
 .dark main select,
 .dark main textarea {
   border-color: oklch(1 0 0 / 22%);
 }
-:root:not(.dark) main .card-interactive.dashboard-primary-card {
-  background-image: linear-gradient(
-    155deg,
-    color-mix(in oklab, var(--primary) 9%, var(--card)),
-    color-mix(in oklab, var(--blossom) 6%, var(--card)) 70%
-  );
-}
 
 /* Keep surfaces quiet so data and actions carry the visual hierarchy. */
 .dark main .card-interactive:not(.dashboard-primary-card),
 :root:not(.dark) main .card-interactive:not(.dashboard-primary-card) {
   --tint: var(--primary);
-  border-color: color-mix(in oklab, var(--border) 88%, transparent);
-  background-color: color-mix(in oklab, var(--card) 96%, var(--background));
-  background-image: none;
-  box-shadow: var(--shadow-card);
+  border-color: color-mix(in oklab, var(--border) 92%, transparent);
+  background-color: color-mix(in oklab, var(--card) 97%, var(--background));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 7%, transparent),
+    var(--shadow-card);
   backdrop-filter: none;
+}
+.dark main .card-interactive:not(.dashboard-primary-card) {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, white 2.5%, transparent),
+    transparent 45%
+  );
+}
+:root:not(.dark) main .card-interactive:not(.dashboard-primary-card) {
+  background-image: none;
 }
 .dark main .card-interactive:not(.dashboard-primary-card):hover,
 :root:not(.dark) main .card-interactive:not(.dashboard-primary-card):hover {
-  border-color: color-mix(in oklab, var(--primary) 34%, var(--border));
+  border-color: color-mix(in oklab, var(--primary) 36%, var(--border));
   box-shadow: var(--shadow-card-hover);
 }
 .dark body::before {
@@ -1249,18 +1255,10 @@ header .bg-primary:not(.bg-brand-gradient) {
     inset 0 1px 0 oklch(1 0 0 / 22%),
     0 8px 20px -10px color-mix(in oklab, var(--primary) 75%, transparent);
 }
-main .card-interactive,
-main [class*="rounded-2xl"][class*="border"][class*="bg-card"] {
+main [class*="rounded-2xl"][class*="border"][class*="bg-card"]:not(.card-interactive) {
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, white 7%, transparent),
     var(--shadow-card);
-}
-.dark main .card-interactive:not(.dashboard-primary-card) {
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, white 2.5%, transparent),
-    transparent 45%
-  );
 }
 .card-interactive:has(:focus-visible) {
   outline: 2px solid color-mix(in oklab, var(--primary) 70%, transparent);

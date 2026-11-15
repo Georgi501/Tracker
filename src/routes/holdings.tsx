@@ -794,7 +794,7 @@ function Holdings() {
               <button
                 onClick={() => setQ("")}
                 aria-label={p.t("close")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-1.5 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X size={15} />
               </button>
@@ -885,7 +885,7 @@ function Holdings() {
                   </Link>
                   <Link
                     to="/demo"
-                    className="press inline-flex items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-secondary"
+                    className="press inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-secondary"
                   >
                     {c.sample}
                   </Link>
@@ -1063,7 +1063,9 @@ function Holdings() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-2 text-right">{num(h.quantity)}</td>
+                        <td className="numeric-display px-2 text-right tabular-nums">
+                          {num(h.quantity)}
+                        </td>
                         <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
                         <td className="hidden px-2 lg:table-cell">
                           <div className="flex justify-end">
@@ -1077,7 +1079,7 @@ function Holdings() {
                             ) : null}
                           </div>
                         </td>
-                        <td className="px-2 text-right">
+                        <td className="numeric-display px-2 text-right tabular-nums">
                           <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                         </td>
                         <td className="numeric-display px-2 text-right">
@@ -1102,7 +1104,7 @@ function Holdings() {
                             </span>
                           </Delta>
                         </td>
-                        <td className="px-2 text-right">
+                        <td className="numeric-display px-2 text-right tabular-nums">
                           <Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta>
                         </td>
                         <td className="pl-2 text-right">
@@ -1219,7 +1221,9 @@ function MarketRow({
           <span className="inline-block h-4 w-16 animate-pulse rounded bg-muted" />
         ) : qt ? (
           <>
-            <p className="font-semibold">{fmt(qt.price, qt.currency)}</p>
+            <p className="numeric-display font-semibold tabular-nums">
+              {fmt(qt.price, qt.currency)}
+            </p>
             {qt.change != null && (
               <p className="text-xs">
                 <Delta value={qt.change}>{pct(qt.change)}</Delta>
@@ -1250,7 +1254,7 @@ function MarketRow({
                 },
           )
         }
-        className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${owned ? "border border-border hover:bg-secondary" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+        className={`flex min-h-9 shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${owned ? "border border-border hover:bg-secondary" : "bg-primary text-primary-foreground hover:opacity-90"}`}
       >
         <Plus size={13} /> {owned ? copy.owned : copy.add}
       </button>

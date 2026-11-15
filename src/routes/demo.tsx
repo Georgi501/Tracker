@@ -378,8 +378,8 @@ function DemoPage() {
               const rowGain = r.totalValue - r.totalCost;
               const pl = (rowGain / r.totalCost) * 100;
               return (
-                <tr key={r.symbol} className="border-t border-border">
-                  <td className="max-w-0 py-2 pr-1 sm:pr-2">
+                <tr key={r.symbol} className="border-t border-border hover:bg-secondary/35">
+                  <td className="max-w-0 py-2.5 pr-1 sm:pr-2">
                     <span className="block truncate font-semibold sm:inline">{r.symbol}</span>
                     <span className="block truncate text-muted-foreground sm:ml-2 sm:inline">
                       {r.name}

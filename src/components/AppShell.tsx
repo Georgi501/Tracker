@@ -478,7 +478,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
       <header className="header-as sticky top-0 z-30">
-        <div className="header-layout mx-auto flex min-h-14 flex-wrap items-center gap-2 px-4 py-2 lg:gap-x-4">
+        <div className="header-layout mx-auto flex min-h-14 flex-wrap items-center gap-x-2 gap-y-1.5 px-4 py-1.5 lg:gap-x-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <span className="brand-wordmark font-display text-lg font-bold tracking-tight sm:text-xl">
               <span className="b1">Capi</span>
@@ -752,8 +752,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main
-        className={`app-main page-enter mx-auto min-w-0 max-w-7xl pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 md:pb-6 ${
-          pathname === "/" ? "min-h-[calc(100svh-3.5rem)] lg:min-h-[calc(100svh-4rem)]" : ""
+        className={`app-main page-enter mx-auto min-w-0 max-w-7xl pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 ${
+          pathname === "/"
+            ? "min-h-[calc(100svh-3.5rem)] pt-3.5 sm:pt-4 lg:min-h-[calc(100svh-4rem)] xl:pt-5"
+            : "pt-6"
         }`}
       >
         <PrivacyController />
@@ -1168,13 +1170,13 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 export function Delta({ value, children }: { value: number; children: ReactNode }) {
   return (
     <span
-      className={
+      className={`tabular-nums ${
         !Number.isFinite(value)
           ? "text-muted-foreground"
           : value >= 0
             ? "text-success"
             : "text-destructive"
-      }
+      }`}
     >
       {children}
     </span>
