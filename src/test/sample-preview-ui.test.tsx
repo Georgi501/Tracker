@@ -15,6 +15,16 @@ vi.mock("recharts", async (importOriginal) => {
   };
 });
 afterEach(cleanup);
+it("keeps compact hero details accessible through the existing disclosure", () => {
+  const { container } = render(<SamplePortfolioPreview lang="en" compact />);
+  const allocation = container.querySelector('[id$="-allocation"]');
+  expect(allocation).not.toBeVisible();
+  fireEvent.click(screen.getByRole("button", { expanded: false }));
+  expect(allocation).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { expanded: true }));
+  expect(allocation).not.toBeVisible();
+  expect(screen.getByText(/Illustrative data/)).toBeVisible();
+});
 it("changes the selected period, visible return and chart for each real control", () => {
   const result = render(<SamplePortfolioPreview lang="en" />);
   let previous = "";

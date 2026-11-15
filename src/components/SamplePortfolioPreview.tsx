@@ -30,9 +30,11 @@ const colors = ["var(--primary)", "var(--success)", "var(--violet)", "var(--sun)
 export function SamplePortfolioPreview({
   lang,
   defaultExpanded = false,
+  compact = false,
 }: {
   lang: Lang;
   defaultExpanded?: boolean;
+  compact?: boolean;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const detailsId = useId();
@@ -75,7 +77,9 @@ export function SamplePortfolioPreview({
   const selected = active === null ? null : series.points[active];
   return (
     <DashboardMotion>
-      <figure className="hero-shot analytics-surface min-w-0 overflow-hidden rounded-2xl border border-border/80 p-4 shadow-xl shadow-black/10 sm:p-5">
+      <figure
+        className={`hero-shot analytics-surface min-w-0 overflow-hidden rounded-2xl border border-border/80 shadow-xl shadow-black/10 ${compact ? "p-3 sm:p-4" : "p-4 sm:p-5"}`}
+      >
         <figcaption className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Layers3 size={14} aria-hidden />
           {c.badge}
@@ -123,7 +127,7 @@ export function SamplePortfolioPreview({
           ))}
         </div>
         <div
-          className="mt-3 h-40 touch-pan-y sm:h-44"
+          className={`mt-3 touch-pan-y ${compact ? "h-28 sm:h-32" : "h-40 sm:h-44"}`}
           role="group"
           aria-label={`${c.badge}, ${period}`}
         >
@@ -238,7 +242,7 @@ export function SamplePortfolioPreview({
             ))}
           </dl>
         </div>
-        <div className="mt-4">
+        <div id={`${detailsId}-allocation`} className="mt-4" hidden={compact && !expanded}>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             {c.allocation}
           </p>
@@ -311,7 +315,7 @@ export function SamplePortfolioPreview({
         <button
           type="button"
           aria-expanded={expanded}
-          aria-controls={`${detailsId} ${detailsId}-holdings`}
+          aria-controls={`${detailsId} ${detailsId}-holdings ${detailsId}-allocation`}
           onClick={() => setExpanded((value) => !value)}
           className="mt-3 min-h-11 w-full rounded-xl border border-border px-3 text-xs font-semibold text-primary hover:bg-secondary"
         >

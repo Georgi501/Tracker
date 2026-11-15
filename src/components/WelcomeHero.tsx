@@ -276,9 +276,9 @@ export function WelcomeHero() {
 
   if (!p.user)
     return (
-      <section className="rise hover-lift-card grid items-center gap-6 rounded-3xl border border-border bg-card p-4 sm:p-6 md:p-7 lg:grid-cols-[1.05fr_1fr]">
+      <section className="rise hover-lift-card grid items-center gap-4 rounded-3xl border border-border bg-card p-4 sm:p-5 lg:grid-cols-[1.05fr_1fr]">
         <div>
-          <h1 className="font-display max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+          <h1 className="font-display max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             {experienceCopy[p.lang].heroTitle}
           </h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
@@ -299,7 +299,7 @@ export function WelcomeHero() {
             </Link>
           </div>
         </div>
-        <SamplePortfolioPreview lang={p.lang} />
+        <SamplePortfolioPreview lang={p.lang} compact />
       </section>
     );
 

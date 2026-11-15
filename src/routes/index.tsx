@@ -46,6 +46,8 @@ import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { WelcomeHero } from "@/components/WelcomeHero";
+import { PopularCompanySuggestions } from "@/components/PopularCompanySuggestions";
+import { getCompanySuggestions } from "@/lib/company-suggestions.functions";
 import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
@@ -119,6 +121,9 @@ import type { Lang } from "@/lib/i18n";
 const EMPTY_HISTORY_POINTS: PortfolioPoint[] = [];
 
 export const Route = createFileRoute("/")({
+  loader: () => getCompanySuggestions(),
+  preload: false,
+  staleTime: Infinity,
   head: () => ({
     meta: [
       { title: "CapiSpot — Investment Portfolio Tracker" },
@@ -557,6 +562,7 @@ function DeferredDashboardSection({ children }: { children: ReactNode }) {
 }
 
 function Dashboard() {
+  const companySuggestions = Route.useLoaderData();
   const p = usePortfolio();
   const { holdings, transactions } = p;
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -730,6 +736,7 @@ function Dashboard() {
             <WelcomeHero />
           )}
         </div>
+        {!p.user && <PopularCompanySuggestions lang={p.lang} companies={companySuggestions} />}
         {!p.user && <LandingSteps />}
         {!p.user && <VideoPresentation mode="visitor" theme={p.theme} lang={p.lang} />}
         {p.user && <MarketTicker />}
@@ -1232,9 +1239,11 @@ function Dashboard() {
             <div className="order-3 lg:contents">
               <WeeklyDigest />
             </div>
-            <div className="order-3 lg:contents">
-              <DashboardMovers />
-            </div>
+            {p.user && (
+              <div className="order-3 lg:contents">
+                <DashboardMovers />
+              </div>
+            )}
             <div className="order-3 lg:contents">
               <PortfolioDataCheck />
             </div>
