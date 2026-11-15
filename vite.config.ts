@@ -2,9 +2,18 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
+import { resolveGoogleClientId } from "./config/google-oauth";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  define: {
+    "import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID": JSON.stringify(
+      resolveGoogleClientId(
+        process.env["CLOUDFLARE_ENV"] || (mode === "production" ? "production" : "development"),
+        { ...loadEnv(mode, process.cwd(), "VITE_"), ...process.env },
+      ),
+    ),
+  },
   plugins: [
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tailwindcss(),
@@ -39,4 +48,4 @@ export default defineConfig({
     host: "::",
     port: 8080,
   },
-});
+}));

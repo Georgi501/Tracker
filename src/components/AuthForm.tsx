@@ -33,9 +33,6 @@ function safeAuthContinuation(value: string | null): string | null {
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";
 
-const GOOGLE_WEB_CLIENT_ID =
-  "306300201431-r984q2kfae6tm75kt29htl8npnajbjh0.apps.googleusercontent.com";
-
 type GoogleCredentialResponse = { credential?: string };
 type GoogleButtonOptions = {
   theme: "outline";
@@ -82,6 +79,7 @@ export function AuthForm({
   redirectOnSignIn?: boolean;
 }) {
   const p = usePortfolio();
+  const googleWebClientId = import.meta.env["VITE_GOOGLE_WEB_CLIENT_ID"]?.trim() || "";
   const passwordId = useId();
   const confirmationCodeId = useId();
   const navigate = useNavigate();
@@ -228,7 +226,7 @@ export function AuthForm({
     let active = true;
     let resizeObserver: ResizeObserver | undefined;
     const container = googleButtonRef.current;
-    if (!container) return;
+    if (!container || !googleWebClientId) return;
     setGoogleReady(false);
     setGoogleLoadFailed(false);
 
@@ -241,7 +239,7 @@ export function AuthForm({
         return hashGoogleNonce(nonce).then((hashedNonce) => {
           if (!active) return;
           googleIdentity.initialize({
-            client_id: GOOGLE_WEB_CLIENT_ID,
+            client_id: googleWebClientId,
             nonce: hashedNonce,
             callback: (response) => {
               if (response.credential) googleSignInRef.current(response.credential, nonce);
@@ -281,7 +279,7 @@ export function AuthForm({
       resizeObserver?.disconnect();
       container.replaceChildren();
     };
-  }, [c.googleFailed, c.googleLoadError, p.lang, googleAttempt]);
+  }, [c.googleFailed, c.googleLoadError, p.lang, googleAttempt, googleWebClientId]);
   const forgot = async () => {
     const target = email.trim();
     if (!target) {
@@ -420,34 +418,38 @@ export function AuthForm({
           {mode === "in" ? p.t("signIn") : p.t("signUp")}
         </button>
       </form>
-      <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        {p.lang === "bg" ? "или" : "or"}
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      <div
-        ref={googleButtonRef}
-        role="group"
-        className={`flex min-h-10 justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}
-        aria-label={c.googleContinue}
-      />
-      {!googleReady && !error && (
-        <p role="status" className="mt-1 text-center text-xs text-muted-foreground">
-          {c.googleLoading}
-        </p>
-      )}
-      {!googleReady && googleLoadFailed && (
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setGoogleLoadFailed(false);
-            setGoogleAttempt((attempt) => attempt + 1);
-          }}
-          className="mt-1 w-full text-center text-xs font-semibold text-primary hover:underline"
-        >
-          {c.googleRetry}
-        </button>
+      {googleWebClientId && (
+        <>
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            {p.lang === "bg" ? "или" : "or"}
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div
+            ref={googleButtonRef}
+            role="group"
+            className={`flex min-h-10 justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}
+            aria-label={c.googleContinue}
+          />
+          {!googleReady && !error && (
+            <p role="status" className="mt-1 text-center text-xs text-muted-foreground">
+              {c.googleLoading}
+            </p>
+          )}
+          {!googleReady && googleLoadFailed && (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setGoogleLoadFailed(false);
+                setGoogleAttempt((attempt) => attempt + 1);
+              }}
+              className="mt-1 w-full text-center text-xs font-semibold text-primary hover:underline"
+            >
+              {c.googleRetry}
+            </button>
+          )}
+        </>
       )}
       <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
         <button
