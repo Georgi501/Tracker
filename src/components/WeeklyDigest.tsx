@@ -1,3 +1,4 @@
+import { HistoryLoadError } from "@/components/HistoryLoadError";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
@@ -110,6 +111,12 @@ export function WeeklyDigest() {
 
   return (
     <Card className="lg:col-span-3">
+      <HistoryLoadError
+        lang={p.lang}
+        failed={q.isError}
+        pending={q.isFetching}
+        retry={() => void q.refetch()}
+      />
       <div className="mb-4 flex items-center gap-2">
         <CalendarDays size={18} className="text-primary" />
         <h3 className="font-display font-semibold">{c.title}</h3>

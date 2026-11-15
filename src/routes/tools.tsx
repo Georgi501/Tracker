@@ -1,3 +1,4 @@
+import { HistoryLoadError } from "@/components/HistoryLoadError";
 import { AllocationTargetsCard } from "@/components/AllocationTargetsCard";
 import { Card, Delta } from "@/components/AppShell";
 import { AssetRiskAnalysis } from "@/components/AssetRiskAnalysis";
@@ -625,6 +626,12 @@ function Risk() {
   return (
     <Card>
       <h3 className="font-display font-semibold">{c.risk}</h3>
+      <HistoryLoadError
+        lang={p.lang}
+        failed={h.isError}
+        pending={h.isFetching}
+        retry={() => void h.refetch()}
+      />
       <p className="mb-3 text-xs text-muted-foreground">{c.riskHint}</p>
       {!p.user ? (
         <p className="text-sm text-muted-foreground">{c.signInNeeded}</p>

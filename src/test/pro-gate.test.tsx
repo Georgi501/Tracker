@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({ isPro: false }));
 
 vi.mock("@/lib/store", () => ({
   pct: (value: number) => `${value}%`,
-  usePortfolio: () => ({ lang: "en", isPro: state.isPro }),
+  usePortfolio: () => ({ lang: "en", isPro: state.isPro, accessReady: true }),
 }));
 
 vi.mock("@/components/AppShell", () => ({

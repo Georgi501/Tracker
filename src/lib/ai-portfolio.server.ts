@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { readPortfolioSnapshot } from "./portfolio-snapshot";
 import {
   computeHoldings,
   normalizeTransactionsForSplits,
@@ -43,29 +44,14 @@ export function toUsdQuotePrice(
 }
 
 export async function loadValuedPortfolio(
-  sb: Pick<SupabaseClient<Database>, "from">,
+  sb: Pick<SupabaseClient<Database>, "rpc">,
 ): Promise<ValuedPortfolioSummary> {
-  const [assetsRes, txsRes, actionsRes, valuationsRes] = await Promise.all([
-    sb
-      .from("assets")
-      .select(
-        "id, symbol, name, type, sector, region, dividend_per_share, pay_months, manual_price",
-      ),
-    sb
-      .from("transactions")
-      .select("id, asset_id, broker_id, kind, quantity, price, fee, date")
-      .order("date"),
-    sb.from("corporate_actions").select("asset_id, event_date, numerator, denominator"),
-    sb.from("asset_valuations").select("asset_id, valuation_date, price_usd"),
-  ]);
-
-  if (assetsRes.error || txsRes.error || actionsRes.error || valuationsRes.error) {
-    throw new Error("Portfolio unavailable");
-  }
-
-  const assetRows = assetsRes.data ?? [];
-  const txRows = txsRes.data ?? [];
-  const corporateActions: CorporateAction[] = (actionsRes.data ?? []).map((action) => ({
+  const snapshot = await readPortfolioSnapshot(sb);
+  const assetRows = snapshot.assets ?? [];
+  const txRows = [...(snapshot.transactions ?? [])].sort((a, b) =>
+    String(a.date).localeCompare(String(b.date)),
+  );
+  const corporateActions: CorporateAction[] = (snapshot.corporate_actions ?? []).map((action) => ({
     assetId: action.asset_id,
     date: action.event_date,
     numerator: Number(action.numerator),
@@ -73,7 +59,7 @@ export async function loadValuedPortfolio(
   }));
 
   const latestValuationByAsset = new Map<string, { valuation_date: string; price_usd: number }>();
-  for (const valuation of valuationsRes.data ?? []) {
+  for (const valuation of snapshot.asset_valuations ?? []) {
     const current = latestValuationByAsset.get(valuation.asset_id);
     if (!current || valuation.valuation_date > current.valuation_date) {
       latestValuationByAsset.set(valuation.asset_id, {

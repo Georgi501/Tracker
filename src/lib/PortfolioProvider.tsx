@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { changePosition } from "./position-deletion";
 import type { User } from "@supabase/supabase-js";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,6 +23,8 @@ import {
   type Currency,
   type Transaction,
 } from "./portfolio";
+import { readPortfolioSnapshot } from "./portfolio-snapshot";
+import { fetchPortfolioQuoteBatches } from "./quote-batches";
 import { increasesOversellAmount } from "./quality";
 import { getQuotes } from "./quotes.functions";
 import {
@@ -188,6 +192,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [priceNote, setPriceNote] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const authEventVersion = useRef(0);
+  const reloadVersion = useRef(0);
+  const queryClient = useQueryClient();
 
   const [liveFx, setLiveFx] = useState<LiveFx | null>(null);
   const eurPerUsd = liveFx?.eurPerUsd ?? null;
@@ -355,6 +361,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const reload = useCallback(async () => {
+    const requestVersion = ++reloadVersion.current;
     if (!user) {
       if (userRef.current) return;
       setAssets([]);
@@ -372,56 +379,65 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setDataUpdatedAt(null);
       return;
     }
-    if (userRef.current?.id !== user.id) return;
-    const result = await Promise.all([
-      supabase.from("assets").select("*"),
-      supabase.from("transactions").select("*"),
-      supabase.from("brokers").select("id,name,format").order("created_at"),
-      supabase.from("broker_transfers").select("*").order("transfer_date").order("created_at"),
-      supabase.from("corporate_actions").select("asset_id,event_date,numerator,denominator"),
-      supabase.from("asset_valuations").select("*").order("valuation_date"),
+    const isCurrentRequest = () =>
+      userRef.current?.id === user.id && requestVersion === reloadVersion.current;
+    if (!isCurrentRequest()) return;
+    // Access decisions must commit independently of financial data availability.
+    const accessRequest = (async () => {
+      try {
+        const [pro, admin] = await Promise.all([
+          supabase.rpc("is_pro", { _user_id: user.id }),
+          supabase.rpc("is_site_admin"),
+        ]);
+        if (!isCurrentRequest()) return false;
+        if (
+          pro.error ||
+          admin.error ||
+          typeof pro.data !== "boolean" ||
+          typeof admin.data !== "boolean"
+        )
+          throw new Error("Unable to verify portfolio access");
+        setIsPro(pro.data);
+        setIsAdmin(admin.data);
+        setAccessReady(true);
+        return true;
+      } catch (error: unknown) {
+        if (!isCurrentRequest()) return false;
+        console.error("Unable to verify portfolio access", error);
+        setIsPro(false);
+        setIsAdmin(false);
+        setAccessReady(false);
+        setDataError(true);
+        return false;
+      }
+    })();
+    const financialRequest = Promise.all([
+      readPortfolioSnapshot(supabase),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase.rpc("is_pro", { _user_id: user.id }),
-      supabase.rpc("is_site_admin"),
     ]).catch((error: unknown) => {
-      if (userRef.current?.id !== user.id) return null;
+      if (!isCurrentRequest()) return null;
       console.error("Unable to reload portfolio data", error);
-      setAccessReady(false);
       setDataError(true);
       return null;
     });
+    const [result, accessVerified] = await Promise.all([financialRequest, accessRequest]);
+    if (!isCurrentRequest()) return;
     if (!result) return;
-    const [a, t, b, bt, ca, mv, p, pro, admin] = result;
-    if (userRef.current?.id !== user.id) return;
-    if (pro.error) {
-      console.error("Unable to verify portfolio access", pro.error);
-      setAccessReady(false);
+    const [snapshot, p] = result;
+    const a = { data: snapshot.assets };
+    const t = { data: snapshot.transactions };
+    const b = { data: snapshot.brokers };
+    const bt = { data: snapshot.broker_transfers };
+    const ca = { data: snapshot.corporate_actions };
+    const mv = { data: snapshot.asset_valuations };
+    if (p.error) {
+      console.error("Unable to reload portfolio data", p.error);
       setDataError(true);
       return;
     }
-    setIsPro(!!pro.data);
-    setAccessReady(true);
-    if (
-      a.error ||
-      t.error ||
-      b.error ||
-      bt.error ||
-      ca.error ||
-      mv.error ||
-      p.error ||
-      admin.error
-    ) {
-      console.error(
-        "Unable to reload portfolio data",
-        a.error ?? t.error ?? b.error ?? bt.error ?? ca.error ?? mv.error ?? p.error ?? admin.error,
-      );
-      setDataError(true);
-      return;
-    }
-    setDataError(false);
+    setDataError(!accessVerified);
     setPortfolioReady(true);
     setDataUpdatedAt(Date.now());
-    setIsAdmin(!!admin.data);
     setBrokers(b.data ?? []);
     setBrokerTransfers(
       (bt.data ?? []).map((transfer) => ({
@@ -506,6 +522,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           ? { quoteNativePrice: current.quoteNativePrice }
           : {}),
         ...(current?.quoteAt !== undefined ? { quoteAt: current.quoteAt } : {}),
+        ...(current?.quoteRefreshFailed ? { quoteRefreshFailed: true } : {}),
         ...(current?.quoteFxAt !== undefined ? { quoteFxAt: current.quoteFxAt } : {}),
         ...(current?.quoteFxSource !== undefined ? { quoteFxSource: current.quoteFxSource } : {}),
       };
@@ -516,14 +533,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     try {
       const quoteAssets = base.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type));
       if (!quoteAssets.length) return;
-      const res = await quoteFn({
-        data: { items: quoteAssets.map((x) => ({ symbol: x.symbol, type: x.type })) },
-      });
-      if (userRef.current?.id !== user.id) return;
+      const res = await fetchPortfolioQuoteBatches(
+        quoteAssets.map((x) => ({ symbol: x.symbol, type: x.type })),
+        quoteFn,
+      );
+      if (userRef.current?.id !== user.id || requestVersion !== reloadVersion.current) return;
       setAssets(
         base.map((x) => {
           const q = res.quotes[x.symbol];
-          if (!q) return x;
+          if (!q)
+            return ["stock", "etf", "crypto"].includes(x.type)
+              ? { ...x, quoteRefreshFailed: true }
+              : x;
           const updated = {
             ...x,
             price: q.price,
@@ -531,6 +552,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             quoteCurrency: q.currency,
             quoteNativePrice: q.nativePrice,
             quoteAt: q.at,
+            quoteRefreshFailed: false,
           };
           delete updated.quoteFxAt;
           delete updated.quoteFxSource;
@@ -540,9 +562,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         }),
       );
       setPricesLive(Object.keys(res.quotes).length > 0);
-      setPriceNote(res.missing.length ? "unavailable" : null);
+      setPriceNote(res.failed ? "error" : res.missing.length ? "unavailable" : null);
     } catch (e) {
-      if (userRef.current?.id !== user.id) return;
+      if (userRef.current?.id !== user.id || requestVersion !== reloadVersion.current) return;
       console.error(e);
       setPriceNote("error");
     }
@@ -582,6 +604,31 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     return data.id;
   };
 
+  const mutatePosition = useCallback(
+    async (assetId: string, operationId: string, action: "delete" | "restore") => {
+      if (!user || userRef.current?.id !== user.id) throw new Error("Sign in required");
+      ++reloadVersion.current;
+      try {
+        const receipt = await changePosition(supabase, assetId, operationId, action);
+        if (userRef.current?.id === user.id && receipt.state === "deleted") {
+          setAssets((items) => items.filter((item) => item.id !== assetId));
+          setTx((items) => items.filter((item) => item.assetId !== assetId));
+          setCorporateActions((items) => items.filter((item) => item.assetId !== assetId));
+          setManualValuations((items) => items.filter((item) => item.assetId !== assetId));
+        }
+        return receipt;
+      } finally {
+        // Reconcile even after a lost response: the server may already have committed.
+        ++reloadVersion.current;
+        if (userRef.current?.id === user.id) {
+          setDataError(true);
+          await reload();
+          void queryClient.invalidateQueries({ queryKey: ["portfolio-history", user.id] });
+        }
+      }
+    },
+    [user, reload, queryClient],
+  );
   const value = useMemo<State>(() => {
     const locale = languageLocale(lang);
     const moneyBase: State["money"] = (usd, o) =>
@@ -620,6 +667,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       toggleTheme: () => setTheme((x) => (x === "dark" ? "light" : "dark")),
       reload,
+      deletePosition: (assetId, operationId) => mutatePosition(assetId, operationId, "delete"),
+      restorePosition: (assetId, operationId) => mutatePosition(assetId, operationId, "restore"),
       addTransaction: async (t, a) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
         const assetId = a ? await ensureAsset(a) : t.assetId;
@@ -991,6 +1040,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     eurPerUsd,
     liveFx,
     convertFn,
+    mutatePosition,
   ]);
 
   return (

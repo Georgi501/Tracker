@@ -36,6 +36,7 @@ export interface Asset {
   quoteCurrency?: string;
   quoteNativePrice?: number; // price in quoteCurrency, as quoted by the provider
   quoteAt?: string;
+  quoteRefreshFailed?: boolean; // Latest request unavailable; retain only the previous real quote.
   quoteFxAt?: string;
   quoteFxSource?: string;
   bondCouponRate?: number;

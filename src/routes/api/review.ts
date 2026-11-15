@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/review")({
         try {
           summary = await loadValuedPortfolio(sb);
         } catch {
-          return new Response("Portfolio unavailable", { status: 503 });
+          return new Response("Portfolio unavailable. Retry.", { status: 503 });
         }
         if (!summary.holdings.length) {
           return new Response("No portfolio data yet", { status: 404 });

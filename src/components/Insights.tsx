@@ -1,3 +1,4 @@
+import { HistoryLoadError } from "@/components/HistoryLoadError";
 import { useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -205,6 +206,15 @@ export function GoalsCard() {
     "mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-base text-foreground sm:h-10 sm:text-sm";
   return (
     <Card className="lg:col-span-2">
+      {historyQueries.map((query, index) => (
+        <HistoryLoadError
+          key={historyCurrencies[index]}
+          lang={p.lang}
+          failed={query.isError}
+          pending={query.isFetching}
+          retry={() => void query.refetch()}
+        />
+      ))}
       <h3 className="font-display font-semibold">{c.goals}</h3>
       <p className="mb-3 text-xs text-muted-foreground">{c.assumption}</p>
       {!p.user ? (
@@ -356,7 +366,8 @@ export function GoalsCard() {
                     target={g.target}
                     loading={historical?.isLoading ?? false}
                     unavailable={
-                      historical?.isError === true || historical?.data?.unavailable === true
+                      (historical?.isError === true && !historical.data) ||
+                      historical?.data?.unavailable === true
                     }
                     lang={p.lang}
                   />

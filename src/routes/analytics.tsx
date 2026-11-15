@@ -1,3 +1,4 @@
+import { HistoryLoadError } from "@/components/HistoryLoadError";
 import { AllocationBreakdown } from "@/components/AllocationBreakdown";
 import { Card } from "@/components/AppShell";
 import { ChartDataTable } from "@/components/ChartDataTable";
@@ -557,6 +558,12 @@ function Analytics() {
   return (
     <div className="grid gap-5 lg:grid-cols-3">
       <h1 className="font-display text-2xl font-bold lg:col-span-3">{p.t("analytics")}</h1>
+      <HistoryLoadError
+        lang={p.lang}
+        failed={historyQuery.isError}
+        pending={historyQuery.isFetching}
+        retry={() => void historyQuery.refetch()}
+      />
 
       <Card className="lg:col-span-3">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

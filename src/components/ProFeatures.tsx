@@ -12,6 +12,35 @@ import {
   MIN_FIRE_RETURN_PCT,
 } from "@/lib/pro";
 import { planCopy } from "@/lib/plan-i18n";
+import type { Lang } from "@/lib/i18n";
+
+const ACCESS_COPY: Record<Lang, { checking: string; failed: string; retry: string }> = {
+  en: {
+    checking: "Checking access…",
+    failed: "Unable to verify access. Your plan has not been confirmed.",
+    retry: "Retry access",
+  },
+  bg: {
+    checking: "Проверка на достъпа…",
+    failed: "Не можем да проверим достъпа. Планът ти не е потвърден.",
+    retry: "Провери достъпа отново",
+  },
+  de: {
+    checking: "Zugriff wird geprüft…",
+    failed: "Der Zugriff konnte nicht geprüft werden. Dein Tarif ist nicht bestätigt.",
+    retry: "Zugriff erneut prüfen",
+  },
+  es: {
+    checking: "Comprobando acceso…",
+    failed: "No se puede verificar el acceso. Tu plan no está confirmado.",
+    retry: "Reintentar acceso",
+  },
+  it: {
+    checking: "Verifica dell'accesso…",
+    failed: "Impossibile verificare l'accesso. Il tuo piano non è confermato.",
+    retry: "Riprova accesso",
+  },
+};
 
 export function ProBadge() {
   return (
@@ -40,14 +69,40 @@ export function ProGate({
 }) {
   const p = usePortfolio();
   const c = proCopy[p.lang];
+  const [checking, setChecking] = useState(false);
+  const access = ACCESS_COPY[p.lang];
   return (
     <Card className={className}>
       <div className="mb-3 flex items-center gap-2">
         <h3 className="font-display font-semibold">{title}</h3>
         {!unlocked && <ProBadge />}
       </div>
-      {p.isPro || unlocked ? (
+      {unlocked || (p.accessReady && p.isPro) ? (
         children
+      ) : p.user && !p.accessReady ? (
+        <div
+          role={p.dataError ? "alert" : "status"}
+          className="space-y-2 text-sm text-muted-foreground"
+        >
+          <p>{p.dataError ? access.failed : access.checking}</p>
+          {p.dataError && (
+            <button
+              type="button"
+              disabled={checking}
+              className="font-semibold text-primary hover:underline disabled:opacity-50"
+              onClick={async () => {
+                setChecking(true);
+                try {
+                  await p.reload();
+                } finally {
+                  setChecking(false);
+                }
+              }}
+            >
+              {access.retry}
+            </button>
+          )}
+        </div>
       ) : (
         <div className="relative overflow-hidden rounded-xl">
           <div aria-hidden className="pointer-events-none select-none blur-[3px] opacity-60">

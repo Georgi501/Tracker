@@ -7,7 +7,8 @@ import { EmptyIllustration, Sparkline } from "@/components/Motion";
 import { QuoteFreshness } from "@/components/QuoteFreshness";
 import { EmptyState } from "@/components/SectionState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import { usePositionDeletion } from "@/hooks/use-position-deletion";
+import { PositionDeletionNotices } from "@/components/PositionDeletionNotices";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
 import { marketQuote, searchMarket } from "@/lib/market.functions";
@@ -714,55 +715,20 @@ function Holdings() {
       />
     </button>
   );
-  const removeAsset = async (id: string, symbol: string) => {
-    if (p.dataError) {
-      toast.error(c.transferHistoryError);
-      return;
-    }
-    if (p.brokerTransfers.some((transfer) => transfer.assetId === id)) {
-      toast.error(c.hasBrokerTransfers);
-      return;
-    }
-    const [assetRow, txRows] = await Promise.all([
-      supabase.from("assets").select("*").eq("id", id).single(),
-      supabase.from("transactions").select("*").eq("asset_id", id),
-    ]);
-    if (assetRow.error || txRows.error) {
-      toast.error((assetRow.error ?? txRows.error)?.message ?? "Error");
-      return;
-    }
-    const { error } = await supabase.from("transactions").delete().eq("asset_id", id);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    const removed = await supabase.from("assets").delete().eq("id", id);
-    if (removed.error) {
-      toast.error(removed.error.message);
-      return;
-    }
-    await p.reload();
-    toast(c.assetRemoved.replace("{s}", symbol), {
-      duration: 8000,
-      action: {
-        label: c.undo,
-        onClick: () => {
-          void (async () => {
-            const a = await supabase.from("assets").insert(assetRow.data);
-            const t = txRows.data.length
-              ? await supabase.from("transactions").insert(txRows.data)
-              : { error: null };
-            if (a.error || t.error) toast.error((a.error ?? t.error)?.message ?? "Error");
-            else toast.success(c.assetRestored.replace("{s}", symbol));
-            await p.reload();
-          })();
-        },
-      },
-    });
-  };
+  const deletion = usePositionDeletion();
+  const { removeAsset } = deletion;
 
   return (
     <div className="space-y-5">
+      <PositionDeletionNotices
+        operations={deletion.operations}
+        loading={deletion.loading}
+        listError={deletion.listError}
+        refresh={deletion.refresh}
+        lang={p.lang}
+        undo={deletion.undo}
+        retry={deletion.retry}
+      />
       {p.holdings.length > 0 &&
         (() => {
           const total = p.holdings.reduce((s, h) => s + h.value, 0);
@@ -1012,6 +978,11 @@ function Holdings() {
                       {lotsToggle(h.asset.id, h.asset.symbol, true)}
                       <button
                         onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                        disabled={deletion.operations.some(
+                          (entry) =>
+                            entry.assetId === h.asset.id &&
+                            (entry.phase === "deleting" || entry.phase === "restoring"),
+                        )}
                         aria-label={`${c.remove} ${h.asset.symbol}`}
                         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
@@ -1138,7 +1109,12 @@ function Holdings() {
                           <div className="flex justify-end">
                             {lotsToggle(h.asset.id, h.asset.symbol)}
                             <button
-                              onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                              onClick={() => removeAsset(h.asset.id, h.asset.symbol)}
+                              disabled={deletion.operations.some(
+                                (entry) =>
+                                  entry.assetId === h.asset.id &&
+                                  (entry.phase === "deleting" || entry.phase === "restoring"),
+                              )}
                               aria-label={`${c.remove} ${h.asset.symbol}`}
                               title={c.remove}
                               className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

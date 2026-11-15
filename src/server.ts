@@ -100,6 +100,17 @@ async function isRateLimited(request: Request, env: unknown, pathname: string): 
 }
 
 export default {
+  scheduled(
+    _controller: unknown,
+    _env: unknown,
+    ctx: { waitUntil: (task: Promise<unknown>) => void },
+  ) {
+    ctx.waitUntil(
+      import("./lib/position-deletion-cleanup.server").then((module) =>
+        module.purgeExpiredPositionDeletions(),
+      ),
+    );
+  },
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
     if (url.hostname === "www.capispot.com") {

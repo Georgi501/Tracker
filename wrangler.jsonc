@@ -8,18 +8,38 @@
   "preview_urls": true,
   "routes": [
     { "pattern": "capispot.com", "custom_domain": true },
-    { "pattern": "www.capispot.com", "custom_domain": true }
+    { "pattern": "www.capispot.com", "custom_domain": true },
   ],
   "vars": {
     "CREEM_MODE": "prod",
     "CREEM_PRODUCT_ID_MONTHLY": "prod_Vrcc1dmOhlbmYS9RQ9wzk",
     "CREEM_PRODUCT_ID_YEARLY": "prod_1wpAdq44KeXo7c2TwlrZAR",
-    "PUBLIC_APP_URL": "https://capispot.com"
+    "PUBLIC_APP_URL": "https://capispot.com",
   },
+  "triggers": { "crons": ["* * * * *"] },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "ratelimits": [
-    { "name": "AI_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }
-  ]
+    { "name": "AI_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+  ],
+  // Separate staging Worker. Keep production routes, secrets and bindings out of this environment.
+  "env": {
+    "staging": {
+      "name": "folio-staging",
+      "workers_dev": true,
+      "preview_urls": true,
+      "routes": [],
+      "vars": {
+        "SUPABASE_URL": "https://ijaogqbfidyidxclfcij.supabase.co",
+        "PUBLIC_APP_URL": "https://folio-staging.capispot.workers.dev",
+        "CREEM_MODE": "test",
+      },
+      "triggers": { "crons": ["* * * * *"] },
+      "observability": { "enabled": true },
+      "ratelimits": [
+        { "name": "AI_LIMITER", "namespace_id": "2001", "simple": { "limit": 30, "period": 60 } },
+      ],
+    },
+  },
 }

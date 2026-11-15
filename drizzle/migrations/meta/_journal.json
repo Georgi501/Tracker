@@ -232,6 +232,13 @@
       "when": 1793368400000,
       "tag": "0032_csv_transaction_execution_time",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793372000000,
+      "tag": "0033_atomic_position_deletion",
+      "breakpoints": true
     }
   ]
 }

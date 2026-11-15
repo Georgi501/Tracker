@@ -913,6 +913,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      portfolio_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };
+      list_position_deletions: { Args: Record<PropertyKey, never>; Returns: Json };
+      purge_expired_position_deletions: { Args: Record<PropertyKey, never>; Returns: number };
+      delete_position: {
+        Args: { p_asset_id: string; p_operation_id: string };
+        Returns: Json;
+      };
+      restore_position: {
+        Args: { p_operation_id: string };
+        Returns: Json;
+      };
       save_live_eurusd: {
         Args: { rate: number; observed_at: string; provider: string };
         Returns: Database["public"]["Tables"]["live_exchange_rates"]["Row"][];

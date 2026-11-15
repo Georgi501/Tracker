@@ -22,19 +22,31 @@ import {
 
 function mockSupabaseTables(tables: Record<string, { data: unknown[]; error?: unknown }>) {
   return {
-    from(table: string) {
-      const result = tables[table] ?? { data: [], error: null };
-      const response = Promise.resolve({ data: result.data, error: result.error ?? null });
-      return {
-        select() {
-          return {
-            order() {
-              return response;
-            },
-            then: response.then.bind(response),
-          };
-        },
-      };
+    rpc(name: string) {
+      if (name === "portfolio_snapshot") {
+        const hasError = Object.values(tables).find((t) => t.error);
+        if (hasError?.error) {
+          return Promise.resolve({ data: null, error: hasError.error });
+        }
+        return Promise.resolve({
+          data: {
+            assets: tables["assets"]?.data ?? [],
+            transactions: tables["transactions"]?.data ?? [],
+            brokers: tables["brokers"]?.data ?? [],
+            broker_transfers: tables["broker_transfers"]?.data ?? [],
+            corporate_actions: (tables["corporate_actions"]?.data ?? []).map((row, index) => ({
+              id: `ca-${index}`,
+              ...(row as object),
+            })),
+            asset_valuations: (tables["asset_valuations"]?.data ?? []).map((row, index) => ({
+              id: `av-${index}`,
+              ...(row as object),
+            })),
+          },
+          error: null,
+        });
+      }
+      return Promise.resolve({ data: null, error: null });
     },
   };
 }
