@@ -37,8 +37,9 @@ export const authCopy: Record<Lang, Copy> = {
     invalid: "Wrong email or password.",
     notConfirmed: "Please confirm your email first — check your inbox (and spam).",
     exists: "This email is already registered. Sign in instead.",
-    sent: (e) => `We sent a confirmation code to ${e}. Enter it below to activate your account.`,
-    codeLabel: "Confirmation code",
+    sent: (e) =>
+      `Check the confirmation email sent to ${e}. Follow its link, then return here to sign in. If it contains a code instead, enter it below.`,
+    codeLabel: "Confirmation code (if provided)",
     verify: "Confirm email",
     invalidCode: "The code is wrong or has expired. Check it or sign up again.",
     back: "Back to sign in",
@@ -68,8 +69,8 @@ export const authCopy: Record<Lang, Copy> = {
     notConfirmed: "Първо потвърдете имейла си — проверете пощата (и спам папката).",
     exists: "Този имейл вече е регистриран. Влезте в профила си.",
     sent: (e) =>
-      `Изпратихме код за потвърждение на ${e}. Въведете го по-долу, за да активирате профила.`,
-    codeLabel: "Код за потвърждение",
+      `Проверете писмото за потвърждение до ${e}. Отворете линка в него, после се върнете тук за вход. Ако вместо линк има код, въведете го по-долу.`,
+    codeLabel: "Код за потвърждение (ако е предоставен)",
     verify: "Потвърди имейла",
     invalidCode: "Кодът е грешен или е изтекъл. Проверете го или се регистрирайте отново.",
     back: "Към вход",
@@ -99,8 +100,8 @@ export const authCopy: Record<Lang, Copy> = {
     notConfirmed: "Bitte bestätigen Sie zuerst Ihre E-Mail (auch Spam prüfen).",
     exists: "Diese E-Mail ist bereits registriert. Bitte anmelden.",
     sent: (e) =>
-      `Bestätigungscode an ${e} gesendet. Geben Sie ihn unten ein, um das Konto zu aktivieren.`,
-    codeLabel: "Bestätigungscode",
+      `Prüfen Sie die Bestätigungs-E-Mail an ${e}. Öffnen Sie den Link und kehren Sie zur Anmeldung zurück. Enthält die E-Mail stattdessen einen Code, geben Sie ihn unten ein.`,
+    codeLabel: "Bestätigungscode (falls vorhanden)",
     verify: "E-Mail bestätigen",
     invalidCode:
       "Der Code ist falsch oder abgelaufen. Prüfen Sie ihn oder registrieren Sie sich erneut.",
@@ -134,8 +135,8 @@ export const authCopy: Record<Lang, Copy> = {
     notConfirmed: "Confirma primero tu correo (revisa también spam).",
     exists: "Este correo ya está registrado. Inicia sesión.",
     sent: (e) =>
-      `Enviamos un código de confirmación a ${e}. Introdúcelo abajo para activar la cuenta.`,
-    codeLabel: "Código de confirmación",
+      `Revisa el correo de confirmación enviado a ${e}. Abre el enlace y vuelve aquí para iniciar sesión. Si contiene un código en su lugar, introdúcelo abajo.`,
+    codeLabel: "Código de confirmación (si se incluye)",
     verify: "Confirmar correo",
     invalidCode: "El código es incorrecto o ha caducado. Revísalo o regístrate de nuevo.",
     back: "Volver a iniciar sesión",
@@ -166,8 +167,8 @@ export const authCopy: Record<Lang, Copy> = {
     notConfirmed: "Conferma prima la tua email (controlla anche lo spam).",
     exists: "Questa email è già registrata. Accedi.",
     sent: (e) =>
-      `Abbiamo inviato un codice di conferma a ${e}. Inseriscilo qui sotto per attivare l'account.`,
-    codeLabel: "Codice di conferma",
+      `Controlla l'email di conferma inviata a ${e}. Apri il link e torna qui per accedere. Se contiene invece un codice, inseriscilo qui sotto.`,
+    codeLabel: "Codice di conferma (se presente)",
     verify: "Conferma email",
     invalidCode: "Il codice è errato o scaduto. Controllalo o registrati di nuovo.",
     back: "Torna all'accesso",

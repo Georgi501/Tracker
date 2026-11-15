@@ -83,6 +83,7 @@ export function AuthForm({
 }) {
   const p = usePortfolio();
   const passwordId = useId();
+  const confirmationCodeId = useId();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -299,15 +300,17 @@ export function AuthForm({
         <h1 className="font-display text-2xl font-bold">{p.t("checkEmail")}</h1>
         <p className="mt-3 text-sm text-muted-foreground">{c.sent(sentTo)}</p>
         <form onSubmit={verifyCode} className="mt-5 space-y-3">
+          <label htmlFor={confirmationCodeId} className="block text-sm font-medium">
+            {c.codeLabel}
+          </label>
           <input
+            id={confirmationCodeId}
             className={`${input} text-center text-lg tracking-widest`}
             required
             inputMode="numeric"
             autoComplete="one-time-code"
             pattern="[0-9]{6}"
             maxLength={6}
-            aria-label={c.codeLabel}
-            placeholder={c.codeLabel}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           />
