@@ -568,7 +568,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <DropdownMenuTrigger asChild>
                 <button
-                  aria-label={p.t("language")}
+                  aria-label={`${p.t("language")}: ${p.lang.toUpperCase()}`}
                   title={p.t("language")}
                   className="press flex h-9 items-center gap-1 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-secondary"
                 >

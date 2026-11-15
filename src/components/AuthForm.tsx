@@ -398,7 +398,8 @@ export function AuthForm({
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground"
+            aria-pressed={show}
+            className="absolute right-1 top-1/2 min-h-9 min-w-11 -translate-y-1/2 rounded-lg px-2 text-xs font-semibold text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {show ? c.hide : c.show}
           </button>
@@ -426,6 +427,7 @@ export function AuthForm({
       </div>
       <div
         ref={googleButtonRef}
+        role="group"
         className={`flex min-h-10 justify-center ${busy ? "pointer-events-none opacity-60" : ""}`}
         aria-label={c.googleContinue}
       />
