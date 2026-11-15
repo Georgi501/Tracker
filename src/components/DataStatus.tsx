@@ -1,4 +1,4 @@
-﻿import { quoteCoverage } from "@/lib/data-status";
+import { quoteCoverage } from "@/lib/data-status";
 import { languageLocale } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/store";
 import { trustCopy } from "@/lib/trust-i18n";
@@ -60,6 +60,7 @@ export function DataStatus() {
               return (
                 <li key={h.asset.id}>
                   {h.asset.symbol}: {c.states[coverage.fresh ? 0 : coverage.stale ? 1 : 2]}
+                  {h.asset.quoteRefreshFailed && <span className="ml-1">· {c.quoteFailure}</span>}
                 </li>
               );
             })}

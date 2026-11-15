@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { QUOTE_BATCH_SIZE } from "./quote-batches";
 export type Quote = {
   price: number;
   nativePrice: number;
@@ -16,7 +17,9 @@ export const getQuotes = createServerFn({ method: "POST" })
   .validator((d) =>
     z
       .object({
-        items: z.array(z.object({ symbol: z.string().max(20), type: z.string().max(20) })).max(60),
+        items: z
+          .array(z.object({ symbol: z.string().max(20), type: z.string().max(20) }))
+          .max(QUOTE_BATCH_SIZE),
       })
       .parse(d),
   )

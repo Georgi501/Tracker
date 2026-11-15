@@ -3,9 +3,9 @@ import { CompanyOverview } from "@/components/CompanyOverview";
 import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
 import { QuoteHero } from "@/components/QuoteHero";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { InvestmentJournal } from "@/components/InvestmentJournal";
 import type { Lang } from "@/lib/i18n";
-import { assetSummary, reviewDue } from "@/lib/journey";
+import { assetSummary } from "@/lib/journey";
 import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
 import { projectedBondCoupon } from "@/lib/portfolio";
@@ -18,7 +18,6 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   BarChart3,
-  BookOpen,
   ChartNoAxesCombined,
   CircleDollarSign,
   Newspaper,
@@ -727,7 +726,7 @@ function AssetPage() {
           </ul>
         </Card>
       )}
-      {asset && <Journal symbol={symbol.toUpperCase()} c={c} />}
+      {asset && <InvestmentJournal symbol={symbol.toUpperCase()} c={c} />}
       {type === "stock" && asset && (
         <CompanyProfileDetails
           snapshotTarget={snapshotTarget}
@@ -747,97 +746,5 @@ function AssetPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function Journal({ symbol, c }: { symbol: string; c: typeof C.en }) {
-  const p = usePortfolio();
-  const [thesis, setThesis] = useState("");
-  const [horizon, setHorizon] = useState("");
-  const [review, setReview] = useState("");
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (!p.user) return;
-    void supabase
-      .from("journal_notes")
-      .select("thesis,horizon,review_date")
-      .eq("symbol", symbol)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setThesis(data.thesis);
-          setHorizon(data.horizon);
-          setReview(data.review_date ?? "");
-        }
-      });
-  }, [p.user, symbol]);
-  const save = async () => {
-    setBusy(true);
-    const { error } = await supabase.from("journal_notes").upsert(
-      {
-        user_id: p.user!.id,
-        symbol,
-        thesis: thesis.slice(0, 4000),
-        horizon: horizon.slice(0, 100),
-        review_date: review || null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,symbol" },
-    );
-    setBusy(false);
-    if (error) toast.error(error.message);
-    else toast.success(c.saved);
-  };
-  return (
-    <Card>
-      <h2 className="mb-3 flex items-center gap-2 font-display font-semibold">
-        <BookOpen className="h-4 w-4 text-primary" />
-        {c.journal}
-      </h2>
-      {!p.user ? (
-        <Link to="/auth" className="text-sm font-semibold text-primary">
-          {c.signIn}
-        </Link>
-      ) : (
-        <div className="space-y-3">
-          {reviewDue(review || null) && (
-            <p className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground">{c.due}</p>
-          )}
-          <label className="block text-sm">
-            {c.thesis}
-            <textarea
-              value={thesis}
-              onChange={(e) => setThesis(e.target.value)}
-              rows={4}
-              maxLength={4000}
-              className="mt-1 w-full rounded-xl border border-border bg-background p-2"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm">
-              {c.horizon}
-              <input
-                value={horizon}
-                onChange={(e) => setHorizon(e.target.value)}
-                maxLength={100}
-                className="mt-1 w-full rounded-xl border border-border bg-background p-2"
-              />
-            </label>
-            <label className="text-sm">
-              {c.review}
-              <input
-                type="date"
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-border bg-background p-2"
-              />
-            </label>
-          </div>
-          <Button onClick={() => void save()} disabled={busy}>
-            {c.save}
-          </Button>
-        </div>
-      )}
-    </Card>
   );
 }

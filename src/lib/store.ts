@@ -1,3 +1,4 @@
+import type { PositionReceipt } from "./position-deletion";
 import type { User } from "@supabase/supabase-js";
 import { createContext, useContext } from "react";
 import type { ImportedTx } from "./csv-import";
@@ -64,6 +65,8 @@ export interface State {
   updateTransaction: (transaction: Transaction) => Promise<void>;
   restoreTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransactions: (ids: string[]) => Promise<number>;
+  deletePosition: (assetId: string, operationId: string) => Promise<PositionReceipt>;
+  restorePosition: (assetId: string, operationId: string) => Promise<PositionReceipt>;
   importTransactions: (
     brokerId: string | null,
     rows: ImportedTx[],

@@ -1,3 +1,4 @@
+import { readPortfolioSnapshot } from "@/lib/portfolio-snapshot";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -43,10 +44,9 @@ export const Route = createFileRoute("/api/review")({
         if (!parsed.success) return new Response("Invalid input", { status: 400 });
         const { lang } = parsed.data;
 
-        const [{ data: assets }, { data: txs }] = await Promise.all([
-          sb.from("assets").select("*"),
-          sb.from("transactions").select("*"),
-        ]);
+        const snapshot = await readPortfolioSnapshot(sb).catch(() => null);
+        if (!snapshot) return new Response("Portfolio unavailable. Retry.", { status: 503 });
+        const { assets, transactions: txs } = snapshot;
         if (!assets?.length || !txs?.length)
           return new Response("No portfolio data yet", { status: 404 });
         const pos = new Map<string, { qty: number; cost: number }>();

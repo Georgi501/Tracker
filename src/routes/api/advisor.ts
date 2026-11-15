@@ -1,3 +1,4 @@
+import { readPortfolioSnapshot } from "@/lib/portfolio-snapshot";
 import type { Database } from "@/integrations/supabase/types";
 import { createClient } from "@supabase/supabase-js";
 import { createFileRoute } from "@tanstack/react-router";
@@ -26,11 +27,9 @@ function userClient(token: string) {
 }
 
 async function portfolioContext(sb: ReturnType<typeof userClient>) {
-  const [a, t] = await Promise.all([
-    sb.from("assets").select("id,symbol,name,type,sector,region"),
-    sb.from("transactions").select("asset_id,kind,quantity,price,date").order("date"),
-  ]);
-  if (a.error || t.error) throw new Error("Portfolio unavailable");
+  const snapshot = await readPortfolioSnapshot(sb);
+  const a = { data: snapshot.assets },
+    t = { data: snapshot.transactions };
   const { fetchLiveQuote } = await import("@/lib/prices.server");
   const quotes = await Promise.all(
     (a.data ?? []).map(async (x) =>

@@ -17,6 +17,8 @@ import {
   type Transaction,
 } from "./portfolio";
 
+import { readPortfolioSnapshot } from "./portfolio-snapshot";
+
 const HISTORY_BATCH_SIZE = 5;
 
 export const getPortfolioHistory = createServerFn({ method: "POST" })
@@ -30,24 +32,11 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const [a, t, actionRows, valuationRows] = await Promise.all([
-      context.supabase.from("assets").select("id,symbol,type"),
-      context.supabase
-        .from("transactions")
-        .select("id,asset_id,kind,quantity,price,fee,date")
-        .order("date"),
-      context.supabase
-        .from("corporate_actions")
-        .select("asset_id,event_date,numerator,denominator"),
-      context.supabase
-        .from("asset_valuations")
-        .select("asset_id,valuation_date,price_usd")
-        .order("valuation_date"),
-    ]);
-    if (a.error || t.error || actionRows.error || valuationRows.error)
-      throw new Error(
-        `Could not load portfolio history inputs: ${a.error?.message ?? t.error?.message ?? actionRows.error?.message ?? valuationRows.error?.message}`,
-      );
+    const snapshot = await readPortfolioSnapshot(context.supabase);
+    const a = { data: snapshot.assets };
+    const t = { data: snapshot.transactions };
+    const actionRows = { data: snapshot.corporate_actions };
+    const valuationRows = { data: snapshot.asset_valuations };
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
       id: r.id,
       assetId: r.asset_id,

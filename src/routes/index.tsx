@@ -1,3 +1,4 @@
+import { HistoryLoadError } from "@/components/HistoryLoadError";
 import { DashboardMotion } from "@/components/DashboardMotion";
 import { PortfolioComparisonLegend } from "@/components/PortfolioComparisonLegend";
 import {
@@ -850,6 +851,12 @@ function Dashboard() {
         {p.user && p.portfolioReady && p.holdings.length > 0 && (
           <>
             <Card className="dashboard-primary-card analytics-surface order-1 min-w-0 p-4 sm:p-5 lg:order-none lg:col-span-2">
+              <HistoryLoadError
+                lang={p.lang}
+                failed={history.isError && !!history.data}
+                pending={history.isFetching}
+                retry={() => void history.refetch()}
+              />
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                   {p.t("netWorth")}

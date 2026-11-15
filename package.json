@@ -82,6 +82,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.64.0",
+    "@electric-sql/pglite": "^0.5.16",
     "@eslint/js": "^9.32.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
