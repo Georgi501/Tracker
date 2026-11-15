@@ -1,4 +1,5 @@
 import { DashboardMotion } from "@/components/DashboardMotion";
+import { PortfolioComparisonLegend } from "@/components/PortfolioComparisonLegend";
 import {
   DashboardMetricCard as Metric,
   DashboardAnalyticsSkeleton,
@@ -930,11 +931,7 @@ function Dashboard() {
                     </div>
                   ) : (
                     <ResponsiveContainer>
-                      <LineChart
-                        accessibilityLayer
-                        data={performanceChart}
-                        margin={{ top: comparison.length ? 34 : 0 }}
-                      >
+                      <LineChart accessibilityLayer data={performanceChart}>
                         <CartesianGrid
                           stroke="var(--border)"
                           strokeDasharray="3 3"
@@ -982,6 +979,7 @@ function Dashboard() {
                             name={indexName}
                             stroke="var(--chart-2)"
                             strokeWidth={2}
+                            strokeDasharray="6 4"
                             dot={false}
                             isAnimationActive={false}
                           />
@@ -1056,47 +1054,29 @@ function Dashboard() {
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
-                {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
-                  <div className="absolute left-11 right-0 top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] leading-tight sm:gap-x-4 sm:text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="size-1.5 shrink-0 rounded-full"
-                        style={{ background: performanceTrend }}
-                      />
-                      {c.portfolio}: <b>{comparisonLast ? pct(comparisonLast.portfolio) : "—"}</b>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="size-1.5 shrink-0 rounded-full bg-chart-2" />
-                      {indexName}: <b>{comparisonLast ? pct(comparisonLast.benchmark) : "—"}</b>
-                    </span>
-                    <span className="hidden text-muted-foreground sm:inline">
-                      {c.difference}:{" "}
-                      <b>
-                        {comparisonLast
-                          ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}`
-                          : "—"}
-                      </b>
-                    </span>
-                    <span
-                      className="basis-full truncate text-[9px] text-muted-foreground"
-                      title={c.priceReturn}
-                    >
-                      {c.priceReturn}
-                    </span>
-                  </div>
-                )}
-                {benchmark !== "none" &&
-                  chartMode === "performance" &&
-                  performanceSeries.length > 0 &&
-                  !comparison.length && (
-                    <p
-                      role="status"
-                      className="absolute left-11 top-2 z-10 text-xs text-muted-foreground"
-                    >
-                      {indexHistory.isFetching ? "…" : c.unavailable}
-                    </p>
-                  )}
               </div>
+              {benchmark !== "none" && chartMode === "performance" && comparison.length > 0 && (
+                <PortfolioComparisonLegend
+                  lang={p.lang}
+                  indexName={indexName}
+                  portfolioValue={comparisonLast ? pct(comparisonLast.portfolio) : "—"}
+                  indexValue={comparisonLast ? pct(comparisonLast.benchmark) : "—"}
+                  differenceValue={
+                    comparisonLast
+                      ? `${(comparisonLast.portfolio - comparisonLast.benchmark).toFixed(2)} ${c.pp}`
+                      : "—"
+                  }
+                  portfolioColor={performanceTrend}
+                />
+              )}
+              {benchmark !== "none" &&
+                chartMode === "performance" &&
+                performanceSeries.length > 0 &&
+                !comparison.length && (
+                  <p role="status" className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {indexHistory.isFetching ? "…" : c.unavailable}
+                  </p>
+                )}
               <ChartDataTable
                 summary={p.t("viewChartData")}
                 caption={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}`}

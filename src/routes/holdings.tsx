@@ -23,6 +23,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
+  CircleAlert,
   Landmark,
   Pencil,
   Plus,
@@ -109,6 +110,7 @@ const COPY: Record<
     | "unavailable"
     | "popular"
     | "remove"
+    | "lots"
     | "confirmRemove",
     string
   >
@@ -131,6 +133,7 @@ const COPY: Record<
     unavailable: "Quote unavailable",
     popular: "Popular",
     remove: "Delete position",
+    lots: "Lots",
     confirmRemove: "Delete {s} and all its transactions?",
   },
   bg: {
@@ -153,6 +156,7 @@ const COPY: Record<
     unavailable: "Няма котировка",
     popular: "Популярни",
     remove: "Изтрий позиция",
+    lots: "Лотове",
     confirmRemove: "Да изтрия ли {s} и всички негови трансакции?",
   },
   de: {
@@ -175,6 +179,7 @@ const COPY: Record<
     unavailable: "Kurs nicht verfügbar",
     popular: "Beliebt",
     remove: "Position löschen",
+    lots: "Kauflots",
     confirmRemove: "{s} und alle Transaktionen löschen?",
   },
   es: {
@@ -195,6 +200,7 @@ const COPY: Record<
     unavailable: "Cotización no disponible",
     popular: "Populares",
     remove: "Eliminar posición",
+    lots: "Lotes",
     confirmRemove: "¿Eliminar {s} y todas sus transacciones?",
   },
   it: {
@@ -217,6 +223,7 @@ const COPY: Record<
     unavailable: "Quotazione non disponibile",
     popular: "Popolari",
     remove: "Elimina posizione",
+    lots: "Lotti",
     confirmRemove: "Eliminare {s} e tutte le sue transazioni?",
   },
 };
@@ -361,7 +368,7 @@ function Holdings() {
       if (!next.delete(id)) next.add(id);
       return next;
     });
-  const lotsLabel = p.lang === "bg" ? "Лотове" : "Lots";
+  const lotsLabel = c.lots;
   const removeLot = async (id: string) => {
     const bg = p.lang === "bg";
     const transaction = p.transactions.find((item) => item.id === id);
@@ -494,19 +501,19 @@ function Holdings() {
                 )}
                 <button
                   onClick={() => void saveLot()}
-                  className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground"
+                  className="min-h-11 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {bg ? "Запази" : "Save"}
                 </button>
                 <button
                   onClick={() => setEditing(null)}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-semibold"
+                  className="min-h-11 rounded-full border border-border px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {bg ? "Отказ" : "Cancel"}
                 </button>
               </li>
             ) : (
-              <li key={t.id} className="flex items-center gap-3 py-2 text-sm">
+              <li key={t.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
                 <span className="w-24 text-muted-foreground">
                   {new Date(t.date).toLocaleDateString(languageLocale(p.lang))}
                 </span>
@@ -531,7 +538,7 @@ function Holdings() {
                     }
                     aria-label={bg ? "Редактирай лота" : "Edit lot"}
                     title={bg ? "Редактирай лота" : "Edit lot"}
-                    className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Pencil size={16} />
                   </button>
@@ -540,7 +547,7 @@ function Holdings() {
                   onClick={() => void removeLot(t.id)}
                   aria-label={bg ? "Изтрий лота" : "Delete lot"}
                   title={bg ? "Изтрий лота" : "Delete lot"}
-                  className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -551,14 +558,15 @@ function Holdings() {
       </div>
     );
   };
-  const lotsToggle = (assetId: string, symbol: string) => (
+  const lotsToggle = (assetId: string, symbol: string, showLabel = false) => (
     <button
       onClick={() => toggleLots(assetId)}
       aria-expanded={expanded.has(assetId)}
       aria-label={`${lotsLabel} ${symbol}`}
       title={lotsLabel}
-      className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+      className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${showLabel ? "border border-border px-3 text-sm font-medium" : "w-11"}`}
     >
+      {showLabel && <span>{lotsLabel}</span>}
       <ChevronDown
         size={16}
         className={`transition-transform ${expanded.has(assetId) ? "rotate-180" : ""}`}
@@ -666,7 +674,7 @@ function Holdings() {
           <button
             type="button"
             onClick={() => openAdd(null)}
-            className="bg-brand-gradient shadow-glow press flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            className="press flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <Plus size={16} />
             {c.addHolding}
@@ -745,8 +753,10 @@ function Holdings() {
           {TYPES.map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setType(t)}
-              className={`min-h-8 rounded-full px-3 py-1 text-xs font-semibold ${type === t ? "bg-brand-gradient text-primary-foreground shadow-glow" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+              aria-pressed={type === t}
+              className={`min-h-11 rounded-full px-3 py-1 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${type === t ? "bg-primary text-primary-foreground underline decoration-2 underline-offset-4" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
             >
               {t === "all" ? p.t("all") : p.t(t)}
             </button>
@@ -761,7 +771,7 @@ function Holdings() {
             {p.user ? (
               <button
                 onClick={() => openAdd(null)}
-                className="bg-brand-gradient shadow-glow press mt-1 flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                className="press mt-1 flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Plus size={16} /> {c.addFirst}
               </button>
@@ -772,7 +782,7 @@ function Holdings() {
                   <Link
                     to="/auth"
                     search={{ mode: "signup" }}
-                    className="bg-brand-gradient shadow-glow press inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                    className="press inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {c.signUp}
                   </Link>
@@ -805,7 +815,7 @@ function Holdings() {
               <button
                 onClick={() => setSort((s) => ({ ...s, dir: s.dir === 1 ? -1 : 1 }))}
                 aria-label={uiStateCopy[p.lang].direction}
-                className="press rounded-full border border-border p-2"
+                className="press inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {sort.dir === 1 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
               </button>
@@ -817,7 +827,7 @@ function Holdings() {
                   style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
                   className="rise-in rounded-2xl border border-border bg-background/60 p-3"
                 >
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-3 gap-y-3">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3">
                     <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
                     <div className="min-w-0 flex-1">
                       <Link
@@ -827,43 +837,57 @@ function Holdings() {
                       >
                         {h.asset.name}
                       </Link>
-                      <StaleBadge at={h.asset.quoteAt} price={h.asset.price} bg={p.lang === "bg"} />
+                      <StaleBadge
+                        at={h.asset.quoteAt}
+                        price={h.asset.price}
+                        missingLabel={c.unavailable}
+                        staleLabel={p.t("holdingValueStale")}
+                      />
                       <p className="text-xs text-muted-foreground">
                         {num(h.quantity)} · {h.asset.symbol} ·{" "}
                         <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
                       </p>
-                      <QuoteFreshness
-                        at={h.asset.quoteAt}
-                        lang={p.lang}
-                        crypto={h.asset.type === "crypto"}
-                        compact
-                      />
+                      <div className="[&_p]:text-xs [&_svg]:size-3">
+                        <QuoteFreshness
+                          at={h.asset.quoteAt}
+                          lang={p.lang}
+                          crypto={h.asset.type === "crypto"}
+                          compact
+                        />
+                      </div>
                     </div>
                     <div className="col-span-full row-start-2 min-w-0 border-t border-border/60 pt-3 text-right">
-                      <HoldingValue
-                        asset={h.asset}
-                        quantity={h.quantity}
-                        valueUsd={h.value}
-                        currency={p.currency}
-                        liveFx={p.liveFx}
-                        displayValue={p.money(h.value)}
-                        lang={p.lang}
-                        t={p.t}
-                      />
-                      <p className="numeric-display text-xs">
+                      <p className="mb-1 text-xs text-muted-foreground">{p.t("value")}</p>
+                      <div className="[&_.numeric-display]:break-words [&_.numeric-display]:text-xl">
+                        <HoldingValue
+                          asset={h.asset}
+                          quantity={h.quantity}
+                          valueUsd={h.value}
+                          currency={p.currency}
+                          liveFx={p.liveFx}
+                          displayValue={p.money(h.value)}
+                          lang={p.lang}
+                          t={p.t}
+                        />
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{p.t("pnl")}</p>
+                      <p className="numeric-display mt-1 break-words text-sm font-semibold">
                         <Delta value={h.pnl}>
                           {p.moneyFor(h.pnl, h.asset, { sign: true })} · {pct(h.pnlPct)}
                         </Delta>
                       </p>
                     </div>
-                    {lotsToggle(h.asset.id, h.asset.symbol)}
-                    <button
-                      onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
-                      aria-label={`${c.remove} ${h.asset.symbol}`}
-                      className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="col-span-full flex flex-wrap items-center justify-between gap-2">
+                      {lotsToggle(h.asset.id, h.asset.symbol, true)}
+                      <button
+                        onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                        aria-label={`${c.remove} ${h.asset.symbol}`}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        <Trash2 size={16} />
+                        <span>{c.remove}</span>
+                      </button>
+                    </div>
                   </div>
                   {expanded.has(h.asset.id) && <div className="mt-3">{lotsPanel(h.asset.id)}</div>}
                 </li>
@@ -922,7 +946,8 @@ function Holdings() {
                               <StaleBadge
                                 at={h.asset.quoteAt}
                                 price={h.asset.price}
-                                bg={p.lang === "bg"}
+                                missingLabel={c.unavailable}
+                                staleLabel={p.t("holdingValueStale")}
                               />
                               <p className="text-xs text-muted-foreground">
                                 {h.asset.symbol} · {p.t(h.asset.type)}
@@ -985,7 +1010,7 @@ function Holdings() {
                               onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
                               aria-label={`${c.remove} ${h.asset.symbol}`}
                               title={c.remove}
-                              className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1127,7 +1152,17 @@ function MarketRow({
 }
 
 /** Flags quotes older than 4 days (covers weekends/holidays) or missing; never substitutes a price. */
-function StaleBadge({ at, price, bg }: { at?: string | undefined; price: number; bg: boolean }) {
+function StaleBadge({
+  at,
+  price,
+  missingLabel,
+  staleLabel,
+}: {
+  at?: string | undefined;
+  price: number;
+  missingLabel: string;
+  staleLabel: string;
+}) {
   const timestamp = at ? Date.parse(at) : Number.NaN;
   const missing = !(price > 0) || !Number.isFinite(timestamp);
   const old = !missing && isQuoteStale(at);
@@ -1135,9 +1170,10 @@ function StaleBadge({ at, price, bg }: { at?: string | undefined; price: number;
   return (
     <span
       title={Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString() : undefined}
-      className="mt-0.5 inline-block rounded-full bg-destructive/15 px-2 text-[10px] font-semibold text-destructive"
+      className="mt-1 inline-flex max-w-full items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs font-medium text-foreground"
     >
-      {missing ? (bg ? "няма цена" : "no quote") : bg ? "остаряла цена" : "stale price"}
+      <CircleAlert size={12} className="shrink-0" aria-hidden="true" />
+      <span>{missing ? missingLabel : staleLabel}</span>
     </span>
   );
 }

@@ -2,6 +2,22 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Selected chart controls have a non-colour cue and a touch-sized target. */
+.dashboard-primary-card :is(button[aria-pressed], [role="combobox"]) {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+.dashboard-primary-card button[aria-pressed="true"] {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+/* The shared coarse-pointer rule is unlayered and otherwise overrides
+   Tailwind min-h-11 with 40px. Keep these portfolio controls at 44px. */
+.holdings-positions button {
+  min-height: 2.75rem;
+}
+
 :root {
   --flow-revenue: oklch(0.5 0.095 190);
   --flow-gross: oklch(0.51 0.16 255);

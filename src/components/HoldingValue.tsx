@@ -75,7 +75,7 @@ export function HoldingValue({
         <DialogTrigger asChild>
           <button
             type="button"
-            className="ml-auto flex min-h-11 max-w-full items-center justify-end rounded px-1 text-right text-[10px] leading-tight text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="ml-auto flex min-h-11 max-w-full items-center justify-end rounded px-1 text-right text-xs leading-normal text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("holdingValueExplain")}
           </button>
