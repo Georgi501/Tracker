@@ -35,22 +35,39 @@ export const Route = createFileRoute("/asset/$symbol")({
         q: z.string().max(60).optional().catch(undefined),
       })
       .parse(search),
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.symbol} — quote, charts and position details | CapiSpot` },
-      {
-        name: "description",
-        content: `Your ${params.symbol} position: P&L, dividends, transaction history, company overview and investing journal.`,
-      },
-      { property: "og:title", content: `${params.symbol} — CapiSpot` },
-      {
-        property: "og:description",
-        content: "Position details, history, news and your investment thesis in one place.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ params }) => {
+    const symbol = params.symbol.toUpperCase();
+    const catalogMatch = searchCatalog(symbol).find((item) => item.symbol.toUpperCase() === symbol);
+    const ogParams = new URLSearchParams({ type: "asset", symbol });
+    if (catalogMatch?.name) ogParams.set("name", catalogMatch.name);
+    if (catalogMatch?.type) {
+      ogParams.set(
+        "sector",
+        catalogMatch.type === "etf" ? "ETF" : catalogMatch.type === "crypto" ? "Crypto" : "Stock",
+      );
+    }
+    const ogImage = `https://capispot.com/api/og?${ogParams.toString()}`;
+    return {
+      meta: [
+        { title: `${params.symbol} — quote, charts and position details | CapiSpot` },
+        {
+          name: "description",
+          content: `Your ${params.symbol} position: P&L, dividends, transaction history, company overview and investing journal.`,
+        },
+        { property: "og:title", content: `${params.symbol} — CapiSpot` },
+        {
+          property: "og:description",
+          content: "Position details, history, news and your investment thesis in one place.",
+        },
+        { property: "og:type", content: "website" },
+        { property: "og:image", content: ogImage },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: ogImage },
+      ],
+    };
+  },
   component: AssetPage,
 });
 

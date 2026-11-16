@@ -18,6 +18,19 @@ export const Route = createFileRoute("/demo")({
         content:
           "See how a CapiSpot portfolio looks, with clearly labeled sample data: allocation, performance, dividends and holdings across brokers. No account needed.",
       },
+      {
+        property: "og:image",
+        content:
+          "https://capispot.com/api/og?type=snapshot&weights=stock:55,etf:30,crypto:10,cash:5",
+      },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:image",
+        content:
+          "https://capispot.com/api/og?type=snapshot&weights=stock:55,etf:30,crypto:10,cash:5",
+      },
     ],
   }),
   component: DemoPage,

@@ -54,6 +54,7 @@ import { Route as ApiAdminRouteImport } from './routes/api/admin'
 import { Route as ApiAdminInsightsRouteImport } from './routes/api/admin-insights'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiModerationRouteImport } from './routes/api/moderation'
+import { Route as ApiOgRouteImport } from './routes/api/og'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiThesisRouteImport } from './routes/api/thesis'
 import { Route as AssetSymbolRouteImport } from './routes/asset.$symbol'
@@ -291,6 +292,11 @@ const ApiModerationRoute = ApiModerationRouteImport.update({
   path: '/api/moderation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOgRoute = ApiOgRouteImport.update({
+  id: '/api/og',
+  path: '/api/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReviewRoute = ApiReviewRouteImport.update({
   id: '/api/review',
   path: '/api/review',
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
+  '/api/og': typeof ApiOgRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
@@ -451,6 +458,7 @@ export interface FileRoutesByTo {
   '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
+  '/api/og': typeof ApiOgRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
@@ -510,6 +518,7 @@ export interface FileRoutesById {
   '/api/admin-insights': typeof ApiAdminInsightsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/moderation': typeof ApiModerationRoute
+  '/api/og': typeof ApiOgRoute
   '/api/review': typeof ApiReviewRoute
   '/api/thesis': typeof ApiThesisRoute
   '/asset/$symbol': typeof AssetSymbolRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
+    | '/api/og'
     | '/api/review'
     | '/api/thesis'
     | '/asset/$symbol'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
+    | '/api/og'
     | '/api/review'
     | '/api/thesis'
     | '/asset/$symbol'
@@ -686,6 +697,7 @@ export interface FileRouteTypes {
     | '/api/admin-insights'
     | '/api/advisor'
     | '/api/moderation'
+    | '/api/og'
     | '/api/review'
     | '/api/thesis'
     | '/asset/$symbol'
@@ -745,6 +757,7 @@ export interface RootRouteChildren {
   ApiAdminInsightsRoute: typeof ApiAdminInsightsRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiModerationRoute: typeof ApiModerationRoute
+  ApiOgRoute: typeof ApiOgRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiThesisRoute: typeof ApiThesisRoute
   AssetSymbolRoute: typeof AssetSymbolRoute
@@ -1075,6 +1088,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiModerationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og': {
+      id: '/api/og'
+      path: '/api/og'
+      fullPath: '/api/og'
+      preLoaderRoute: typeof ApiOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/review': {
       id: '/api/review'
       path: '/api/review'
@@ -1212,6 +1232,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminInsightsRoute: ApiAdminInsightsRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiModerationRoute: ApiModerationRoute,
+  ApiOgRoute: ApiOgRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiThesisRoute: ApiThesisRoute,
   AssetSymbolRoute: AssetSymbolRoute,

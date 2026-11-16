@@ -64,6 +64,7 @@ import { CommandMenu } from "./CommandMenu";
 import { DataStatus } from "./DataStatus";
 import { HeaderSearch } from "./HeaderSearch";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
+import { MobileBottomNavigation } from "./MobileBottomNavigation";
 import { PortfolioReminderMonitor } from "./PortfolioReminderMonitor";
 import { PriceAlertMonitor } from "./PriceAlertMonitor";
 import { PrivacyController, PrivacyToggle } from "./PrivacyMode";
@@ -564,7 +565,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={openTransactionDialog}
                 aria-label={p.t("addTx")}
                 title={p.t("addTx")}
-                className="press hidden size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:grid"
+                className="press grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <Plus size={17} />
               </button>
@@ -760,7 +761,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main
-        className={`app-main page-enter mx-auto min-w-0 max-w-7xl pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 ${
+        className={`app-main page-enter mx-auto min-w-0 max-w-7xl pb-24 md:pb-8 ${
           pathname === "/"
             ? "min-h-[calc(100svh-3.5rem)] pt-3.5 sm:pt-4 lg:min-h-[calc(100svh-4rem)] xl:pt-5"
             : "pt-6"
@@ -1041,108 +1042,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           pricingLabel={p.t("pricing")}
         />
       ) : (
-        <nav
-          aria-label={shellCopy.quickNavigation}
-          data-hidden={navHidden}
-          className="mobile-bottom-nav glass-bar fixed inset-x-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex items-center justify-around rounded-2xl border border-border px-1 py-1.5 md:hidden"
-        >
-          {(p.user
-            ? ([
-                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-                { to: "/holdings", label: p.t("holdings"), Icon: Wallet },
-              ] as const)
-            : ([
-                { to: "/", label: p.t("dashboard"), Icon: LayoutDashboard },
-                {
-                  to: "/demo",
-                  label: p.lang === "bg" ? "Пример" : "Sample",
-                  Icon: Wallet,
-                },
-              ] as const)
-          ).map(({ to, label, Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact: true }}
-              className="flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium text-muted-foreground"
-              activeProps={{ className: "text-primary bg-primary/10" }}
-            >
-              <Icon size={20} />
-              <span className="max-w-16 truncate">{label}</span>
-            </Link>
-          ))}
-          <button
-            onClick={() => {
-              if (p.user) openTransactionDialog();
-              else navigate({ to: "/auth" });
-            }}
-            aria-label={p.t("addTx")}
-            className="press -mt-6 grid size-12 place-items-center rounded-full bg-primary text-primary-foreground ring-2 ring-background"
-          >
-            <Plus size={24} />
-          </button>
-          <Link
-            to="/markets"
-            activeOptions={{ exact: true }}
-            className="flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium text-muted-foreground"
-            activeProps={{ className: "text-primary bg-primary/10" }}
-          >
-            <Search size={20} />
-            <span className="max-w-16 truncate">{marketCopy[p.lang].markets}</span>
-          </Link>
-          <DropdownMenu
-            modal={false}
-            open={activeMenu === "mobile-more"}
-            onOpenChange={(isOpen) => setActiveMenu(isOpen ? "mobile-more" : null)}
-          >
-            <DropdownMenuTrigger asChild>
-              <button
-                aria-label={shellCopy.more}
-                aria-current={
-                  ["/", "/holdings", "/markets"].includes(pathname) ? undefined : "page"
-                }
-                className={`flex min-w-12 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium ${
-                  ["/", "/holdings", "/markets"].includes(pathname)
-                    ? "text-muted-foreground"
-                    : "bg-primary/10 text-primary"
-                }`}
-              >
-                <ChevronDown size={20} />
-                <span className="max-w-16 truncate">{shellCopy.more}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              side="top"
-              className="mb-2 max-h-[60dvh] w-64 overflow-y-auto"
-            >
-              {mobileMoreGroups.map((group, index) => (
-                <Fragment key={group.label}>
-                  {index > 0 && <DropdownMenuSeparator />}
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">
-                      {group.label}
-                    </DropdownMenuLabel>
-                    {group.links.map((item) => (
-                      <DropdownMenuItem key={item.to} asChild>
-                        <Link to={item.to}>{item.label}</Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </Fragment>
-              ))}
-              {!p.user && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => setAuthOpen(true)}>
-                    <UserRound size={14} />
-                    {p.t("signIn")}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </nav>
+        <MobileBottomNavigation
+          lang={p.lang}
+          pathname={pathname}
+          label={shellCopy.quickNavigation}
+          hidden={navHidden}
+        />
       )}
       <Suspense fallback={null}>
         {txEverOpened && <AddTransactionDialog open={open} onClose={() => setOpen(false)} />}
