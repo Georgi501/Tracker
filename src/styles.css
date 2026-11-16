@@ -673,9 +673,8 @@ main select {
 .header-main-nav {
   min-height: 2.75rem;
 }
-/* Keep a real search field while navigation and account controls share the
-   first row. Only use one row when there is room for a readable search field. */
-@media (min-width: 1600px) {
+/* Keep a real search field while navigation and account controls share a single row on laptops & desktops. */
+@media (min-width: 1024px) {
   .header-layout {
     min-height: 4rem;
     flex-wrap: nowrap;
@@ -686,8 +685,13 @@ main select {
   }
   .header-search-slot {
     order: 0;
-    flex: 1 0 16rem;
+    flex: 1 1 12rem;
     width: auto;
+    max-width: 24rem;
+  }
+}
+@media (min-width: 1280px) {
+  .header-search-slot {
     max-width: 28rem;
   }
 }
@@ -813,7 +817,7 @@ body::before {
   z-index: -1;
   pointer-events: none;
 }
-  /* Consolidated in the unified surface system below */
+/* Consolidated in the unified surface system below */
 @media (hover: hover) {
   main .card-interactive {
     transition:

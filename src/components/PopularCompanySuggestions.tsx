@@ -47,8 +47,10 @@ export function PopularCompanySuggestions({
               className="flex h-full min-h-14 scroll-mt-40 scroll-mb-28 items-center gap-2 rounded-lg px-1 py-1.5 text-sm transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <CompanySuggestionLogo symbol={symbol} />
-              <span className="min-w-0">
-                <span className="block break-words text-sm font-semibold leading-snug">{name}</span>
+              <span className="min-w-0 flex-1">
+                <span title={name} className="block truncate text-sm font-semibold leading-snug">
+                  {name}
+                </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">{symbol}</span>
               </span>
             </Link>

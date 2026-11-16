@@ -533,7 +533,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenu>
             )}
           </nav>
-          <div className="header-search-slot order-last min-w-0 w-full basis-full">
+          <div className="header-search-slot order-last min-w-0 w-full basis-full lg:max-w-sm xl:max-w-md">
             <HeaderSearch />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1">

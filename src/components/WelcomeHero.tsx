@@ -250,6 +250,14 @@ const COPY: Record<Lang, Copy> = {
   },
 };
 
+const TRUST_STRIP: Record<Lang, readonly [string, string, string]> = {
+  en: ["Free CSV import", "Multi-broker view", "Read-only security"],
+  bg: ["Безплатен CSV импорт", "Всички брокери заедно", "Сигурност само за четене"],
+  de: ["Kostenloser CSV-Import", "Multi-Broker-Ansicht", "Nur-Lese-Sicherheit"],
+  es: ["CSV gratis", "Vista multibróker", "Seguridad de solo lectura"],
+  it: ["CSV gratuito", "Vista multibroker", "Sicurezza in sola lettura"],
+};
+
 const chip =
   "press inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent";
 const GOAL_LABEL: Record<Lang, string> = {
@@ -276,7 +284,7 @@ export function WelcomeHero() {
 
   if (!p.user)
     return (
-      <section className="rise hover-lift-card grid items-center gap-3.5 rounded-3xl border border-border bg-card p-3.5 sm:gap-4 sm:p-4 lg:grid-cols-[1.05fr_1fr] lg:px-5 lg:py-4 xl:p-5">
+      <section className="rise hover-lift-card grid items-center gap-3.5 rounded-3xl border border-border bg-card p-3.5 sm:gap-4 sm:p-4 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:px-5 lg:py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:p-5">
         <div className="min-w-0">
           <h1 className="font-display max-w-4xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-[2rem] xl:text-4xl">
             {experienceCopy[p.lang].heroTitle}
@@ -298,6 +306,19 @@ export function WelcomeHero() {
               {c.sampleLink}
             </Link>
           </div>
+          <ul className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {TRUST_STRIP[p.lang].map((item, idx) => (
+              <li key={item} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                {idx > 0 && (
+                  <span aria-hidden="true" className="text-border">
+                    ·
+                  </span>
+                )}
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-primary/80" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
         <SamplePortfolioPreview lang={p.lang} compact />
       </section>
