@@ -43,7 +43,7 @@ describe("landing steps", () => {
   );
 
   it.each(languages)(
-    "renders tactile Trading 212, IBKR, and Revolut CSV guide pill links (>= 40px) in $name",
+    "renders tactile guide pills and interactive step links across all destinations in $name",
     ({ code }) => {
       state.lang = code;
       render(<LandingSteps />);
@@ -53,10 +53,19 @@ describe("landing steps", () => {
         "/trading212-import",
         "/ibkr-import",
         "/revolut-import",
+        "/import-demo",
+        "/demo",
+        "/etf-overlap",
       ]);
-      for (const link of links) {
+      const guideLinks = links.slice(0, 3);
+      for (const link of guideLinks) {
         expect(link.className).toContain("min-h-10");
         expect(link.className).toContain("rounded-full");
+      }
+      const stepLinks = links.slice(3);
+      for (const link of stepLinks) {
+        expect(link.className).toContain("focus-visible:ring-2");
+        expect(link.className).toContain("hover:border-primary/50");
       }
     },
   );

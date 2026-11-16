@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  ArrowUpRight,
   ChartNoAxesCombined,
   FileSpreadsheet,
   LockKeyhole,
@@ -411,6 +412,7 @@ const COPY: Record<Lang, LandingCopy> = {
 };
 
 const STEP_ICONS = [FileSpreadsheet, ChartNoAxesCombined, Target];
+const STEP_LINKS = ["/import-demo", "/demo", "/etf-overlap"] as const;
 
 export function LandingSteps() {
   const { lang } = usePortfolio();
@@ -458,22 +460,33 @@ export function LandingSteps() {
       <ol className="mt-4 grid gap-3 md:grid-cols-3">
         {c.steps.map((step, index) => {
           const Icon = STEP_ICONS[index] ?? Target;
+          const stepHref = STEP_LINKS[index] ?? "/demo";
           return (
             <li key={step.title}>
-              <div className="group flex h-full flex-col rounded-xl border border-border/80 bg-card p-4 transition-colors hover:border-primary/40">
-                <div className="flex items-center gap-2.5">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
-                    <Icon size={16} aria-hidden="true" />
-                  </span>
-                  <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-bold tracking-wider text-primary tabular-nums ring-1 ring-inset ring-primary/25">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+              <Link
+                to={stepHref}
+                className="group flex h-full flex-col rounded-xl border border-border/80 bg-card/80 p-4 transition-all hover:border-primary/50 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
+                      <Icon size={16} aria-hidden="true" />
+                    </span>
+                    <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-bold tracking-wider text-primary tabular-nums ring-1 ring-inset ring-primary/25">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <ArrowUpRight
+                    size={15}
+                    aria-hidden="true"
+                    className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary"
+                  />
                 </div>
                 <h3 className="mt-2.5 font-display text-sm font-semibold tracking-tight text-foreground sm:text-[15px]">
                   {step.title}
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
-              </div>
+              </Link>
             </li>
           );
         })}
