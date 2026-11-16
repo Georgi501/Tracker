@@ -1,11 +1,13 @@
 import { createElement, type ComponentType, type ReactNode } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { safeAuthContinuation } from "@/lib/auth-i18n";
 import { Route } from "@/routes/import-demo";
 
 const state = vi.hoisted(() => ({
   lang: "en",
   signedIn: false,
+  broker: "generic" as string | undefined,
 }));
 
 vi.mock("@/lib/store", () => ({
@@ -19,8 +21,9 @@ vi.mock("@/lib/store", () => ({
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: object) => ({
     options,
-    useSearch: () => ({ broker: "generic" }),
+    useSearch: () => ({ broker: state.broker }),
   }),
+  useNavigate: () => vi.fn(),
   Link: ({
     children,
     to,
@@ -48,6 +51,7 @@ afterEach(cleanup);
 beforeEach(() => {
   state.lang = "en";
   state.signedIn = false;
+  state.broker = "generic";
 });
 
 function getImportDemoPage() {
@@ -88,5 +92,35 @@ describe("CSV demo calls to action", () => {
       "href",
       "/brokers",
     );
+  });
+
+  it.each(["trading212", "ibkr", "revolut"] as const)(
+    "preserves ?broker=%s in both signup and signed-in CTAs",
+    (broker) => {
+      state.broker = broker;
+      state.signedIn = false;
+      const { unmount } = render(getImportDemoPage());
+      expect(
+        screen.getByRole("link", { name: "Create account · Import your own CSV" }),
+      ).toHaveAttribute("href", `/auth?mode=signup&next=%2Fbrokers%3Fbroker%3D${broker}`);
+      unmount();
+
+      state.signedIn = true;
+      render(getImportDemoPage());
+      expect(screen.getByRole("link", { name: "Import your own CSV" })).toHaveAttribute(
+        "href",
+        `/brokers?broker=${broker}`,
+      );
+    },
+  );
+
+  it("preserves valid ?broker= search parameters in safeAuthContinuation", () => {
+    expect(safeAuthContinuation("/brokers")).toBe("/brokers");
+    expect(safeAuthContinuation("/brokers?broker=trading212")).toBe("/brokers?broker=trading212");
+    expect(safeAuthContinuation("/brokers?broker=ibkr")).toBe("/brokers?broker=ibkr");
+    expect(safeAuthContinuation("/brokers?broker=revolut")).toBe("/brokers?broker=revolut");
+    expect(safeAuthContinuation("/brokers?broker=generic")).toBe("/brokers?broker=generic");
+    expect(safeAuthContinuation("/brokers?broker=unknown")).toBeNull();
+    expect(safeAuthContinuation("/brokers?broker=ibkr&extra=1")).toBeNull();
   });
 });

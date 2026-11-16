@@ -1,4 +1,4 @@
-﻿import type { Lang } from "./i18n";
+import type { Lang } from "./i18n";
 type TrustCopy = {
   retry: string;
   quoteFailure: string;
@@ -21,6 +21,9 @@ type TrustCopy = {
   show: string;
   wizard: string;
   steps: readonly [string, string, string, string];
+  dropzoneTitle: string;
+  dropzoneHint: string;
+  detectedBroker: string;
   chooseAccount: string;
   create: string;
   next: string;
@@ -60,6 +63,10 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     show: "Show monetary values",
     wizard: "Import your first transactions",
     steps: ["Choose broker", "Export instructions", "Review preview", "Import summary"],
+    dropzoneTitle: "Drop a broker CSV here to auto-detect",
+    dropzoneHint:
+      "Automatically detects Trading 212, Interactive Brokers, Revolut or Generic CSV — or choose a broker below.",
+    detectedBroker: "Detected format",
     chooseAccount: "Broker account",
     create: "Create this broker account",
     next: "Continue",
@@ -108,6 +115,10 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     show: "Покажи паричните стойности",
     wizard: "Импортирай първите си сделки",
     steps: ["Избери брокер", "Инструкции за експорт", "Прегледай файла", "Резултат от импорта"],
+    dropzoneTitle: "Пусни CSV файл тук за автоматично разпознаване",
+    dropzoneHint:
+      "Разпознава автоматично Trading 212, Interactive Brokers, Revolut или общ CSV — или избери брокер отдолу.",
+    detectedBroker: "Разпознат формат",
     chooseAccount: "Брокерска сметка",
     create: "Създай тази брокерска сметка",
     next: "Продължи",
@@ -156,6 +167,10 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     show: "Geldwerte anzeigen",
     wizard: "Erste Transaktionen importieren",
     steps: ["Broker wählen", "Exportanleitung", "Vorschau prüfen", "Importergebnis"],
+    dropzoneTitle: "Broker-CSV hier ablegen zur automatischen Erkennung",
+    dropzoneHint:
+      "Erkennt automatisch Trading 212, Interactive Brokers, Revolut oder allgemeines CSV — oder unten Broker wählen.",
+    detectedBroker: "Erkanntes Format",
     chooseAccount: "Brokerkonto",
     create: "Dieses Brokerkonto erstellen",
     next: "Weiter",
@@ -212,6 +227,10 @@ export const trustCopy: Record<Lang, TrustCopy> = {
       "Revisar vista previa",
       "Resumen de importación",
     ],
+    dropzoneTitle: "Suelta aquí tu CSV para detectar el bróker automáticamente",
+    dropzoneHint:
+      "Detecta automáticamente Trading 212, Interactive Brokers, Revolut o CSV genérico — o elige un bróker abajo.",
+    detectedBroker: "Formato detectado",
     chooseAccount: "Cuenta de bróker",
     create: "Crear esta cuenta de bróker",
     next: "Continuar",
@@ -268,6 +287,10 @@ export const trustCopy: Record<Lang, TrustCopy> = {
       "Controlla anteprima",
       "Riepilogo importazione",
     ],
+    dropzoneTitle: "Trascina qui il CSV per rilevare automaticamente il broker",
+    dropzoneHint:
+      "Rileva automaticamente Trading 212, Interactive Brokers, Revolut o CSV generico — oppure scegli un broker qui sotto.",
+    detectedBroker: "Formato rilevato",
     chooseAccount: "Conto broker",
     create: "Crea questo conto broker",
     next: "Continua",

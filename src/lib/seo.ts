@@ -53,6 +53,31 @@ export function articleJsonLd(title: string, description: string, path: string) 
   };
 }
 
+export function canonicalLink(path: string) {
+  return {
+    rel: "canonical",
+    href: `${SITE}${path}`,
+  };
+}
+
+export function faqJsonLd(questions: readonly (readonly [string, string])[]) {
+  return {
+    type: "application/ld+json",
+    children: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: questions.map(([question, answer]) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: answer,
+        },
+      })),
+    }),
+  };
+}
+
 export function softwareJsonLd(description: string) {
   return {
     type: "application/ld+json",

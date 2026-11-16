@@ -1,7 +1,7 @@
 import { Card } from "@/components/AppShell";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { Button } from "@/components/ui/button";
-import { articleJsonLd } from "@/lib/seo";
+import { articleJsonLd, canonicalLink, faqJsonLd } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
@@ -175,7 +175,11 @@ export const Route = createFileRoute("/trading212-import")({
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
     ],
-    scripts: [articleJsonLd(TITLE, DESCRIPTION, "/trading212-import")],
+    links: [canonicalLink("/trading212-import")],
+    scripts: [
+      articleJsonLd(TITLE, DESCRIPTION, "/trading212-import"),
+      faqJsonLd(GUIDE.en.questions),
+    ],
   }),
   component: Trading212Import,
 });
@@ -202,7 +206,9 @@ function Trading212Import() {
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {sampleButton}
           <Button asChild variant="outline" className="h-auto min-h-11 rounded-full px-5 py-3">
-            <Link to="/brokers">{g.importCta}</Link>
+            <Link to="/brokers" search={{ broker: "trading212" }}>
+              {g.importCta}
+            </Link>
           </Button>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">{g.sampleNote}</p>

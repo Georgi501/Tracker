@@ -204,3 +204,38 @@ export function authErrorKey(
   if (m.includes("already registered") || m.includes("already exists")) return "exists";
   return null;
 }
+
+export function safeAuthContinuation(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin || url.hash) return null;
+    if (url.pathname === "/brokers") {
+      if (!url.search) return "/brokers";
+      const broker = url.searchParams.get("broker");
+      if (
+        Array.from(url.searchParams.keys()).length === 1 &&
+        (broker === "trading212" ||
+          broker === "ibkr" ||
+          broker === "revolut" ||
+          broker === "generic")
+      ) {
+        return `/brokers?broker=${broker}`;
+      }
+      return null;
+    }
+    if (url.pathname === "/holdings") {
+      return url.search ? null : url.pathname;
+    }
+    if (url.pathname !== "/pricing") return null;
+    const params = url.searchParams;
+    if (params.get("checkout") !== "pro") return null;
+    const interval = params.get("interval");
+    if (interval !== "month" && interval !== "year") return null;
+    const promo = params.get("promo");
+    if (promo && (interval !== "year" || !/^[A-Za-z0-9_-]{3,32}$/.test(promo))) return null;
+    return `/pricing?checkout=pro&interval=${interval}${promo ? `&promo=${encodeURIComponent(promo)}` : ""}`;
+  } catch {
+    return null;
+  }
+}

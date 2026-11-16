@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { authCopy, authErrorKey } from "@/lib/auth-i18n";
+import { authCopy, authErrorKey, safeAuthContinuation } from "@/lib/auth-i18n";
 import { loadGoogleIdentityScript } from "@/lib/google-identity";
 import { usePortfolio } from "@/lib/store";
 import { useNavigate } from "@tanstack/react-router";
@@ -8,27 +8,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const AUTH_CONTINUATION_KEY = "capispot-auth-continuation";
-
-function safeAuthContinuation(value: string | null): string | null {
-  if (!value) return null;
-  try {
-    const url = new URL(value, window.location.origin);
-    if (url.origin !== window.location.origin || url.hash) return null;
-    if (url.pathname === "/brokers" || url.pathname === "/holdings") {
-      return url.search ? null : url.pathname;
-    }
-    if (url.pathname !== "/pricing") return null;
-    const params = url.searchParams;
-    if (params.get("checkout") !== "pro") return null;
-    const interval = params.get("interval");
-    if (interval !== "month" && interval !== "year") return null;
-    const promo = params.get("promo");
-    if (promo && (interval !== "year" || !/^[A-Za-z0-9_-]{3,32}$/.test(promo))) return null;
-    return `/pricing?checkout=pro&interval=${interval}${promo ? `&promo=${encodeURIComponent(promo)}` : ""}`;
-  } catch {
-    return null;
-  }
-}
 
 const input =
   "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring";

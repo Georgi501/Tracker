@@ -8,7 +8,12 @@ import {
   type BrokerFormat,
 } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
-import { SAMPLE_IBKR_CSV, SAMPLE_IMPORT_CSV, SAMPLE_TRADING212_CSV } from "@/lib/sample-import";
+import {
+  SAMPLE_IBKR_CSV,
+  SAMPLE_IMPORT_CSV,
+  SAMPLE_REVOLUT_CSV,
+  SAMPLE_TRADING212_CSV,
+} from "@/lib/sample-import";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CircleAlert, CircleCheck, Upload } from "lucide-react";
@@ -19,7 +24,7 @@ const SAMPLE_CSVS: Record<BrokerFormat, string> = {
   generic: SAMPLE_IMPORT_CSV,
   trading212: SAMPLE_TRADING212_CSV,
   ibkr: SAMPLE_IBKR_CSV,
-  revolut: SAMPLE_IMPORT_CSV,
+  revolut: SAMPLE_REVOLUT_CSV,
 };
 
 export const Route = createFileRoute("/import-demo")({
@@ -45,7 +50,7 @@ const COPY: Record<
     description: string;
     private: string;
     format: string;
-    sampleFormats: Record<"generic" | "trading212" | "ibkr", string>;
+    sampleFormats: Record<BrokerFormat, string>;
     selectFormat: string;
     download: string;
     summary: [string, string, string];
@@ -70,6 +75,7 @@ const COPY: Record<
       generic: "Generic CSV",
       trading212: "Trading 212",
       ibkr: "Interactive Brokers",
+      revolut: "Revolut",
     },
     selectFormat: "Sample format",
     download: "Download sample CSV",
@@ -94,6 +100,7 @@ const COPY: Record<
       generic: "Общ CSV шаблон",
       trading212: "Trading 212",
       ibkr: "Interactive Brokers",
+      revolut: "Revolut",
     },
     selectFormat: "Примерен формат",
     download: "Изтегли примерния CSV",
@@ -118,6 +125,7 @@ const COPY: Record<
       generic: "Allgemeine CSV-Datei",
       trading212: "Trading 212",
       ibkr: "Interactive Brokers",
+      revolut: "Revolut",
     },
     selectFormat: "Beispielformat",
     download: "Beispiel-CSV herunterladen",
@@ -142,6 +150,7 @@ const COPY: Record<
       generic: "CSV genérico",
       trading212: "Trading 212",
       ibkr: "Interactive Brokers",
+      revolut: "Revolut",
     },
     selectFormat: "Formato de ejemplo",
     download: "Descargar CSV de ejemplo",
@@ -166,6 +175,7 @@ const COPY: Record<
       generic: "CSV generico",
       trading212: "Trading 212",
       ibkr: "Interactive Brokers",
+      revolut: "Revolut",
     },
     selectFormat: "Formato di esempio",
     download: "Scarica CSV di esempio",
@@ -186,7 +196,7 @@ function ImportDemo() {
   const c = COPY[p.lang];
   const { broker } = Route.useSearch();
   const formatFromBroker = (value: string | undefined): BrokerFormat =>
-    value === "trading212" || value === "ibkr" ? value : "generic";
+    value === "trading212" || value === "ibkr" || value === "revolut" ? value : "generic";
   const [selectedFormat, setSelectedFormat] = useState<BrokerFormat>(() =>
     formatFromBroker(broker),
   );
@@ -223,7 +233,12 @@ function ImportDemo() {
     return labels[p.lang][kind] ?? kind;
   };
   const rejectionReason = p.lang === "bg" ? "Неподдържано действие" : "Unsupported action";
-  const formatName = c.sampleFormats[selectedFormat === "revolut" ? "generic" : selectedFormat];
+  const formatName = c.sampleFormats[selectedFormat];
+  const brokerSearch: { broker: BrokerFormat | undefined } = {
+    broker: selectedFormat === "generic" ? undefined : selectedFormat,
+  };
+  const nextBrokersPath =
+    selectedFormat === "generic" ? "/brokers" : `/brokers?broker=${selectedFormat}`;
   const downloadSample = () => {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
@@ -237,6 +252,7 @@ function ImportDemo() {
     <div className="page-enter mx-auto max-w-4xl space-y-5">
       <Link
         to="/brokers"
+        search={brokerSearch}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={16} aria-hidden />
@@ -258,7 +274,7 @@ function ImportDemo() {
               onChange={(event) => setSelectedFormat(event.target.value as BrokerFormat)}
               className="mt-1 block min-h-11 rounded-lg border border-input bg-background px-3 text-sm font-semibold"
             >
-              {(["generic", "trading212", "ibkr"] as const).map((value) => (
+              {(["generic", "trading212", "ibkr", "revolut"] as const).map((value) => (
                 <option key={value} value={value}>
                   {c.sampleFormats[value]}
                 </option>
@@ -349,6 +365,7 @@ function ImportDemo() {
           {p.user ? (
             <Link
               to="/brokers"
+              search={brokerSearch}
               onClick={() =>
                 trackAnalyticsEvent("csv_demo_import_click", undefined, "/import-demo")
               }
@@ -360,7 +377,7 @@ function ImportDemo() {
           ) : (
             <Link
               to="/auth"
-              search={{ mode: "signup", next: "/brokers" }}
+              search={{ mode: "signup", next: nextBrokersPath }}
               onClick={() =>
                 trackAnalyticsEvent("csv_demo_import_click", undefined, "/import-demo")
               }

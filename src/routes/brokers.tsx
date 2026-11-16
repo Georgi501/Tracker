@@ -36,8 +36,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Plus, RefreshCw, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 export const Route = createFileRoute("/brokers")({
+  validateSearch: (search) =>
+    z
+      .object({
+        broker: z.enum(["trading212", "ibkr", "revolut", "generic"]).optional().catch(undefined),
+      })
+      .parse(search),
   head: () => ({
     meta: [
       { title: "Brokers — CapiSpot CSV import" },
@@ -195,6 +202,7 @@ const DIRECT_BROKER_COPY = {
 
 function Brokers() {
   const p = usePortfolio();
+  const { broker: initialBroker } = Route.useSearch();
   const queryClient = useQueryClient();
   const getConnections = useServerFn(brokerConnectionStates);
   const brokerIds = p.brokers
@@ -224,6 +232,7 @@ function Brokers() {
         </p>
         <Link
           to="/import-demo"
+          search={{ broker: initialBroker }}
           className="mx-auto inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
         >
           <Upload size={16} aria-hidden />
@@ -234,7 +243,10 @@ function Brokers() {
         </p>
         <Link
           to="/auth"
-          search={{ mode: "signup", next: "/brokers" }}
+          search={{
+            mode: "signup",
+            next: initialBroker ? `/brokers?broker=${initialBroker}` : "/brokers",
+          }}
           className="mt-2 inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 text-sm font-semibold hover:bg-accent"
         >
           {p.t("signUp")}
@@ -242,17 +254,20 @@ function Brokers() {
       </Card>
     );
 
-  const add = async (format: BrokerFormat) => {
+  const add = async (format: BrokerFormat): Promise<string | void> => {
     const label = BROKER_FORMATS.find((f) => f.id === format)?.label ?? format;
     const n = p.brokers.filter((b) => b.format === format).length;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("brokers")
-      .insert({ name: n ? `${label} ${n + 1}` : label, format });
+      .insert({ name: n ? `${label} ${n + 1}` : label, format })
+      .select("id")
+      .single();
     if (error) {
       toast.error(error.message);
       return;
     }
     await p.reload();
+    return data?.id;
   };
   const remove = async (id: string) => {
     if (p.dataError) {
@@ -402,6 +417,7 @@ function Brokers() {
       <FirstImportWizard
         lang={p.lang}
         brokers={p.brokers}
+        initialFormat={initialBroker}
         onCreate={add}
         onUpload={upload}
         preview={!!preview}

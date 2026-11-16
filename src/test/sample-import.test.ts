@@ -5,7 +5,12 @@ import {
   rejectedCsvRows,
   splitDuplicates,
 } from "@/lib/csv-import";
-import { SAMPLE_IBKR_CSV, SAMPLE_IMPORT_CSV, SAMPLE_TRADING212_CSV } from "@/lib/sample-import";
+import {
+  SAMPLE_IBKR_CSV,
+  SAMPLE_IMPORT_CSV,
+  SAMPLE_REVOLUT_CSV,
+  SAMPLE_TRADING212_CSV,
+} from "@/lib/sample-import";
 
 it("demonstrates format detection, duplicate handling, and rejected rows", () => {
   const format = detectBrokerFormat(SAMPLE_IMPORT_CSV);
@@ -25,6 +30,7 @@ it("demonstrates format detection, duplicate handling, and rejected rows", () =>
 it.each([
   ["Trading 212", "trading212", SAMPLE_TRADING212_CSV],
   ["Interactive Brokers", "ibkr", SAMPLE_IBKR_CSV],
+  ["Revolut", "revolut", SAMPLE_REVOLUT_CSV],
 ] as const)("demonstrates %s CSV import parsing", (_label, expectedFormat, csv) => {
   const format = detectBrokerFormat(csv);
   expect(format).toBe(expectedFormat);
