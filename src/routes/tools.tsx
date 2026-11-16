@@ -42,6 +42,7 @@ import {
   rebalance,
   riskMetrics,
   taxReportCsv,
+  taxReportHtml,
 } from "@/lib/tools";
 import { toolsCopy } from "@/lib/tools-i18n";
 import {
@@ -662,6 +663,7 @@ function Tax() {
   const p = usePortfolio();
   const c = toolsCopy[p.lang];
   const [taxYearStartMonth, setTaxYearStartMonth] = useState(1);
+  const [selectedTaxYear, setSelectedTaxYear] = useState<string>("all");
   const [taxSettingsLoaded, setTaxSettingsLoaded] = useState(false);
   useEffect(() => {
     try {
@@ -738,20 +740,50 @@ function Tax() {
         </div>
       )}
       {years.length > 0 && (
-        <div className="mt-3 space-y-1">
-          <Button
-            variant="secondary"
-            className="h-11 w-full sm:w-auto"
-            onClick={() =>
-              download(
-                `folio-tax-report-${new Date().toISOString().slice(0, 10)}.csv`,
-                "\uFEFF" + taxReportCsv(years, p.assets),
-                "text/csv;charset=utf-8",
-              )
-            }
-          >
-            {extrasCopy[p.lang].taxExport}
-          </Button>
+        <div className="mt-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              aria-label={c.year}
+              value={selectedTaxYear}
+              onChange={(event) => setSelectedTaxYear(event.target.value)}
+              className="h-11 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="all">{c.allYears}</option>
+              {years.map((y) => (
+                <option key={y.year} value={String(y.year)}>
+                  {y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="secondary"
+              className="h-11 w-full sm:w-auto"
+              onClick={() =>
+                download(
+                  `folio-tax-report-${new Date().toISOString().slice(0, 10)}.csv`,
+                  "\uFEFF" + taxReportCsv(years, p.assets),
+                  "text/csv;charset=utf-8",
+                )
+              }
+            >
+              {extrasCopy[p.lang].taxExport}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full sm:w-auto"
+              onClick={() => {
+                const printWin = window.open("", "_blank");
+                if (!printWin) return;
+                const targetYear = selectedTaxYear === "all" ? undefined : Number(selectedTaxYear);
+                printWin.document.open();
+                printWin.document.write(taxReportHtml(years, p.assets, p.lang, targetYear));
+                printWin.document.close();
+                window.setTimeout(() => printWin.print(), 300);
+              }}
+            >
+              {c.exportTaxPdf}
+            </Button>
+          </div>
           <p className="text-xs text-muted-foreground">{extrasCopy[p.lang].taxNote}</p>
         </div>
       )}

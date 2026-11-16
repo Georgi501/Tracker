@@ -73,7 +73,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
+import {
+  BENCHMARKS,
+  benchmarkSeries,
+  savedBenchmark,
+  twrIrrDeltaSummary,
+  type BenchmarkSymbol,
+} from "@/lib/benchmark";
 
 const MonthlyOverview = lazy(() =>
   import("@/components/MonthlyOverview").then((module) => ({
@@ -1204,6 +1210,45 @@ function Dashboard() {
                     {...(irrV != null ? { n: irrV } : {})}
                   />
                 </div>
+                {(() => {
+                  const delta = twrIrrDeltaSummary(tw, irrV);
+                  if (!delta) return null;
+                  const timingLabel =
+                    delta.timingEffect === "favorable"
+                      ? c.timingFavorable
+                      : delta.timingEffect === "unfavorable"
+                        ? c.timingUnfavorable
+                        : c.timingNeutral;
+                  return (
+                    <div className="col-span-2 rounded-xl border border-border/80 bg-card/85 px-3 py-2 text-xs sm:col-span-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-muted-foreground">{c.twrVsIrrTitle}</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={c.twrVsIrrTitle}
+                              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums text-foreground hover:bg-secondary/60"
+                            >
+                              <span>
+                                {delta.spreadPp >= 0 ? "+" : ""}
+                                {delta.spreadPp.toFixed(2)} {c.pp}
+                              </span>
+                              <Info size={12} className="text-muted-foreground" aria-hidden />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                            <p className="font-semibold">{timingLabel}</p>
+                            <p className="mt-1 text-muted-foreground">{c.twrVsIrrNote}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        {timingLabel}
+                      </p>
+                    </div>
+                  );
+                })()}
                 <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
                   <Metric
                     label={p.t("invested")}

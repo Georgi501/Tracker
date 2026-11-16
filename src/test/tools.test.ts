@@ -7,6 +7,7 @@ import {
   fifoTaxReport,
   rebalance,
   riskMetrics,
+  taxReportHtml,
 } from "@/lib/tools";
 import { detectBrokerFormat, parseBrokerCsv } from "@/lib/csv-import";
 
@@ -262,5 +263,63 @@ describe("dividendIncomeSummary", () => {
     );
     expect(summary.yearToDate).toBe(0);
     expect(summary.excludedTransactions).toBe(2);
+  });
+});
+
+describe("taxReportHtml", () => {
+  it("generates a print-ready HTML tax report with FIFO acquisition dates, fees, dividends, and escaped text across all 5 languages", () => {
+    const years = fifoTaxReport([
+      {
+        id: "b1",
+        assetId: "a1",
+        kind: "buy",
+        quantity: 5,
+        price: 100,
+        fee: 5,
+        date: "2024-01-10",
+      },
+      {
+        id: "s1",
+        assetId: "a1",
+        kind: "sell",
+        quantity: 5,
+        price: 140,
+        fee: 3,
+        date: "2025-06-15",
+      },
+      {
+        id: "d1",
+        assetId: "a1",
+        kind: "dividend",
+        quantity: 1,
+        price: 12,
+        fee: 1.8,
+        date: "2025-07-01",
+      },
+    ]);
+
+    expect(years[0]?.sales[0]?.acquiredDate).toBe("2024-01-10");
+    expect(years[0]?.sales[0]?.fee).toBe(3);
+    expect(years[0]?.dividendRows).toEqual([
+      { assetId: "a1", date: "2025-07-01", gross: 12, fee: 1.8, net: 10.2 },
+    ]);
+
+    for (const lang of ["en", "bg", "de", "es", "it"] as const) {
+      const html = taxReportHtml(
+        years,
+        [{ id: "a1", symbol: "MSFT", name: "Microsoft <Corp>" }],
+        lang,
+        2025,
+        "2026-11-16",
+      );
+      expect(html).toContain(`lang="${lang}"`);
+      expect(html).toContain("2024-01-10");
+      expect(html).toContain("2025-06-15");
+      expect(html).toContain("2025-07-01");
+      expect(html).toContain("Microsoft &lt;Corp&gt;");
+      expect(html).not.toContain("<Corp>");
+      expect(html).toContain("+192.00");
+      expect(html).toContain("10.20");
+    }
   });
 });

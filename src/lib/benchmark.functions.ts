@@ -4,7 +4,7 @@ export const getBenchmarkHistory = createServerFn({ method: "POST" })
   .validator((input) =>
     z
       .object({
-        symbol: z.enum(["^GSPC", "^NDX", "URTH", "^STOXX", "^RUT", "^N225"]),
+        symbol: z.enum(["^GSPC", "^NDX", "VT", "VWCE.DE", "URTH", "^STOXX", "^RUT", "^N225"]),
         start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       })

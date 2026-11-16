@@ -6,14 +6,24 @@ import {
   type Transaction,
 } from "./portfolio";
 import type { PortfolioPoint } from "./history";
+import type { Lang } from "./i18n";
 
 export interface RealizedLot {
   assetId: string;
   date: string;
+  acquiredDate?: string | undefined;
   quantity: number;
   proceeds: number;
   cost: number;
+  fee?: number | undefined;
   gain: number;
+}
+export interface TaxDividendRow {
+  assetId: string;
+  date: string;
+  gross: number;
+  fee: number;
+  net: number;
 }
 export interface TaxYear {
   year: number;
@@ -23,6 +33,7 @@ export interface TaxYear {
   cost: number;
   dividends: number;
   sales: RealizedLot[];
+  dividendRows?: TaxDividendRow[] | undefined;
 }
 
 export interface FifoSalePreview {
@@ -255,7 +266,7 @@ export function fifoTaxReport(
   const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
     a.date.localeCompare(b.date),
   );
-  const lots = new Map<string, { qty: number; costPerUnit: number }[]>();
+  const lots = new Map<string, { qty: number; costPerUnit: number; date: string }[]>();
   const years = new Map<number, TaxYear>();
   const yearOf = (d: string) => {
     const calendarYear = Number(d.slice(0, 4));
@@ -271,6 +282,7 @@ export function fifoTaxReport(
         cost: 0,
         dividends: 0,
         sales: [],
+        dividendRows: [],
       };
       years.set(y, r);
     }
@@ -278,36 +290,54 @@ export function fifoTaxReport(
   };
   for (const t of sorted) {
     if (t.kind === "dividend") {
-      yearOf(t.date).dividends += t.quantity * t.price - (t.fee ?? 0);
+      const gross = t.quantity * t.price;
+      const fee = t.fee ?? 0;
+      const net = gross - fee;
+      const y = yearOf(t.date);
+      y.dividends += net;
+      y.dividendRows?.push({ assetId: t.assetId, date: t.date, gross, fee, net });
       continue;
     }
     const queue = lots.get(t.assetId) ?? [];
     lots.set(t.assetId, queue);
     if (t.kind === "buy") {
-      queue.push({ qty: t.quantity, costPerUnit: t.price + (t.fee ?? 0) / t.quantity });
+      queue.push({
+        qty: t.quantity,
+        costPerUnit: t.price + (t.fee ?? 0) / t.quantity,
+        date: t.date,
+      });
       continue;
     }
     let left = t.quantity;
     let cost = 0;
     let matched = 0;
+    const acquiredDates: string[] = [];
     while (left > 1e-12 && queue.length) {
       const lot = queue[0]!;
       const take = Math.min(lot.qty, left);
       cost += take * lot.costPerUnit;
       matched += take;
+      if (!acquiredDates.includes(lot.date)) acquiredDates.push(lot.date);
       lot.qty -= take;
       left -= take;
       if (lot.qty <= 1e-12) queue.shift();
     }
     if (matched <= 0) continue;
-    const proceeds = matched * t.price - (t.fee ?? 0) * (matched / t.quantity);
+    const saleFee = (t.fee ?? 0) * (matched / t.quantity);
+    const proceeds = matched * t.price - saleFee;
+    const acquiredDate =
+      acquiredDates.length <= 1
+        ? (acquiredDates[0] ?? t.date)
+        : `${acquiredDates[0]} – ${acquiredDates[acquiredDates.length - 1]}`;
     const y = yearOf(t.date);
     y.sales.push({
       assetId: t.assetId,
       date: t.date,
+      acquiredDate,
       quantity: matched,
       proceeds,
       cost,
+      fee: saleFee,
       gain: proceeds - cost,
     });
     y.realized += proceeds - cost;
@@ -444,4 +474,301 @@ export function taxReportCsv(years: TaxYear[], assets: Asset[]): string {
         ].join(","),
       );
   return lines.join("\n");
+}
+
+function escapeHtml(value: string | number | null | undefined): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const TAX_REPORT_HTML_COPY: Record<
+  Lang,
+  {
+    title: string;
+    generated: string;
+    summaryTitle: string;
+    salesTitle: string;
+    dividendsTitle: string;
+    year: string;
+    asset: string;
+    acquired: string;
+    sold: string;
+    quantity: string;
+    cost: string;
+    fee: string;
+    proceeds: string;
+    gain: string;
+    dividends: string;
+    date: string;
+    gross: string;
+    net: string;
+    emptySales: string;
+    emptyDividends: string;
+    disclaimer: string;
+  }
+> = {
+  en: {
+    title: "CapiSpot — Annual Tax Report (FIFO, USD)",
+    generated: "Generated on",
+    summaryTitle: "Annual Summary",
+    salesTitle: "Realized Disposals (FIFO)",
+    dividendsTitle: "Confirmed Dividends Received",
+    year: "Tax year",
+    asset: "Asset",
+    acquired: "Acquired",
+    sold: "Disposal date",
+    quantity: "Quantity",
+    cost: "Cost basis (USD)",
+    fee: "Sale fee (USD)",
+    proceeds: "Net proceeds (USD)",
+    gain: "Realized P/L (USD)",
+    dividends: "Net dividends (USD)",
+    date: "Date",
+    gross: "Gross (USD)",
+    net: "Net (USD)",
+    emptySales: "No realized sales recorded in this period.",
+    emptyDividends: "No confirmed dividends recorded in this period.",
+    disclaimer:
+      "Informational FIFO report derived from your recorded portfolio transactions in USD. Verify against official broker statements and consult a qualified tax advisor before filing.",
+  },
+  bg: {
+    title: "CapiSpot — Годишна данъчна справка (FIFO, USD)",
+    generated: "Генерирана на",
+    summaryTitle: "Годишно обобщение",
+    salesTitle: "Реализирани продажби (FIFO)",
+    dividendsTitle: "Получени потвърдени дивиденти",
+    year: "Данъчна година",
+    asset: "Актив",
+    acquired: "Придобиване",
+    sold: "Дата на продажба",
+    quantity: "Количество",
+    cost: "Себестойност (USD)",
+    fee: "Такса продажба (USD)",
+    proceeds: "Нетни постъпления (USD)",
+    gain: "Реализирана П/З (USD)",
+    dividends: "Нетни дивиденти (USD)",
+    date: "Дата",
+    gross: "Бруто (USD)",
+    net: "Нето (USD)",
+    emptySales: "Няма записани продажби за този период.",
+    emptyDividends: "Няма записани дивиденти за този период.",
+    disclaimer:
+      "Информационна FIFO справка по записаните в портфолиото сделки в USD. Провери спрямо официалните брокерски извлечения и се консултирай с данъчен специалист.",
+  },
+  de: {
+    title: "CapiSpot — Jährlicher Steuerbericht (FIFO, USD)",
+    generated: "Erstellt am",
+    summaryTitle: "Jahresübersicht",
+    salesTitle: "Realisierte Verkäufe (FIFO)",
+    dividendsTitle: "Erhaltene bestätigte Dividenden",
+    year: "Steuerjahr",
+    asset: "Wertpapier",
+    acquired: "Erwerb",
+    sold: "Verkaufsdatum",
+    quantity: "Stückzahl",
+    cost: "Einstandswert (USD)",
+    fee: "Verkaufsgebühr (USD)",
+    proceeds: "Nettoerlös (USD)",
+    gain: "Realisierter G/V (USD)",
+    dividends: "Nettodividenden (USD)",
+    date: "Datum",
+    gross: "Brutto (USD)",
+    net: "Netto (USD)",
+    emptySales: "Keine realisierten Verkäufe in diesem Zeitraum.",
+    emptyDividends: "Keine bestätigten Dividenden in diesem Zeitraum.",
+    disclaimer:
+      "Informativer FIFO-Bericht basierend auf den erfassten Transaktionen in USD. Bitte mit offiziellen Broker-Abrechnungen abgleichen; keine Steuerberatung.",
+  },
+  es: {
+    title: "CapiSpot — Informe Fiscal Anual (FIFO, USD)",
+    generated: "Generado el",
+    summaryTitle: "Resumen anual",
+    salesTitle: "Ventas realizadas (FIFO)",
+    dividendsTitle: "Dividendos confirmados recibidos",
+    year: "Año fiscal",
+    asset: "Activo",
+    acquired: "Adquisición",
+    sold: "Fecha de venta",
+    quantity: "Cantidad",
+    cost: "Coste (USD)",
+    fee: "Comisión venta (USD)",
+    proceeds: "Ingresos netos (USD)",
+    gain: "G/P realizada (USD)",
+    dividends: "Dividendos netos (USD)",
+    date: "Fecha",
+    gross: "Bruto (USD)",
+    net: "Neto (USD)",
+    emptySales: "No hay ventas realizadas en este período.",
+    emptyDividends: "No hay dividendos registrados en este período.",
+    disclaimer:
+      "Informe informativo FIFO basado en las transacciones registradas en USD. Compruébalo con los extractos oficiales de tu bróker; no constituye asesoramiento fiscal.",
+  },
+  it: {
+    title: "CapiSpot — Report Fiscale Annuale (FIFO, USD)",
+    generated: "Generato il",
+    summaryTitle: "Riepilogo annuale",
+    salesTitle: "Vendite realizzate (FIFO)",
+    dividendsTitle: "Dividendi confermati ricevuti",
+    year: "Anno fiscale",
+    asset: "Asset",
+    acquired: "Acquisto",
+    sold: "Data di vendita",
+    quantity: "Quantità",
+    cost: "Costo (USD)",
+    fee: "Commissione vendita (USD)",
+    proceeds: "Ricavi netti (USD)",
+    gain: "P/L realizzato (USD)",
+    dividends: "Dividendi netti (USD)",
+    date: "Data",
+    gross: "Lordo (USD)",
+    net: "Netto (USD)",
+    emptySales: "Nessuna vendita realizzata in questo periodo.",
+    emptyDividends: "Nessun dividendo registrato in questo periodo.",
+    disclaimer:
+      "Report informativo FIFO basato sulle operazioni registrate in USD. Verifica con gli estratti conto ufficiali del broker; non costituisce consulenza fiscale.",
+  },
+};
+
+/** Print/PDF-ready HTML annual tax report summarizing FIFO sales and confirmed dividends. */
+export function taxReportHtml(
+  years: TaxYear[],
+  assets: Pick<Asset, "id" | "symbol" | "name">[],
+  lang: Lang = "en",
+  selectedYear?: number,
+  generatedAt = new Date().toISOString().slice(0, 10),
+): string {
+  const c = TAX_REPORT_HTML_COPY[lang];
+  const byId = new Map(assets.map((asset) => [asset.id, asset]));
+  const filteredYears =
+    selectedYear !== undefined ? years.filter((item) => item.year === selectedYear) : years;
+  const yearLabel = (y: TaxYear) =>
+    y.yearEnd === y.year ? String(y.year) : `${y.year}/${String(y.yearEnd).slice(-2)}`;
+  const money = (v: number, sign = false) => `${sign && v > 0 ? "+" : ""}${v.toFixed(2)}`;
+
+  const summaryRows = filteredYears
+    .map(
+      (y) => `<tr>
+        <td><strong>${escapeHtml(yearLabel(y))}</strong></td>
+        <td class="num">${escapeHtml(money(y.proceeds))}</td>
+        <td class="num">${escapeHtml(money(y.cost))}</td>
+        <td class="num ${y.realized >= 0 ? "pos" : "neg"}">${escapeHtml(money(y.realized, true))}</td>
+        <td class="num">${escapeHtml(money(y.dividends))}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const salesSections = filteredYears
+    .map((y) => {
+      if (!y.sales.length) {
+        return `<p class="muted">${escapeHtml(yearLabel(y))}: ${escapeHtml(c.emptySales)}</p>`;
+      }
+      const rows = y.sales
+        .map((sale) => {
+          const asset = byId.get(sale.assetId);
+          const label = asset ? `${asset.symbol} — ${asset.name}` : sale.assetId;
+          return `<tr>
+            <td>${escapeHtml(yearLabel(y))}</td>
+            <td><strong>${escapeHtml(label)}</strong></td>
+            <td>${escapeHtml(sale.acquiredDate ?? "—")}</td>
+            <td>${escapeHtml(sale.date)}</td>
+            <td class="num">${escapeHtml(Number(sale.quantity.toFixed(6)))}</td>
+            <td class="num">${escapeHtml(money(sale.cost))}</td>
+            <td class="num">${escapeHtml(money(sale.fee ?? 0))}</td>
+            <td class="num">${escapeHtml(money(sale.proceeds))}</td>
+            <td class="num ${sale.gain >= 0 ? "pos" : "neg"}"><strong>${escapeHtml(money(sale.gain, true))}</strong></td>
+          </tr>`;
+        })
+        .join("");
+      return `<table>
+        <thead><tr>
+          <th>${escapeHtml(c.year)}</th>
+          <th>${escapeHtml(c.asset)}</th>
+          <th>${escapeHtml(c.acquired)}</th>
+          <th>${escapeHtml(c.sold)}</th>
+          <th class="num">${escapeHtml(c.quantity)}</th>
+          <th class="num">${escapeHtml(c.cost)}</th>
+          <th class="num">${escapeHtml(c.fee)}</th>
+          <th class="num">${escapeHtml(c.proceeds)}</th>
+          <th class="num">${escapeHtml(c.gain)}</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    })
+    .join("");
+
+  const dividendSections = filteredYears
+    .map((y) => {
+      const divs = y.dividendRows ?? [];
+      if (!divs.length) {
+        return `<p class="muted">${escapeHtml(yearLabel(y))}: ${escapeHtml(c.emptyDividends)}</p>`;
+      }
+      const rows = divs
+        .map((div) => {
+          const asset = byId.get(div.assetId);
+          const label = asset ? `${asset.symbol} — ${asset.name}` : div.assetId;
+          return `<tr>
+            <td>${escapeHtml(div.date)}</td>
+            <td><strong>${escapeHtml(label)}</strong></td>
+            <td class="num">${escapeHtml(money(div.gross))}</td>
+            <td class="num">${escapeHtml(money(div.fee))}</td>
+            <td class="num"><strong>${escapeHtml(money(div.net))}</strong></td>
+          </tr>`;
+        })
+        .join("");
+      return `<table>
+        <thead><tr>
+          <th>${escapeHtml(c.date)}</th>
+          <th>${escapeHtml(c.asset)}</th>
+          <th class="num">${escapeHtml(c.gross)}</th>
+          <th class="num">${escapeHtml(c.fee)}</th>
+          <th class="num">${escapeHtml(c.net)}</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    })
+    .join("");
+
+  return `<!doctype html>
+<html lang="${escapeHtml(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>${escapeHtml(c.title)}</title>
+<style>
+body{font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#0f172a;margin:28px auto;max-width:1040px;padding:0 24px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:24px 0 8px;border-bottom:1px solid #cbd5e1;padding-bottom:4px}
+p.meta{color:#475569;margin:0 0 20px;font-size:12px}p.muted{color:#64748b;font-size:12px;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:16px;font-variant-numeric:tabular-nums}
+th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;overflow-wrap:anywhere}
+th{background:#f1f5f9;font-weight:600}th.num,td.num{text-align:right}
+.pos{color:#047857}.neg{color:#b91c1c}
+footer{margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;color:#64748b;font-size:11px}
+@media print{body{margin:0 auto;padding:0 10mm}table,tr{break-inside:avoid}h2{break-after:avoid}}
+</style></head><body>
+<h1>${escapeHtml(c.title)}</h1>
+<p class="meta">${escapeHtml(c.generated)}: ${escapeHtml(generatedAt)}</p>
+<section>
+  <h2>${escapeHtml(c.summaryTitle)}</h2>
+  <table>
+    <thead><tr>
+      <th>${escapeHtml(c.year)}</th>
+      <th class="num">${escapeHtml(c.proceeds)}</th>
+      <th class="num">${escapeHtml(c.cost)}</th>
+      <th class="num">${escapeHtml(c.gain)}</th>
+      <th class="num">${escapeHtml(c.dividends)}</th>
+    </tr></thead>
+    <tbody>${summaryRows}</tbody>
+  </table>
+</section>
+<section>
+  <h2>${escapeHtml(c.salesTitle)}</h2>
+  ${salesSections}
+</section>
+<section>
+  <h2>${escapeHtml(c.dividendsTitle)}</h2>
+  ${dividendSections}
+</section>
+<footer>${escapeHtml(c.disclaimer)}</footer>
+</body></html>`;
 }

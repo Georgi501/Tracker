@@ -43,6 +43,8 @@ const en = {
   rebalanceTaxNote:
     "Estimate only, based on FIFO transaction records and current quoted prices. Excludes fees and taxes; does not execute trades or provide tax advice.",
   rebalanceBasisUnavailable: "FIFO basis unavailable",
+  exportTaxPdf: "Print / Save PDF report",
+  allYears: "All years",
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -88,6 +90,8 @@ const bg: Copy = {
   rebalanceTaxNote:
     "Само ориентировъчна оценка по FIFO сделките и текущите котировки. Не включва такси и данъци, не изпълнява сделки и не е данъчен съвет.",
   rebalanceBasisUnavailable: "FIFO себестойността не е налична",
+  exportTaxPdf: "Печат / Запази PDF справка",
+  allYears: "Всички години",
 };
 const de: Copy = {
   tools: "Werkzeuge",
@@ -132,6 +136,8 @@ const de: Copy = {
   rebalanceTaxNote:
     "Nur eine Schätzung anhand der FIFO-Transaktionen und aktueller Kurse. Ohne Gebühren und Steuern; führt keine Trades aus und ist keine Steuerberatung.",
   rebalanceBasisUnavailable: "FIFO-Einstandswert nicht verfügbar",
+  exportTaxPdf: "Steuerbericht drucken / als PDF speichern",
+  allYears: "Alle Jahre",
 };
 const es: Copy = {
   tools: "Herramientas",
@@ -176,6 +182,8 @@ const es: Copy = {
   rebalanceTaxNote:
     "Solo es una estimación basada en transacciones FIFO y cotizaciones actuales. Excluye comisiones e impuestos; no ejecuta operaciones ni constituye asesoramiento fiscal.",
   rebalanceBasisUnavailable: "Coste FIFO no disponible",
+  exportTaxPdf: "Imprimir / Guardar informe PDF",
+  allYears: "Todos los años",
 };
 const it: Copy = {
   tools: "Strumenti",
@@ -221,5 +229,7 @@ const it: Copy = {
   rebalanceTaxNote:
     "Solo una stima basata sulle transazioni FIFO e sulle quotazioni attuali. Esclude commissioni e imposte; non esegue operazioni e non è consulenza fiscale.",
   rebalanceBasisUnavailable: "Costo FIFO non disponibile",
+  exportTaxPdf: "Stampa / Salva report PDF",
+  allYears: "Tutti gli anni",
 };
 export const toolsCopy: Record<Lang, Copy> = { en, bg, de, es, it };

@@ -19,6 +19,7 @@ import {
 import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } from "@/lib/benchmark";
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { confirmPortfolioSplit } from "@/lib/corporate-actions.functions";
+import { calculatePortfolioExposures } from "@/lib/etf-overlap";
 import type { PortfolioPoint } from "@/lib/history";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
@@ -100,6 +101,53 @@ const EMPTY_COPY: Record<
   },
 };
 
+const EXPOSURE_MODE_COPY: Record<
+  Lang,
+  {
+    lookThrough: string;
+    direct: string;
+    decomposed: (symbols: string) => string;
+    fallback: (symbols: string) => string;
+  }
+> = {
+  en: {
+    lookThrough: "ETF look-through",
+    direct: "Direct holdings",
+    decomposed: (symbols) => `Includes index ETF sector/region look-through for: ${symbols}.`,
+    fallback: (symbols) =>
+      `Underlying weights unavailable for ${symbols}; shown by direct asset classification.`,
+  },
+  bg: {
+    lookThrough: "Пълен ETF разрез",
+    direct: "Директни позиции",
+    decomposed: (symbols) =>
+      `Включва секторен и регионален разрез на индексните ETF-и: ${symbols}.`,
+    fallback: (symbols) =>
+      `Няма данни за базовите тегла на ${symbols}; показани са по директна класификация.`,
+  },
+  de: {
+    lookThrough: "ETF-Durchblick",
+    direct: "Direkte Positionen",
+    decomposed: (symbols) => `Enthält Sektor-/Regionen-Durchblick für Index-ETFs: ${symbols}.`,
+    fallback: (symbols) =>
+      `Basisgewichte nicht verfügbar für ${symbols}; direkte Klassifizierung wird verwendet.`,
+  },
+  es: {
+    lookThrough: "Desglose de ETF",
+    direct: "Posiciones directas",
+    decomposed: (symbols) => `Incluye desglose por sector y región de ETFs indexados: ${symbols}.`,
+    fallback: (symbols) =>
+      `Pesos subyacentes no disponibles para ${symbols}; se muestra la clasificación directa.`,
+  },
+  it: {
+    lookThrough: "Scomposizione ETF",
+    direct: "Posizioni dirette",
+    decomposed: (symbols) => `Include scomposizione per settore e regione degli ETF: ${symbols}.`,
+    fallback: (symbols) =>
+      `Pesi sottostanti non disponibili per ${symbols}; mostrata la classificazione diretta.`,
+  },
+};
+
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
@@ -130,6 +178,7 @@ function Analytics() {
   const [startDate, setStartDate] = useState(dateInput(anchor - 30 * DAY));
   const [endDate, setEndDate] = useState(today);
   const [compare, setCompare] = useState(false);
+  const [exposureMode, setExposureMode] = useState<"lookThrough" | "direct">("lookThrough");
   const [benchmark, setBenchmark] = useState<BenchmarkSymbol | "none">("none");
   const [benchmarkLoaded, setBenchmarkLoaded] = useState(false);
   useEffect(() => {
@@ -309,6 +358,8 @@ function Analytics() {
     .filter((h) => Number.isFinite(h.pnl))
     .map((h) => ({ name: h.asset.symbol, v: h.pnl, pct: h.pnlPct }))
     .sort((a, b) => b.v - a.v);
+  const sectorExposure = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
+  const regionExposure = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
   const exposures = [
     {
       title: p.t("byClass"),
@@ -319,17 +370,11 @@ function Analytics() {
     },
     {
       title: c.bySector,
-      rows: groupBy(
-        p.holdings.filter((h) => Number.isFinite(h.value)),
-        (h) => p.label(h.asset.sector),
-      ),
+      rows: sectorExposure.rows,
     },
     {
       title: c.byRegion,
-      rows: groupBy(
-        p.holdings.filter((h) => Number.isFinite(h.value)),
-        (h) => p.label(h.asset.region),
-      ),
+      rows: regionExposure.rows,
     },
     {
       title: p.t("byCurrency"),
@@ -1131,9 +1176,38 @@ function Analytics() {
             className="sm:col-span-2 lg:col-span-3"
             aria-labelledby="analytics-exposure-title"
           >
-            <h4 id="analytics-exposure-title" className="mb-3 font-semibold">
-              {c.exposures}
-            </h4>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h4 id="analytics-exposure-title" className="font-semibold">
+                {c.exposures}
+              </h4>
+              <div className="inline-flex rounded-full bg-secondary p-1 text-xs">
+                {(["lookThrough", "direct"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={exposureMode === mode}
+                    onClick={() => setExposureMode(mode)}
+                    className={`min-h-8 rounded-full px-3 py-1 font-semibold transition-colors ${
+                      exposureMode === mode
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {EXPOSURE_MODE_COPY[p.lang][mode]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {exposureMode === "lookThrough" && sectorExposure.decomposedEtfs.length > 0 && (
+              <p className="mb-3 text-xs text-muted-foreground">
+                {EXPOSURE_MODE_COPY[p.lang].decomposed(sectorExposure.decomposedEtfs.join(", "))}
+              </p>
+            )}
+            {exposureMode === "lookThrough" && sectorExposure.fallbackEtfs.length > 0 && (
+              <p className="mb-3 text-xs text-muted-foreground">
+                {EXPOSURE_MODE_COPY[p.lang].fallback(sectorExposure.fallbackEtfs.join(", "))}
+              </p>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               {accounts.some((account) => account.value !== null) && (
                 <Breakdown

@@ -3,6 +3,8 @@ import type { Currency } from "./portfolio";
 export const BENCHMARKS = [
   { symbol: "^GSPC", name: "S&P 500" },
   { symbol: "^NDX", name: "NASDAQ 100" },
+  { symbol: "VT", name: "FTSE All-World (VT)" },
+  { symbol: "VWCE.DE", name: "FTSE All-World UCITS (VWCE)" },
   { symbol: "URTH", name: "MSCI World (ETF)" },
   { symbol: "^STOXX", name: "STOXX Europe 600" },
   { symbol: "^RUT", name: "Russell 2000" },
@@ -12,6 +14,40 @@ export type BenchmarkSymbol = (typeof BENCHMARKS)[number]["symbol"];
 export function savedBenchmark(value: unknown): BenchmarkSymbol | "none" {
   return BENCHMARKS.find((b) => b.symbol === value)?.symbol ?? "none";
 }
+
+export interface TwrIrrDeltaSummary {
+  ttwror: number;
+  irr: number;
+  spreadPp: number;
+  timingEffect: "favorable" | "unfavorable" | "neutral";
+}
+
+/**
+ * Compares time-weighted strategy return (TTWROR) with money-weighted return (IRR)
+ * to explain the impact of deposit/withdrawal timing.
+ */
+export function twrIrrDeltaSummary(
+  ttwrorPct: number | null | undefined,
+  irrPct: number | null | undefined,
+): TwrIrrDeltaSummary | null {
+  if (
+    typeof ttwrorPct !== "number" ||
+    !Number.isFinite(ttwrorPct) ||
+    typeof irrPct !== "number" ||
+    !Number.isFinite(irrPct)
+  ) {
+    return null;
+  }
+  const spreadPp = Number((irrPct - ttwrorPct).toFixed(4));
+  const timingEffect = spreadPp > 0.25 ? "favorable" : spreadPp < -0.25 ? "unfavorable" : "neutral";
+  return {
+    ttwror: ttwrorPct,
+    irr: irrPct,
+    spreadPp,
+    timingEffect,
+  };
+}
+
 export function benchmarkSeries(
   points: PortfolioPoint[],
   prices: DailyPrice[],
