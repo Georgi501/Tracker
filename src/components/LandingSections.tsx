@@ -486,23 +486,32 @@ export function LandingSections() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
   return (
-    <div className="space-y-8 lg:col-span-3">
+    <div className="space-y-6 lg:col-span-3">
       <section aria-labelledby="landing-features" className="space-y-3">
-        <h2 id="landing-features" className="font-display text-center text-2xl font-bold">
+        <h2
+          id="landing-features"
+          className="font-display text-center text-xl font-bold tracking-tight sm:text-2xl"
+        >
           {c.featuresTitle}
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {c.features.map((feature) => (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {c.features.map((feature, index) => (
             <Card
               key={feature.title}
-              className="border-border/60 bg-card/60 p-4 sm:p-5 sm:[&:last-child:nth-child(odd)]:col-span-2"
+              className={`border-border/70 bg-card/70 p-4 sm:p-5 ${
+                index < 3 ? "lg:col-span-2" : "lg:col-span-3"
+              }`}
             >
-              <h3 className="font-display font-semibold">{feature.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
+              <h3 className="font-display text-base font-semibold tracking-tight">
+                {feature.title}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                {feature.body}
+              </p>
               <Link
                 to={feature.href}
                 {...(feature.hash ? { hash: feature.hash } : {})}
-                className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
               >
                 {feature.link}
                 <ArrowRight size={14} aria-hidden />
@@ -512,47 +521,56 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section aria-labelledby="landing-trust" className="space-y-3">
-        <div className="flex items-center justify-center gap-2">
-          <LockKeyhole className="text-primary" size={18} aria-hidden />
-          <h2 id="landing-trust" className="font-display text-center text-xl font-bold">
-            {c.trustTitle}
-          </h2>
+      <section
+        aria-labelledby="landing-trust"
+        className="rounded-2xl border border-border bg-card/50 p-4 shadow-[var(--shadow-card)] sm:p-5"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <LockKeyhole className="text-primary" size={17} aria-hidden />
+            <h2 id="landing-trust" className="font-display text-lg font-bold tracking-tight">
+              {c.trustTitle}
+            </h2>
+          </div>
+          <Link
+            to="/features"
+            hash="methodology"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
+          >
+            {c.features[3]?.link}
+            <ArrowRight size={13} aria-hidden />
+          </Link>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
           {c.trust.map((item) => (
-            <div key={item.title} className="border-l-2 border-primary/30 py-1 pl-3">
+            <div
+              key={item.title}
+              className="rounded-xl border border-border/60 bg-background/40 p-3.5"
+            >
               <h3 className="text-sm font-semibold">{item.title}</h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
             </div>
           ))}
         </div>
-        <p className="text-center">
-          <Link
-            to="/features"
-            hash="methodology"
-            className="text-sm font-semibold text-primary hover:underline"
-          >
-            {c.features[3]?.link}
-          </Link>
-        </p>
       </section>
 
-      <section className="border-t border-border pt-5 text-center">
-        <h2 className="font-display text-balance text-xl font-bold sm:text-2xl">{c.finalTitle}</h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{c.finalBody}</p>
-        <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+      <section className="rounded-2xl border border-border/80 bg-card/60 p-5 text-center shadow-[var(--shadow-card)] sm:p-6">
+        <h2 className="font-display text-balance text-xl font-bold tracking-tight sm:text-2xl">
+          {c.finalTitle}
+        </h2>
+        <p className="mx-auto mt-1.5 max-w-xl text-sm text-muted-foreground">{c.finalBody}</p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/auth"
             search={{ mode: "signup" }}
-            className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             {c.signup}
             <ArrowRight size={15} aria-hidden />
           </Link>
           <Link
             to="/demo"
-            className="inline-flex min-h-10 items-center rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-semibold hover:bg-secondary"
+            className="inline-flex min-h-11 items-center rounded-full border border-border bg-background/70 px-5 py-2 text-sm font-semibold hover:bg-secondary"
           >
             {c.demo}
           </Link>

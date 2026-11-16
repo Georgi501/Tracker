@@ -12,6 +12,8 @@ const COPY: Record<
     title: string;
     description: string;
     fullWalkthrough: string;
+    visitorTab: string;
+    proTab: string;
     visitorFrame: string;
     proFrame: string;
   }
@@ -22,6 +24,8 @@ const COPY: Record<
     description:
       "Explore real screens, from portfolio tracking to market context and Pro insights.",
     fullWalkthrough: "Open the full walkthrough",
+    visitorTab: "Portfolio tour",
+    proTab: "Pro tools",
     visitorFrame: "CapiSpot portfolio walkthrough",
     proFrame: "CapiSpot Pro tools walkthrough",
   },
@@ -31,6 +35,8 @@ const COPY: Record<
     description:
       "Разгледай реални екрани — от проследяването на портфейл до пазарния контекст и Pro анализите.",
     fullWalkthrough: "Отвори пълното представяне",
+    visitorTab: "Преглед на портфейл",
+    proTab: "Pro инструменти",
     visitorFrame: "Представяне на портфейла в CapiSpot",
     proFrame: "Представяне на Pro инструментите в CapiSpot",
   },
@@ -40,6 +46,8 @@ const COPY: Record<
     description:
       "Entdecke echte Ansichten – von der Portfolioübersicht bis zu Marktdaten und Pro-Analysen.",
     fullWalkthrough: "Vollständigen Rundgang öffnen",
+    visitorTab: "Portfolio-Tour",
+    proTab: "Pro-Tools",
     visitorFrame: "CapiSpot-Portfolio-Rundgang",
     proFrame: "Rundgang durch die CapiSpot-Pro-Tools",
   },
@@ -49,6 +57,8 @@ const COPY: Record<
     description:
       "Explora pantallas reales, desde el seguimiento de cartera hasta el contexto de mercado y los análisis Pro.",
     fullWalkthrough: "Abrir el recorrido completo",
+    visitorTab: "Vista de cartera",
+    proTab: "Herramientas Pro",
     visitorFrame: "Recorrido por la cartera de CapiSpot",
     proFrame: "Recorrido por las herramientas Pro de CapiSpot",
   },
@@ -58,6 +68,8 @@ const COPY: Record<
     description:
       "Esplora schermate reali, dal monitoraggio del portafoglio al contesto di mercato e alle analisi Pro.",
     fullWalkthrough: "Apri la panoramica completa",
+    visitorTab: "Tour portafoglio",
+    proTab: "Strumenti Pro",
     visitorFrame: "Panoramica del portafoglio CapiSpot",
     proFrame: "Panoramica degli strumenti Pro di CapiSpot",
   },
@@ -84,8 +96,13 @@ export function VideoPresentation({
   lang: Lang;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(560);
+  const [activeMode, setActiveMode] = useState<VideoMode>(mode);
+  const [height, setHeight] = useState<number | null>(null);
   const c = COPY[lang];
+
+  useEffect(() => {
+    setActiveMode(mode);
+  }, [mode]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
@@ -96,7 +113,7 @@ export function VideoPresentation({
       ) {
         return;
       }
-      setHeight(Math.max(360, Math.min(event.data.height, 1800)));
+      setHeight(Math.max(300, Math.min(event.data.height, 420)));
     };
 
     window.addEventListener("message", handleMessage);
@@ -106,34 +123,63 @@ export function VideoPresentation({
   return (
     <section
       aria-label={c.title}
-      className="grid overflow-hidden rounded-3xl border border-border bg-card lg:col-span-3 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)]"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] lg:col-span-3"
     >
-      <div className="flex flex-col items-start justify-center gap-2 border-b border-border p-4 sm:gap-4 sm:p-8 lg:border-b-0 lg:border-r">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-xs">
-          {c.label}
-        </p>
-        <h2 className="max-w-md text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-          {c.title}
-        </h2>
-        <p className="max-w-md text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
-          {c.description}
-        </p>
-        <a
-          href="/video-preview/"
-          className="inline-flex items-center gap-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 sm:text-sm"
-        >
-          {c.fullWalkthrough}
-          <ArrowUpRight size={16} aria-hidden />
-        </a>
+      <div className="flex flex-col gap-3 border-b border-border/80 bg-card/80 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 max-w-2xl">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
+            {c.label}
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="font-display text-lg font-bold tracking-tight text-foreground sm:text-xl">
+              {c.title}
+            </h2>
+            <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+              {c.description}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div
+            role="group"
+            aria-label={c.label}
+            className="inline-flex rounded-full border border-border bg-secondary/70 p-0.5 text-xs"
+          >
+            {(["visitor", "pro"] as const).map((tabMode) => (
+              <button
+                key={tabMode}
+                type="button"
+                aria-pressed={activeMode === tabMode}
+                onClick={() => setActiveMode(tabMode)}
+                className={`min-h-8 rounded-full px-3 py-1 font-semibold transition-colors ${
+                  activeMode === tabMode
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tabMode === "visitor" ? c.visitorTab : c.proTab}
+              </button>
+            ))}
+          </div>
+          <a
+            href={`/video-preview/?mode=${activeMode}&theme=${theme}&lang=${lang}`}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-secondary"
+          >
+            <span>{c.fullWalkthrough}</span>
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+        </div>
       </div>
-      <div className="min-w-0 bg-background/30">
+      <div
+        className="h-[300px] w-full min-w-0 bg-background/40 sm:h-[330px]"
+        style={height !== null ? { height } : undefined}
+      >
         <iframe
-          key={`${mode}-${lang}`}
+          key={`${activeMode}-${lang}`}
           ref={frame}
-          title={mode === "pro" ? c.proFrame : c.visitorFrame}
-          src={`/video-preview/?embed=1&mode=${mode}&theme=${theme}&lang=${lang}`}
-          className="block w-full border-0"
-          style={{ height }}
+          title={activeMode === "pro" ? c.proFrame : c.visitorFrame}
+          src={`/video-preview/?embed=1&mode=${activeMode}&theme=${theme}&lang=${lang}`}
+          className="block h-full w-full border-0"
           allowFullScreen
           loading="lazy"
         />

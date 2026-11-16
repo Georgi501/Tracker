@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePortfolio } from "@/lib/store";
 
@@ -9,6 +9,14 @@ const PLACEHOLDER = {
   de: "Nach News, Tickern oder Unternehmen suchen",
   es: "Buscar noticias, tickers o empresas",
   it: "Cerca notizie, ticker o aziende",
+} as const;
+
+const CLEAR_LABEL = {
+  en: "Clear search",
+  bg: "Изчисти търсенето",
+  de: "Suche löschen",
+  es: "Borrar búsqueda",
+  it: "Cancella ricerca",
 } as const;
 
 /** Global search bar: typing opens Asset search with the query, so results appear while typing. */
@@ -21,25 +29,25 @@ export function HeaderSearch() {
   useEffect(() => {
     setValue(urlQ);
   }, [urlQ]);
-  const go = (q: string) =>
+  const go = (q: string, withTransition = false) =>
     navigate({
       to: "/markets",
       search: { q: q || undefined },
       replace: loc.pathname === "/markets",
-      viewTransition: loc.pathname !== "/markets",
+      viewTransition: withTransition && loc.pathname !== "/markets",
     });
   return (
     <form
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
-        go(value.trim());
+        go(value.trim(), true);
       }}
       className="header-search-frame rotating-border-frame relative h-11 w-full rounded-full border border-border bg-secondary sm:h-9"
     >
       <Search
         size={16}
-        className="pointer-events-none absolute left-4 top-1/2 z-20 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-3.5 top-1/2 z-20 -translate-y-1/2 text-muted-foreground"
       />
       <input
         aria-label={PLACEHOLDER[p.lang]}
@@ -52,8 +60,28 @@ export function HeaderSearch() {
           setValue(e.target.value);
           go(e.target.value);
         }}
-        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-9 pr-12 text-sm text-foreground outline-none placeholder:text-muted-foreground"
       />
+      {value ? (
+        <button
+          type="button"
+          aria-label={CLEAR_LABEL[p.lang]}
+          onClick={() => {
+            setValue("");
+            if (loc.pathname === "/markets") go("");
+          }}
+          className="absolute right-2 top-1/2 z-20 grid size-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-background/40 hover:text-foreground"
+        >
+          <X size={14} aria-hidden="true" />
+        </button>
+      ) : (
+        <kbd
+          aria-hidden="true"
+          className="pointer-events-none absolute right-2.5 top-1/2 z-20 hidden -translate-y-1/2 rounded border border-border/80 bg-background/50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground xl:inline-block"
+        >
+          Ctrl K
+        </kbd>
+      )}
     </form>
   );
 }

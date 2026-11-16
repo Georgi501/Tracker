@@ -13,6 +13,7 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 import { paymentsCopy } from "@/lib/payments-i18n";
 import { planCopy } from "@/lib/plan-i18n";
 import { proCopy } from "@/lib/pro-i18n";
+import { canonicalLink } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bot, CalendarRange, Check, Flame, LayoutGrid, RefreshCw } from "lucide-react";
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [canonicalLink("/pricing")],
   }),
   component: Pricing,
 });

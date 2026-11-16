@@ -5,6 +5,7 @@ import { dcfCopy } from "@/lib/dcf-copy";
 import { experienceCopy } from "@/lib/experience-i18n";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { SAMPLE_DIVIDENDS, SAMPLE_HOLDINGS } from "@/lib/sample-portfolio";
+import { canonicalLink } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Info } from "lucide-react";
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/demo")({
           "https://capispot.com/api/og?type=snapshot&weights=stock:55,etf:30,crypto:10,cash:5",
       },
     ],
+    links: [canonicalLink("/demo")],
   }),
   component: DemoPage,
 });
