@@ -16,6 +16,7 @@ Disallow: /holdings
 Disallow: /analytics
 Disallow: /advisor
 Disallow: /settings
+Disallow: /account
 Disallow: /api/
 Disallow: /admin
 

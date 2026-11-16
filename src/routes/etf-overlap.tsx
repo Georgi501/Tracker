@@ -3,6 +3,7 @@ import { RelatedGuides } from "@/components/RelatedGuides";
 import { Button } from "@/components/ui/button";
 import {
   compareEtfProfiles,
+  resolveEtfExposureProfile,
   SUPPORTED_ETF_EXPOSURE_PROFILES,
   type EtfComparisonRow,
 } from "@/lib/etf-overlap";
@@ -12,6 +13,7 @@ import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Layers, Plus, Sparkles, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { z } from "zod";
 
 const ETF_INDEX_LABELS: Record<string, string> = {
   VOO: "Vanguard S&P 500 (US)",
@@ -182,6 +184,12 @@ const DESCRIPTION =
   "Compare 2 or 3 US and UCITS ETFs (VOO, QQQ, VWCE, IWDA, VUAA, CSPX, EQQQ) to inspect shared sector and regional exposure instantly.";
 
 export const Route = createFileRoute("/etf-overlap")({
+  validateSearch: (search) =>
+    z
+      .object({
+        etf: z.string().max(16).optional().catch(undefined),
+      })
+      .parse(search),
   head: () => ({
     meta: [
       { title: TITLE },
@@ -199,14 +207,26 @@ export const Route = createFileRoute("/etf-overlap")({
     links: [canonicalLink("/etf-overlap")],
     scripts: [articleJsonLd(TITLE, DESCRIPTION, "/etf-overlap")],
   }),
-  component: EtfOverlapPage,
+  component: EtfOverlapRoute,
 });
 
-export function EtfOverlapPage() {
+function EtfOverlapRoute() {
+  const { etf } = Route.useSearch();
+  return <EtfOverlapPage initialEtf={etf} />;
+}
+
+export function resolveInitialEtfPair(initialEtf?: string): string[] {
+  const profile = initialEtf ? resolveEtfExposureProfile(initialEtf) : null;
+  if (!profile) return ["VOO", "QQQ"];
+  const partner = profile.symbol === "VOO" ? "QQQ" : profile.symbol === "VWCE" ? "IWDA" : "VOO";
+  return [profile.symbol, partner];
+}
+
+export function EtfOverlapPage({ initialEtf }: { initialEtf?: string | undefined } = {}) {
   const p = usePortfolio();
   const c = COPY[p.lang];
   const supportedSymbols = useMemo(() => Object.keys(SUPPORTED_ETF_EXPOSURE_PROFILES), []);
-  const [selected, setSelected] = useState<string[]>(["VOO", "QQQ"]);
+  const [selected, setSelected] = useState<string[]>(() => resolveInitialEtfPair(initialEtf));
 
   const comparison = useMemo(() => compareEtfProfiles(selected), [selected]);
 

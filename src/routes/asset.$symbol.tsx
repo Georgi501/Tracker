@@ -506,21 +506,26 @@ function AssetPage() {
           </Card>
         )}
       </div>
-      {resolveEtfExposureProfile(symbol) && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
-          <div className="flex items-center gap-2.5 text-sm text-foreground">
-            <Layers className="size-4 shrink-0 text-primary" aria-hidden="true" />
-            <span>{ETF_OVERLAP_CTA[p.lang].label(symbol.toUpperCase())}</span>
+      {(() => {
+        const etfProfile = resolveEtfExposureProfile(symbol);
+        if (!etfProfile) return null;
+        return (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
+            <div className="flex items-center gap-2.5 text-sm text-foreground">
+              <Layers className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              <span>{ETF_OVERLAP_CTA[p.lang].label(etfProfile.symbol)}</span>
+            </div>
+            <Link
+              to="/etf-overlap"
+              search={{ etf: etfProfile.symbol }}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95"
+            >
+              {ETF_OVERLAP_CTA[p.lang].button}
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
           </div>
-          <Link
-            to="/etf-overlap"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95"
-          >
-            {ETF_OVERLAP_CTA[p.lang].button}
-            <ArrowRight className="size-3.5" aria-hidden="true" />
-          </Link>
-        </div>
-      )}
+        );
+      })()}
       {type === "stock" && (
         <nav
           aria-label={p.lang === "bg" ? "Раздели за проучване" : "Research sections"}

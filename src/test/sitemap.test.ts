@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { handleSitemapRequest } from "@/routes/sitemap[.]xml";
 import { describe, expect, it } from "vitest";
 
@@ -42,6 +44,22 @@ describe("dynamic /sitemap.xml route", () => {
       "/api/",
     ]) {
       expect(xml).not.toContain(forbidden);
+    }
+  });
+
+  it("robots.txt declares sitemap.xml and disallows private app routes", () => {
+    const robots = readFileSync(resolve(process.cwd(), "public/robots.txt"), "utf8");
+    expect(robots).toContain("Sitemap: https://capispot.com/sitemap.xml");
+    for (const disallowed of [
+      "/holdings",
+      "/analytics",
+      "/advisor",
+      "/settings",
+      "/account",
+      "/admin",
+      "/api/",
+    ]) {
+      expect(robots).toContain(`Disallow: ${disallowed}`);
     }
   });
 });

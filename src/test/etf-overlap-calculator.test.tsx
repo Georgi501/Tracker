@@ -1,5 +1,5 @@
-import { compareEtfProfiles } from "@/lib/etf-overlap";
-import { EtfOverlapPage } from "@/routes/etf-overlap";
+import { compareEtfProfiles, resolveEtfExposureProfile } from "@/lib/etf-overlap";
+import { EtfOverlapPage, resolveInitialEtfPair } from "@/routes/etf-overlap";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -66,5 +66,19 @@ describe("ETF overlap & look-through calculator", () => {
       "href",
       "/brokers",
     );
+  });
+
+  it("pre-selects a supported ?etf=<SYMBOL> alongside a non-duplicate comparison ETF", () => {
+    expect(resolveInitialEtfPair("vwce")).toEqual(["VWCE", "IWDA"]);
+    expect(resolveInitialEtfPair("VOO")).toEqual(["VOO", "QQQ"]);
+    expect(resolveInitialEtfPair("CSPX")).toEqual(["CSPX", "VOO"]);
+    expect(resolveInitialEtfPair("UNKNOWN")).toEqual(["VOO", "QQQ"]);
+
+    expect(resolveEtfExposureProfile("VWCE")?.symbol).toBe("VWCE");
+    expect(resolveEtfExposureProfile("AAPL")).toBeNull();
+
+    render(<EtfOverlapPage initialEtf="VWCE" />);
+    expect((screen.getByLabelText("ETF 1") as HTMLSelectElement).value).toBe("VWCE");
+    expect((screen.getByLabelText("ETF 2") as HTMLSelectElement).value).toBe("IWDA");
   });
 });
