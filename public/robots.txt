@@ -12,6 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /holdings
+Disallow: /analytics
+Disallow: /advisor
+Disallow: /settings
 Disallow: /api/
 Disallow: /admin
 

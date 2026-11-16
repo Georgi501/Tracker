@@ -4,6 +4,7 @@ import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
 import { QuoteHero } from "@/components/QuoteHero";
 import { Button } from "@/components/ui/button";
 import { InvestmentJournal } from "@/components/InvestmentJournal";
+import { resolveEtfExposureProfile } from "@/lib/etf-overlap";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { assetSummary } from "@/lib/journey";
 import { searchCatalog } from "@/lib/market-search";
@@ -17,9 +18,11 @@ import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
+  ArrowRight,
   BarChart3,
   ChartNoAxesCombined,
   CircleDollarSign,
+  Layers,
   Newspaper,
   UsersRound,
 } from "lucide-react";
@@ -289,6 +292,31 @@ const C = {
   },
 };
 
+const ETF_OVERLAP_CTA: Record<Lang, { label: (symbol: string) => string; button: string }> = {
+  en: {
+    label: (s) => `See how ${s} overlaps by sector and region with other US & UCITS ETFs.`,
+    button: "Compare ETF overlap",
+  },
+  bg: {
+    label: (s) => `Виж как ${s} се припокрива по сектори и региони с други US и UCITS ETF-и.`,
+    button: "Сравни ETF припокриването",
+  },
+  de: {
+    label: (s) =>
+      `Sieh, wie sich ${s} nach Sektor und Region mit anderen US- & UCITS-ETFs überschneidet.`,
+    button: "ETF-Überschneidung prüfen",
+  },
+  es: {
+    label: (s) =>
+      `Comprueba cómo se solapa ${s} por sector y región con otros ETFs de EE. UU. y UCITS.`,
+    button: "Comparar solapamiento ETF",
+  },
+  it: {
+    label: (s) => `Scopri come ${s} si sovrappone per settore e area con altri ETF US e UCITS.`,
+    button: "Confronta sovrapposizione ETF",
+  },
+};
+
 const RESEARCH_NAV: Record<
   Lang,
   readonly (readonly [string, string, typeof ChartNoAxesCombined])[]
@@ -478,6 +506,21 @@ function AssetPage() {
           </Card>
         )}
       </div>
+      {resolveEtfExposureProfile(symbol) && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
+          <div className="flex items-center gap-2.5 text-sm text-foreground">
+            <Layers className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span>{ETF_OVERLAP_CTA[p.lang].label(symbol.toUpperCase())}</span>
+          </div>
+          <Link
+            to="/etf-overlap"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95"
+          >
+            {ETF_OVERLAP_CTA[p.lang].button}
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
       {type === "stock" && (
         <nav
           aria-label={p.lang === "bg" ? "Раздели за проучване" : "Research sections"}
