@@ -6,6 +6,7 @@ const GUIDES = [
   { to: "/average-cost", en: "Average buy price", bg: "Средна цена на покупка" },
   { to: "/dividend-tracker", en: "Dividend tracking", bg: "Следене на дивиденти" },
   { to: "/etf-vs-stocks", en: "ETFs vs stocks", bg: "ETF срещу акции" },
+  { to: "/etf-overlap", en: "ETF overlap calculator", bg: "Калкулатор за ETF припокриване" },
   { to: "/portfolio-in-eur", en: "Portfolio in EUR", bg: "Портфолио в EUR" },
   { to: "/csv-import", en: "Free CSV import", bg: "Безплатен CSV импорт" },
   { to: "/revolut-import", en: "Import Revolut", bg: "Импорт от Revolut" },

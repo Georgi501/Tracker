@@ -26,6 +26,7 @@ import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DividendTrackerRouteImport } from './routes/dividend-tracker'
 import { Route as DividendsRouteImport } from './routes/dividends'
 import { Route as EarningsRouteImport } from './routes/earnings'
+import { Route as EtfOverlapRouteImport } from './routes/etf-overlap'
 import { Route as EtfVsStocksRouteImport } from './routes/etf-vs-stocks'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FifoGuideRouteImport } from './routes/fifo-guide'
@@ -41,6 +42,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevolutImportRouteImport } from './routes/revolut-import'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StockTaxBgRouteImport } from './routes/stock-tax-bg'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TimelineRouteImport } from './routes/timeline'
@@ -152,6 +154,11 @@ const EarningsRoute = EarningsRouteImport.update({
   path: '/earnings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EtfOverlapRoute = EtfOverlapRouteImport.update({
+  id: '/etf-overlap',
+  path: '/etf-overlap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EtfVsStocksRoute = EtfVsStocksRouteImport.update({
   id: '/etf-vs-stocks',
   path: '/etf-vs-stocks',
@@ -225,6 +232,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RevolutImportRoute = RevolutImportRouteImport.update({
   id: '/revolut-import',
   path: '/revolut-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StockTaxBgRoute = StockTaxBgRouteImport.update({
@@ -372,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-overlap': typeof EtfOverlapRoute
   '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
@@ -387,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revolut-import': typeof RevolutImportRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -431,6 +445,7 @@ export interface FileRoutesByTo {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-overlap': typeof EtfOverlapRoute
   '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
@@ -446,6 +461,7 @@ export interface FileRoutesByTo {
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revolut-import': typeof RevolutImportRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -491,6 +507,7 @@ export interface FileRoutesById {
   '/dividend-tracker': typeof DividendTrackerRoute
   '/dividends': typeof DividendsRoute
   '/earnings': typeof EarningsRoute
+  '/etf-overlap': typeof EtfOverlapRoute
   '/etf-vs-stocks': typeof EtfVsStocksRoute
   '/features': typeof FeaturesRoute
   '/fifo-guide': typeof FifoGuideRoute
@@ -506,6 +523,7 @@ export interface FileRoutesById {
   '/refund': typeof RefundRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revolut-import': typeof RevolutImportRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stock-tax-bg': typeof StockTaxBgRoute
   '/terms': typeof TermsRoute
   '/timeline': typeof TimelineRoute
@@ -552,6 +570,7 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-overlap'
     | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
@@ -567,6 +586,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/reset-password'
     | '/revolut-import'
+    | '/sitemap.xml'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -611,6 +631,7 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-overlap'
     | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
@@ -626,6 +647,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/reset-password'
     | '/revolut-import'
+    | '/sitemap.xml'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -670,6 +692,7 @@ export interface FileRouteTypes {
     | '/dividend-tracker'
     | '/dividends'
     | '/earnings'
+    | '/etf-overlap'
     | '/etf-vs-stocks'
     | '/features'
     | '/fifo-guide'
@@ -685,6 +708,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/reset-password'
     | '/revolut-import'
+    | '/sitemap.xml'
     | '/stock-tax-bg'
     | '/terms'
     | '/timeline'
@@ -730,6 +754,7 @@ export interface RootRouteChildren {
   DividendTrackerRoute: typeof DividendTrackerRoute
   DividendsRoute: typeof DividendsRoute
   EarningsRoute: typeof EarningsRoute
+  EtfOverlapRoute: typeof EtfOverlapRoute
   EtfVsStocksRoute: typeof EtfVsStocksRoute
   FeaturesRoute: typeof FeaturesRoute
   FifoGuideRoute: typeof FifoGuideRoute
@@ -745,6 +770,7 @@ export interface RootRouteChildren {
   RefundRoute: typeof RefundRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevolutImportRoute: typeof RevolutImportRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StockTaxBgRoute: typeof StockTaxBgRoute
   TermsRoute: typeof TermsRoute
   TimelineRoute: typeof TimelineRoute
@@ -892,6 +918,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EarningsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/etf-overlap': {
+      id: '/etf-overlap'
+      path: '/etf-overlap'
+      fullPath: '/etf-overlap'
+      preLoaderRoute: typeof EtfOverlapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/etf-vs-stocks': {
       id: '/etf-vs-stocks'
       path: '/etf-vs-stocks'
@@ -995,6 +1028,13 @@ declare module '@tanstack/react-router' {
       path: '/revolut-import'
       fullPath: '/revolut-import'
       preLoaderRoute: typeof RevolutImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stock-tax-bg': {
@@ -1205,6 +1245,7 @@ const rootRouteChildren: RootRouteChildren = {
   DividendTrackerRoute: DividendTrackerRoute,
   DividendsRoute: DividendsRoute,
   EarningsRoute: EarningsRoute,
+  EtfOverlapRoute: EtfOverlapRoute,
   EtfVsStocksRoute: EtfVsStocksRoute,
   FeaturesRoute: FeaturesRoute,
   FifoGuideRoute: FifoGuideRoute,
@@ -1220,6 +1261,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundRoute: RefundRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RevolutImportRoute: RevolutImportRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StockTaxBgRoute: StockTaxBgRoute,
   TermsRoute: TermsRoute,
   TimelineRoute: TimelineRoute,

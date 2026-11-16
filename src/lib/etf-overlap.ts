@@ -217,3 +217,89 @@ export function calculateEtfOverlap(
   }
   return [...values.values()].sort((a, b) => b.weight - a.weight);
 }
+
+export interface EtfComparisonRow {
+  name: string;
+  weights: Record<string, number>;
+  overlap: number;
+}
+
+export interface EtfComparisonResult {
+  symbols: string[];
+  sectorOverlap: number;
+  regionOverlap: number;
+  sectors: EtfComparisonRow[];
+  regions: EtfComparisonRow[];
+}
+
+function buildComparisonDimension(
+  profiles: EtfExposureProfile[],
+  dimension: "sectors" | "regions",
+): { rows: EtfComparisonRow[]; totalOverlap: number } {
+  const keys = new Set<string>();
+  for (const profile of profiles) {
+    for (const key of Object.keys(profile[dimension])) {
+      keys.add(key);
+    }
+  }
+
+  let totalOverlap = 0;
+  const rows: EtfComparisonRow[] = [];
+
+  for (const key of keys) {
+    const weights: Record<string, number> = {};
+    let minWeight = Infinity;
+    let maxWeight = 0;
+    for (const profile of profiles) {
+      const raw = profile[dimension][key] ?? 0;
+      const w = Number.isFinite(raw) && raw > 0 ? raw : 0;
+      weights[profile.symbol] = w;
+      if (w < minWeight) minWeight = w;
+      if (w > maxWeight) maxWeight = w;
+    }
+    const overlap = Number.isFinite(minWeight) ? minWeight : 0;
+    totalOverlap += overlap;
+    if (maxWeight > 0) {
+      rows.push({ name: key, weights, overlap });
+    }
+  }
+
+  rows.sort((a, b) => b.overlap - a.overlap || a.name.localeCompare(b.name));
+  return {
+    rows,
+    totalOverlap: Math.min(1, Math.max(0, totalOverlap)),
+  };
+}
+
+/**
+ * Compares 2 or 3 supported ETFs using verified sector and region exposure profiles.
+ * Unknown tickers are ignored rather than fabricated.
+ */
+export function compareEtfProfiles(
+  symbols: readonly string[],
+  profiles: Record<string, EtfExposureProfile> = SUPPORTED_ETF_EXPOSURE_PROFILES,
+): EtfComparisonResult | null {
+  const resolved: EtfExposureProfile[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of symbols) {
+    const profile = resolveEtfExposureProfile(raw, profiles);
+    if (!profile || seen.has(profile.symbol)) continue;
+    seen.add(profile.symbol);
+    resolved.push(profile);
+    if (resolved.length === 3) break;
+  }
+
+  if (resolved.length < 2) return null;
+
+  const sectors = buildComparisonDimension(resolved, "sectors");
+  const regions = buildComparisonDimension(resolved, "regions");
+
+  return {
+    symbols: resolved.map((p) => p.symbol),
+    sectorOverlap: sectors.totalOverlap,
+    regionOverlap: regions.totalOverlap,
+    sectors: sectors.rows,
+    regions: regions.rows,
+  };
+}

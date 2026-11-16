@@ -6,6 +6,7 @@ import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { EtfOverlapCard } from "@/components/EtfOverlapCard";
 import { PerformanceAttribution } from "@/components/PerformanceAttribution";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
+import { ShareAllocationButton } from "@/components/ShareAllocationModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -602,7 +603,10 @@ function Analytics() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-3">
-      <h1 className="font-display text-2xl font-bold lg:col-span-3">{p.t("analytics")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-3">
+        <h1 className="font-display text-2xl font-bold">{p.t("analytics")}</h1>
+        <ShareAllocationButton holdings={p.holdings} lang={p.lang} />
+      </div>
       <HistoryLoadError
         lang={p.lang}
         failed={historyQuery.isError}
