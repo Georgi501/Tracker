@@ -74,6 +74,9 @@ const FeedbackDialog = lazy(() =>
   import("./FeedbackDialog").then((m) => ({ default: m.FeedbackDialog })),
 );
 const AuthForm = lazy(() => import("./AuthForm").then((m) => ({ default: m.AuthForm })));
+const PortfolioEventsBell = lazy(() =>
+  import("./PortfolioEventsBell").then((m) => ({ default: m.PortfolioEventsBell })),
+);
 const AddTransactionDialog = lazy(() =>
   import("./AddTransactionDialog").then((m) => ({ default: m.AddTransactionDialog })),
 );
@@ -535,6 +538,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex shrink-0 items-center gap-1">
             <CommandMenu onAddTx={openTransactionDialog} />
             <PrivacyToggle lang={p.lang} />
+            {p.user && (
+              <Suspense fallback={null}>
+                <PortfolioEventsBell />
+              </Suspense>
+            )}{" "}
             {p.authReady &&
               !p.authError &&
               (!p.user || p.accessReady) &&

@@ -1,4 +1,5 @@
 import { Card } from "@/components/AppShell";
+import { ConfirmedDividendCalendar } from "@/components/ConfirmedDividendCalendar";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { DividendTable } from "@/components/Insights";
@@ -9,6 +10,7 @@ import { languageLocale } from "@/lib/i18n";
 import { dividendRows } from "@/lib/insights";
 import { totalDividends } from "@/lib/portfolio";
 import { monthlyIncome } from "@/lib/pro";
+import { buildConfirmedDividendCalendar } from "@/lib/portfolio-events";
 import { proCopy } from "@/lib/pro-i18n";
 import { pct, usePortfolio } from "@/lib/store";
 import { toolsCopy } from "@/lib/tools-i18n";
@@ -117,6 +119,7 @@ function Dividends() {
       kind: e.payDate ? c.payDate : c.exDate,
     }))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const confirmedCalendar = buildConfirmedDividendCalendar(held, info, toUsd);
   const past = p.transactions
     .filter((t) => t.kind === "dividend")
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -317,6 +320,12 @@ function Dividends() {
         />
       </ProGate>
       <DividendTable rows={posRows} />
+      <ConfirmedDividendCalendar
+        months={confirmedCalendar}
+        lang={p.lang}
+        money={(usd) => p.money(usd)}
+        loading={events.isFetching}
+      />
       <Card className="lg:col-span-2">
         <h3 className="font-display mb-2 font-semibold">{p.t("upcoming")}</h3>
         <ul className="divide-y divide-border">

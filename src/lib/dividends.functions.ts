@@ -111,3 +111,44 @@ export const getDividendEvents = createServerFn({ method: "POST" })
       }),
     );
   });
+
+export interface SecFilingEvent {
+  symbol: string;
+  periodEnd: string;
+  filed: string;
+  filingUrl: string;
+}
+
+/** Public read-only: latest confirmed SEC 10-K/10-K/A filing dates for supported US companies. */
+export const getPortfolioSecFilings = createServerFn({ method: "POST" })
+  .validator((input) =>
+    z
+      .object({ symbols: z.array(z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/)).max(30) })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<SecFilingEvent[]> => {
+    const { fetchSecAnnualFinancials } = await import("./sec-financials.server");
+    const unique = [...new Set(data.symbols.map((symbol) => symbol.toUpperCase()))];
+    const results = await Promise.all(
+      unique.map(async (symbol): Promise<SecFilingEvent | null> => {
+        try {
+          const sec = await fetchSecAnnualFinancials(symbol);
+          if (!sec || !sec.rows.length) return null;
+          const latestRow = sec.rows.at(-1);
+          if (!latestRow) return null;
+          const filed = sec.filingDates?.[latestRow.date];
+          const filingUrl = sec.filings?.[latestRow.date];
+          if (!filed || !filingUrl) return null;
+          return {
+            symbol,
+            periodEnd: latestRow.date,
+            filed,
+            filingUrl,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return results.filter((item): item is SecFilingEvent => item !== null);
+  });

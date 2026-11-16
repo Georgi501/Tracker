@@ -1,4 +1,5 @@
 import { Card } from "@/components/AppShell";
+import { PortfolioEventFeed } from "@/components/PortfolioEventFeed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useWatchState } from "@/hooks/use-watch-state";
@@ -178,6 +179,7 @@ function Alerts() {
         <h1 className="font-display text-2xl font-bold">{copy.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{copy.description}</p>
       </div>
+      <PortfolioEventFeed />
       <Card>
         <form onSubmit={add} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto]">
           <label className="grid gap-1 text-sm">

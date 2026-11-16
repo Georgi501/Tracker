@@ -201,6 +201,12 @@ export function createSecFinancialService({
         return source ? [[row.date, source.filingUrl]] : [];
       }),
     );
+    const filingDates = Object.fromEntries(
+      history.rows.flatMap((row) => {
+        const source = filing(row);
+        return source ? [[row.date, source.filed]] : [];
+      }),
+    );
     return {
       rows,
       fcfMethods: Object.fromEntries(
@@ -210,6 +216,7 @@ export function createSecFinancialService({
       source: "SEC EDGAR" as const,
       epsHistoryUnavailable: true,
       filings,
+      filingDates,
     };
   };
 }
