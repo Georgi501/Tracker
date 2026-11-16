@@ -1,17 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import {
+  Activity,
   ArrowRight,
   ArrowUpRight,
+  Building2,
   ChartNoAxesCombined,
+  CheckCircle2,
+  Coins,
+  Compass,
+  Database,
   FileSpreadsheet,
   LockKeyhole,
+  ShieldCheck,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
 import type { Lang } from "@/lib/i18n";
 
-type FeaturePath = "/features" | "/dividends" | "/tools" | "/pricing";
+type FeaturePath = "/features" | "/dividends" | "/tools" | "/pricing" | "/markets";
 type LandingCopy = {
   stepsEyebrow: string;
   stepsTitle: string;
@@ -23,12 +31,14 @@ type LandingCopy = {
   featuresTitle: string;
   features: {
     title: string;
+    badge?: string;
     body: string;
     href: FeaturePath;
     hash?: "methodology";
     link: string;
   }[];
   trustTitle: string;
+  methodologyLink: string;
   trust: { title: string; body: string }[];
   finalTitle: string;
   finalBody: string;
@@ -59,38 +69,40 @@ const COPY: Record<Lang, LandingCopy> = {
     features: [
       {
         title: "Portfolio performance",
-        body: "Follow dated history and compare portfolio performance with selected market indices.",
+        badge: "TTWROR · IRR · Benchmarks",
+        body: "Follow dated history and compare cash-flow-adjusted returns with selected market indices.",
         href: "/features",
         hash: "methodology",
         link: "How calculations work",
       },
       {
+        title: "Full company analysis",
+        badge: "SEC 10-K · DCF",
+        body: "Full company profiles for 2 companies per week with DCF included. Standalone DCF is Pro.",
+        href: "/pricing",
+        link: "Compare plans",
+      },
+      {
         title: "Dividends and activity",
-        body: "Keep transaction history together with confirmed dividend information.",
+        body: "Keep transaction history together with confirmed dividend schedules.",
         href: "/dividends",
         link: "Explore dividends",
       },
       {
         title: "Goals and planning",
-        body: "Set a target and explore transparent scenarios based on your own assumptions.",
+        body: "Set a target and explore transparent scenarios based on your assumptions.",
         href: "/tools",
         link: "Explore investor tools",
       },
       {
         title: "Market data, with limits",
-        body: "See provider quotes and historical prices; missing data is not filled with estimates.",
-        href: "/features",
-        hash: "methodology",
-        link: "Read the methodology",
-      },
-      {
-        title: "Full company analysis",
-        body: "Full company profiles for 2 companies per week, DCF calculator included. The standalone DCF tool is Pro.",
-        href: "/pricing",
-        link: "Compare plans",
+        body: "Live provider quotes and historical closes; missing data is never estimated.",
+        href: "/markets",
+        link: "Explore live markets",
       },
     ],
     trustTitle: "Built to be clear about data and privacy",
+    methodologyLink: "Read the methodology",
     trust: [
       {
         title: "Your portfolio is private",
@@ -132,14 +144,22 @@ const COPY: Record<Lang, LandingCopy> = {
     features: [
       {
         title: "Представяне на портфейла",
-        body: "Виж как се е променяла стойността на портфейла ти и сравнявай доходността с избрани пазарни индекси.",
+        badge: "TTWROR · IRR · Индекси",
+        body: "Проследявай датираната история и сравнявай доходността с избрани пазарни индекси.",
         href: "/features",
         hash: "methodology",
         link: "Как се изчислява",
       },
       {
+        title: "Пълен анализ на компании",
+        badge: "SEC 10-K · DCF",
+        body: "Пълни профили на 2 компании седмично с вграден DCF. Самостоятелният DCF е Pro.",
+        href: "/pricing",
+        link: "Сравни плановете",
+      },
+      {
         title: "Дивиденти и сделки",
-        body: "Съхранявай историята на сделките заедно с потвърдената информация за дивиденти.",
+        body: "Съхранявай историята на сделките заедно с потвърдените дивиденти.",
         href: "/dividends",
         link: "Разгледай дивидентите",
       },
@@ -151,19 +171,13 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Пазарни данни с ясни ограничения",
-        body: "Виж котировки и исторически цени от доставчика; липсващите данни не се заместват с измислени стойности.",
-        href: "/features",
-        hash: "methodology",
-        link: "Прочети методологията",
-      },
-      {
-        title: "Пълен анализ на компании",
-        body: "Пълни профили на 2 компании седмично, с DCF калкулатор в същия преглед. Самостоятелният DCF инструмент е Pro.",
-        href: "/pricing",
-        link: "Сравни плановете",
+        body: "Котировки и исторически цени от доставчика; липсващите данни не се измислят.",
+        href: "/markets",
+        link: "Разгледай пазарите",
       },
     ],
     trustTitle: "Яснота за данните и поверителността",
+    methodologyLink: "Прочети методологията",
     trust: [
       {
         title: "Портфолиото ти е лично",
@@ -205,14 +219,22 @@ const COPY: Record<Lang, LandingCopy> = {
     features: [
       {
         title: "Portfolio-Performance",
+        badge: "TTWROR · IRR · Indizes",
         body: "Verfolge den datierten Verlauf und vergleiche die Rendite mit ausgewählten Marktindizes.",
         href: "/features",
         hash: "methodology",
         link: "Berechnung verstehen",
       },
       {
+        title: "Vollständige Unternehmensanalysen",
+        badge: "SEC 10-K · DCF",
+        body: "Vollständige Profile für 2 Unternehmen pro Woche inkl. DCF. Eigenständiger DCF ist Pro.",
+        href: "/pricing",
+        link: "Tarife vergleichen",
+      },
+      {
         title: "Dividenden und Aktivitäten",
-        body: "Behalte Transaktionsverlauf und bestätigte Dividendeninformationen zusammen.",
+        body: "Behalte Transaktionsverlauf und bestätigte Dividenden zusammen im Blick.",
         href: "/dividends",
         link: "Dividenden entdecken",
       },
@@ -224,19 +246,13 @@ const COPY: Record<Lang, LandingCopy> = {
       },
       {
         title: "Marktdaten mit klaren Grenzen",
-        body: "Sieh Anbieter-Kurse und historische Preise; fehlende Daten werden nicht geschätzt.",
-        href: "/features",
-        hash: "methodology",
-        link: "Methodik lesen",
-      },
-      {
-        title: "Vollständige Unternehmensanalysen",
-        body: "Vollständige Profile für 2 Unternehmen pro Woche, DCF-Rechner inklusive. Der eigenständige DCF-Rechner ist Pro.",
-        href: "/pricing",
-        link: "Tarife vergleichen",
+        body: "Anbieter-Kurse und historische Preise; fehlende Daten werden nie geschätzt.",
+        href: "/markets",
+        link: "Märkte entdecken",
       },
     ],
     trustTitle: "Klarheit bei Daten und Datenschutz",
+    methodologyLink: "Methodik lesen",
     trust: [
       {
         title: "Dein Portfolio bleibt privat",
@@ -281,38 +297,40 @@ const COPY: Record<Lang, LandingCopy> = {
     features: [
       {
         title: "Rendimiento de cartera",
+        badge: "TTWROR · IRR · Índices",
         body: "Sigue el historial fechado y compara la rentabilidad con índices seleccionados.",
         href: "/features",
         hash: "methodology",
         link: "Cómo se calcula",
       },
       {
+        title: "Análisis completos de empresas",
+        badge: "SEC 10-K · DCF",
+        body: "Perfiles completos de 2 empresas por semana con DCF incluido. El DCF independiente es Pro.",
+        href: "/pricing",
+        link: "Comparar planes",
+      },
+      {
         title: "Dividendos y actividad",
-        body: "Mantén el historial de operaciones junto con información de dividendos confirmados.",
+        body: "Mantén el historial de operaciones junto con los dividendos confirmados.",
         href: "/dividends",
         link: "Explorar dividendos",
       },
       {
         title: "Objetivos y planificación",
-        body: "Define un objetivo y consulta escenarios transparentes con tus propias hipótesis.",
+        body: "Define un objetivo y consulta escenarios transparentes con tus hipótesis.",
         href: "/tools",
         link: "Explorar herramientas",
       },
       {
         title: "Datos de mercado con límites claros",
-        body: "Consulta cotizaciones e historial del proveedor; los datos que faltan no se estiman.",
-        href: "/features",
-        hash: "methodology",
-        link: "Leer metodología",
-      },
-      {
-        title: "Análisis completos de empresas",
-        body: "Perfiles completos de 2 empresas por semana, con calculadora DCF incluida. La herramienta DCF independiente es Pro.",
-        href: "/pricing",
-        link: "Comparar planes",
+        body: "Cotizaciones e historial del proveedor; los datos que faltan no se estiman.",
+        href: "/markets",
+        link: "Explorar mercados",
       },
     ],
     trustTitle: "Claridad sobre datos y privacidad",
+    methodologyLink: "Leer metodología",
     trust: [
       {
         title: "Tu cartera es privada",
@@ -358,38 +376,40 @@ const COPY: Record<Lang, LandingCopy> = {
     features: [
       {
         title: "Rendimento del portafoglio",
+        badge: "TTWROR · IRR · Indici",
         body: "Segui lo storico datato e confronta i rendimenti con gli indici selezionati.",
         href: "/features",
         hash: "methodology",
         link: "Come si calcola",
       },
       {
+        title: "Analisi aziendali complete",
+        badge: "SEC 10-K · DCF",
+        body: "Profili completi di 2 aziende a settimana con DCF incluso. Il DCF autonomo è Pro.",
+        href: "/pricing",
+        link: "Confronta i piani",
+      },
+      {
         title: "Dividendi e attività",
-        body: "Conserva insieme lo storico delle operazioni e le informazioni sui dividendi confermati.",
+        body: "Conserva insieme lo storico operazioni e i dividendi confermati.",
         href: "/dividends",
         link: "Esplora i dividendi",
       },
       {
         title: "Obiettivi e pianificazione",
-        body: "Imposta un obiettivo ed esplora scenari trasparenti basati sulle tue ipotesi.",
+        body: "Imposta un obiettivo ed esplora scenari trasparenti sulle tue ipotesi.",
         href: "/tools",
         link: "Esplora gli strumenti",
       },
       {
         title: "Dati di mercato con limiti chiari",
-        body: "Consulta quotazioni e prezzi storici del fornitore; i dati mancanti non vengono stimati.",
-        href: "/features",
-        hash: "methodology",
-        link: "Leggi la metodologia",
-      },
-      {
-        title: "Analisi aziendali complete",
-        body: "Profili completi di 2 aziende a settimana, con calcolatore DCF incluso. Lo strumento DCF autonomo è Pro.",
-        href: "/pricing",
-        link: "Confronta i piani",
+        body: "Quotazioni e prezzi storici del fornitore; i dati mancanti non vengono stimati.",
+        href: "/markets",
+        link: "Esplora i mercati",
       },
     ],
     trustTitle: "Chiarezza su dati e privacy",
+    methodologyLink: "Leggi la metodologia",
     trust: [
       {
         title: "Il portafoglio è privato",
@@ -495,6 +515,9 @@ export function LandingSteps() {
   );
 }
 
+const FEATURE_ICONS = [TrendingUp, Building2, Coins, Compass, Activity] as const;
+const TRUST_ICONS = [ShieldCheck, Database, CheckCircle2] as const;
+
 export function LandingSections() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
@@ -508,39 +531,55 @@ export function LandingSections() {
           {c.featuresTitle}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-          {c.features.map((feature, index) => (
-            <Card
-              key={feature.title}
-              className={`border-border/70 bg-card/70 p-4 sm:p-5 ${
-                index < 3 ? "lg:col-span-2" : "lg:col-span-3"
-              }`}
-            >
-              <h3 className="font-display text-base font-semibold tracking-tight">
-                {feature.title}
-              </h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                {feature.body}
-              </p>
-              <Link
-                to={feature.href}
-                {...(feature.hash ? { hash: feature.hash } : {})}
-                className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
+          {c.features.map((feature, index) => {
+            const Icon = FEATURE_ICONS[index] ?? TrendingUp;
+            const isFeatured = index < 2;
+            return (
+              <Card
+                key={feature.title}
+                className={`group flex h-full flex-col justify-between rounded-2xl border-border/75 bg-card/75 p-4 transition-all hover:border-primary/40 hover:bg-card sm:p-5 ${
+                  isFeatured ? "lg:col-span-3" : "lg:col-span-2"
+                }`}
               >
-                {feature.link}
-                <ArrowRight size={14} aria-hidden />
-              </Link>
-            </Card>
-          ))}
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
+                      <Icon size={16} aria-hidden="true" />
+                    </span>
+                    {feature.badge && (
+                      <span className="rounded-full border border-border/80 bg-secondary/60 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+                        {feature.badge}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-3 font-display text-base font-semibold tracking-tight text-foreground">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                    {feature.body}
+                  </p>
+                </div>
+                <Link
+                  to={feature.href}
+                  {...(feature.hash ? { hash: feature.hash } : {})}
+                  className="mt-3.5 inline-flex w-fit items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
+                >
+                  {feature.link}
+                  <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              </Card>
+            );
+          })}
         </div>
       </section>
 
       <section
         aria-labelledby="landing-trust"
-        className="rounded-2xl border border-border bg-card/50 p-4 shadow-[var(--shadow-card)] sm:p-5"
+        className="rounded-2xl border border-border bg-card/50 p-4 shadow-[var(--shadow-card)] sm:p-6"
       >
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3.5">
           <div className="flex items-center gap-2">
-            <LockKeyhole className="text-primary" size={17} aria-hidden />
+            <LockKeyhole className="text-primary" size={17} aria-hidden="true" />
             <h2 id="landing-trust" className="font-display text-lg font-bold tracking-tight">
               {c.trustTitle}
             </h2>
@@ -550,20 +589,26 @@ export function LandingSections() {
             hash="methodology"
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
           >
-            {c.features[3]?.link}
-            <ArrowRight size={13} aria-hidden />
+            {c.methodologyLink}
+            <ArrowRight size={13} aria-hidden="true" />
           </Link>
         </div>
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {c.trust.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-xl border border-border/60 bg-background/40 p-3.5"
-            >
-              <h3 className="text-sm font-semibold">{item.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
-            </div>
-          ))}
+        <div className="mt-4 grid divide-y divide-border/60 md:grid-cols-3 md:divide-x md:divide-y-0">
+          {c.trust.map((item, index) => {
+            const Icon = TRUST_ICONS[index] ?? ShieldCheck;
+            return (
+              <div
+                key={item.title}
+                className="py-3 first:pt-0 last:pb-0 md:px-5 md:py-1 md:first:pl-0 md:last:pr-0"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon size={15} aria-hidden="true" className="shrink-0 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
