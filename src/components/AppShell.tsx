@@ -947,6 +947,19 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </li>
               <li>
+                <Link to="/etf-overlap">
+                  {
+                    {
+                      en: "ETF overlap calculator",
+                      bg: "ETF overlap калкулатор",
+                      de: "ETF-Überschneidungsrechner",
+                      es: "Calculadora solapamiento ETF",
+                      it: "Calcolatore sovrapposizione ETF",
+                    }[p.lang]
+                  }
+                </Link>
+              </li>
+              <li>
                 <Link to="/portfolio-in-eur">
                   {p.lang === "bg" ? "Портфолио в EUR" : "Portfolio in EUR"}
                 </Link>

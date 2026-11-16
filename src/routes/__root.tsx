@@ -6,6 +6,7 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
@@ -14,6 +15,7 @@ import { Toaster } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { PortfolioProvider } from "../lib/PortfolioProvider";
 import { isLang, type Lang } from "../lib/i18n";
+import { hreflangLinks } from "../lib/seo";
 import { usePortfolio } from "../lib/store";
 import appCss from "../styles.css?url";
 
@@ -223,51 +225,85 @@ const ERROR_COPY: Record<
   },
 };
 
+const ROOT_SEO: Record<Lang, { title: string; description: string }> = {
+  en: {
+    title: "CapiSpot — Portfolio Tracker",
+    description: "Track your investment portfolio: net worth, allocation, holdings and dividends.",
+  },
+  bg: {
+    title: "CapiSpot — Проследяване на портфолио",
+    description:
+      "Проследявай инвестиционното си портфолио: нетна стойност, разпределение, позиции и дивиденти.",
+  },
+  de: {
+    title: "CapiSpot — Portfolio-Tracker",
+    description:
+      "Verfolge dein Anlageportfolio: Nettovermögen, Aufteilung, Positionen und Dividenden.",
+  },
+  es: {
+    title: "CapiSpot — Seguimiento de carteras",
+    description:
+      "Sigue tu cartera de inversiones: patrimonio neto, distribución, posiciones y dividendos.",
+  },
+  it: {
+    title: "CapiSpot — Tracker di portafoglio",
+    description:
+      "Monitora il tuo portafoglio di investimenti: patrimonio netto, allocazione, posizioni e dividendi.",
+  },
+};
+
 const canonicalUrl = (pathname = "/") => `https://capispot.com${pathname.replace(/\/+$/, "")}`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: ({ matches }) => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CapiSpot — Portfolio Tracker" },
-      {
-        name: "description",
-        content: "Track your investment portfolio: net worth, allocation, holdings and dividends.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "CapiSpot" },
-      { property: "og:image", content: "https://capispot.com/og.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://capispot.com/og.png" },
-      { name: "theme-color", content: "#060914" },
-      { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "CapiSpot" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap",
-      },
-      {
-        rel: "canonical",
-        href: canonicalUrl(matches.at(-1)?.pathname),
-      },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-      { rel: "icon", href: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-    ],
-  }),
+  head: ({ matches }) => {
+    const rawLang = (matches[0]?.search as Record<string, unknown> | undefined)?.["lang"];
+    const lang: Lang = isLang(rawLang) ? rawLang : "en";
+    const seo = ROOT_SEO[lang];
+    const pathname = matches.at(-1)?.pathname ?? "/";
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: seo.title },
+        {
+          name: "description",
+          content: seo.description,
+        },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "CapiSpot" },
+        { property: "og:image", content: "https://capispot.com/og.png" },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: "https://capispot.com/og.png" },
+        { name: "theme-color", content: "#060914" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-title", content: "CapiSpot" },
+      ],
+      links: [
+        {
+          rel: "stylesheet",
+          href: appCss,
+        },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700&display=swap",
+        },
+        {
+          rel: "canonical",
+          href: canonicalUrl(pathname),
+        },
+        ...hreflangLinks(pathname),
+        { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+        { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+        { rel: "icon", href: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -275,8 +311,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const rawLang = useRouterState({
+    select: (s) => (s.location.search as Record<string, unknown> | undefined)?.["lang"],
+  });
+  const htmlLang: Lang = isLang(rawLang) ? rawLang : "en";
   return (
-    <html lang="en" className="dark">
+    <html lang={htmlLang} className="dark">
       <head>
         <HeadContent />
       </head>

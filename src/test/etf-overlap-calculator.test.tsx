@@ -11,17 +11,34 @@ vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (opts: unknown) => opts,
   Link: ({
     to,
+    search,
+    onClick,
     children,
     className,
+    ...rest
   }: {
     to: string;
+    search?: Record<string, string>;
+    onClick?: () => void;
     children: React.ReactNode;
     className?: string;
-  }) => (
-    <a href={to} className={className}>
-      {children}
-    </a>
-  ),
+    "aria-current"?: "page";
+  }) => {
+    const query = search ? `?${new URLSearchParams(search).toString()}` : "";
+    return (
+      <a
+        href={`${to}${query}`}
+        className={className}
+        onClick={(e) => {
+          e.preventDefault();
+          onClick?.();
+        }}
+        {...rest}
+      >
+        {children}
+      </a>
+    );
+  },
 }));
 
 describe("ETF overlap & look-through calculator", () => {
@@ -49,18 +66,17 @@ describe("ETF overlap & look-through calculator", () => {
       screen.getByRole("heading", { name: "ETF Overlap & Exposure Calculator" }),
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "VWCE vs IWDA" }));
-    expect(screen.getByRole("button", { name: "VWCE vs IWDA" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    const vwcePreset = screen.getByRole("link", { name: "VWCE vs IWDA" });
+    expect(vwcePreset).toHaveAttribute("href", "/etf-overlap?etfs=VWCE%2CIWDA");
+    fireEvent.click(vwcePreset);
+    expect(vwcePreset).toHaveAttribute("aria-current", "page");
 
     fireEvent.click(screen.getByRole("button", { name: /Add 3rd ETF/i }));
     expect(screen.getByLabelText("ETF 3")).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /Create free account/i })).toHaveAttribute(
       "href",
-      "/auth",
+      "/auth?mode=signup",
     );
     expect(screen.getByRole("link", { name: /Explore broker imports/i })).toHaveAttribute(
       "href",
@@ -80,5 +96,15 @@ describe("ETF overlap & look-through calculator", () => {
     render(<EtfOverlapPage initialEtf="VWCE" />);
     expect((screen.getByLabelText("ETF 1") as HTMLSelectElement).value).toBe("VWCE");
     expect((screen.getByLabelText("ETF 2") as HTMLSelectElement).value).toBe("IWDA");
+  });
+
+  it("supports ?etfs=2-3 comma-separated ETFs for crawlable comparison pairs", () => {
+    expect(resolveInitialEtfPair(undefined, "VOO,VWCE,QQQ")).toEqual(["VOO", "VWCE", "QQQ"]);
+    expect(resolveInitialEtfPair(undefined, "cspx,iwda,INVALID")).toEqual(["CSPX", "IWDA"]);
+
+    render(<EtfOverlapPage initialEtfs="VOO,VWCE,QQQ" />);
+    expect((screen.getByLabelText("ETF 1") as HTMLSelectElement).value).toBe("VOO");
+    expect((screen.getByLabelText("ETF 2") as HTMLSelectElement).value).toBe("VWCE");
+    expect((screen.getByLabelText("ETF 3") as HTMLSelectElement).value).toBe("QQQ");
   });
 });

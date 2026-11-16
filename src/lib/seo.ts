@@ -1,3 +1,5 @@
+import { languages } from "./i18n";
+
 const SITE = "https://capispot.com";
 const ORGANIZATION_ID = SITE + "/#organization";
 const WEBSITE_ID = SITE + "/#website";
@@ -57,6 +59,52 @@ export function canonicalLink(path: string) {
   return {
     rel: "canonical",
     href: `${SITE}${path}`,
+  };
+}
+
+export function hreflangLinks(pathname = "/") {
+  const cleanPath = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+  const baseUrl = `${SITE}${cleanPath}`;
+  return [
+    ...languages.map(({ code }) => ({
+      rel: "alternate",
+      hrefLang: code,
+      href: `${baseUrl}?lang=${code}`,
+    })),
+    {
+      rel: "alternate",
+      hrefLang: "x-default",
+      href: baseUrl,
+    },
+  ];
+}
+
+export function breadcrumbJsonLd(items: readonly { name: string; path: string }[]) {
+  return {
+    type: "application/ld+json",
+    children: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: items.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        item: `${SITE}${item.path}`,
+      })),
+    }),
+  };
+}
+
+export function assetEntityJsonLd(params: { symbol: string; name: string; type: "stock" | "etf" }) {
+  return {
+    type: "application/ld+json",
+    children: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": params.type === "etf" ? "InvestmentFund" : "Corporation",
+      name: params.name,
+      tickerSymbol: params.symbol,
+      url: `${SITE}/asset/${encodeURIComponent(params.symbol)}`,
+    }),
   };
 }
 

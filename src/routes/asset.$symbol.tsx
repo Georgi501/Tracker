@@ -4,12 +4,14 @@ import { CompanyProfileDetails } from "@/components/CompanyProfileDetails";
 import { QuoteHero } from "@/components/QuoteHero";
 import { Button } from "@/components/ui/button";
 import { InvestmentJournal } from "@/components/InvestmentJournal";
-import { resolveEtfExposureProfile } from "@/lib/etf-overlap";
+import { COMPANY_SUGGESTIONS } from "@/lib/company-suggestions";
+import { resolveEtfExposureProfile, SUPPORTED_ETF_EXPOSURE_PROFILES } from "@/lib/etf-overlap";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { assetSummary } from "@/lib/journey";
 import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
 import { projectedBondCoupon } from "@/lib/portfolio";
+import { assetEntityJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { pct, usePortfolio } from "@/lib/store";
 import { useSectionAnchor } from "@/lib/use-section-anchor";
 import { readBondCouponDates, writeBondCouponDate } from "@/lib/watchlist";
@@ -29,6 +31,28 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
+export function buildAssetHeadScripts(rawSymbol: string) {
+  const symbol = rawSymbol.toUpperCase();
+  const catalogMatch = searchCatalog(symbol).find((item) => item.symbol.toUpperCase() === symbol);
+  const scripts = [
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: "Markets", path: "/markets" },
+      { name: symbol, path: `/asset/${encodeURIComponent(symbol)}` },
+    ]),
+  ];
+  if (catalogMatch && (catalogMatch.type === "stock" || catalogMatch.type === "etf")) {
+    scripts.push(
+      assetEntityJsonLd({
+        symbol,
+        name: catalogMatch.name,
+        type: catalogMatch.type,
+      }),
+    );
+  }
+  return scripts;
+}
 
 export const Route = createFileRoute("/asset/$symbol")({
   validateSearch: (search) =>
@@ -69,6 +93,7 @@ export const Route = createFileRoute("/asset/$symbol")({
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:image", content: ogImage },
       ],
+      scripts: buildAssetHeadScripts(params.symbol),
     };
   },
   component: AssetPage,
@@ -315,6 +340,14 @@ const ETF_OVERLAP_CTA: Record<Lang, { label: (symbol: string) => string; button:
     label: (s) => `Scopri come ${s} si sovrappone per settore e area con altri ETF US e UCITS.`,
     button: "Confronta sovrapposizione ETF",
   },
+};
+
+const PEER_EXPLORE_TITLE: Record<Lang, string> = {
+  en: "Explore more companies & ETFs",
+  bg: "Разгледай още компании и ETF-и",
+  de: "Weitere Unternehmen & ETFs entdecken",
+  es: "Explorar más empresas y ETFs",
+  it: "Esplora altre aziende ed ETF",
 };
 
 const RESEARCH_NAV: Record<
@@ -812,6 +845,31 @@ function AssetPage() {
           />
         </div>
       )}
+      <nav
+        aria-label={PEER_EXPLORE_TITLE[p.lang]}
+        className="rounded-2xl border border-border/70 bg-card/50 p-4 sm:p-5"
+      >
+        <h2 className="font-display text-sm font-semibold text-foreground">
+          {PEER_EXPLORE_TITLE[p.lang]}
+        </h2>
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {[
+            ...COMPANY_SUGGESTIONS.slice(0, 8).map((item) => item.symbol),
+            ...Object.keys(SUPPORTED_ETF_EXPOSURE_PROFILES).slice(0, 8),
+          ]
+            .filter((peer) => peer !== symbol.toUpperCase())
+            .map((peer) => (
+              <Link
+                key={peer}
+                to="/asset/$symbol"
+                params={{ symbol: peer }}
+                className="inline-flex min-h-9 items-center rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary"
+              >
+                {peer}
+              </Link>
+            ))}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -7,12 +7,12 @@ import {
   SUPPORTED_ETF_EXPOSURE_PROFILES,
   type EtfComparisonRow,
 } from "@/lib/etf-overlap";
-import type { Lang } from "@/lib/i18n";
-import { articleJsonLd, canonicalLink } from "@/lib/seo";
+import { isLang, type Lang } from "@/lib/i18n";
+import { articleJsonLd, canonicalLink, faqJsonLd } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Layers, Plus, Sparkles, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 const ETF_INDEX_LABELS: Record<string, string> = {
@@ -179,6 +179,79 @@ const COPY: Record<Lang, Copy> = {
   },
 };
 
+const FAQ_ITEMS: Record<Lang, readonly (readonly [string, string])[]> = {
+  en: [
+    [
+      "How is ETF overlap calculated?",
+      "CapiSpot compares verified index-level sector and regional weights across 2 or 3 selected ETFs and sums the minimum shared weight in each category.",
+    ],
+    [
+      "Which US and UCITS ETFs are supported?",
+      "You can compare S&P 500, Nasdaq-100, FTSE All-World, and MSCI World ETFs including VOO, SPY, QQQ, VWCE, IWDA, VUAA, CSPX, VTI, and EQQQ.",
+    ],
+    [
+      "Can I check overlap across my real portfolio?",
+      "Yes. Create a free account and import your broker CSV to see look-through sector, regional, and top-holding overlap across all your positions.",
+    ],
+  ],
+  bg: [
+    [
+      "Как се изчислява ETF припокриването?",
+      "CapiSpot сравнява проверените индексни тегла по сектори и региони между 2 или 3 избрани ETF-а и сумира минималното общо тегло във всяка категория.",
+    ],
+    [
+      "Кои US и UCITS ETF-и се поддържат?",
+      "Можеш да сравняваш S&P 500, Nasdaq-100, FTSE All-World и MSCI World ETF-и, включително VOO, SPY, QQQ, VWCE, IWDA, VUAA, CSPX, VTI и EQQQ.",
+    ],
+    [
+      "Мога ли да проверя припокриването в реалното си портфолио?",
+      "Да. Създай безплатен профил и импортирай CSV от твоя брокер, за да видиш реалната експозиция по сектори, региони и водещи компании.",
+    ],
+  ],
+  de: [
+    [
+      "Wie wird die ETF-Überschneidung berechnet?",
+      "CapiSpot vergleicht verifizierte Index-Sektor- und Regionen-Gewichtungen von 2 oder 3 gewählten ETFs und summiert das kleinste gemeinsame Gewicht je Kategorie.",
+    ],
+    [
+      "Welche US- und UCITS-ETFs werden unterstützt?",
+      "Vergleiche S&P 500, Nasdaq-100, FTSE All-World und MSCI World ETFs wie VOO, SPY, QQQ, VWCE, IWDA, VUAA, CSPX, VTI und EQQQ.",
+    ],
+    [
+      "Kann ich die Überschneidung in meinem echten Portfolio prüfen?",
+      "Ja. Erstelle ein kostenloses Konto und importiere deine Broker-CSV, um die echte Sektor-, Regionen- und Positionsüberschneidung zu sehen.",
+    ],
+  ],
+  es: [
+    [
+      "¿Cómo se calcula el solapamiento entre ETFs?",
+      "CapiSpot compara los pesos sectoriales y regionales verificados de 2 o 3 ETFs seleccionados y suma el peso mínimo compartido en cada categoría.",
+    ],
+    [
+      "¿Qué ETFs de EE. UU. y UCITS son compatibles?",
+      "Puedes comparar ETFs del S&P 500, Nasdaq-100, FTSE All-World y MSCI World como VOO, SPY, QQQ, VWCE, IWDA, VUAA, CSPX, VTI y EQQQ.",
+    ],
+    [
+      "¿Puedo analizar el solapamiento de toda mi cartera real?",
+      "Sí. Crea una cuenta gratuita e importa el CSV de tu bróker para ver la exposición real por sector, región y principales posiciones.",
+    ],
+  ],
+  it: [
+    [
+      "Come viene calcolata la sovrapposizione ETF?",
+      "CapiSpot confronta i pesi settoriali e geografici verificati di 2 o 3 ETF selezionati e somma il peso minimo condiviso in ogni categoria.",
+    ],
+    [
+      "Quali ETF US e UCITS sono supportati?",
+      "Puoi confrontare ETF S&P 500, Nasdaq-100, FTSE All-World e MSCI World tra cui VOO, SPY, QQQ, VWCE, IWDA, VUAA, CSPX, VTI ed EQQQ.",
+    ],
+    [
+      "Posso verificare la sovrapposizione sul mio portafoglio reale?",
+      "Sì. Crea un account gratuito e importa il CSV del tuo broker per vedere l'esposizione reale per settore, area geografica e partecipazioni.",
+    ],
+  ],
+};
+
 const TITLE = "Free ETF Overlap & Look-Through Calculator — CapiSpot";
 const DESCRIPTION =
   "Compare 2 or 3 US and UCITS ETFs (VOO, QQQ, VWCE, IWDA, VUAA, CSPX, EQQQ) to inspect shared sector and regional exposure instantly.";
@@ -188,45 +261,86 @@ export const Route = createFileRoute("/etf-overlap")({
     z
       .object({
         etf: z.string().max(16).optional().catch(undefined),
+        etfs: z.string().max(48).optional().catch(undefined),
       })
       .parse(search),
-  head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:type", content: "article" },
-      {
-        property: "og:image",
-        content:
-          "https://capispot.com/api/og?type=asset&symbol=ETF%20OVERLAP&name=Sector%20%26%20Region%20Look-Through&sector=Free%20Calculator",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [canonicalLink("/etf-overlap")],
-    scripts: [articleJsonLd(TITLE, DESCRIPTION, "/etf-overlap")],
-  }),
+  head: ({ matches }) => {
+    const rootSearch = matches[0]?.search as { lang?: Lang } | undefined;
+    const lang: Lang = rootSearch?.lang && isLang(rootSearch.lang) ? rootSearch.lang : "en";
+    const routeSearch = matches.at(-1)?.search as { etf?: string; etfs?: string } | undefined;
+    const hasCustomPair = Boolean(routeSearch?.etfs || routeSearch?.etf);
+    const pair = resolveInitialEtfPair(routeSearch?.etf, routeSearch?.etfs);
+    const title = hasCustomPair
+      ? `${pair.join(" vs ")} ETF Overlap & Exposure Calculator — CapiSpot`
+      : TITLE;
+    const description = hasCustomPair
+      ? `Compare ${pair.join(", ")} side by side to inspect shared sector and regional exposure instantly with CapiSpot.`
+      : DESCRIPTION;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        {
+          property: "og:image",
+          content:
+            "https://capispot.com/api/og?type=asset&symbol=ETF%20OVERLAP&name=Sector%20%26%20Region%20Look-Through&sector=Free%20Calculator",
+        },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [canonicalLink("/etf-overlap")],
+      scripts: [articleJsonLd(title, description, "/etf-overlap"), faqJsonLd(FAQ_ITEMS[lang])],
+    };
+  },
   component: EtfOverlapRoute,
 });
 
 function EtfOverlapRoute() {
-  const { etf } = Route.useSearch();
-  return <EtfOverlapPage initialEtf={etf} />;
+  const { etf, etfs } = Route.useSearch();
+  return <EtfOverlapPage initialEtf={etf} initialEtfs={etfs} />;
 }
 
-export function resolveInitialEtfPair(initialEtf?: string): string[] {
+export function resolveInitialEtfPair(initialEtf?: string, initialEtfs?: string): string[] {
+  if (initialEtfs) {
+    const resolved: string[] = [];
+    const seen = new Set<string>();
+    for (const part of initialEtfs.split(",")) {
+      const profile = resolveEtfExposureProfile(part);
+      if (!profile || seen.has(profile.symbol)) continue;
+      seen.add(profile.symbol);
+      resolved.push(profile.symbol);
+      if (resolved.length === 3) break;
+    }
+    if (resolved.length >= 2) return resolved;
+  }
+
   const profile = initialEtf ? resolveEtfExposureProfile(initialEtf) : null;
   if (!profile) return ["VOO", "QQQ"];
   const partner = profile.symbol === "VOO" ? "QQQ" : profile.symbol === "VWCE" ? "IWDA" : "VOO";
   return [profile.symbol, partner];
 }
 
-export function EtfOverlapPage({ initialEtf }: { initialEtf?: string | undefined } = {}) {
+export function EtfOverlapPage({
+  initialEtf,
+  initialEtfs,
+}: {
+  initialEtf?: string | undefined;
+  initialEtfs?: string | undefined;
+} = {}) {
   const p = usePortfolio();
   const c = COPY[p.lang];
   const supportedSymbols = useMemo(() => Object.keys(SUPPORTED_ETF_EXPOSURE_PROFILES), []);
-  const [selected, setSelected] = useState<string[]>(() => resolveInitialEtfPair(initialEtf));
+  const [selected, setSelected] = useState<string[]>(() =>
+    resolveInitialEtfPair(initialEtf, initialEtfs),
+  );
+
+  useEffect(() => {
+    if (initialEtf || initialEtfs) {
+      setSelected(resolveInitialEtfPair(initialEtf, initialEtfs));
+    }
+  }, [initialEtf, initialEtfs]);
 
   const comparison = useMemo(() => compareEtfProfiles(selected), [selected]);
 
@@ -279,19 +393,20 @@ export function EtfOverlapPage({ initialEtf }: { initialEtf?: string | undefined
                 preset.symbols.length === selected.length &&
                 preset.symbols.every((s, idx) => selected[idx] === s);
               return (
-                <button
+                <Link
                   key={preset.id}
-                  type="button"
-                  aria-pressed={active}
+                  to="/etf-overlap"
+                  search={{ etfs: preset.symbols.join(",") }}
                   onClick={() => setSelected([...preset.symbols])}
-                  className={`min-h-10 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex min-h-10 items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                     active
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-secondary/50 text-foreground hover:border-primary/50"
                   }`}
                 >
                   {preset.label}
-                </button>
+                </Link>
               );
             })}
           </div>

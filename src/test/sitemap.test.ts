@@ -12,7 +12,9 @@ describe("dynamic /sitemap.xml route", () => {
 
     const xml = await response.text();
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml).toContain(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    );
 
     for (const path of [
       "/",
@@ -23,6 +25,9 @@ describe("dynamic /sitemap.xml route", () => {
       "/ibkr-import",
       "/revolut-import",
       "/etf-overlap",
+      "/etf-overlap?etfs=VOO,QQQ",
+      "/etf-overlap?etfs=VWCE,IWDA",
+      "/etf-overlap?etfs=VUAA,EQQQ",
       "/dividend-tracker",
       "/asset/AAPL",
       "/asset/VOO",
@@ -30,6 +35,11 @@ describe("dynamic /sitemap.xml route", () => {
     ]) {
       expect(xml).toContain(`<loc>https://capispot.com${path}</loc>`);
     }
+
+    for (const hreflang of ["en", "bg", "de", "es", "it", "x-default"]) {
+      expect(xml).toContain(`rel="alternate" hreflang="${hreflang}"`);
+    }
+    expect(xml).toContain("https://capispot.com/etf-overlap?etfs=VOO,QQQ&amp;lang=de");
   });
 
   it("strictly excludes authenticated and private routes", async () => {
