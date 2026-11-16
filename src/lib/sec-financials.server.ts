@@ -1,4 +1,5 @@
-﻿import { z } from "zod";
+import { z } from "zod";
+import { publicEdgeCache, type PublicEdgeCache } from "./edge-cache.server";
 import { extractSecInlinePayments } from "./sec-inline-payments";
 import { NVDA_FINANCED_ASSET_TAG } from "./sec-nvda-fcf";
 import { extractSecAnnualHistory, type SecAnnualRow } from "./sec-financials";
@@ -12,6 +13,8 @@ const tickerSchema = z.record(
 );
 const normalizeTicker = (symbol: string) => symbol.toUpperCase().replaceAll(".", "-");
 const DAY = 86_400_000;
+const SEC_TICKERS_EDGE_TTL_SECONDS = 24 * 3600;
+const SEC_HISTORY_EDGE_TTL_SECONDS = 12 * 3600;
 type History = ReturnType<typeof extractSecAnnualHistory>;
 
 /** Shared public-data cache and queue; no account/portfolio data enters this service. */
@@ -19,7 +22,13 @@ export function createSecFinancialService({
   fetcher = fetch,
   now = Date.now,
   wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
-}: { fetcher?: typeof fetch; now?: () => number; wait?: (ms: number) => Promise<void> } = {}) {
+  edgeCache = publicEdgeCache,
+}: {
+  fetcher?: typeof fetch;
+  now?: () => number;
+  wait?: (ms: number) => Promise<void>;
+  edgeCache?: PublicEdgeCache;
+} = {}) {
   let queue: Promise<unknown> = Promise.resolve();
   let lastRequest = -Infinity;
   let tickers: { expires: number; value: Promise<Map<string, number>> } | null = null;
@@ -40,7 +49,18 @@ export function createSecFinancialService({
   }
   async function resolveCik(symbol: string) {
     if (!tickers || tickers.expires <= now()) {
-      const value = request("https://www.sec.gov/files/company_tickers.json").then((payload) => {
+      const value = (async () => {
+        const edgeHit = await edgeCache.get<Record<string, number>>(
+          "sec-tickers",
+          "company_tickers_v1",
+        );
+        if (edgeHit && typeof edgeHit === "object") {
+          const entries = Object.entries(edgeHit).filter(
+            ([k, v]) => typeof k === "string" && Number.isInteger(v) && v > 0,
+          );
+          if (entries.length > 0) return new Map<string, number>(entries);
+        }
+        const payload = await request("https://www.sec.gov/files/company_tickers.json");
         const mapping = new Map<string, number>();
         for (const entry of Object.values(tickerSchema.parse(payload))) {
           const ticker = normalizeTicker(entry.ticker);
@@ -49,8 +69,14 @@ export function createSecFinancialService({
             throw new Error("Ambiguous SEC ticker mapping.");
           mapping.set(ticker, entry.cik_str);
         }
+        await edgeCache.set(
+          "sec-tickers",
+          "company_tickers_v1",
+          Object.fromEntries(mapping),
+          SEC_TICKERS_EDGE_TTL_SECONDS,
+        );
         return mapping;
-      });
+      })();
       const entry = { expires: now() + DAY, value };
       tickers = entry;
       void value.catch(() => {
@@ -66,9 +92,14 @@ export function createSecFinancialService({
     const key = `${cik}:${asOf}`;
     let cached = histories.get(key);
     if (!cached || cached.expires <= now()) {
-      const value = request(
-        `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, "0")}.json`,
-      ).then(async (payload) => {
+      const value = (async () => {
+        const edgeHit = await edgeCache.get<History>("sec-annual-history", key);
+        if (edgeHit && edgeHit.cik === cik && Array.isArray(edgeHit.rows)) {
+          return edgeHit;
+        }
+        const payload = await request(
+          `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, "0")}.json`,
+        );
         let history = extractSecAnnualHistory(payload, { asOf, years: 10 });
         if (history.cik !== cik) throw new Error("SEC company identity mismatch.");
         const extension =
@@ -129,8 +160,15 @@ export function createSecFinancialService({
           );
         }
         if (history.cik !== cik) throw new Error("SEC company identity mismatch.");
+        if (
+          history.rows.some(
+            (row) => row.revenue != null || row.netIncome != null || row.operatingCashFlow != null,
+          )
+        ) {
+          await edgeCache.set("sec-annual-history", key, history, SEC_HISTORY_EDGE_TTL_SECONDS);
+        }
         return history;
-      });
+      })();
       cached = { expires: now() + 6 * 60 * 60_000, value };
       histories.set(key, cached);
       const entry = cached;
