@@ -15,7 +15,6 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { Card } from "@/components/AppShell";
 import { usePortfolio } from "@/lib/store";
 import type { Lang } from "@/lib/i18n";
 
@@ -535,39 +534,41 @@ export function LandingSections() {
             const Icon = FEATURE_ICONS[index] ?? TrendingUp;
             const isFeatured = index < 2;
             return (
-              <Card
+              <Link
                 key={feature.title}
-                className={`group flex h-full flex-col justify-between rounded-2xl border-border/75 bg-card/75 p-4 transition-all hover:border-primary/40 hover:bg-card sm:p-5 ${
+                to={feature.href}
+                {...(feature.hash ? { hash: feature.hash } : {})}
+                className={`group flex h-full flex-col rounded-2xl border border-border/75 bg-card/75 p-4 shadow-[var(--shadow-card)] transition-colors hover:border-primary/50 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isFeatured ? "lg:col-span-3" : "lg:col-span-2"
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
-                      <Icon size={16} aria-hidden="true" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
+                      <Icon size={15} aria-hidden="true" />
                     </span>
-                    {feature.badge && (
-                      <span className="rounded-full border border-border/80 bg-secondary/60 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-muted-foreground">
-                        {feature.badge}
-                      </span>
-                    )}
+                    <h3 className="font-display text-sm font-semibold tracking-tight text-foreground sm:text-base">
+                      {feature.title}
+                    </h3>
                   </div>
-                  <h3 className="mt-3 font-display text-base font-semibold tracking-tight text-foreground">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                    {feature.body}
-                  </p>
+                  {feature.badge && (
+                    <span className="shrink-0 rounded-full border border-border/80 bg-secondary/60 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+                      {feature.badge}
+                    </span>
+                  )}
                 </div>
-                <Link
-                  to={feature.href}
-                  {...(feature.hash ? { hash: feature.hash } : {})}
-                  className="mt-3.5 inline-flex w-fit items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
-                >
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                  {feature.body}
+                </p>
+                <span className="mt-2.5 inline-flex w-fit items-center gap-1 text-xs font-semibold text-primary sm:text-sm">
                   {feature.link}
-                  <ArrowRight size={14} aria-hidden="true" />
-                </Link>
-              </Card>
+                  <ArrowRight
+                    size={14}
+                    aria-hidden="true"
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
+              </Link>
             );
           })}
         </div>
