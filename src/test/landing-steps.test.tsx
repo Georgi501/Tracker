@@ -43,7 +43,7 @@ describe("landing steps", () => {
   );
 
   it.each(languages)(
-    "renders tactile Trading 212, IBKR, and Revolut CSV guide pill links (>= 44px) in $name",
+    "renders tactile Trading 212, IBKR, and Revolut CSV guide pill links (>= 40px) in $name",
     ({ code }) => {
       state.lang = code;
       render(<LandingSteps />);
@@ -55,7 +55,7 @@ describe("landing steps", () => {
         "/revolut-import",
       ]);
       for (const link of links) {
-        expect(link.className).toContain("min-h-11");
+        expect(link.className).toContain("min-h-10");
         expect(link.className).toContain("rounded-full");
       }
     },

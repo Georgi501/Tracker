@@ -12,6 +12,7 @@ import type { Lang } from "@/lib/i18n";
 
 type FeaturePath = "/features" | "/dividends" | "/tools" | "/pricing";
 type LandingCopy = {
+  stepsEyebrow: string;
   stepsTitle: string;
   stepsIntro: string;
   trading212Guide: string;
@@ -36,6 +37,7 @@ type LandingCopy = {
 
 const COPY: Record<Lang, LandingCopy> = {
   en: {
+    stepsEyebrow: "How it works",
     stepsTitle: "Get started in three steps",
     stepsIntro: "Broker CSV imports are free—bring your investments into one clear view.",
     trading212Guide: "Trading 212 CSV guide",
@@ -108,6 +110,7 @@ const COPY: Record<Lang, LandingCopy> = {
     demo: "Explore the sample portfolio",
   },
   bg: {
+    stepsEyebrow: "Как работи",
     stepsTitle: "Започни в три стъпки",
     stepsIntro: "Импортът на CSV от брокер е безплатен — събери инвестициите си на едно място.",
     trading212Guide: "Ръководство за CSV от Trading 212",
@@ -180,6 +183,7 @@ const COPY: Record<Lang, LandingCopy> = {
     demo: "Разгледай примерното портфолио",
   },
   de: {
+    stepsEyebrow: "So funktioniert's",
     stepsTitle: "In drei Schritten starten",
     stepsIntro: "Broker-CSV-Importe sind kostenlos – bringe deine Anlagen übersichtlich zusammen.",
     trading212Guide: "Trading 212 CSV-Anleitung",
@@ -252,6 +256,7 @@ const COPY: Record<Lang, LandingCopy> = {
     demo: "Beispielportfolio ansehen",
   },
   es: {
+    stepsEyebrow: "Cómo funciona",
     stepsTitle: "Empieza en tres pasos",
     stepsIntro: "Importar CSV de un bróker es gratis: reúne tus inversiones en una vista clara.",
     trading212Guide: "Guía de CSV de Trading 212",
@@ -327,6 +332,7 @@ const COPY: Record<Lang, LandingCopy> = {
     demo: "Ver cartera de ejemplo",
   },
   it: {
+    stepsEyebrow: "Come funziona",
     stepsTitle: "Inizia in tre passaggi",
     stepsIntro:
       "Importare un CSV del broker è gratis: riunisci i tuoi investimenti in una vista chiara.",
@@ -415,18 +421,29 @@ export function LandingSteps() {
     { to: "/revolut-import", label: c.revolutGuide },
   ] as const;
   return (
-    <section aria-labelledby="landing-steps" className="space-y-4 py-1 lg:col-span-3">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 id="landing-steps" className="font-display text-2xl font-bold tracking-tight">
-          {c.stepsTitle}
-        </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">{c.stepsIntro}</p>
-        <div className="mt-3 flex flex-wrap justify-center gap-2">
+    <section
+      aria-labelledby="landing-steps"
+      className="rounded-2xl border border-border bg-card/50 p-4 shadow-[var(--shadow-card)] sm:p-6 lg:col-span-3"
+    >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-xl">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
+            {c.stepsEyebrow}
+          </p>
+          <h2
+            id="landing-steps"
+            className="mt-1 font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl"
+          >
+            {c.stepsTitle}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
+        </div>
+        <div className="flex flex-wrap gap-2 lg:justify-end">
           {guides.map((guide) => (
             <Link
               key={guide.to}
               to={guide.to}
-              className="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group inline-flex min-h-10 items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{guide.label}</span>
               <ArrowRight
@@ -438,26 +455,24 @@ export function LandingSteps() {
           ))}
         </div>
       </div>
-      <ol className="grid gap-3.5 md:grid-cols-3">
+      <ol className="mt-4 grid gap-3 md:grid-cols-3">
         {c.steps.map((step, index) => {
           const Icon = STEP_ICONS[index] ?? Target;
           return (
             <li key={step.title}>
-              <div className="group flex h-full flex-col rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] transition-colors hover:border-primary/40 sm:p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
-                    <Icon size={18} aria-hidden="true" />
+              <div className="group flex h-full flex-col rounded-xl border border-border/80 bg-card p-4 transition-colors hover:border-primary/40">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
+                    <Icon size={16} aria-hidden="true" />
                   </span>
-                  <span className="rounded-full bg-secondary/80 px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-muted-foreground tabular-nums ring-1 ring-inset ring-border/70">
+                  <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-bold tracking-wider text-primary tabular-nums ring-1 ring-inset ring-primary/25">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
-                <h3 className="mt-3.5 font-display text-base font-semibold tracking-tight text-foreground">
+                <h3 className="mt-2.5 font-display text-sm font-semibold tracking-tight text-foreground sm:text-[15px]">
                   {step.title}
                 </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                  {step.body}
-                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
               </div>
             </li>
           );
