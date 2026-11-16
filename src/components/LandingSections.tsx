@@ -16,6 +16,7 @@ type LandingCopy = {
   stepsIntro: string;
   trading212Guide: string;
   ibkrGuide: string;
+  revolutGuide: string;
   steps: { title: string; body: string }[];
   featuresTitle: string;
   features: {
@@ -39,6 +40,7 @@ const COPY: Record<Lang, LandingCopy> = {
     stepsIntro: "Broker CSV imports are free—bring your investments into one clear view.",
     trading212Guide: "Trading 212 CSV guide",
     ibkrGuide: "Interactive Brokers CSV guide",
+    revolutGuide: "Revolut CSV guide",
     steps: [
       { title: "Add your activity", body: "Import a broker CSV or record a transaction manually." },
       {
@@ -110,6 +112,7 @@ const COPY: Record<Lang, LandingCopy> = {
     stepsIntro: "Импортът на CSV от брокер е безплатен — събери инвестициите си на едно място.",
     trading212Guide: "Ръководство за CSV от Trading 212",
     ibkrGuide: "Ръководство за CSV от Interactive Brokers",
+    revolutGuide: "Ръководство за CSV от Revolut",
     steps: [
       { title: "Добави сделките си", body: "Импортирай CSV от брокер или въведи сделка ръчно." },
       {
@@ -181,6 +184,7 @@ const COPY: Record<Lang, LandingCopy> = {
     stepsIntro: "Broker-CSV-Importe sind kostenlos – bringe deine Anlagen übersichtlich zusammen.",
     trading212Guide: "Trading 212 CSV-Anleitung",
     ibkrGuide: "Interactive Brokers CSV-Anleitung",
+    revolutGuide: "Revolut CSV-Anleitung",
     steps: [
       {
         title: "Aktivitäten hinzufügen",
@@ -252,6 +256,7 @@ const COPY: Record<Lang, LandingCopy> = {
     stepsIntro: "Importar CSV de un bróker es gratis: reúne tus inversiones en una vista clara.",
     trading212Guide: "Guía de CSV de Trading 212",
     ibkrGuide: "Guía de CSV de Interactive Brokers",
+    revolutGuide: "Guía de CSV de Revolut",
     steps: [
       {
         title: "Añade tu actividad",
@@ -327,6 +332,7 @@ const COPY: Record<Lang, LandingCopy> = {
       "Importare un CSV del broker è gratis: riunisci i tuoi investimenti in una vista chiara.",
     trading212Guide: "Guida CSV di Trading 212",
     ibkrGuide: "Guida CSV di Interactive Brokers",
+    revolutGuide: "Guida CSV di Revolut",
     steps: [
       {
         title: "Aggiungi le attività",
@@ -403,40 +409,55 @@ const STEP_ICONS = [FileSpreadsheet, ChartNoAxesCombined, Target];
 export function LandingSteps() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
+  const guides = [
+    { to: "/trading212-import", label: c.trading212Guide },
+    { to: "/ibkr-import", label: c.ibkrGuide },
+    { to: "/revolut-import", label: c.revolutGuide },
+  ] as const;
   return (
-    <section aria-labelledby="landing-steps" className="space-y-2 lg:col-span-3">
-      <div className="text-center">
-        <h2 id="landing-steps" className="font-display text-2xl font-bold">
+    <section aria-labelledby="landing-steps" className="space-y-4 py-1 lg:col-span-3">
+      <div className="mx-auto max-w-2xl text-center">
+        <h2 id="landing-steps" className="font-display text-2xl font-bold tracking-tight">
           {c.stepsTitle}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{c.stepsIntro}</p>
-        <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
-          <a href="/trading212-import" className="text-primary underline underline-offset-4">
-            {c.trading212Guide}
-          </a>
-          <a href="/ibkr-import" className="text-primary underline underline-offset-4">
-            {c.ibkrGuide}
-          </a>
+        <p className="mt-1.5 text-sm text-muted-foreground">{c.stepsIntro}</p>
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {guides.map((guide) => (
+            <Link
+              key={guide.to}
+              to={guide.to}
+              className="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span>{guide.label}</span>
+              <ArrowRight
+                size={13}
+                aria-hidden="true"
+                className="text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+              />
+            </Link>
+          ))}
         </div>
       </div>
-      <ol className="grid gap-2.5 md:grid-cols-3">
+      <ol className="grid gap-3.5 md:grid-cols-3">
         {c.steps.map((step, index) => {
           const Icon = STEP_ICONS[index] ?? Target;
           return (
             <li key={step.title}>
-              <div className="flex h-full items-start gap-3 px-1 py-2 sm:px-2">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30">
-                  <Icon size={18} aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {String(index + 1).padStart(2, "0")}
-                    </p>
-                    <h3 className="font-display text-sm font-semibold">{step.title}</h3>
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
+              <div className="group flex h-full flex-col rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] transition-colors hover:border-primary/40 sm:p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-primary/25 transition-colors group-hover:bg-primary/18">
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <span className="rounded-full bg-secondary/80 px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-muted-foreground tabular-nums ring-1 ring-inset ring-border/70">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </div>
+                <h3 className="mt-3.5 font-display text-base font-semibold tracking-tight text-foreground">
+                  {step.title}
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                  {step.body}
+                </p>
               </div>
             </li>
           );
