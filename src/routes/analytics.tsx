@@ -25,7 +25,7 @@ import type { PortfolioPoint } from "@/lib/history";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
 import { languageLocale } from "@/lib/i18n";
-import { accountValues, assetCurrency, groupBy } from "@/lib/portfolio";
+import { accountValues, assetCurrency, groupBy, transactionsFingerprint } from "@/lib/portfolio";
 import { proCopy } from "@/lib/pro-i18n";
 import {
   comparisonReturns,
@@ -45,7 +45,7 @@ import { riskMetrics } from "@/lib/tools";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -208,8 +208,9 @@ function Analytics() {
   const historyFn = useServerFn(getPortfolioHistory);
   const confirmSplitFn = useServerFn(confirmPortfolioSplit);
   const [confirmingSplit, setConfirmingSplit] = useState<string | null>(null);
+  const txKey = useMemo(() => transactionsFingerprint(p.transactions), [p.transactions]);
   const historyQuery = useQuery({
-    queryKey: ["portfolio-history", p.user?.id, p.transactions, "ALL", p.currency],
+    queryKey: ["portfolio-history", p.user?.id, txKey, "ALL", p.currency],
     queryFn: () => historyFn({ data: { period: "ALL", currency: p.currency } }),
     enabled: !!p.user,
     staleTime: 60000,

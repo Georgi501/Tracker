@@ -53,7 +53,7 @@ import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
-import { portfolioIrr, type Transaction } from "@/lib/portfolio";
+import { portfolioIrr, transactionsFingerprint, type Transaction } from "@/lib/portfolio";
 import { fifoTaxReport } from "@/lib/tools";
 import { toast } from "sonner";
 import {
@@ -618,8 +618,9 @@ function Dashboard() {
   }, [holdings, transactions, p.corporateActions]);
   const { total, portfolioValue, cost, pnl, realized, day } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
+  const txKey = useMemo(() => transactionsFingerprint(p.transactions), [p.transactions]);
   const history = useQuery({
-    queryKey: ["portfolio-history", p.user?.id, p.transactions, period, p.currency],
+    queryKey: ["portfolio-history", p.user?.id, txKey, period, p.currency],
     queryFn: () => historyFn({ data: { period, currency: p.currency } }),
     enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,

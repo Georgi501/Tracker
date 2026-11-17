@@ -485,6 +485,14 @@ export function portfolioIrr(
 
 export type Period = "1D" | "1W" | "1M" | "1Y" | "ALL";
 
+/** Stable cache key for React Query so 60s quote reloads do not refetch unchanged history. */
+export function transactionsFingerprint(txs: Transaction[]): string {
+  if (!txs.length) return "0";
+  return txs
+    .map((t) => `${t.id}:${t.assetId}:${t.date}:${t.kind}:${t.quantity}:${t.price}:${t.fee ?? 0}`)
+    .join("|");
+}
+
 /** Time-weighted return over a series (chain-linked period returns). */
 export function ttwror(series: { v: number }[]) {
   let g = 1;

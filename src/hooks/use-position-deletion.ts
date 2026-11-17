@@ -95,18 +95,24 @@ export function usePositionDeletion() {
       active = false;
     };
   }, [userId, listAttempt]);
+  const hasActiveCountdown = Array.from(operations.current.values()).some(
+    (entry) => entry.phase === "deleted" && entry.deadlineAt !== undefined,
+  );
   useEffect(() => {
     if (!userId) return;
     const refresh = () => setListAttempt((value) => value + 1);
     const timer = setInterval(refresh, 60000);
-    const tick = setInterval(() => update((value) => value + 1), 1000);
     window.addEventListener("focus", refresh);
     return () => {
       clearInterval(timer);
-      clearInterval(tick);
       window.removeEventListener("focus", refresh);
     };
   }, [userId]);
+  useEffect(() => {
+    if (!userId || !hasActiveCountdown) return;
+    const tick = setInterval(() => update((value) => value + 1), 1000);
+    return () => clearInterval(tick);
+  }, [userId, hasActiveCountdown]);
   const publish = (entry: PositionOperation) => {
     operations.current.set(entry.operationId, entry);
     if (mounted.current) update((version) => version + 1);

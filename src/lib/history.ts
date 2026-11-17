@@ -90,6 +90,21 @@ export function currencyRate(
   }
   return null;
 }
+function createPriceCursor(prices: DailyPrice[], maxAgeDays = 7) {
+  let idx = -1;
+  let lastMs = Number.NaN;
+  const maxAgeMs = maxAgeDays * 86400000;
+  return (date: string, dateMs: number): number | null => {
+    while (idx + 1 < prices.length && prices[idx + 1]!.date <= date) {
+      idx++;
+      lastMs = Date.parse(prices[idx]!.date);
+    }
+    if (idx < 0 || !Number.isFinite(lastMs) || dateMs - lastMs > maxAgeMs) return null;
+    const close = prices[idx]!.close;
+    return close > 0 ? close : null;
+  };
+}
+
 export function buildPortfolioHistory(
   assets: HistoryAsset[],
   txs: Transaction[],
@@ -106,10 +121,34 @@ export function buildPortfolioHistory(
   );
   const qty = new Map<string, number>();
   const contributions = new Map<string, number>();
+  const assetCursors = new Map(
+    assets.map((asset) => [
+      asset.id,
+      createPriceCursor(asset.prices, asset.manualValuation ? 90 : 7),
+    ]),
+  );
+  const eurCursor = createPriceCursor(eurUsd, 7);
+  const gbpCursor = createPriceCursor(gbpUsd, 7);
+  const rateAt = (currency: string, date: string, dateMs: number): number | null => {
+    if (currency === "USD") return 1;
+    if (currency === "EUR") return eurCursor(date, dateMs);
+    if (currency === "GBP") return gbpCursor(date, dateMs);
+    if (currency === "GBX" || currency === "GBp") {
+      const rate = gbpCursor(date, dateMs);
+      return rate === null ? null : rate / 100;
+    }
+    if (currency === "BGN") {
+      const rate = eurCursor(date, dateMs);
+      return rate === null ? null : rate / 1.95583;
+    }
+    return currencyRate(currency, date, eurUsd, gbpUsd);
+  };
   let previousValues: Map<string, number> | null = null;
   let previousBaseRate: number | null = null;
   let index = 0;
-  for (let t = Date.parse(start); t <= Date.parse(end); t += 86400000) {
+  const startMs = Date.parse(start);
+  const endMs = Date.parse(end);
+  for (let t = startMs; t <= endMs; t += 86400000) {
     const date = new Date(t).toISOString().slice(0, 10);
     let flow = 0;
     const assetFlows = new Map<string, number>();
@@ -143,9 +182,8 @@ export function buildPortfolioHistory(
         values.set(asset.id, 0);
         continue;
       }
-      const price =
-        asset.type === "cash" ? 1 : closeAt(asset.prices, date, asset.manualValuation ? 90 : 7);
-      const rate = currencyRate(asset.currency, date, eurUsd, gbpUsd);
+      const price = asset.type === "cash" ? 1 : (assetCursors.get(asset.id)?.(date, t) ?? null);
+      const rate = rateAt(asset.currency, date, t);
       if (price === null || rate === null) {
         available = false;
         break;
@@ -154,7 +192,7 @@ export function buildPortfolioHistory(
       values.set(asset.id, assetValue);
       value += assetValue;
     }
-    const baseRate = base === "USD" ? 1 : currencyRate("EUR", date, eurUsd, gbpUsd);
+    const baseRate = base === "USD" ? 1 : rateAt("EUR", date, t);
     if (!available || baseRate === null)
       return { points: [], unavailable: true, assetContributions: [] };
     points.push({ t, v: value / baseRate, flow: flow / baseRate });

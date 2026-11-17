@@ -1,10 +1,10 @@
 import { Pause, Play, TrendingDown, TrendingUp } from "lucide-react";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Card } from "@/components/AppShell";
 import { Link } from "@tanstack/react-router";
-import { marketQuote } from "@/lib/market.functions";
+import { marketTickerQuotes } from "@/lib/market.functions";
 import { MARKET_TICKER_INSTRUMENTS } from "@/lib/market-ticker";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/store";
@@ -74,23 +74,23 @@ const COPY: Record<
   },
 };
 
+const TICKER_SYMBOLS = MARKET_TICKER_INSTRUMENTS.map((market) => market.symbol);
+
 export function MarketTicker() {
   const { lang } = usePortfolio();
   const c = COPY[lang];
-  const quoteFn = useServerFn(marketQuote);
+  const quotesFn = useServerFn(marketTickerQuotes);
   const [paused, setPaused] = useState(false);
-  const queries = useQueries({
-    queries: MARKET_TICKER_INSTRUMENTS.map((market) => ({
-      queryKey: ["market-quote", market.symbol, "stock"],
-      queryFn: () => quoteFn({ data: { symbol: market.symbol, type: "stock" } }),
-      staleTime: 300_000,
-      refetchInterval: 300_000,
-    })),
+  const tickerQuery = useQuery({
+    queryKey: ["market-ticker-quotes", TICKER_SYMBOLS],
+    queryFn: () => quotesFn({ data: { symbols: TICKER_SYMBOLS } }),
+    staleTime: 300_000,
+    refetchInterval: 300_000,
   });
-  const entries = MARKET_TICKER_INSTRUMENTS.map((market, index) => ({
+  const entries = MARKET_TICKER_INSTRUMENTS.map((market) => ({
     market,
-    query: queries[index],
-    quote: queries[index]?.data?.quote ?? null,
+    query: tickerQuery,
+    quote: tickerQuery.data?.quotes[market.symbol] ?? null,
   }));
   const latestAt = entries
     .map((entry) => entry.quote?.at)
@@ -164,7 +164,7 @@ export function MarketTicker() {
               ) : (
                 <span className="shrink-0 text-xs text-muted-foreground">—</span>
               )
-            ) : query?.isError || query?.data?.reason === "unavailable" ? (
+            ) : query?.isError || (query?.data && !quote) ? (
               <span className="shrink-0 text-[10px] text-muted-foreground">{c.unavailable}</span>
             ) : (
               <span className="shrink-0 text-xs text-muted-foreground" aria-label={c.loading}>

@@ -93,6 +93,25 @@ export const marketQuote = createServerFn({ method: "POST" })
     return { quote, reason: quote ? null : ("unavailable" as const) };
   });
 
+export const marketTickerQuotes = createServerFn({ method: "POST" })
+  .validator((input) =>
+    z
+      .object({
+        symbols: z
+          .array(z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/))
+          .min(1)
+          .max(12),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { fetchLiveQuote } = await import("./prices.server");
+    const entries = await Promise.all(
+      data.symbols.map(async (symbol) => [symbol, await fetchLiveQuote(symbol, "stock")] as const),
+    );
+    return { quotes: Object.fromEntries(entries) };
+  });
+
 export interface ExtendedQuote {
   session: "pre" | "post";
   price: number;
