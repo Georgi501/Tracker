@@ -55,11 +55,18 @@ describe("security hardening regressions", () => {
       "utf8",
     );
 
-    it("restricts is_pro(uuid) to self or privileged server roles with empty search_path", () => {
+    it("restricts is_pro(uuid) without relying on SECURITY DEFINER current_user and isolates is_pro_internal", () => {
       expect(sql0034).toMatch(/SET\s+search_path\s*=\s*''/i);
       expect(sql0034).not.toMatch(/auth\.uid\(\)\s+IS\s+NULL/i);
+      expect(sql0034).not.toMatch(/current_user\s+IN/i);
       expect(sql0034).toMatch(
-        /_user_id\s*=\s*auth\.uid\(\)\s+OR\s+current_user\s+IN\s*\(\s*'service_role',\s*'postgres',\s*'supabase_admin'\s*\)/i,
+        /REVOKE\s+ALL\s+ON\s+FUNCTION\s+public\.is_pro_internal\(uuid\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated;/i,
+      );
+      expect(sql0034).toMatch(
+        /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_pro_internal\(uuid\)\s+TO\s+service_role;/i,
+      );
+      expect(sql0034).toMatch(
+        /\(auth\.uid\(\)\s+IS\s+NOT\s+NULL\s+AND\s+_user_id\s*=\s*auth\.uid\(\)\)\s+OR\s+auth\.role\(\)\s*=\s*'service_role'/i,
       );
       expect(sql0034).toMatch(
         /REVOKE\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_pro\(uuid\)\s+FROM\s+PUBLIC,\s*anon;/i,
@@ -67,6 +74,8 @@ describe("security hardening regressions", () => {
       expect(sql0034).toMatch(
         /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_pro\(uuid\)\s+TO\s+authenticated,\s*service_role;/i,
       );
+      const adminSource = readFileSync(resolve(process.cwd(), "src/routes/api/admin.ts"), "utf8");
+      expect(adminSource).toContain('rpc("is_pro_internal"');
     });
 
     it("creates public_profiles without referral_code and keeps Stage C out of drizzle/migrations", () => {

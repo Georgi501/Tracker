@@ -955,6 +955,7 @@ export type Database = {
         Returns: string;
       };
       is_pro: { Args: { _user_id: string }; Returns: boolean };
+      is_pro_internal: { Args: { _user_id: string }; Returns: boolean };
       is_site_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       admin_dashboard_stats: {
         Args: Record<PropertyKey, never>;

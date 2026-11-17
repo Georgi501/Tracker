@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/admin")({
           return failure(usersResult.error, "Unable to load registered accounts");
         const proResults = await Promise.all(
           usersResult.data.users.map(async (user) => {
-            const result = await auth.supabaseAdmin.rpc("is_pro", {
+            const result = await auth.supabaseAdmin.rpc("is_pro_internal", {
               _user_id: user.id,
             });
             return { user, result };
