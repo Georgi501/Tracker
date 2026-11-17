@@ -60,7 +60,7 @@ export function HeaderSearch() {
           setValue(e.target.value);
           go(e.target.value);
         }}
-        className="header-search-input absolute inset-px z-10 rounded-full bg-secondary pl-9 pr-12 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+        className="header-search-input absolute inset-0 z-10 rounded-full bg-transparent pl-9 pr-12 text-sm text-foreground outline-none placeholder:text-muted-foreground"
       />
       {value ? (
         <button
@@ -74,14 +74,7 @@ export function HeaderSearch() {
         >
           <X size={14} aria-hidden="true" />
         </button>
-      ) : (
-        <kbd
-          aria-hidden="true"
-          className="pointer-events-none absolute right-2.5 top-1/2 z-20 hidden -translate-y-1/2 rounded border border-border/80 bg-background/50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground xl:inline-block"
-        >
-          Ctrl K
-        </kbd>
-      )}
+      ) : null}
     </form>
   );
 }

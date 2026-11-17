@@ -787,12 +787,15 @@ main select {
   opacity: 0.75;
   animation: header-search-rotate 3s linear infinite;
 }
+.header-search-input:focus-visible {
+  outline: none;
+}
 .header-search-frame:focus-within {
   border-color: var(--primary);
   background: oklch(1 0 0 / 18%);
 }
-.header-search-frame:focus-within .header-search-input {
-  background: oklch(1 0 0 / 18%);
+.header-search-frame:has(:focus-visible) {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 40%, transparent);
 }
 .header-as a:hover .logo-mark {
   transform: translateY(-1px) scale(1.04);
