@@ -493,6 +493,22 @@ export function transactionsFingerprint(txs: Transaction[]): string {
     .join("|");
 }
 
+/** Full history cache key covering transactions, split actions, and manual valuations. */
+export function portfolioHistoryFingerprint(
+  txs: Transaction[],
+  actions: CorporateAction[] = [],
+  valuations: { id?: string; assetId: string; date: string; priceUsd: number }[] = [],
+): string {
+  const txPart = transactionsFingerprint(txs);
+  const actionPart = actions.length
+    ? actions.map((a) => `${a.assetId}:${a.date}:${a.numerator}/${a.denominator}`).join("|")
+    : "0";
+  const valPart = valuations.length
+    ? valuations.map((v) => `${v.id ?? ""}:${v.assetId}:${v.date}:${v.priceUsd}`).join("|")
+    : "0";
+  return `${txPart}#${actionPart}#${valPart}`;
+}
+
 /** Time-weighted return over a series (chain-linked period returns). */
 export function ttwror(series: { v: number }[]) {
   let g = 1;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { buildPortfolioHistory, type DailyPrice, type HistoryAsset } from "@/lib/history";
-import { transactionsFingerprint, type Transaction } from "@/lib/portfolio";
+import {
+  portfolioHistoryFingerprint,
+  transactionsFingerprint,
+  type Transaction,
+} from "@/lib/portfolio";
 
 function makeSeries(startDate: string, days: number, basePrice: number): DailyPrice[] {
   const out: DailyPrice[] = [];
@@ -69,6 +73,27 @@ describe("performance optimizations", () => {
     expect(transactionsFingerprint([{ ...base[0]!, date: "2024-01-11" }])).not.toBe(
       transactionsFingerprint(base),
     );
+  });
+
+  it("invalidates portfolioHistoryFingerprint when corporate actions or manual valuations change in-place", () => {
+    const txs: Transaction[] = [
+      { id: "t1", assetId: "a1", kind: "buy", quantity: 1, price: 100, fee: 0, date: "2024-01-10" },
+    ];
+    const actions = [{ assetId: "a1", date: "2024-06-01", numerator: 2, denominator: 1 }];
+    const vals = [{ id: "v1", assetId: "a1", date: "2024-07-01", priceUsd: 120 }];
+
+    const fp0 = portfolioHistoryFingerprint(txs, actions, vals);
+    const fpEditedAction = portfolioHistoryFingerprint(
+      txs,
+      [{ assetId: "a1", date: "2024-06-01", numerator: 4, denominator: 1 }],
+      vals,
+    );
+    const fpEditedVal = portfolioHistoryFingerprint(txs, actions, [
+      { id: "v1", assetId: "a1", date: "2024-07-01", priceUsd: 135 },
+    ]);
+    expect(fpEditedAction).not.toBe(fp0);
+    expect(fpEditedVal).not.toBe(fp0);
+    expect(portfolioHistoryFingerprint([...txs], [...actions], [...vals])).toBe(fp0);
   });
 
   it("handles duplicate timestamps, unsorted prices, weekend gaps, and stock splits in buildPortfolioHistory", () => {

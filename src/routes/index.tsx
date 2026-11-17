@@ -53,7 +53,7 @@ import { MarketTicker } from "@/components/MarketTicker";
 import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
-import { portfolioIrr, transactionsFingerprint, type Transaction } from "@/lib/portfolio";
+import { portfolioHistoryFingerprint, portfolioIrr, type Transaction } from "@/lib/portfolio";
 import { fifoTaxReport } from "@/lib/tools";
 import { toast } from "sonner";
 import {
@@ -619,9 +619,8 @@ function Dashboard() {
   const { total, portfolioValue, cost, pnl, realized, day } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
   const txKey = useMemo(
-    () =>
-      `${transactionsFingerprint(p.transactions)}#${p.corporateActions.length}:${p.manualValuations.length}`,
-    [p.transactions, p.corporateActions.length, p.manualValuations.length],
+    () => portfolioHistoryFingerprint(p.transactions, p.corporateActions, p.manualValuations),
+    [p.transactions, p.corporateActions, p.manualValuations],
   );
   const history = useQuery({
     queryKey: ["portfolio-history", p.user?.id, txKey, period, p.currency],

@@ -25,7 +25,12 @@ import type { PortfolioPoint } from "@/lib/history";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
 import { languageLocale } from "@/lib/i18n";
-import { accountValues, assetCurrency, groupBy, transactionsFingerprint } from "@/lib/portfolio";
+import {
+  accountValues,
+  assetCurrency,
+  groupBy,
+  portfolioHistoryFingerprint,
+} from "@/lib/portfolio";
 import { proCopy } from "@/lib/pro-i18n";
 import {
   comparisonReturns,
@@ -149,6 +154,8 @@ const EXPOSURE_MODE_COPY: Record<
   },
 };
 
+const EMPTY_HISTORY: PortfolioPoint[] = [];
+
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
@@ -209,9 +216,8 @@ function Analytics() {
   const confirmSplitFn = useServerFn(confirmPortfolioSplit);
   const [confirmingSplit, setConfirmingSplit] = useState<string | null>(null);
   const txKey = useMemo(
-    () =>
-      `${transactionsFingerprint(p.transactions)}#${p.corporateActions.length}:${p.manualValuations.length}`,
-    [p.transactions, p.corporateActions.length, p.manualValuations.length],
+    () => portfolioHistoryFingerprint(p.transactions, p.corporateActions, p.manualValuations),
+    [p.transactions, p.corporateActions, p.manualValuations],
   );
   const historyQuery = useQuery({
     queryKey: ["portfolio-history", p.user?.id, txKey, "ALL", p.currency],
@@ -219,7 +225,7 @@ function Analytics() {
     enabled: !!p.user,
     staleTime: 60000,
   });
-  const history: PortfolioPoint[] = historyQuery.data?.points ?? [];
+  const history = historyQuery.data?.points ?? EMPTY_HISTORY;
   const pendingSplits = historyQuery.data?.pendingSplits ?? [];
   const confirmSplit = async (split: (typeof pendingSplits)[number]) => {
     const key = `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`;
