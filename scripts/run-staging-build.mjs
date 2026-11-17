@@ -14,7 +14,9 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log("Build environment OK (staging): VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY are set.");
+console.log(
+  "Build environment OK (staging): VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY are set.",
+);
 
 const viteBin = process.platform === "win32" ? "npx.cmd" : "npx";
 execFileSync(viteBin, ["vite", "build", "--mode", "staging"], {
