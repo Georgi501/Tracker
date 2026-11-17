@@ -1,19 +1,19 @@
 -- Phase 2 Security Hardening — Stage A (Expand, zero-downtime safe before frontend deploy):
--- 1. Prevent Pro-status enumeration via public.is_pro(uuid)
+-- 1. Prevent Pro-status enumeration via public.is_pro(uuid) with restricted search_path and explicit role check
 -- 2. Expose only safe public profile columns via public.public_profiles
 -- 3. Update direct_messages & avatars policies to reference public.public_profiles so Stage C
---    (dropping legacy public.profiles SELECT policy) does not break DMs or avatar signed URLs.
+--    (dropping legacy public.profiles SELECT policy after Worker deploy) does not break DMs or avatar signed URLs.
 
 CREATE OR REPLACE FUNCTION public.is_pro(_user_id uuid)
 RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path TO 'public'
+SET search_path = ''
 AS $$
   SELECT (
-    auth.uid() IS NULL
-    OR _user_id = auth.uid()
+    _user_id = auth.uid()
+    OR current_user IN ('service_role', 'postgres', 'supabase_admin')
   ) AND (
     EXISTS (
       SELECT 1 FROM public.subscriptions

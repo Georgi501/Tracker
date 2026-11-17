@@ -45,18 +45,22 @@ describe("security hardening regressions", () => {
     });
   });
 
-  describe("SQL migrations 0034 (Stage A) and 0035 (Stage C)", () => {
+  describe("SQL migrations 0034 (Stage A) and post-deploy 0035 (Stage C)", () => {
     const sql0034 = readFileSync(
       resolve(process.cwd(), "drizzle/migrations/0034_security_hardening.sql"),
       "utf8",
     );
     const sql0035 = readFileSync(
-      resolve(process.cwd(), "drizzle/migrations/0035_profiles_owner_only_rls.sql"),
+      resolve(process.cwd(), "drizzle/post-deploy/0035_profiles_owner_only_rls.sql"),
       "utf8",
     );
 
-    it("prevents Pro-status enumeration via is_pro(uuid) for anon and other users", () => {
-      expect(sql0034).toMatch(/auth\.uid\(\)\s+IS\s+NULL\s+OR\s+_user_id\s*=\s*auth\.uid\(\)/i);
+    it("restricts is_pro(uuid) to self or privileged server roles with empty search_path", () => {
+      expect(sql0034).toMatch(/SET\s+search_path\s*=\s*''/i);
+      expect(sql0034).not.toMatch(/auth\.uid\(\)\s+IS\s+NULL/i);
+      expect(sql0034).toMatch(
+        /_user_id\s*=\s*auth\.uid\(\)\s+OR\s+current_user\s+IN\s*\(\s*'service_role',\s*'postgres',\s*'supabase_admin'\s*\)/i,
+      );
       expect(sql0034).toMatch(
         /REVOKE\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_pro\(uuid\)\s+FROM\s+PUBLIC,\s*anon;/i,
       );
@@ -65,7 +69,7 @@ describe("security hardening regressions", () => {
       );
     });
 
-    it("creates public_profiles without referral_code and contracts profiles in 0035", () => {
+    it("creates public_profiles without referral_code and keeps Stage C out of drizzle/migrations", () => {
       expect(sql0034).toMatch(/CREATE\s+OR\s+REPLACE\s+VIEW\s+public\.public_profiles\s+AS/i);
       expect(sql0034).not.toMatch(
         /CREATE\s+OR\s+REPLACE\s+VIEW\s+public\.public_profiles[\s\S]*referral_code/i,
