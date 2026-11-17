@@ -615,12 +615,12 @@ function AccountPage() {
         null,
         2,
       );
-      const url = URL.createObjectURL(new Blob([body], { type: "application/json" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `folio-account-export-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+      const { downloadText } = await import("@/lib/utils");
+      downloadText(
+        `folio-account-export-${new Date().toISOString().slice(0, 10)}.json`,
+        body,
+        "application/json",
+      );
       toast.success(c.exportSuccess);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to export account data");

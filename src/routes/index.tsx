@@ -618,7 +618,11 @@ function Dashboard() {
   }, [holdings, transactions, p.corporateActions]);
   const { total, portfolioValue, cost, pnl, realized, day } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
-  const txKey = useMemo(() => transactionsFingerprint(p.transactions), [p.transactions]);
+  const txKey = useMemo(
+    () =>
+      `${transactionsFingerprint(p.transactions)}#${p.corporateActions.length}:${p.manualValuations.length}`,
+    [p.transactions, p.corporateActions.length, p.manualValuations.length],
+  );
   const history = useQuery({
     queryKey: ["portfolio-history", p.user?.id, txKey, period, p.currency],
     queryFn: () => historyFn({ data: { period, currency: p.currency } }),

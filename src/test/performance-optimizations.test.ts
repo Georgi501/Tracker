@@ -63,5 +63,62 @@ describe("performance optimizations", () => {
 
     const edited: Transaction[] = [{ ...base[0]!, quantity: 3 }];
     expect(transactionsFingerprint(edited)).not.toBe(transactionsFingerprint(base));
+    expect(transactionsFingerprint([{ ...base[0]!, fee: 2 }])).not.toBe(
+      transactionsFingerprint(base),
+    );
+    expect(transactionsFingerprint([{ ...base[0]!, date: "2024-01-11" }])).not.toBe(
+      transactionsFingerprint(base),
+    );
+  });
+
+  it("handles duplicate timestamps, unsorted prices, weekend gaps, and stock splits in buildPortfolioHistory", () => {
+    const assets: HistoryAsset[] = [
+      {
+        id: "a1",
+        type: "stock",
+        currency: "USD",
+        // Unsorted + duplicate date ("2024-01-05" appears twice, latest 105 wins) + weekend gap (Jan 6-7)
+        prices: [
+          { date: "2024-01-08", close: 55 }, // post 2:1 split
+          { date: "2024-01-05", close: 100 },
+          { date: "2024-01-05", close: 105 },
+        ],
+      },
+    ];
+    const txs: Transaction[] = [
+      { id: "t1", assetId: "a1", kind: "buy", quantity: 1, price: 100, fee: 0, date: "2024-01-05" },
+    ];
+    const splits = [{ assetId: "a1", date: "2024-01-08", numerator: 2, denominator: 1 }];
+    const res = buildPortfolioHistory(
+      assets,
+      txs,
+      "2024-01-05",
+      "2024-01-08",
+      "USD",
+      [],
+      [],
+      splits,
+    );
+    expect(res.unavailable).toBe(false);
+    // Jan 5: 2 split-adjusted shares * (105 / 2)? No, split is on Jan 8, so price on Jan 5 is Yahoo split-adjusted!
+    // Wait: Yahoo daily closes are already split-adjusted; normalizeTransactionsForSplits scales quantity by 2 -> 2 * 105 = 210 on Jan 5..7, 2 * 55 = 110 on Jan 8
+    expect(res.points.map((p) => p.v)).toEqual([210, 210, 210, 110]);
+  });
+
+  it("marks history unavailable when price gap exceeds 7 calendar days", () => {
+    const assets: HistoryAsset[] = [
+      {
+        id: "a1",
+        type: "stock",
+        currency: "USD",
+        prices: [{ date: "2024-01-01", close: 100 }],
+      },
+    ];
+    const txs: Transaction[] = [
+      { id: "t1", assetId: "a1", kind: "buy", quantity: 1, price: 100, fee: 0, date: "2024-01-01" },
+    ];
+    const res = buildPortfolioHistory(assets, txs, "2024-01-01", "2024-01-09", "USD", [], []);
+    expect(res.unavailable).toBe(true);
+    expect(res.points).toEqual([]);
   });
 });

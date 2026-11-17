@@ -91,16 +91,23 @@ export function currencyRate(
   return null;
 }
 function createPriceCursor(prices: DailyPrice[], maxAgeDays = 7) {
+  let ordered = prices;
+  for (let i = 1; i < prices.length; i++) {
+    if (prices[i]!.date < prices[i - 1]!.date) {
+      ordered = [...prices].sort((a, b) => a.date.localeCompare(b.date));
+      break;
+    }
+  }
   let idx = -1;
   let lastMs = Number.NaN;
   const maxAgeMs = maxAgeDays * 86400000;
   return (date: string, dateMs: number): number | null => {
-    while (idx + 1 < prices.length && prices[idx + 1]!.date <= date) {
+    while (idx + 1 < ordered.length && ordered[idx + 1]!.date <= date) {
       idx++;
-      lastMs = Date.parse(prices[idx]!.date);
+      lastMs = Date.parse(ordered[idx]!.date);
     }
     if (idx < 0 || !Number.isFinite(lastMs) || dateMs - lastMs > maxAgeMs) return null;
-    const close = prices[idx]!.close;
+    const close = ordered[idx]!.close;
     return close > 0 ? close : null;
   };
 }

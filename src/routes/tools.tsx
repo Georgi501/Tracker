@@ -82,15 +82,12 @@ export const Route = createFileRoute("/tools")({
   component: Tools,
 });
 
+import { downloadText } from "@/lib/utils";
+
 const CLASSES = ["stock", "etf", "crypto", "bond", "cash", "realEstate"] as const;
 
 function download(name: string, body: string, type: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  downloadText(name, body, type);
 }
 
 const BACKUP_COPY: Record<

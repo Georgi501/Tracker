@@ -240,12 +240,9 @@ function ImportDemo() {
   const nextBrokersPath =
     selectedFormat === "generic" ? "/brokers" : `/brokers?broker=${selectedFormat}`;
   const downloadSample = () => {
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `capispot-${selectedFormat}-sample.csv`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    void import("@/lib/utils").then(({ downloadText }) =>
+      downloadText(`capispot-${selectedFormat}-sample.csv`, csv, "text/csv;charset=utf-8"),
+    );
   };
 
   return (

@@ -208,7 +208,11 @@ function Analytics() {
   const historyFn = useServerFn(getPortfolioHistory);
   const confirmSplitFn = useServerFn(confirmPortfolioSplit);
   const [confirmingSplit, setConfirmingSplit] = useState<string | null>(null);
-  const txKey = useMemo(() => transactionsFingerprint(p.transactions), [p.transactions]);
+  const txKey = useMemo(
+    () =>
+      `${transactionsFingerprint(p.transactions)}#${p.corporateActions.length}:${p.manualValuations.length}`,
+    [p.transactions, p.corporateActions.length, p.manualValuations.length],
+  );
   const historyQuery = useQuery({
     queryKey: ["portfolio-history", p.user?.id, txKey, "ALL", p.currency],
     queryFn: () => historyFn({ data: { period: "ALL", currency: p.currency } }),
@@ -299,9 +303,10 @@ function Analytics() {
   const trendColor =
     currentReturn !== null && currentReturn < 0 ? "var(--destructive)" : "var(--success)";
   const previousReturn = range ? rangeReturn(history, previousRange(range)) : null;
-  const activeHistory = range
-    ? history.filter((point) => point.t >= range.start && point.t < range.end)
-    : [];
+  const activeHistory = useMemo(
+    () => (range ? history.filter((point) => point.t >= range.start && point.t < range.end) : []),
+    [history, range],
+  );
   const benchmarkBaseline = range
     ? history.filter((point) => point.t < range.start).at(-1)
     : undefined;
@@ -344,7 +349,7 @@ function Analytics() {
           }))
           .filter((point) => !range || point.t >= range.start)
       : [];
-  const risk = riskMetrics(activeHistory);
+  const risk = useMemo(() => riskMetrics(activeHistory), [activeHistory]);
   const periodExtremes = returns.filter(
     (item): item is typeof item & { current: number } => item.current !== null,
   );
@@ -356,36 +361,41 @@ function Analytics() {
     (worst, item) => (!worst || item.current < worst.current ? item : worst),
     null,
   );
-  const contrib = p.holdings
-    .filter((h) => Number.isFinite(h.pnl))
-    .map((h) => ({ name: h.asset.symbol, v: h.pnl, pct: h.pnlPct }))
-    .sort((a, b) => b.v - a.v);
-  const sectorExposure = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
-  const regionExposure = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
-  const exposures = [
-    {
-      title: p.t("byClass"),
-      rows: groupBy(
-        p.holdings.filter((h) => Number.isFinite(h.value)),
-        (h) => p.t(h.asset.type),
-      ),
-    },
-    {
-      title: c.bySector,
-      rows: sectorExposure.rows,
-    },
-    {
-      title: c.byRegion,
-      rows: regionExposure.rows,
-    },
-    {
-      title: p.t("byCurrency"),
-      rows: groupBy(
-        p.holdings.filter((h) => Number.isFinite(h.value)),
-        (h) => assetCurrency(h.asset),
-      ),
-    },
-  ];
+  const contrib = useMemo(
+    () =>
+      p.holdings
+        .filter((h) => Number.isFinite(h.pnl))
+        .map((h) => ({ name: h.asset.symbol, v: h.pnl, pct: h.pnlPct }))
+        .sort((a, b) => b.v - a.v),
+    [p.holdings],
+  );
+  const { sectorExposure, regionExposure, exposures } = useMemo(() => {
+    const sector = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
+    const region = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
+    const validHoldings = p.holdings.filter((h) => Number.isFinite(h.value));
+    return {
+      sectorExposure: sector,
+      regionExposure: region,
+      exposures: [
+        {
+          title: p.t("byClass"),
+          rows: groupBy(validHoldings, (h) => p.t(h.asset.type)),
+        },
+        {
+          title: c.bySector,
+          rows: sector.rows,
+        },
+        {
+          title: c.byRegion,
+          rows: region.rows,
+        },
+        {
+          title: p.t("byCurrency"),
+          rows: groupBy(validHoldings, (h) => assetCurrency(h.asset)),
+        },
+      ],
+    };
+  }, [p, exposureMode, c.bySector, c.byRegion]);
   const accounts = accountValues(
     p.assets,
     p.transactions,
@@ -536,15 +546,13 @@ function Analytics() {
     sections: reportSections,
   };
   const downloadReport = () => {
-    const blob = new Blob(["\uFEFF", analyticsReportCsv(report)], {
-      type: "text/csv;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `capispot-analytics-${today}.csv`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    void import("@/lib/utils").then(({ downloadText }) =>
+      downloadText(
+        `capispot-analytics-${today}.csv`,
+        `\uFEFF${analyticsReportCsv(report)}`,
+        "text/csv;charset=utf-8",
+      ),
+    );
   };
   const selectLastFullMonth = () => {
     const day = new Date(`${today}T00:00:00Z`);

@@ -58,18 +58,25 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
-import { AllocationDriftMonitor } from "./AllocationDriftMonitor";
 import { AnalyticsConsent } from "./AnalyticsConsent";
-import { CommandMenu } from "./CommandMenu";
 import { DataStatus } from "./DataStatus";
 import { HeaderSearch } from "./HeaderSearch";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { MobileBottomNavigation } from "./MobileBottomNavigation";
-import { PortfolioReminderMonitor } from "./PortfolioReminderMonitor";
-import { PriceAlertMonitor } from "./PriceAlertMonitor";
 import { PrivacyController, PrivacyToggle } from "./PrivacyMode";
 import { PublicMobileNavigation } from "./PublicMobileNavigation";
 import { ListSkeleton } from "./SectionState";
+
+const CommandMenu = lazy(() => import("./CommandMenu").then((m) => ({ default: m.CommandMenu })));
+const AllocationDriftMonitor = lazy(() =>
+  import("./AllocationDriftMonitor").then((m) => ({ default: m.AllocationDriftMonitor })),
+);
+const PortfolioReminderMonitor = lazy(() =>
+  import("./PortfolioReminderMonitor").then((m) => ({ default: m.PortfolioReminderMonitor })),
+);
+const PriceAlertMonitor = lazy(() =>
+  import("./PriceAlertMonitor").then((m) => ({ default: m.PriceAlertMonitor })),
+);
 
 const FeedbackDialog = lazy(() =>
   import("./FeedbackDialog").then((m) => ({ default: m.FeedbackDialog })),
@@ -537,7 +544,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <HeaderSearch />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1">
-            <CommandMenu onAddTx={openTransactionDialog} />
+            <Suspense fallback={null}>
+              <CommandMenu onAddTx={openTransactionDialog} />
+            </Suspense>
             <PrivacyToggle lang={p.lang} />
             {p.user && (
               <Suspense fallback={null}>
@@ -1078,9 +1087,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Dialog>
       <KeyboardShortcuts onAddTx={openTransactionDialog} />
       <AnalyticsConsent />
-      <PriceAlertMonitor />
-      <PortfolioReminderMonitor />
-      <AllocationDriftMonitor />
+      {p.user && (
+        <Suspense fallback={null}>
+          <PriceAlertMonitor />
+          <PortfolioReminderMonitor />
+          <AllocationDriftMonitor />
+        </Suspense>
+      )}
     </div>
   );
 }
