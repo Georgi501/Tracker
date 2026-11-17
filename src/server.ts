@@ -81,18 +81,28 @@ function withSecurityHeaders(response: Response): Response {
   });
 }
 
-const RATE_LIMITED_PATHS = ["/api/advisor", "/api/thesis", "/api/review"];
+export const RATE_LIMITED_PATHS = [
+  "/api/advisor",
+  "/api/thesis",
+  "/api/review",
+  "/api/public/analytics",
+];
 
 type Limiter = { limit: (options: { key: string }) => Promise<{ success: boolean }> };
 
 // Cloudflare's rate limit binding; when it is not configured requests pass through unchanged.
-async function isRateLimited(request: Request, env: unknown, pathname: string): Promise<boolean> {
+export async function isRateLimited(
+  request: Request,
+  env: unknown,
+  pathname: string,
+): Promise<boolean> {
   if (request.method !== "POST" || !RATE_LIMITED_PATHS.includes(pathname)) return false;
   const limiter = (env as { AI_LIMITER?: Limiter } | undefined)?.AI_LIMITER;
   if (!limiter) return false;
-  const key = request.headers.get("cf-connecting-ip") ?? "unknown";
+  const clientIp = request.headers.get("cf-connecting-ip")?.trim();
+  if (!clientIp) return false;
   try {
-    return !(await limiter.limit({ key: `${pathname}:${key}` })).success;
+    return !(await limiter.limit({ key: `${pathname}:${clientIp}` })).success;
   } catch (error) {
     console.error(error);
     return false;

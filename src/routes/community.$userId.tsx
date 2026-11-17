@@ -36,7 +36,7 @@ function Member() {
   useEffect(() => {
     if (!p.user) return;
     void supabase
-      .from("profiles")
+      .from("public_profiles")
       .select(PROFILE_COLS)
       .eq("id", userId)
       .maybeSingle()

@@ -84,7 +84,7 @@ function Messages() {
       const list = [...map.values()];
       const { data: profs, error: profileError } = list.length
         ? await supabase
-            .from("profiles")
+            .from("public_profiles")
             .select(PROFILE_COLS)
             .in(
               "id",

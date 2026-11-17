@@ -910,7 +910,19 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      public_profiles: {
+        Row: {
+          id: string;
+          display_name: string | null;
+          bio: string;
+          investing_style: string;
+          avatar_path: string | null;
+          is_public: boolean;
+          share_portfolio: boolean;
+          share_level: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       portfolio_snapshot: { Args: Record<PropertyKey, never>; Returns: Json };

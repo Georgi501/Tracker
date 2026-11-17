@@ -166,13 +166,13 @@ function Wall() {
               .order("created_at")
               .limit(500)
           : { data: [] },
-        supabase.from("profiles").select(PROFILE_COLS).in("id", people),
+        supabase.from("public_profiles").select(PROFILE_COLS).in("id", people),
       ]);
       const comms = (cm.data ?? []) as Comment[];
       const commenters = comms.map((x) => x.user_id).filter((x) => !people.includes(x));
       const extra = commenters.length
         ? await supabase
-            .from("profiles")
+            .from("public_profiles")
             .select(PROFILE_COLS)
             .in("id", [...new Set(commenters)])
         : { data: [] };

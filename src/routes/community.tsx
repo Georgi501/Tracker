@@ -52,7 +52,7 @@ function Directory() {
     setLoadError(false);
     void (async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select(PROFILE_COLS)
         .eq("is_public", true)
         .neq("id", p.user!.id)
