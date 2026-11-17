@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "node scripts/check-build-env.mjs production && vite build",
+    "build:staging": "node scripts/check-build-env.mjs staging && vite build --mode staging",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -15,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build:staging && wrangler deploy --env staging",
     "cf-typegen": "wrangler types"
   },
   "overrides": {

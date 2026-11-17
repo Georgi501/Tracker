@@ -63,4 +63,38 @@ describe("production build environment check", () => {
     );
     expect(findProblems("production", dir, {})).toEqual([]);
   });
+
+  it("blocks staging build from using production Supabase or VITE_CREEM_MODE=prod", () => {
+    const dir = emptyDir();
+    writeFileSync(
+      path.join(dir, ".env"),
+      "VITE_SUPABASE_URL=https://xirvqdnqhyzkovnaqyrf.supabase.co\nVITE_SUPABASE_PUBLISHABLE_KEY=prod-key\nVITE_CREEM_MODE=prod\n",
+    );
+    const problems = findProblems("staging", dir, {});
+    expect(problems.join(" ")).toContain("xirvqdnqhyzkovnaqyrf.supabase.co");
+    expect(problems.join(" ")).toContain("VITE_CREEM_MODE=prod");
+  });
+
+  it("blocks production build from accidentally using staging Supabase", () => {
+    const problems = findProblems("production", emptyDir(), {
+      VITE_SUPABASE_URL: "https://ijaogqbfidyidxclfcij.supabase.co",
+      VITE_SUPABASE_PUBLISHABLE_KEY: "staging-key",
+    });
+    expect(problems.join(" ")).toContain("ijaogqbfidyidxclfcij.supabase.co");
+  });
+
+  it("passes staging build only with staging Supabase and matching wrangler.jsonc", () => {
+    const dir = emptyDir();
+    writeFileSync(
+      path.join(dir, ".env.staging"),
+      "VITE_SUPABASE_URL=https://ijaogqbfidyidxclfcij.supabase.co\nVITE_SUPABASE_PUBLISHABLE_KEY=staging-key\nVITE_CREEM_MODE=test\n",
+    );
+    writeFileSync(
+      path.join(dir, "wrangler.jsonc"),
+      JSON.stringify({
+        env: { staging: { vars: { SUPABASE_URL: "https://ijaogqbfidyidxclfcij.supabase.co" } } },
+      }),
+    );
+    expect(findProblems("staging", dir, {})).toEqual([]);
+  });
 });

@@ -162,8 +162,14 @@ type AssetRow = {
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const rawSearchLang = useRouterState({
+    select: (state) => (state.location.search as Record<string, unknown> | undefined)?.["lang"],
+  });
+  const urlLang: Lang | null = isLang(rawSearchLang) ? rawSearchLang : null;
+  const urlLangRef = useRef(urlLang);
+  urlLangRef.current = urlLang;
   const prerendered = isPrerenderedPath(pathname);
-  const [lang, setLangS] = useState<Lang>("en");
+  const [lang, setLangS] = useState<Lang>(urlLang ?? "en");
   const [currency, setCurrencyS] = useState<Currency>("EUR");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [user, setUser] = useState<User | null>(null);
@@ -245,7 +251,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     try {
       const s = JSON.parse(localStorage.getItem(KEY) ?? "null");
       if (s) {
-        if (isLang(s.lang)) setLangS(s.lang);
+        if (!urlLangRef.current && isLang(s.lang)) setLangS(s.lang);
         if (s.currency in FX) setCurrencyS(s.currency);
         if (s.theme === "light" || s.theme === "dark") setTheme(s.theme);
         else if (window.matchMedia?.("(prefers-color-scheme: light)").matches) setTheme("light");
@@ -257,6 +263,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
     setLoaded(true);
   }, []);
+  useEffect(() => {
+    if (urlLang) setLangS(urlLang);
+  }, [urlLang]);
   useEffect(() => {
     if (loaded) localStorage.setItem(KEY, JSON.stringify({ lang, currency, theme }));
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -469,7 +478,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     );
     if (p.data) {
       setDisplayName(p.data.display_name ?? "");
-      if (isLang(p.data.lang)) setLangS(p.data.lang);
+      if (!urlLangRef.current && isLang(p.data.lang)) setLangS(p.data.lang);
       if (p.data.currency in FX) setCurrencyS(p.data.currency as Currency);
     }
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
