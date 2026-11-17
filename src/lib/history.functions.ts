@@ -5,8 +5,10 @@ import {
   buildPortfolioHistory,
   closeAt,
   currencyRate,
+  earliestTransactionDate,
   isValidIsoDate,
   mapInBatches,
+  partitionDiscoveredSplits,
   periodStart,
   type HistoryAsset,
 } from "./history";
@@ -54,6 +56,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         assetReturns: [],
         assetContributions: [],
         pendingSplits: [],
+        eurUsdPrices: undefined,
       };
     const approvedActions: CorporateAction[] = (actionRows.data ?? []).map((action) => ({
       assetId: action.asset_id,
@@ -63,13 +66,17 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
     }));
     const now = new Date();
     const end = now.toISOString().slice(0, 10);
-    const first = txs[0]?.date ?? end;
+    txs.sort((a, b) => a.date.localeCompare(b.date));
+    const first = earliestTransactionDate(txs, end);
     const start = [periodStart(data.period, first, now), first].sort().at(-1) ?? first;
     const fetchStart = new Date(Date.parse(start) - 7 * 86400000).toISOString().slice(0, 10);
+    const firstFetchStart = new Date(Date.parse(first) - 7 * 86400000).toISOString().slice(0, 10);
+    const eurFetchStart =
+      data.currency === "EUR" && firstFetchStart < fetchStart ? firstFetchStart : fetchStart;
     try {
       const { dailyHistory } = await import("./history.server");
       const [eur, gbp] = await Promise.all([
-        dailyHistory("EURUSD=X", fetchStart, end),
+        dailyHistory("EURUSD=X", eurFetchStart, end),
         dailyHistory("GBPUSD=X", fetchStart, end),
       ]);
       const transactedAssetIds = new Set(
@@ -120,29 +127,13 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           splits: [],
         };
       });
-      const hasPositionBefore = (assetId: string, date: string) => {
-        let quantity = 0;
-        for (const transaction of txs) {
-          if (transaction.assetId !== assetId || transaction.date >= date) continue;
-          if (transaction.kind === "buy") quantity += transaction.quantity;
-          else if (transaction.kind === "sell") quantity -= transaction.quantity;
-        }
-        return quantity > 1e-9;
-      };
-      const approvedKeys = new Set(
-        approvedActions.map(
-          (action) => `${action.assetId}|${action.date}|${action.numerator}|${action.denominator}`,
-        ),
-      );
       const discoveredSplits = downloadedAssets.flatMap((asset) =>
         asset.splits.map((split) => ({ assetId: asset.id, symbol: asset.symbol, ...split })),
       );
-      const pendingSplits = discoveredSplits.filter(
-        (split) =>
-          hasPositionBefore(split.assetId, split.date) &&
-          !approvedKeys.has(
-            `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`,
-          ),
+      const { pendingSplits, confirmedSplits } = partitionDiscoveredSplits(
+        txs,
+        discoveredSplits,
+        approvedActions,
       );
       if (pendingSplits.length)
         return {
@@ -152,14 +143,8 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           assetReturns: [],
           assetContributions: [],
           pendingSplits,
+          eurUsdPrices: undefined,
         };
-      const confirmedSplits = discoveredSplits.filter(
-        (split) =>
-          hasPositionBefore(split.assetId, split.date) &&
-          approvedKeys.has(
-            `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`,
-          ),
-      );
       const splitActions: CorporateAction[] = confirmedSplits.map(
         ({ assetId, date, numerator, denominator }) => ({
           assetId,
@@ -179,7 +164,13 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         splitActions,
       );
       if (history.unavailable)
-        return { ...history, attribution: null, assetReturns: [], pendingSplits: [] };
+        return {
+          ...history,
+          attribution: null,
+          assetReturns: [],
+          pendingSplits: [],
+          eurUsdPrices: undefined,
+        };
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
         .toISOString()
         .slice(0, 10);
@@ -234,6 +225,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         ),
         assetReturns,
         pendingSplits: [],
+        eurUsdPrices: data.currency === "EUR" ? eur.prices : undefined,
       };
     } catch (error) {
       console.error("Could not build portfolio history", error);
@@ -244,6 +236,7 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
         assetReturns: [],
         assetContributions: [],
         pendingSplits: [],
+        eurUsdPrices: undefined,
       };
     }
   });

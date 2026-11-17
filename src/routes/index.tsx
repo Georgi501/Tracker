@@ -614,11 +614,9 @@ function Dashboard() {
         0,
       ),
       day: holdings.reduce((sum, holding) => sum + holding.dayChange, 0),
-      irr:
-        holdings.length && Number.isFinite(total) ? portfolioIrr(transactions, total) : Number.NaN,
     };
   }, [holdings, transactions, p.corporateActions]);
-  const { total, portfolioValue, cost, pnl, realized, day, irr: irrV } = portfolioMetrics;
+  const { total, portfolioValue, cost, pnl, realized, day } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
   const history = useQuery({
     queryKey: ["portfolio-history", p.user?.id, p.transactions, period, p.currency],
@@ -626,6 +624,17 @@ function Dashboard() {
     enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,
   });
+  const irrV = useMemo(() => {
+    if (!holdings.length || !Number.isFinite(total)) return Number.NaN;
+    if (p.currency === "USD") return portfolioIrr(transactions, total);
+    return history.data?.eurUsdPrices
+      ? portfolioIrr(transactions, total, undefined, {
+          currency: "EUR",
+          eurUsd: history.data.eurUsdPrices,
+          liveEurPerUsd: p.eurPerUsd,
+        })
+      : null;
+  }, [holdings.length, total, p.currency, transactions, history.data?.eurUsdPrices, p.eurPerUsd]);
   const series = history.data?.points ?? EMPTY_HISTORY_POINTS;
   const valueChartSeries = useMemo(
     () => series.map((point) => ({ t: point.t, v: point.v })),

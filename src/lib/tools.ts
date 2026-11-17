@@ -381,6 +381,7 @@ export function riskMetrics(points: PortfolioPoint[], riskFreePct = 0): RiskMetr
     const a = points[i - 1]!;
     const b = points[i]!;
     if (a.v <= 0) continue;
+    if (b.v - b.flow < 0) return null;
     rets.push((b.v - b.flow) / a.v - 1);
   }
   if (rets.length < 10) return null;

@@ -435,24 +435,51 @@ export function irr(flows: { date: Date; amount: number }[]): number | null {
   return ((lo + hi) / 2) * 100;
 }
 
+export interface PortfolioIrrFx {
+  currency: Currency;
+  eurUsd: { date: string; close: number }[];
+  liveEurPerUsd: number | null;
+}
+
+function eurUsdRateAt(eurUsd: { date: string; close: number }[], date: string): number | null {
+  let match: { date: string; close: number } | undefined;
+  for (const point of eurUsd) {
+    if (point.date > date) break;
+    match = point;
+  }
+  if (!match || Date.parse(date) - Date.parse(match.date) > 7 * 86400000) return null;
+  return Number.isFinite(match.close) && match.close > 0 ? match.close : null;
+}
+
 export function portfolioIrr(
   txs: Transaction[],
   currentValue: number,
   now = new Date(),
+  fx?: PortfolioIrrFx,
 ): number | null {
   if (!Number.isFinite(currentValue) || !Number.isFinite(now.getTime())) return null;
-  const flows = [...txs]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((t) => ({
-      date: new Date(t.date),
-      amount:
-        t.kind === "buy"
-          ? -(t.quantity * t.price + (t.fee ?? 0))
-          : t.kind === "sell"
-            ? t.quantity * t.price - (t.fee ?? 0)
-            : t.quantity * t.price - (t.fee ?? 0),
-    }));
-  flows.push({ date: now, amount: currentValue });
+  let terminalValue = currentValue;
+  const useEur = fx?.currency === "EUR";
+  if (useEur) {
+    if (!fx.liveEurPerUsd || !Number.isFinite(fx.liveEurPerUsd) || fx.liveEurPerUsd <= 0)
+      return null;
+    terminalValue = currentValue * fx.liveEurPerUsd;
+  }
+  const flows: { date: Date; amount: number }[] = [];
+  for (const t of [...txs].sort((a, b) => a.date.localeCompare(b.date))) {
+    const usdAmount =
+      t.kind === "buy"
+        ? -(t.quantity * t.price + (t.fee ?? 0))
+        : t.quantity * t.price - (t.fee ?? 0);
+    if (!useEur) {
+      flows.push({ date: new Date(t.date), amount: usdAmount });
+      continue;
+    }
+    const rate = eurUsdRateAt(fx.eurUsd, t.date);
+    if (rate === null) return null;
+    flows.push({ date: new Date(t.date), amount: usdAmount / rate });
+  }
+  flows.push({ date: now, amount: terminalValue });
   return irr(flows);
 }
 

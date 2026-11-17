@@ -1,3 +1,4 @@
+import type { StockSplitEvent } from "./corporate-actions";
 import {
   normalizeTransactionsForSplits,
   type CorporateAction,
@@ -106,6 +107,7 @@ export function buildPortfolioHistory(
   const qty = new Map<string, number>();
   const contributions = new Map<string, number>();
   let previousValues: Map<string, number> | null = null;
+  let previousBaseRate: number | null = null;
   let index = 0;
   for (let t = Date.parse(start); t <= Date.parse(end); t += 86400000) {
     const date = new Date(t).toISOString().slice(0, 10);
@@ -156,17 +158,17 @@ export function buildPortfolioHistory(
     if (!available || baseRate === null)
       return { points: [], unavailable: true, assetContributions: [] };
     points.push({ t, v: value / baseRate, flow: flow / baseRate });
-    if (previousValues) {
+    if (previousValues && previousBaseRate !== null) {
       for (const asset of assets) {
         const dailyContribution =
-          ((values.get(asset.id) ?? 0) -
-            (previousValues.get(asset.id) ?? 0) -
-            (assetFlows.get(asset.id) ?? 0)) /
-          baseRate;
+          (values.get(asset.id) ?? 0) / baseRate -
+          (previousValues.get(asset.id) ?? 0) / previousBaseRate -
+          (assetFlows.get(asset.id) ?? 0) / baseRate;
         contributions.set(asset.id, (contributions.get(asset.id) ?? 0) + dailyContribution);
       }
     }
     previousValues = values;
+    previousBaseRate = baseRate;
   }
   return {
     points,
@@ -188,4 +190,69 @@ export function historyReturn(points: PortfolioPoint[]): number | null {
     growth *= (current.v - current.flow) / prior.v;
   }
   return (growth - 1) * 100;
+}
+
+/** Earliest transaction date in ISO format regardless of input row order. */
+export function earliestTransactionDate(txs: Transaction[], fallback: string): string {
+  let earliest = fallback;
+  let hasTx = false;
+  for (const tx of txs) {
+    if (!hasTx || tx.date < earliest) {
+      earliest = tx.date;
+      hasTx = true;
+    }
+  }
+  return earliest;
+}
+
+export interface DiscoveredSplit extends StockSplitEvent {
+  assetId: string;
+  symbol: string;
+}
+
+/**
+ * Partition discovered splits into pending vs. confirmed using split-adjusted
+ * pre-split quantities so partial sales between multiple splits stay accurate.
+ */
+export function partitionDiscoveredSplits(
+  txs: Transaction[],
+  discoveredSplits: DiscoveredSplit[],
+  approvedActions: CorporateAction[],
+): { pendingSplits: DiscoveredSplit[]; confirmedSplits: DiscoveredSplit[] } {
+  const approvedKeys = new Set(
+    approvedActions.map(
+      (action) => `${action.assetId}|${action.date}|${action.numerator}|${action.denominator}`,
+    ),
+  );
+  const sortedSplits = [...discoveredSplits].sort((a, b) => a.date.localeCompare(b.date));
+  const priorSplits: CorporateAction[] = [];
+  const pendingSplits: DiscoveredSplit[] = [];
+  const confirmedSplits: DiscoveredSplit[] = [];
+
+  for (const split of sortedSplits) {
+    const priorAssetTxs = txs.filter(
+      (tx) => tx.assetId === split.assetId && tx.date < split.date && tx.kind !== "dividend",
+    );
+    const relevantPriorSplits = priorSplits.filter(
+      (action) => action.assetId === split.assetId && action.date < split.date,
+    );
+    let quantity = 0;
+    for (const tx of normalizeTransactionsForSplits(priorAssetTxs, relevantPriorSplits)) {
+      if (tx.kind === "buy") quantity += tx.quantity;
+      else if (tx.kind === "sell") quantity -= tx.quantity;
+    }
+    if (quantity <= 1e-9) continue;
+
+    priorSplits.push({
+      assetId: split.assetId,
+      date: split.date,
+      numerator: split.numerator,
+      denominator: split.denominator,
+    });
+    const key = `${split.assetId}|${split.date}|${split.numerator}|${split.denominator}`;
+    if (approvedKeys.has(key)) confirmedSplits.push(split);
+    else pendingSplits.push(split);
+  }
+
+  return { pendingSplits, confirmedSplits };
 }
