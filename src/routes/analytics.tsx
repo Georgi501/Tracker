@@ -1025,11 +1025,23 @@ function Analytics() {
       )}
       <ProGate
         className="lg:col-span-3"
-        title={p.lang === "bg" ? "Припокриване на ETF-и" : "ETF overlap"}
+        title={
+          {
+            en: "ETF overlap",
+            bg: "Припокриване на ETF-и",
+            de: "ETF-Überschneidung",
+            es: "Solapamiento de ETFs",
+            it: "Sovrapposizione ETF",
+          }[p.lang]
+        }
         desc={
-          p.lang === "bg"
-            ? "Виж скритата експозиция към общи компании във фондовете и директните позиции."
-            : "See shared underlying company exposure across ETFs and direct holdings."
+          {
+            en: "See shared underlying company exposure across ETFs and direct holdings.",
+            bg: "Виж скритата експозиция към общи компании във фондовете и директните позиции.",
+            de: "Erkenne gemeinsame Unternehmenspositionen über ETFs und Einzelaktien hinweg.",
+            es: "Descubre la exposición compartida a empresas entre tus ETFs y posiciones directas.",
+            it: "Visualizza l'esposizione condivisa alle società tra ETF e posizioni dirette.",
+          }[p.lang]
         }
         preview={<div className="h-36 rounded-lg bg-primary/20" />}
       >
@@ -1295,7 +1307,15 @@ function Breakdown({
         locale={languageLocale(p.lang)}
         data={data}
         colorOffset={colorOffset}
-        totalLabel={p.lang === "bg" ? "Обща стойност" : "Total value"}
+        totalLabel={
+          {
+            en: "Total value",
+            bg: "Обща стойност",
+            de: "Gesamtwert",
+            es: "Valor total",
+            it: "Valore totale",
+          }[p.lang]
+        }
         formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
       />
     </Card>

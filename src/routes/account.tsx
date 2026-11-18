@@ -233,16 +233,45 @@ type Subscription = {
 };
 
 function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; userId: string }) {
-  const bg = lang === "bg";
   const avatar = useOwnAvatar(userId);
   const [photoBusy, setPhotoBusy] = useState(false);
   const photo = {
-    change: bg ? "Смени снимката" : "Change photo",
-    add: bg ? "Добави снимка" : "Add photo",
-    remove: bg ? "Премахни" : "Remove",
-    invalid: bg ? "Изображение до 5 MB" : "Image up to 5 MB",
-    saved: bg ? "Снимката е обновена." : "Photo updated.",
-  };
+    en: {
+      change: "Change photo",
+      add: "Add photo",
+      remove: "Remove",
+      invalid: "Image up to 5 MB",
+      saved: "Photo updated.",
+    },
+    bg: {
+      change: "Смени снимката",
+      add: "Добави снимка",
+      remove: "Премахни",
+      invalid: "Изображение до 5 MB",
+      saved: "Снимката е обновена.",
+    },
+    de: {
+      change: "Foto ändern",
+      add: "Foto hinzufügen",
+      remove: "Entfernen",
+      invalid: "Bild bis zu 5 MB",
+      saved: "Foto aktualisiert.",
+    },
+    es: {
+      change: "Cambiar foto",
+      add: "Añadir foto",
+      remove: "Quitar",
+      invalid: "Imagen de hasta 5 MB",
+      saved: "Foto actualizada.",
+    },
+    it: {
+      change: "Cambia foto",
+      add: "Aggiungi foto",
+      remove: "Rimuovi",
+      invalid: "Immagine fino a 5 MB",
+      saved: "Foto aggiornata.",
+    },
+  }[lang];
   const pickPhoto = async (file: File) => {
     setPhotoBusy(true);
     try {
@@ -268,23 +297,97 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
     }
   };
   const t = {
-    title: bg ? "Вход и сигурност" : "Sign-in & security",
-    email: bg ? "Имейл" : "Email",
-    newEmail: bg ? "Нов имейл" : "New email",
-    changeEmail: bg ? "Смени имейла" : "Change email",
-    emailSent: bg
-      ? "Изпратихме линк за потвърждение. Имейлът се сменя след потвърждение."
-      : "We sent a confirmation link. The email changes once you confirm it.",
-    password: bg ? "Парола" : "Password",
-    newPassword: bg ? "Нова парола (мин. 6 символа)" : "New password (min. 6 characters)",
-    repeat: bg ? "Повтори паролата" : "Repeat password",
-    changePassword: bg ? "Смени паролата" : "Change password",
-    passwordDone: bg ? "Паролата е сменена." : "Password updated.",
-    mismatch: bg ? "Паролите не съвпадат." : "Passwords do not match.",
-    current: bg ? "Текуща парола" : "Current password",
-    wrongCurrent: bg ? "Текущата парола е грешна." : "The current password is incorrect.",
-    cancel: bg ? "Отказ" : "Cancel",
-  };
+    en: {
+      title: "Sign-in & security",
+      email: "Email",
+      newEmail: "New email",
+      changeEmail: "Change email",
+      emailSent: "We sent a confirmation link. The email changes once you confirm it.",
+      password: "Password",
+      newPassword: "New password (min. 6 characters)",
+      repeat: "Repeat password",
+      changePassword: "Change password",
+      passwordDone: "Password updated.",
+      mismatch: "Passwords do not match.",
+      current: "Current password",
+      wrongCurrent: "The current password is incorrect.",
+      cancel: "Cancel",
+      googleManaged:
+        "You signed in with Google — your email and password are managed by your Google account.",
+    },
+    bg: {
+      title: "Вход и сигурност",
+      email: "Имейл",
+      newEmail: "Нов имейл",
+      changeEmail: "Смени имейла",
+      emailSent: "Изпратихме линк за потвърждение. Имейлът се сменя след потвърждение.",
+      password: "Парола",
+      newPassword: "Нова парола (мин. 6 символа)",
+      repeat: "Повтори паролата",
+      changePassword: "Смени паролата",
+      passwordDone: "Паролата е сменена.",
+      mismatch: "Паролите не съвпадат.",
+      current: "Текуща парола",
+      wrongCurrent: "Текущата парола е грешна.",
+      cancel: "Отказ",
+      googleManaged:
+        "Влезли сте с Google — имейлът и паролата се управляват от Google акаунта ви.",
+    },
+    de: {
+      title: "Anmeldung & Sicherheit",
+      email: "E-Mail",
+      newEmail: "Neue E-Mail",
+      changeEmail: "E-Mail ändern",
+      emailSent: "Bestätigungslink gesendet. Die E-Mail wird nach Bestätigung geändert.",
+      password: "Passwort",
+      newPassword: "Neues Passwort (mind. 6 Zeichen)",
+      repeat: "Passwort wiederholen",
+      changePassword: "Passwort ändern",
+      passwordDone: "Passwort aktualisiert.",
+      mismatch: "Passwörter stimmen nicht überein.",
+      current: "Aktuelles Passwort",
+      wrongCurrent: "Das aktuelle Passwort ist falsch.",
+      cancel: "Abbrechen",
+      googleManaged:
+        "Du bist über Google angemeldet — E-Mail und Passwort werden über dein Google-Konto verwaltet.",
+    },
+    es: {
+      title: "Inicio de sesión y seguridad",
+      email: "Correo electrónico",
+      newEmail: "Nuevo correo",
+      changeEmail: "Cambiar correo",
+      emailSent: "Enviamos un enlace de confirmación. El correo cambiará al confirmarlo.",
+      password: "Contraseña",
+      newPassword: "Nueva contraseña (mín. 6 caracteres)",
+      repeat: "Repetir contraseña",
+      changePassword: "Cambiar contraseña",
+      passwordDone: "Contraseña actualizada.",
+      mismatch: "Las contraseñas no coinciden.",
+      current: "Contraseña actual",
+      wrongCurrent: "La contraseña actual es incorrecta.",
+      cancel: "Cancelar",
+      googleManaged:
+        "Iniciaste sesión con Google; tu correo y contraseña se administran en tu cuenta de Google.",
+    },
+    it: {
+      title: "Accesso e sicurezza",
+      email: "Email",
+      newEmail: "Nuova email",
+      changeEmail: "Cambia email",
+      emailSent: "Abbiamo inviato un link di conferma. L'email cambierà dopo la conferma.",
+      password: "Password",
+      newPassword: "Nuova password (min. 6 caratteri)",
+      repeat: "Ripeti password",
+      changePassword: "Cambia password",
+      passwordDone: "Password aggiornata.",
+      mismatch: "Le password non coincidono.",
+      current: "Password attuale",
+      wrongCurrent: "La password attuale non è corretta.",
+      cancel: "Annulla",
+      googleManaged:
+        "Hai effettuato l'accesso con Google: email e password sono gestite dal tuo account Google.",
+    },
+  }[lang];
   const [open, setOpen] = useState<"email" | "password" | null>(null);
   const [current, setCurrent] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -388,11 +491,7 @@ function SecurityCard({ email, lang, userId }: { email: string; lang: Lang; user
         {t.email}: <strong>{email}</strong>
       </p>
       {open === null && !hasPassword && (
-        <p className="text-sm text-muted-foreground">
-          {bg
-            ? "Влезли сте с Google — имейлът и паролата се управляват от Google акаунта ви."
-            : "You signed in with Google — your email and password are managed by your Google account."}
-        </p>
+        <p className="text-sm text-muted-foreground">{t.googleManaged}</p>
       )}
       {open === null && hasPassword && (
         <div className="flex flex-wrap gap-2">

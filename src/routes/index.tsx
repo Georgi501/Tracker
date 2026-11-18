@@ -1269,7 +1269,15 @@ function Dashboard() {
                     value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
                   />
                   <Metric
-                    label={p.lang === "bg" ? "Реализирана P&L" : "Realized P&L"}
+                    label={
+                      {
+                        en: "Realized P&L",
+                        bg: "Реализирана P&L",
+                        de: "Realisierter G/V",
+                        es: "G/P realizada",
+                        it: "P/L realizzato",
+                      }[p.lang]
+                    }
                     help={METRIC_HELP[p.lang].realized}
                     value={
                       p.user ? (
@@ -1349,7 +1357,16 @@ function Dashboard() {
                                 {portfolioValue > 0 && Number.isFinite(h.value)
                                   ? ((h.value / portfolioValue) * 100).toFixed(1)
                                   : "0.0"}
-                                % {p.lang === "bg" ? "от портфолиото" : "of portfolio"}
+                                %{" "}
+                                {
+                                  {
+                                    en: "of portfolio",
+                                    bg: "от портфолиото",
+                                    de: "des Portfolios",
+                                    es: "de la cartera",
+                                    it: "del portafoglio",
+                                  }[p.lang]
+                                }
                               </span>
                             </div>
                           </div>
@@ -1364,7 +1381,7 @@ function Dashboard() {
         </DeferredDashboardSection>
         {p.user && p.portfolioReady && p.holdings.length > 0 && (
           <div className="order-3 lg:contents">
-            <Card className="min-w-0">
+            <Card className="min-w-0 lg:col-span-3">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 font-display font-semibold">
                   <Clock3 size={16} className="text-muted-foreground" aria-hidden />
@@ -1379,7 +1396,7 @@ function Dashboard() {
                 </Link>
               </div>
               {recentTransactions.length ? (
-                <ul className="divide-y divide-border">
+                <ul className="grid divide-y divide-border lg:grid-cols-2 lg:gap-x-6">
                   {recentTransactions.map((transaction) => {
                     const asset = p.assets.find((item) => item.id === transaction.assetId);
                     const amount =

@@ -404,7 +404,7 @@ function Pricing() {
           {planCopy[p.lang].compareSub}
         </p>
         <Card className="mt-6 overflow-hidden p-0">
-          <div className="grid grid-cols-[1fr_1fr_1.3fr] gap-2 border-b border-border bg-secondary/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="hidden grid-cols-[1fr_1fr_1.3fr] gap-2 border-b border-border bg-secondary/50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground sm:grid">
             <span />
             <span>{planCopy[p.lang].freeTag}</span>
             <span className="text-primary">{planCopy[p.lang].proTag}</span>
@@ -412,13 +412,23 @@ function Pricing() {
           {planCopy[p.lang].groups.map((g) => (
             <div
               key={g.title}
-              className="grid grid-cols-[1fr_1fr_1.3fr] gap-2 border-b border-border px-4 py-3 text-sm last:border-0"
+              className="grid grid-cols-1 gap-1.5 border-b border-border px-4 py-3.5 text-sm last:border-0 sm:grid-cols-[1fr_1fr_1.3fr] sm:gap-2 sm:py-3"
             >
               <span className="font-semibold">{g.title}</span>
-              <span className="text-muted-foreground">{g.free}</span>
-              <span className="flex gap-1.5">
+              <span className="text-muted-foreground">
+                <span className="mr-1.5 inline-block text-[11px] font-bold uppercase tracking-wide text-muted-foreground/80 sm:hidden">
+                  {planCopy[p.lang].freeTag}:
+                </span>
+                {g.free}
+              </span>
+              <span className="flex items-start gap-1.5">
                 <Check size={14} className="mt-0.5 shrink-0 text-primary" />
-                {g.pro}
+                <span className="min-w-0 break-words">
+                  <span className="mr-1.5 inline-block text-[11px] font-bold uppercase tracking-wide text-primary sm:hidden">
+                    {planCopy[p.lang].proTag}:
+                  </span>
+                  {g.pro}
+                </span>
               </span>
             </div>
           ))}
@@ -458,7 +468,7 @@ function Pricing() {
             );
           })}
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-3">
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
           <Card className="flex gap-3 p-5">
             <Bot className="shrink-0 text-primary" />
             <div>

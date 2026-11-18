@@ -224,7 +224,7 @@ function Markets() {
   return (
     <div className="space-y-5">
       <h1 className="font-display text-2xl font-bold">{c.markets}</h1>
-      <form onSubmit={submit} className="flex max-w-2xl gap-2">
+      <form onSubmit={submit} className="flex max-w-2xl flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
           <Input
@@ -247,7 +247,7 @@ function Markets() {
             className="h-10 pl-9"
           />
         </div>
-        <Button type="submit" disabled={busy} className="h-10">
+        <Button type="submit" disabled={busy} className="h-10 w-full sm:w-auto">
           <Search />
           {c.search}
         </Button>

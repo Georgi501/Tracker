@@ -535,12 +535,19 @@ function Brokers() {
           {p.t("template")}
         </a>
       </div>
-      <ImportGuide bg={p.lang === "bg"} />
+      <ImportGuide lang={p.lang} />
     </div>
   );
 }
 
-const IMPORT_GUIDE = {
+const IMPORT_GUIDE: Record<
+  Lang,
+  {
+    title: string;
+    steps: [string, string][];
+    tips: string[];
+  }
+> = {
   en: {
     title: "How importing works",
     steps: [
@@ -611,10 +618,115 @@ const IMPORT_GUIDE = {
       "Pro добавя синхронизация само за четене с Interactive Brokers и Trading 212. CapiSpot никога не подава поръчки.",
     ],
   },
+  de: {
+    title: "So funktioniert der Import",
+    steps: [
+      [
+        "1. Broker hinzufügen",
+        "Wähle oben deinen Broker. Dadurch wird ein Container für dessen Transaktionen erstellt; für den CSV-Import ist kein Broker-Login nötig.",
+      ],
+      [
+        "2. CSV vom Broker exportieren",
+        "Lade im Bereich Berichte oder Kontoauszüge deines Brokers die gesamte Transaktionshistorie herunter, damit keine frühen Käufe für Durchschnittspreis und FIFO fehlen.",
+      ],
+      [
+        "3. Datei hochladen",
+        "Klicke neben dem Broker auf CSV importieren oder nutze das Auto-Detect-Feld. Die Datei wird im Browser gelesen und das Format automatisch erkannt.",
+      ],
+      [
+        "4. Vorschau prüfen",
+        "Du siehst jede neue Zeile vor dem Speichern. Duplikate werden markiert und standardmäßig übersprungen; nicht lesbare Zeilen werden mit Grund aufgelistet.",
+      ],
+      [
+        "5. Bestätigen",
+        "Nach Bestätigung werden die Transaktionen gespeichert. Jede behält ihre Originalwährung und wird mit dem historischen Tageskurs in USD umgerechnet.",
+      ],
+      [
+        "6. FIFO-Bericht",
+        "Der jährliche FIFO-Bericht über realisierte Gewinne und Verluste ist eine Pro-Funktion. Free enthält CSV-Import, Vorschau und Duplikatprüfung.",
+      ],
+    ],
+    tips: [
+      "Dieselbe Datei zweimal zu importieren ist sicher: Duplikate werden erkannt.",
+      "Falls ein Ticker nicht erkannt wird, korrigiere ihn in der Vorschau.",
+      "Für spätere Updates exportiere einfach eine neue CSV: es werden nur neue Zeilen hinzugefügt.",
+      "Pro ergänzt Read-only-Sync für Interactive Brokers und Trading 212. CapiSpot platziert niemals Orders.",
+    ],
+  },
+  es: {
+    title: "Cómo funciona la importación",
+    steps: [
+      [
+        "1. Añade tu bróker",
+        "Elige el bróker arriba para crear su contenedor de operaciones; no necesitas iniciar sesión en el bróker para importar por CSV.",
+      ],
+      [
+        "2. Exporta un CSV desde tu bróker",
+        "En la sección de informes o extractos de tu bróker, descarga el historial completo desde tu primera compra.",
+      ],
+      [
+        "3. Sube el archivo",
+        "Pulsa Importar CSV junto al bróker o usa la zona de detección automática. El formato se detecta en tu navegador.",
+      ],
+      [
+        "4. Revisa la vista previa",
+        "Verás cada fila antes de guardar. Los duplicados se omiten por defecto y las filas no válidas se muestran con su motivo.",
+      ],
+      [
+        "5. Confirma",
+        "Al confirmar, las operaciones se guardan con su divisa original y se convierten a USD con el tipo de cambio de su fecha.",
+      ],
+      [
+        "6. Informe FIFO",
+        "El informe anual FIFO de ganancias y pérdidas realizadas es una función Pro. El plan Free incluye importación CSV, vista previa y control de duplicados.",
+      ],
+    ],
+    tips: [
+      "Importar el mismo archivo dos veces es seguro: se detectan los duplicados.",
+      "Si un símbolo no se reconoce, corrígelo en la vista previa.",
+      "Para actualizar más adelante, sube un CSV nuevo: solo se añadirán las filas nuevas.",
+      "Pro añade sincronización de solo lectura para Interactive Brokers y Trading 212. CapiSpot nunca envía órdenes.",
+    ],
+  },
+  it: {
+    title: "Come funziona l'importazione",
+    steps: [
+      [
+        "1. Aggiungi il tuo broker",
+        "Scegli il broker sopra per creare un contenitore per le sue operazioni; per l'importazione CSV non serve accedere al broker.",
+      ],
+      [
+        "2. Esporta un CSV dal broker",
+        "Nella sezione report o estratti conto del broker, scarica lo storico completo dal primo acquisto.",
+      ],
+      [
+        "3. Carica il file",
+        "Premi Importa CSV accanto al broker o trascina il file nell'area di rilevamento automatico.",
+      ],
+      [
+        "4. Controlla l'anteprima",
+        "Vedi ogni nuova riga prima del salvataggio. I duplicati vengono ignorati per impostazione predefinita e le righe non valide sono elencate con il motivo.",
+      ],
+      [
+        "5. Conferma",
+        "Dopo la conferma, le operazioni vengono salvate mantenendo la valuta originale e convertite in USD al cambio della data.",
+      ],
+      [
+        "6. Report FIFO",
+        "Il report annuale FIFO di profitti e perdite realizzati è una funzione Pro. Il piano Free include importazione CSV, anteprima e controllo duplicati.",
+      ],
+    ],
+    tips: [
+      "Importare lo stesso file due volte è sicuro: i duplicati vengono rilevati.",
+      "Se un ticker non viene riconosciuto, correggilo nell'anteprima.",
+      "Per aggiornare in seguito, carica un nuovo CSV: verranno aggiunte solo le nuove righe.",
+      "Pro aggiunge la sincronizzazione di sola lettura per Interactive Brokers e Trading 212. CapiSpot non invia mai ordini.",
+    ],
+  },
 };
 
-function ImportGuide({ bg }: { bg: boolean }) {
-  const g = bg ? IMPORT_GUIDE.bg : IMPORT_GUIDE.en;
+function ImportGuide({ lang }: { lang: Lang }) {
+  const g = IMPORT_GUIDE[lang];
   return (
     <details className="mt-6 rounded-2xl border border-border bg-card p-4" open>
       <summary className="cursor-pointer font-display text-lg font-semibold">{g.title}</summary>

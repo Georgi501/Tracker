@@ -1,6 +1,7 @@
 import { Card } from "@/components/AppShell";
 import { RelatedGuides } from "@/components/RelatedGuides";
 import { Button } from "@/components/ui/button";
+import type { Lang } from "@/lib/i18n";
 import { articleJsonLd, canonicalLink, faqJsonLd } from "@/lib/seo";
 import { usePortfolio } from "@/lib/store";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -33,7 +34,7 @@ type Guide = {
   note: string;
 };
 
-const GUIDE: Record<"en" | "bg", Guide> = {
+const GUIDE: Record<Lang, Guide> = {
   en: {
     title: "Import your Trading 212 CSV into CapiSpot",
     intro:
@@ -159,6 +160,195 @@ const GUIDE: Record<"en" | "bg", Guide> = {
     demo: "Виж примерно портфолио",
     note: "Обща информация, не е данъчен или инвестиционен съвет. CapiSpot не е свързан с Trading 212.",
   },
+  de: {
+    title: "Trading 212 CSV in CapiSpot importieren",
+    intro:
+      "Verwandle deine Transaktionshistorie in ein übersichtliches Portfolio. Teste zuerst die Trading-212-Beispieldatei und importiere danach deine eigenen Trades und Dividenden mit Vorschau.",
+    sampleCta: "Trading 212 CSV testen — ohne Konto",
+    importCta: "Ich habe bereits eine CSV-Datei",
+    sampleNote:
+      "Das Beispiel bleibt in deinem Browser. Zum Testen sind kein Konto und keine Broker-Verbindung nötig.",
+    exportTitle: "1. Transaktionshistorie aus Trading 212 herunterladen",
+    exportSteps: [
+      "Öffne das Menü in Trading 212 und gehe zu Verlauf (History).",
+      "Wähle den Export, den Zeitraum und die gewünschten Aktivitätstypen einschließlich Orders und Dividenden.",
+      "Lade die CSV-Datei herunter und behalte die originalen Spaltenüberschriften und Währungen bei.",
+      "Schließe die Historie ab dem ersten Kauf ein. Bei mehreren Exporten prüfe die Zeiträume, damit keine frühen Käufe fehlen.",
+    ],
+    exportNote:
+      "Verwende den CSV-Transaktionsverlauf statt eines PDF-Kontoauszugs oder Pie-Exports.",
+    source: "Offizielle Export-Anleitung von Trading 212",
+    newTab: "öffnet in neuem Tab",
+    reviewTitle: "2. Zeilen vor dem Speichern prüfen",
+    reviewIntro:
+      "Öffne in CapiSpot den Bereich Broker, wähle Trading 212, erstelle oder wähle das Konto und lade deine CSV hoch. Prüfe die Vorschau vor dem Bestätigen.",
+    reviewItems: [
+      [
+        "Trades und Dividenden",
+        "Prüfe Datum, Ticker, Stückzahl, Kurse und Gebühren. Originalwährungen bleiben in der Vorschau sichtbar.",
+      ],
+      [
+        "Mögliche Duplikate",
+        "Bereits erfasste Zeilen werden standardmäßig übersprungen. Prüfe markierte Zeilen vor einer Auswahl.",
+      ],
+      [
+        "Zu prüfende Zeilen",
+        "Nicht unterstützte Einträge wie Zinsen auf Guthaben sowie unvollständige Zeilen werden separat ausgewiesen.",
+      ],
+    ],
+    plansTitle: "CSV-Import ist Free. Direkter Sync ist Pro.",
+    freeTitle: "Free · CSV-Import",
+    free: "Lade eine kompatible CSV hoch, prüfe Transaktionen und Duplikate und bestätige den Import kostenlos.",
+    proTitle: "Pro · Read-only-Sync und FIFO-Berichte",
+    pro: "Verbinde einen Read-only Trading 212 API-Schlüssel für Trades und Dividenden. Jährliche FIFO-Berichte über realisierte Gewinne und Verluste sind ebenfalls Teil von Pro.",
+    pricing: "Free und Pro vergleichen",
+    faqTitle: "Vor deinem ersten Import",
+    questions: [
+      [
+        "Warum zeigt das Beispiel ein Duplikat und eine zu prüfende Zeile?",
+        "Sie sind absichtlich enthalten, damit du siehst, wie die Vorschau sie behandelt.",
+      ],
+      [
+        "Brauche ich einen Trading 212 API-Schlüssel?",
+        "Nicht für den CSV-Import. Der Read-only API-Sync ist eine separate Pro-Option.",
+      ],
+      [
+        "Wann werden meine Transaktionen gespeichert?",
+        "Das Beispiel speichert keine Daten. Dein eigener Import wird erst gespeichert, wenn du die Vorschau bestätigst.",
+      ],
+    ],
+    resultTitle: "3. Portfolio nach dem Import öffnen",
+    result:
+      "Die Importübersicht zeigt hinzugefügte, übersprungene und zu prüfende Zeilen. Öffne danach deine Positionen oder sieh dir ein Beispielportfolio an.",
+    demo: "Beispielportfolio ansehen",
+    note: "Allgemeine Informationen, keine Steuer- oder Anlageberatung. CapiSpot ist nicht mit Trading 212 verbunden.",
+  },
+  es: {
+    title: "Importa tu CSV de Trading 212 en CapiSpot",
+    intro:
+      "Convierte tu historial de operaciones en una cartera fácil de seguir. Prueba primero el ejemplo de Trading 212 y luego importa tus propias operaciones y dividendos con vista previa.",
+    sampleCta: "Probar CSV de Trading 212 — sin cuenta",
+    importCta: "Ya tengo un archivo CSV",
+    sampleNote:
+      "El ejemplo permanece en tu navegador. No necesitas cuenta ni conexión con el bróker para probarlo.",
+    exportTitle: "1. Descarga tu historial de Trading 212",
+    exportSteps: [
+      "Abre el menú en Trading 212 y entra en Historial (History).",
+      "Elige la opción de exportación, el período y los tipos de actividad, incluyendo órdenes y dividendos.",
+      "Descarga el archivo CSV conservando los encabezados y divisas originales.",
+      "Incluye el historial desde tu primera compra para no omitir operaciones antiguas.",
+    ],
+    exportNote:
+      "Usa el CSV del historial de transacciones en lugar de un extracto PDF o exportación de pies.",
+    source: "Instrucciones oficiales de exportación de Trading 212",
+    newTab: "se abre en una pestaña nueva",
+    reviewTitle: "2. Revisa las filas antes de guardarlas",
+    reviewIntro:
+      "En CapiSpot, abre Brokers, elige Trading 212, selecciona la cuenta y sube tu CSV. Revisa la vista previa antes de confirmar.",
+    reviewItems: [
+      [
+        "Operaciones y dividendos",
+        "Comprueba fechas, tickers, cantidades, precios y comisiones. Las divisas originales permanecen visibles.",
+      ],
+      [
+        "Posibles duplicados",
+        "Las filas ya registradas se omiten por defecto. Revisa cualquier fila marcada antes de incluirla.",
+      ],
+      [
+        "Filas por revisar",
+        "Acciones no compatibles, como intereses sobre efectivo, y filas incompletas se muestran por separado.",
+      ],
+    ],
+    plansTitle: "La importación CSV es Free. La sincronización directa es Pro.",
+    freeTitle: "Free · Importación CSV",
+    free: "Sube un CSV compatible, revisa las operaciones y duplicados y confirma la importación gratis.",
+    proTitle: "Pro · Sincronización de solo lectura e informes FIFO",
+    pro: "Conecta una API de Trading 212 de solo lectura para operaciones y dividendos, además de informes anuales FIFO.",
+    pricing: "Comparar Free y Pro",
+    faqTitle: "Antes de tu primera importación",
+    questions: [
+      [
+        "¿Por qué el ejemplo muestra un duplicado y una fila por revisar?",
+        "Están incluidos deliberadamente para mostrar cómo los gestiona la vista previa.",
+      ],
+      [
+        "¿Necesito una clave API de Trading 212?",
+        "No para importar un CSV. La conexión API de solo lectura es una opción Pro independiente.",
+      ],
+      [
+        "¿Cuándo se guardan mis operaciones?",
+        "El ejemplo no guarda datos. Tu importación se guarda únicamente al confirmar la vista previa.",
+      ],
+    ],
+    resultTitle: "3. Abre tu cartera después de importar",
+    result:
+      "El resumen muestra lo añadido, omitido o pendiente de revisión. Abre tus posiciones o explora una cartera de ejemplo.",
+    demo: "Ver una cartera de ejemplo",
+    note: "Información general, no asesoramiento fiscal ni de inversión. CapiSpot no está afiliado a Trading 212.",
+  },
+  it: {
+    title: "Importa il tuo CSV di Trading 212 in CapiSpot",
+    intro:
+      "Trasforma lo storico delle tue operazioni in un portafoglio chiaro. Prova prima il file di esempio Trading 212 e poi importa operazioni e dividendi con anteprima.",
+    sampleCta: "Prova un CSV Trading 212 — senza account",
+    importCta: "Ho già un file CSV",
+    sampleNote:
+      "L'esempio resta nel tuo browser. Non servono account o collegamenti al broker per provarlo.",
+    exportTitle: "1. Scarica lo storico transazioni da Trading 212",
+    exportSteps: [
+      "Apri il menu in Trading 212 e vai su Cronologia (History).",
+      "Scegli l'esportazione, il periodo e i tipi di attività, inclusi ordini e dividendi.",
+      "Scarica il file CSV mantenendo intestazioni e valute originali.",
+      "Includi lo storico dal primo acquisto per non perdere le operazioni iniziali.",
+    ],
+    exportNote:
+      "Usa il CSV dello storico transazioni anziché un estratto conto PDF o un'esportazione delle torte (Pie).",
+    source: "Istruzioni ufficiali di esportazione di Trading 212",
+    newTab: "si apre in una nuova scheda",
+    reviewTitle: "2. Controlla le righe prima di salvarle",
+    reviewIntro:
+      "In CapiSpot apri Broker, scegli Trading 212, seleziona il conto e carica il CSV. Verifica l'anteprima prima di confermare.",
+    reviewItems: [
+      [
+        "Operazioni e dividendi",
+        "Controlla date, ticker, quantità, prezzi e commissioni. Le valute originali restano visibili nell'anteprima.",
+      ],
+      [
+        "Possibili duplicati",
+        "Le righe già registrate vengono ignorate per impostazione predefinita.",
+      ],
+      [
+        "Righe da controllare",
+        "Voci non supportate, come interessi sulla liquidità, e righe incomplete vengono elencate separatamente.",
+      ],
+    ],
+    plansTitle: "L'importazione CSV è Free. La sincronizzazione diretta è Pro.",
+    freeTitle: "Free · Importazione CSV",
+    free: "Carica un CSV compatibile, controlla operazioni e duplicati e conferma l'importazione gratuitamente.",
+    proTitle: "Pro · Sincronizzazione di sola lettura e report FIFO",
+    pro: "Collega un'API Trading 212 di sola lettura per operazioni e dividendi e sblocca i report annuali FIFO.",
+    pricing: "Confronta Free e Pro",
+    faqTitle: "Prima della tua prima importazione",
+    questions: [
+      [
+        "Perché l'esempio mostra un duplicato e una riga da controllare?",
+        "Sono inclusi intenzionalmente per mostrare come vengono gestiti nell'anteprima.",
+      ],
+      [
+        "Serve una chiave API di Trading 212?",
+        "Non per l'importazione CSV. La connessione API di sola lettura è un'opzione Pro separata.",
+      ],
+      [
+        "Quando vengono salvate le mie transazioni?",
+        "L'esempio non salva dati. Le tue operazioni vengono salvate solo quando confermi l'anteprima.",
+      ],
+    ],
+    resultTitle: "3. Apri il portafoglio dopo l'importazione",
+    result:
+      "Il riepilogo mostra le righe aggiunte, ignorate o da verificare. Apri le tue posizioni o esplora un portafoglio di esempio.",
+    demo: "Vedi un portafoglio di esempio",
+    note: "Informazioni generali, non consulenza fiscale o d'investimento. CapiSpot non è affiliato a Trading 212.",
+  },
 };
 
 const TITLE = "Trading 212 CSV Import & Portfolio Tracker | CapiSpot";
@@ -186,7 +376,7 @@ export const Route = createFileRoute("/trading212-import")({
 
 function Trading212Import() {
   const { lang } = usePortfolio();
-  const g = lang === "bg" ? GUIDE.bg : GUIDE.en;
+  const g = GUIDE[lang];
   const sampleButton = (
     <Button
       asChild

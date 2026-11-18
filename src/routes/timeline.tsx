@@ -184,52 +184,59 @@ function Timeline() {
             {g.items.map((t) => {
               const a = p.assets.find((x) => x.id === t.assetId);
               return (
-                <li key={t.id} className="flex flex-wrap items-center gap-3">
+                <li
+                  key={t.id}
+                  className="flex flex-col gap-2 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                >
                   <span
-                    className={`absolute -left-[7px] h-3 w-3 rounded-full ${t.kind === "sell" ? "bg-destructive" : t.kind === "dividend" ? "bg-chart-2" : "bg-primary"}`}
+                    className={`absolute -left-[7px] mt-1.5 h-3 w-3 rounded-full sm:mt-0 ${t.kind === "sell" ? "bg-destructive" : t.kind === "dividend" ? "bg-chart-2" : "bg-primary"}`}
                   />
-                  {a && <CompanyLogo symbol={a.symbol} type={a.type} />}
-                  <div className="min-w-0 flex-1 text-sm">
-                    {a ? (
-                      <Link
-                        to="/asset/$symbol"
-                        params={{ symbol: a.symbol }}
-                        className="font-semibold hover:text-primary"
-                      >
-                        {a.symbol}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {t.date} · {c.kind[t.kind]}
-                      {t.brokerId
-                        ? ` · ${p.brokers.find((broker) => broker.id === t.brokerId)?.name ?? c.broker}`
-                        : ""}
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    {a && <CompanyLogo symbol={a.symbol} type={a.type} />}
+                    <div className="min-w-0 flex-1 text-sm">
+                      {a ? (
+                        <Link
+                          to="/asset/$symbol"
+                          params={{ symbol: a.symbol }}
+                          className="font-semibold hover:text-primary"
+                        >
+                          {a.symbol}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {t.date} · {c.kind[t.kind]}
+                        {t.brokerId
+                          ? ` · ${p.brokers.find((broker) => broker.id === t.brokerId)?.name ?? c.broker}`
+                          : ""}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium">
-                    {t.kind === "dividend"
-                      ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), a)
-                      : `${t.quantity} × ${p.moneyFor(t.price, a)}`}
-                    {(t.fee ?? 0) > 0 && (
-                      <span className="ml-1 block text-xs text-muted-foreground">
-                        {p.t("fee")}: {p.money(t.fee ?? 0)}
-                      </span>
+                  <div className="flex items-center justify-between gap-2 pl-11 sm:justify-end sm:pl-0">
+                    <span className="text-sm font-medium sm:text-right">
+                      {t.kind === "dividend"
+                        ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), a)
+                        : `${t.quantity} × ${p.moneyFor(t.price, a)}`}
+                      {(t.fee ?? 0) > 0 && (
+                        <span className="block text-xs text-muted-foreground">
+                          {p.t("fee")}: {p.money(t.fee ?? 0)}
+                        </span>
+                      )}
+                    </span>
+                    {p.user && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label={c.edit}
+                        title={c.edit}
+                        onClick={() => setEditing(t)}
+                      >
+                        <Pencil aria-hidden />
+                      </Button>
                     )}
-                  </span>
-                  {p.user && (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      aria-label={c.edit}
-                      title={c.edit}
-                      onClick={() => setEditing(t)}
-                    >
-                      <Pencil aria-hidden />
-                    </Button>
-                  )}
+                  </div>
                 </li>
               );
             })}

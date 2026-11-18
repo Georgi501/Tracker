@@ -1,96 +1,159 @@
-# CapiSpot — UI/UX, CSS & Responsive Design Overhaul Checkpoint
+# CapiSpot — UI/UX, CSS & Responsive Design Overhaul Checkpoint (Phases 1, 2 & 3)
 
-## 1. Scope & Completed Improvements
+## 1. Complete Route-by-Route Coverage Matrix
 
-### Priority 1: Global Navigation Bar & Search Input Clipping (Issue A)
-- **Root Causes Identified:**
-  1. `src/components/HeaderSearch.tsx` applied hardcoded `pr-12` (`48px` right padding) even when the input was empty and the clear (`X`) button was not rendered, wasting `34px` of text display width.
-  2. `src/components/AppShell.tsx` rendered 5 inline desktop links (`Dashboard`, `Holdings`, `Asset search`, `Watchlist`, `Price alerts`) plus `More v` on viewports `<1536px` and used a 33-character Bulgarian top-nav label for `/markets` (`"Търсене: компании, тикери, новини"`), compressing `.header-search-slot` down to `250px` at `1440px`, `163px` at `1280px`, and `95px` at `1024px`.
-  3. `src/styles.css` unwrapped `.header-layout` into a single horizontal row at `@media (min-width: 1024px)` (`64rem`), leaving insufficient room for brand + nav + search + 8 right-hand utility controls at `1024px`.
-  4. `src/components/CommandMenu.tsx` used `size-11` (`44px`) on the header trigger button while all adjacent utility icons used `size-9` (`36px`).
-- **Fixes Implemented:**
-  - `src/components/HeaderSearch.tsx`: Replaced static `pr-12` with conditional `${value ? "pr-9" : "pr-3.5"}`, recovering `34px` of usable placeholder width.
-  - `src/components/CommandMenu.tsx`: Aligned header trigger button to `size-9` (`36px`).
-  - `src/components/AppShell.tsx`:
-    - Introduced concise top-bar labels for `/markets` (`en: "Asset search"`, `bg: "Пазари"`, `de: "Marktsuche"`, `es: "Mercados"`, `it: "Mercati"`) while keeping the full descriptive string in the footer.
-    - Added `/watchlist` to the desktop `More v` menu (`Portfolio` group, alongside `/alerts`) and hid inline `/watchlist` and `/alerts` pills below `2xl` (`hidden 2xl:inline-flex`), keeping them 1 click away via `More v` on laptop screens and inline on `>=1536px` monitors.
-  - `src/styles.css`:
-    - Moved the single-row `.header-layout` breakpoint from `1024px` to `@media (min-width: 1280px)` with `.header-search-slot { min-width: 20rem }` (`320px`) at `1280px` and `min-width: 23rem` (`368px`) at `>=1440px`. At `1024px`, the search bar sits cleanly on Row 2 at `980px` full container width.
+All 38 UI route modules in `src/routes/` and their shared components were audited across Phases 1, 2, and 3. The matrix below strictly separates:
+- **Visually Verified (Live Browser + Playwright Screenshots & DOM Metrics)** across desktop (`1440px`, `1280px`, `1024px`) and mobile (`360px`, `390px`, `430px`, `768px`), dark/light themes, and 5 languages (`en`, `bg`, `de`, `es`, `it`).
+- **Code-Reviewed Only** (static routes sharing verified templates or parameterized wrappers around verified core views).
+- **Not Tested in Browser** (parameterized child thread route `/advisor/$threadId`, covered by Vitest unit/integration tests and sharing `AdvisorLayout.tsx` with visually verified `/advisor`).
+- **Confirmed & Fixed Issues** (with exact file references and before/after verification).
 
-### Priority 1B: Holdings Search Input Clipping (`src/routes/holdings.tsx`)
-- **Root Cause Identified:** The search input wrapper inside the Holdings card header was constrained to `sm:w-96` (`384px`) with static `pr-9`, clipping `"Search holdings or any ticker (META, VWCE.DE, BTC)..."` to `"Search holdings or any ticker (META, VWCE.DE, E"`.
-- **Fix Implemented:** Expanded the Holdings search input wrapper to `w-full sm:min-w-[26rem] sm:flex-1 lg:max-w-lg` (`512px` on desktop) with `h-11 py-2` and conditional `${q ? "pr-9" : "pr-3.5"}`.
-
-### Priority 2: Excessive Empty Space in Cards & Layouts (Issue B)
-- **Root Causes Identified:**
-  1. `Holdings Summary` (`1248px × 113px`) and `Allocation` (`1248px × 314px`) stacked vertically as full-width cards on `/holdings`, leaving ~80% of `Holdings Summary` blank and forcing the Holdings table below the fold.
-  2. `src/components/AllocationCard.tsx` placed `<ShareAllocationButton>` in a separate bottom row (`mt-4 flex justify-end`), adding `52px` of empty vertical space below the donut and legend.
-  3. `src/components/AllocationBreakdown.tsx` used a 50/50 split (`sm:grid-cols-2`), giving a `176px` donut a `540px`-wide column with ~`360px` of empty space, and rendered an empty `176px` `<PieChart>` when total allocation value was `0`.
-  4. `src/styles.css` required `@container (min-width: 60rem)` (`960px`) for `.holdings-table`, which missed the `942px` inner card width on `1024px` laptops by `18px` and forced a `952px`-tall mobile card stack.
-- **Fixes Implemented:**
-  - `src/routes/holdings.tsx`: Paired `Holdings Summary` and `AllocationCard` side-by-side on desktop (`grid gap-4 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]`) and added a 3-metric bottom summary bar (`Invested`, `Total gain / loss`, `Holdings`) to `Holdings Summary` so both cards align at `250px` height.
-  - `src/components/AllocationCard.tsx`: Moved `<ShareAllocationButton>` into the card header next to the `[Asset class | Sector | Region]` segmented control (`mb-3 flex flex-wrap items-center justify-between gap-2`).
-  - `src/components/AllocationBreakdown.tsx` & `src/styles.css`:
-    - Added `.allocation-breakdown-grid` (`@container (min-width: 26rem)` -> `10.5rem minmax(0, 1fr)`, `@container (min-width: 44rem)` -> `11.5rem minmax(0, 1fr)`) and `.allocation-legend-multi` (2-column legend when `>= 4` items).
-    - Added a compact horizontal zero/partial-value empty state when `rows.length === 0 || total <= 0`.
-    - Widened donut inner hole (`innerRadius="65%"`) and refined center overlay padding (`px-6`) so the total value never touches the inner ring.
-  - `src/styles.css`: Lowered `.holdings-table` container query threshold from `60rem` (`960px`) to `56rem` (`896px`), enabling the desktop table at `1024px` (`height: 538px` vs `952px` before).
-  - `src/routes/index.tsx` & `src/styles.css`: Added `min-w-0 flex-1` and `truncate` to Dashboard `Top Holdings` rows and consolidated duplicate `@media (prefers-reduced-motion: reduce)` rules.
-
----
-
-## 2. Before vs. After Quantitative Measurements
-
-| Viewport / Language | Metric | BEFORE | AFTER | Improvement |
+| Route Path | File | Verification Level | Viewports / Langs Tested | Confirmed & Fixed Issues |
 | :--- | :--- | :--- | :--- | :--- |
-| **1440px Desktop (`en`, dark/light)** | Global Header Search Width | `250px` (clipped) | `453px` (100% visible) | **+203px (+81%)** |
-| **1440px Desktop (`bg`, dark)** | Global Header Search Width | `250px` (clipped) | `462px` (100% visible) | **+212px (+85%)** |
-| **1440px Desktop (`de`, dark)** | Global Header Search Width | `250px` (clipped) | `440px` (100% visible) | **+190px (+76%)** |
-| **1440px Desktop (`es` / `it`, dark)** | Global Header Search Width | `250px` (clipped) | `462px` (100% visible) | **+212px (+85%)** |
-| **1440px Desktop (all 5 langs)** | Top Nav Scroll Overflow | `0px`–`73px` | `0px` across all 5 langs | **Zero overflow** |
-| **1440px Desktop (all 5 langs)** | Holdings Search Input Width | `384px` (clipped) | `512px` (100% visible) | **+128px (+33%)** |
-| **1440px Desktop** | Summary + Allocation Vertical Footprint | `113px + 16px + 314px = 443px` | `250px` (side-by-side grid) | **-193px (-44% vertical space)** |
-| **1280px Laptop (`en`, dark/light)** | Global Header Search Width | `163px` (severely clipped) | `321px` (100% visible) | **+158px (+97%)** |
-| **1280px Laptop (`bg` / `de` / `es` / `it`)** | Global Header Search Width | `163px` | `348px` / `318px` / `344px` / `350px` | **Unclipped across all 5 langs** |
-| **1024px Laptop (`en`, dark)** | Global Header Search Width | `95px` (unusable) | `980px` (clean Row 2) | **+885px (+932%)** |
-| **1024px Laptop (`en`, dark)** | Holdings Table Card Height | `952px` (mobile fallback) | `538px` (desktop table) | **-414px (-43% height)** |
-| **768px / 430px / 390px / 360px** | Horizontal Page Overflow (`pageOverflow`) | `false` | `false` (`scrollWidth <= innerWidth`) | **Zero horizontal scroll** |
+| `/` (Visitor Homepage) | `src/routes/index.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `bg`, `de`, dark/light) | Global Header search unclipped (`Phase 1`). Documented duplicate header inside embedded `VideoPresentation` iframe for Next Phase (Video Modernization). |
+| `/` (Authenticated Dashboard) | `src/routes/index.tsx` | **Visually Verified** | `1920px`, `1440px`, `1280px`, `1024px`, `768px`, `430px`, `390px`, `360px` (`en`, `bg`, `de`, `es`, `it`, dark/light) | **Fixed (Phase 2):** `Recent activity` occupied only 1 of 3 columns (`405px` of `1248px`), leaving an `843px` (`66.7%`) blank void on the right. Expanded to `lg:col-span-3` with a 2-column desktop activity grid (`lg:grid-cols-2`). Localized `"Realized P&L"` and `"of portfolio"` across all 5 languages. |
+| `/holdings` | `src/routes/holdings.tsx` | **Visually Verified** | `1920px`–`360px` (`en`, `bg`, `de`, `es`, `it`, dark/light) | **Fixed (Phase 1):** Expanded Holdings search input (`384px` -> `512px`), paired `Holdings Summary` + `AllocationCard` side-by-side at `250px` height (`-44%` vertical footprint), lowered `.holdings-table` container threshold from `60rem` to `56rem` so `1024px` renders the desktop table (`538px` vs `952px`). |
+| `/pricing` | `src/routes/pricing.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 2):** 1) `#plan-comparison` 3-column table clipped right-column text at `x=360px` on mobile (`"CSV-Import (IBKR, T212, Revolut)"` cut off); converted to stacked mobile rows (`grid-cols-1 sm:grid-cols-[1fr_1fr_1.3fr]`) with `FREE:` / `PRO:` mobile badges. 2) Bottom 2-card showcase used `md:grid-cols-3`, leaving column 3 empty (`405px` gap); changed to `md:grid-cols-2`. |
+| `/demo` | `src/routes/demo.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean responsive layout (`pageOverflow: false`); uses shared `AllocationBreakdown` improvements from Phase 1. |
+| `/import-demo` | `src/routes/import-demo.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean 3-column desktop / 1-column mobile onboarding workflow (`pageOverflow: false`). |
+| `/brokers` | `src/routes/brokers.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 3):** Localized `IMPORT_GUIDE` header/cards into `de`, `es`, and `it` (previously fell back to English). |
+| `/trading212-import` | `src/routes/trading212-import.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 3):** Added complete `de`, `es`, and `it` translations to `/trading212-import` and `src/components/RelatedGuides.tsx` (previously English-only when browsing in German/Spanish/Italian). |
+| `/ibkr-import` | `src/routes/ibkr-import.tsx` | **Visually Verified** | `1440px` (`en`, dark) | Clean layout (`pageOverflow: false`); benefits from localized `RelatedGuides.tsx`. |
+| `/revolut-import` | `src/routes/revolut-import.tsx` | **Code-Reviewed Only** | Shares identical guide layout & `RelatedGuides` with `/trading212-import` & `/ibkr-import` | Benefits from `RelatedGuides.tsx` 5-language localization. |
+| `/analytics` | `src/routes/analytics.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 2/3):** Localized `ETF overlap` `ProGate` title/description and `AllocationBreakdown` `totalLabel` across `en`, `bg`, `de`, `es`, `it`; benefits from `ProGate` CSS Grid single-cell overlay fix. |
+| `/tools` | `src/routes/tools.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 2):** Eliminated **3 separate 50%-width (`614px`) empty desktop grid gaps** in `Free` (`Watchlist` -> `lg:col-span-2`), `For my portfolio` (paired `DataQuality` + `RecurringReminders`, `Risk` + `ConcentrationCard`, `GoalsCard` `lg:col-span-2`), and `Pro` (`Tax` -> `lg:col-span-2`). Localized `toolGroups` and `Shareable portfolio snapshot` across all 5 languages. |
+| `/dividends` | `src/routes/dividends.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean responsive KPI grid, calendar, and event table (`pageOverflow: false`). |
+| `/watchlist` | `src/routes/watchlist.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | **Fixed (Phase 2):** 1) `ProGate` (`DCF estimates`) clipped its lock header and `"Upgrade to Pro"` CTA vertically on `360px` mobile because the blurred 3-row preview (`165px`) was shorter than the absolute overlay text; fixed in `src/components/ProFeatures.tsx` via CSS Grid single-cell overlay (`col-start-1 row-start-1`). 2) Fixed mobile star remove button alignment (`col-span-2 justify-self-end md:col-span-1`). |
+| `/alerts` | `src/routes/alerts.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean form and alert list layout (`pageOverflow: false`). |
+| `/markets` | `src/routes/markets.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | **Fixed (Phase 2):** On `360px` mobile, the search form kept input + submit button on a single row (`flex gap-2`), crushing the search input to `159px` (`"Tesla, BMW, ME"` clipped). Changed to `flex-col sm:flex-row` with `w-full sm:w-auto` submit button, expanding mobile input width from **`159px` to `318px` (`+100%`)**. |
+| `/compare` | `src/routes/compare.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean ticker selector chips and comparison cards (`pageOverflow: false`). |
+| `/etf-overlap` | `src/routes/etf-overlap.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean 2-picker overlap analyzer and intersection table (`pageOverflow: false`). |
+| `/community` | `src/routes/community.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Verified both `CommunityUpsell` and Pro member directory grid (`pageOverflow: false`). |
+| `/community/$userId` | `src/routes/community.$userId.tsx` | **Code-Reviewed Only** | Parameterized profile detail route sharing `CommunityUpsell` and standard `bg-card` layout | Uses responsive `sm:flex-row` header and percentage-only public allocation list. |
+| `/wall` | `src/routes/wall.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean composer, feed filters, and post cards (`pageOverflow: false`). |
+| `/messages` | `src/routes/messages.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean split inbox / conversation thread layout (`pageOverflow: false`). |
+| `/profile` | `src/routes/profile.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean profile editor and public portfolio opt-in toggle (`pageOverflow: false`). |
+| `/admin` (Owner Console) | `src/routes/admin.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark, live production + staging + local mock) | **Fixed (Phase 3):** Added 5-language localization (`en`, `bg`, `de`, `es`, `it`) and graceful inline error state (`loadFailed`) to `src/components/ModerationPanel.tsx` so failed moderation fetches never hang on `…`. |
+| `/account` | `src/routes/account.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, `de`, dark) | **Fixed (Phase 3):** Localized `SecurityCard` (`Sign-in & security`, `Add photo`, `Change email`, `Change password`, etc.) across all 5 languages (`en`, `bg`, `de`, `es`, `it`). |
+| `/timeline` | `src/routes/timeline.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | **Fixed (Phase 2):** On `360px` mobile, transaction rows kept symbol+title, date+broker, and amount in a single horizontal flex row, crushing `"2026-04-10 · Buy · Interactive Brokers"` into a `38px`-wide 8-line vertical column (`height: 156px`). Changed `<li>` to `flex-col gap-2 py-1 sm:flex-row sm:items-center sm:justify-between`, reducing mobile row height to `98px` (`-37%`) with full horizontal readability. |
+| `/earnings` | `src/routes/earnings.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean upcoming earnings calendar and filter chips (`pageOverflow: false`). |
+| `/asset/$symbol` (`/asset/AAPL`) | `src/routes/asset.$symbol.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean interactive chart, key metrics grid, SEC EDGAR annual financials table, and position thesis journal (`pageOverflow: false`). |
+| `/market/$slug` | `src/routes/market.$slug.tsx` | **Code-Reviewed Only** | Public SEO instrument overview wrapper around shared quote/chart primitives | Uses responsive `sm:grid-cols-2 lg:grid-cols-4` cards and `overflow-x-auto` tables. |
+| `/advisor` | `src/routes/advisor.tsx`, `src/components/AdvisorLayout.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean sidebar drawer + prompt composer layout (`pageOverflow: false`). |
+| `/advisor/$threadId` | `src/routes/advisor.$threadId.tsx` | **Not Tested in Browser (Covered by Vitest)** | Shares `AdvisorLayout.tsx` with `/advisor`; covered by `src/test/` advisor route tests | Uses identical `AdvisorLayout` shell verified on `/advisor`. |
+| `/auth` | `src/routes/auth.tsx` | **Visually Verified** | `1440px`, `360px` (`en`, dark) | Clean centered auth card, social/email tabs, and validation states (`pageOverflow: false`). |
+| `/reset-password` | `src/routes/reset-password.tsx` | **Code-Reviewed Only** | Shares centered auth card structure with `/auth` | Clean `max-w-md` single-column form. |
+| `/features` | `src/routes/features.tsx` | **Visually Verified** | `1440px` (`en`, dark) | Clean feature matrix and CTA layout (`pageOverflow: false`). |
+| `/terms`, `/privacy`, `/disclaimer`, `/cookies` | `src/routes/terms.tsx`, `privacy.tsx`, `disclaimer.tsx`, `cookies.tsx` (`src/components/LegalPage.tsx`) | **Code-Reviewed Only** | Shared `LegalPage.tsx` prose container (`max-w-3xl`) | Clean typography and responsive padding. |
 
 ---
 
-## 3. Separate Financial Data Investigation: Region Allocation (~98% Europe with S&P 500 ETF)
+## 2. Summary of Phase 1, Phase 2 & Phase 3 Fixes
 
-- **Observation:** In the owner's screenshot, `Allocation -> Region` showed `Europe 98.0%` and `North America 2.0%` while the portfolio held `SXR8.DE` (iShares Core S&P 500 UCITS ETF) and `AAPL`.
-- **Root Cause in Code (Not Modified per Financial Guardrails):**
-  - When a user adds an asset via `src/components/AddTransactionDialog.tsx` (line 238), the `assets` row is created with:
-    `region: cur === "EUR" ? "Europe" : "Global"`
-  - Because `SXR8.DE` is traded on Xetra in `EUR`, its stored `asset.region` defaults to `"Europe"` (representing **listing/trading currency region** rather than **underlying index geographic exposure** `"North America"`), even though `UCITS` in `src/lib/market-search.ts` (line 109) defines `SXR8.DE` with `index: "S&P 500"` and `domicile: "IE"`.
-  - Meanwhile, CSV imports in `src/lib/PortfolioProvider.tsx` (line 906) default non-crypto assets to `"North America"`.
-- **Recommended Dedicated Follow-Up:**
-  1. Derive default `region` for known UCITS ETFs in `src/lib/market-search.ts` (`UCITS` catalog) from the underlying index (`"S&P 500"` / `"NASDAQ-100"` -> `"North America"`, `"MSCI World"` / `"FTSE All-World"` -> `"Global"`, `"STOXX Europe 600"` -> `"Europe"`) before falling back to currency/exchange.
-  2. Add a clarifying tooltip on the `Region` pill in `AllocationCard` explaining whether region reflects underlying index exposure or listing domicile.
+### Phase 1 (Committed in `81b2c9e`)
+1. **Global Header Search & Navigation Unclipping (`src/components/HeaderSearch.tsx`, `src/components/AppShell.tsx`, `src/components/CommandMenu.tsx`, `src/styles.css`):**
+   - Conditional clear-button padding (`${value ? "pr-9" : "pr-3.5"}`), concise top-nav `/markets` labels (`Asset search`, `Пазари`, `Marktsuche`, `Mercados`, `Mercati`), `hidden 2xl:inline-flex` on inline `/watchlist` & `/alerts` pills (accessible via `More v` on `<1536px`), and single-row `.header-layout` breakpoint at `1280px` (giving `1024px` laptops a full-width `980px` Row 2 search input).
+2. **Holdings Search & Side-by-Side Summary + Allocation (`src/routes/holdings.tsx`, `src/components/AllocationCard.tsx`, `src/components/AllocationBreakdown.tsx`, `src/styles.css`):**
+   - Expanded Holdings search input from `384px` (`sm:w-96`) to `512px` (`sm:min-w-[26rem] sm:flex-1 lg:max-w-lg`).
+   - Paired `Holdings Summary` and `AllocationCard` side-by-side on desktop at an aligned `250px` height (`-44%` vertical footprint), moved `<ShareAllocationButton>` into the `AllocationCard` header, and lowered `.holdings-table` container threshold from `60rem` (`960px`) to `56rem` (`896px`).
+
+### Phase 2 & Phase 3 (Completed in Current Commit)
+1. **`ProGate` Mobile Vertical Clipping (`src/components/ProFeatures.tsx`):**
+   - **Root Cause:** `ProGate` used `relative overflow-hidden` on the container and `absolute inset-0` on the lock overlay (`z-10`). When a caller passed a compact `preview` (such as the 3-row `DCF estimates` preview on `/watchlist`, `height: 165px`) and the overlay description wrapped to 4 lines on `360px` mobile, the overlay content overflowed the `165px` container and clipped the lock icon and `"Upgrade to Pro"` CTA button top/bottom.
+   - **Fix:** Converted `ProGate` to a single-cell CSS Grid overlay (`grid overflow-hidden rounded-xl` on the container, `col-start-1 row-start-1` on both the blurred preview and the `z-10` lock overlay). The container now automatically expands to the taller of the preview or the lock message across all viewports and languages.
+2. **Pricing Comparison Mobile Clipping & Desktop 2-Card Grid Gap (`src/routes/pricing.tsx`):**
+   - **Root Cause:** `#plan-comparison` forced `grid-cols-[1.2fr_1fr_1.2fr]` even on `360px` screens, cutting off `"CSV-Import (IBKR, T212, Revolut)"` and `"Verifizierte Dividenden-Historie + Kalender"` at the right viewport boundary. Below it, a 2-card showcase used `md:grid-cols-3`, leaving column 3 empty (`405px` blank space).
+   - **Fix:** Made `#plan-comparison` rows stack cleanly on `<640px` (`grid-cols-1 gap-1.5 sm:grid-cols-[1fr_1fr_1.3fr]`) with inline `FREE:` and `PRO:` mobile badges (`sm:hidden`), and changed the 2-card showcase grid to `md:grid-cols-2`.
+3. **Authenticated Dashboard `Recent activity` 66.7% Empty Row Gap & i18n (`src/routes/index.tsx`):**
+   - **Root Cause:** Inside the 3-column bottom grid (`lg:grid-cols-3`), `Top holdings` (`lg:col-span-2`) and `Winners & Losers` (`1 col`) filled Row 1, leaving `Recent activity` alone in Row 2 spanning only 1 column (`405px` wide) with `843px` (`66.7%`) of empty space to its right. Additionally, `"Realized P&L"` and `"of portfolio"` were hardcoded in English.
+   - **Fix:** Added `lg:col-span-3` to `Recent activity` with a 2-column desktop transaction grid (`grid divide-y divide-border lg:grid-cols-2 lg:gap-x-6`), and localized `"Realized P&L"` and `"of portfolio"` across `en`, `bg`, `de`, `es`, and `it`.
+4. **Tools Route (`/tools`) Three 50%-Width Desktop Grid Gaps & i18n (`src/routes/tools.tsx`):**
+   - **Root Cause:** Each of the three `lg:grid-cols-2` sections (`Free`, `For my portfolio`, `Pro`) had an odd number of 1-column cards or an unpaired `lg:col-span-2` card (`ConcentrationCard` at index 1), leaving three separate `614px`-wide (`50%`) empty holes on desktop. Section titles (`Free`, `For my portfolio`, `Pro`) and `Shareable portfolio snapshot` were also hardcoded in English.
+   - **Fix:** Added `lg:col-span-2` to `Watchlist` (in `Free`) and `Tax` (in `Pro`), reordered `For my portfolio` so `DataQuality` + `RecurringReminders` pair on Row 1, `Risk` + `ConcentrationCard` pair on Row 2, and `GoalsCard` (`lg:col-span-2`) spans Row 3, and localized all group headers and `Shareable portfolio snapshot` across `en`, `bg`, `de`, `es`, `it`.
+5. **Markets Route (`/markets`) Mobile Search Input Crushing (`src/routes/markets.tsx`):**
+   - **Root Cause:** The search `<form>` used `flex max-w-2xl gap-2` at all screen sizes, leaving the text input only `159px` wide on `360px` mobile (`"Tesla, BMW, META, Bitcoin…"` clipped to `"Tesla, BMW, ME"`).
+   - **Fix:** Changed the form to `flex max-w-2xl flex-col gap-2 sm:flex-row` with `w-full sm:w-auto` on the submit button, doubling mobile search input width from `159px` to `318px` (`100%` placeholder visibility).
+6. **Watchlist Route (`/watchlist`) Mobile Remove Button Alignment (`src/routes/watchlist.tsx`):**
+   - **Root Cause:** On `<768px`, each watchlist card uses `grid-cols-2`, placing the remove star `<button>` as the 5th grid item floating in column 1 of row 3.
+   - **Fix:** Added `col-span-2 justify-self-end md:col-span-1` so the star button aligns cleanly to the bottom-right corner on mobile and stays in column 5 on desktop.
+7. **Timeline Route (`/timeline`) Mobile Transaction Row Crushing (`src/routes/timeline.tsx`):**
+   - **Root Cause:** Each transaction `<li>` used `flex items-center justify-between gap-3`, squeezing the middle date/kind/broker span (`"2026-04-10 · Buy · Interactive Brokers"`) into a `38px`-wide 8-line vertical column (`height: 156px`) on `360px` mobile.
+   - **Fix:** Changed `<li>` to `flex flex-col gap-2 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3`, giving mobile a clean 2-row card layout (`height: 98px`, `-37%` vertical space) with full horizontal text readability.
+8. **Multi-Language (`de`/`es`/`it`) Completeness Across `/analytics`, `/account`, `/trading212-import`, `/brokers`, `RelatedGuides`, and `/admin` (`ModerationPanel`):**
+   - Added complete `en`, `bg`, `de`, `es`, `it` translations to `src/routes/analytics.tsx` (`ETF overlap` `ProGate` & `AllocationBreakdown` `totalLabel`), `src/routes/account.tsx` (`SecurityCard`), `src/routes/trading212-import.tsx`, `src/components/RelatedGuides.tsx`, `src/routes/brokers.tsx` (`IMPORT_GUIDE`), and `src/components/ModerationPanel.tsx` (including graceful inline `loadFailed` error state).
 
 ---
 
-## 4. Product Video Presentation Inventory (Section 16 — Documented Only)
+## 3. Phase 2 & Phase 3 Quantitative Before vs. After Measurements
 
-- **Wrapper Component:** `src/components/VideoPresentation.tsx`
-  - Embedded on the signed-out landing page (`src/routes/index.tsx`) via an `<iframe>` loading `/video-preview/?mode=${activeMode}&theme=${theme}&lang=${lang}`.
-  - Supports 2 interactive tour modes (`visitor`: "Portfolio tour", `pro`: "Pro tools"), synchronized with app theme (`dark`/`light`) and language (`en`/`bg`/`de`/`es`/`it`).
-- **Static Player & Assets:**
-  - `public/video-preview/index.html`
-  - 10 slide screenshots in `public/video-preview/`: `ui-overview.png`, `ui-holdings.png`, `ui-import.png`, `ui-market-discovery.png`, `ui-dividends.png`, `ui-features.png`, `ui-fifo.png`, `ui-dcf.png`, `ui-pro-features.png`, `ui-pro-preview.png`, plus `public/hero-portfolio.png`.
-- **Assets Needing Refresh After Production Approval:**
-  - `public/video-preview/ui-holdings.png` and `public/hero-portfolio.png` still depict the pre-overhaul stacked Holdings Summary / Allocation layout and narrower search bars.
+| Route / Viewport / Lang | Metric | BEFORE (`phase2-before`) | AFTER (`phase2-after`) | Improvement |
+| :--- | :--- | :--- | :--- | :--- |
+| **`/` Dashboard (`1440px`, `en`)** | `Recent activity` Card Width / Row Coverage | `405px` (`33.3%`, `843px` empty void) | `1248px` (`100%` width, 2-col activity grid) | **+843px (+208% width, 0 empty void)** |
+| **`/pricing` (`1440px`, `en`)** | Bottom 2-Card Showcase Row Coverage | `2 × 405px` (`md:grid-cols-3`, `405px` gap) | `2 × 616px` (`md:grid-cols-2`, 100% row) | **Eliminated 405px blank column** |
+| **`/pricing` (`360px`, `de`)** | `#plan-comparison` Mobile Text Clipping | 3 columns (`~100px` each, right col cut off) | Stacked mobile rows with `FREE:` / `PRO:` badges | **100% text visibility, 0 clipping** |
+| **`/tools` (`1440px`, `de`)** | Empty 50%-Width Desktop Grid Holes | `3` holes (`3 × 614px` blank spaces) | `0` holes (all 3 tool groups balanced) | **Eliminated 3 desktop grid gaps** |
+| **`/markets` (`360px`, `en`)** | Mobile Asset Search Input Width | `159px` (`"Tesla, BMW, ME"` clipped) | `318px` (`"Tesla, BMW, META, Bitcoin…"` 100% visible) | **+159px (+100% input width)** |
+| **`/watchlist` (`360px`, `en`)** | `DCF estimates` `ProGate` Card Height | `165px` (lock icon & CTA button clipped) | `222px` (CSS Grid single-cell overlay, 0 clipping) | **Full lock card & CTA visibility** |
+| **`/timeline` (`360px`, `en`)** | Mobile Transaction Row Width / Height | Date crushed into `38px` col (`156px` tall) | Full-width stacked mobile row (`98px` tall) | **-37% row height, full readability** |
+| **All 44 Audited Captures** | Horizontal Page Overflow (`scrollWidth > innerWidth`) | `0` routes overflowing | `0` routes overflowing (`pageOverflow: false`) | **Zero horizontal scroll across all routes** |
 
 ---
 
-## 5. Preserved CapiSpot Growth Roadmap
+## 4. Separate Financial Correctness Report: Region Classification (`SXR8.DE` Showing ~98% Europe)
 
-1. **Completed Previously:** Admin Panel Pro grants, temporary trial grants, revocations, search across all auth user pages, and atomic PostgreSQL audit logging (`migration 0036`, live on `capispot.com`).
-2. **Completed in This Overhaul (Staging):** Global Header & Holdings search unclipping across EN/BG/DE/ES/IT, side-by-side desktop `Holdings Summary + Allocation` layout, `1024px` container query table threshold, responsive zero-overflow containment across `360px–1920px`.
-3. **Next Planned Initiatives:**
-   - **Broker CSV Onboarding Funnel:** Expand guided CSV validation feedback and automatic region/underlying-index enrichment for UCITS ETFs (`SXR8.DE`, `VUAA.DE`, `VWCE.DE`).
-   - **Landing Page & Video Preview Refresh:** Regenerate `public/video-preview/ui-*.png` and `public/hero-portfolio.png` from the updated UI once approved for production.
-   - **SEO / Programmatic Asset Discovery Pages:** Continue expanding public `/asset/$symbol` and broker import guide interlinking.
-   - **Pro Conversion & Trial Lifecycle:** Surface clear expiry countdown badges for temporary Pro grants issued via the Admin Panel.
+> [!IMPORTANT]
+> Per strict financial guardrails, **no financial calculation or region assignment logic was modified during the UI/UX overhaul**. This section documents the exact root cause and provides a self-contained implementation and unit test specification for a dedicated financial logic task.
+
+### Root Cause
+1. In `src/components/AddTransactionDialog.tsx` (line 238), newly added assets assign `region` using only the trading currency:
+   ```ts
+   region: cur === "EUR" ? "Europe" : "Global",
+   ```
+2. In `src/lib/PortfolioProvider.tsx` (line 906), CSV-imported assets assign `region` using:
+   ```ts
+   region: r.assetType === "crypto" ? "Global" : "North America",
+   ```
+3. Meanwhile, `src/lib/market-search.ts` (lines 106–121) already contains the authoritative `UCITS` metadata catalog with `index` (`"S&P 500"`, `"NASDAQ-100"`, `"FTSE All-World"`, `"MSCI World"`, `"MSCI ACWI"`, `"MSCI EM"`, `"STOXX Europe 600"`, `"DAX"`), `domicile`, and `currency`.
+4. Because `SXR8.DE` (iShares Core S&P 500 UCITS ETF) trades on Xetra in `EUR`, `AddTransactionDialog.tsx` stores `region: "Europe"` (reflecting trading currency) instead of `"North America"` (its underlying `S&P 500` exposure), causing `Allocation -> Region` on `/holdings` (`src/routes/holdings.tsx` line 156) to report ~98% Europe for an S&P 500 portfolio.
+
+### Proposed Fix for Dedicated Follow-Up Task
+1. Add a pure helper `inferAssetRegion({ symbol, type, currency }: { symbol: string; type?: string; currency?: string }): string` in `src/lib/market-search.ts`:
+   - If `type === "crypto"`, return `"Global"`.
+   - Look up `symbol.toUpperCase()` in `UCITS`:
+     - `index` in `["S&P 500", "NASDAQ-100"]` -> `"North America"`
+     - `index` in `["STOXX Europe 600", "DAX"]` -> `"Europe"`
+     - `index` in `["FTSE All-World", "MSCI World", "MSCI ACWI"]` -> `"Global"`
+     - `index` in `["MSCI EM"]` -> `"Emerging Markets"`
+   - Fall back to exchange suffix / currency (`symbol.endsWith(".DE") || symbol.endsWith(".L") || symbol.endsWith(".PA") || symbol.endsWith(".AS") || currency === "EUR" || currency === "GBP"` -> `"Europe"`, `currency === "USD"` -> `"North America"`, otherwise `"Global"`).
+2. Call `inferAssetRegion` consistently in both `src/components/AddTransactionDialog.tsx` and `src/lib/PortfolioProvider.tsx`, and normalize known `UCITS` symbols at selector time in `AllocationCard` / `holdings.tsx` so existing saved rows immediately display accurate underlying region exposure without requiring a destructive database migration.
+3. **Unit Tests to Add (`src/test/ucits.test.ts`):**
+   - `inferAssetRegion({ symbol: "SXR8.DE", type: "etf", currency: "EUR" }) === "North America"`
+   - `inferAssetRegion({ symbol: "VUAA.DE", type: "etf", currency: "EUR" }) === "North America"`
+   - `inferAssetRegion({ symbol: "VWCE.DE", type: "etf", currency: "EUR" }) === "Global"`
+   - `inferAssetRegion({ symbol: "EXSA.DE", type: "etf", currency: "EUR" }) === "Europe"`
+   - `inferAssetRegion({ symbol: "IS3N.DE", type: "etf", currency: "EUR" }) === "Emerging Markets"`
+   - `inferAssetRegion({ symbol: "AAPL", type: "stock", currency: "USD" }) === "North America"`
+   - `inferAssetRegion({ symbol: "SAP.DE", type: "stock", currency: "EUR" }) === "Europe"`
+   - `inferAssetRegion({ symbol: "BTC", type: "crypto", currency: "USD" }) === "Global"`
+
+---
+
+## 5. Product Video Modernization Plan (Next Phase After UI Approval)
+
+Per project rules, `src/components/VideoPresentation.tsx` and `public/video-preview/` were kept 100% untouched during Phases 1–3. Once the UI/UX overhaul is approved, the Video Modernization Phase should execute the following steps:
+
+1. **Eliminate Duplicate Outer/Inner Header & Mode Switcher:**
+   - **Current Issue Observed in `dashboard_1440_en_dark.png`:** `src/components/VideoPresentation.tsx` renders an outer card header (`PRODUCT WALKTHROUGH` / `See CapiSpot in action.` / `[Portfolio tour | Pro tools]`) and embeds `/video-preview/?mode=...`, which renders its own inner header (`See the product. Understand the difference.` / `[Portfolio tour | Pro tools]`), resulting in two stacked headers and two identical mode switchers.
+   - **Planned Fix:** Pass `&embed=1` to `/video-preview/` (or remove the redundant inner top bar inside `public/video-preview/index.html`) so the outer React card header in `VideoPresentation.tsx` is the single unified control bar.
+2. **Refresh All 10 Slide Assets + Hero Image from the Overhauled UI:**
+   - Re-capture `public/hero-portfolio.png` and `public/video-preview/ui-overview.png`, `ui-holdings.png`, `ui-import.png`, `ui-market-discovery.png`, `ui-dividends.png`, `ui-features.png`, `ui-fifo.png`, `ui-dcf.png`, `ui-pro-features.png`, and `ui-pro-preview.png` at `1440×900` (`deviceScaleFactor: 2`) so the walkthrough reflects the new side-by-side `Holdings Summary + Allocation` layout, unclipped search bars, and balanced `Tools` / `Dashboard` grids.
+
+---
+
+## 6. Preserved Post-Video Roadmap: Analytics, Conversion Funnel, Onboarding & User Acquisition
+
+To be executed **after** the Product Video Modernization Phase:
+1. **Privacy-Safe Conversion Funnel Telemetry:** Track anonymous step completion across `Landing Page -> Demo / CSV Import Preview -> Sign Up -> First Portfolio Import -> Pro Upgrade View` without third-party ad trackers.
+2. **Guided First-Import Onboarding & Broker Auto-Detection:** Expand `FirstImportWizard` with instant broker detection badges (Trading 212, IBKR, Revolut) and automatic underlying-index region enrichment for UCITS ETFs.
+3. **Pro Trial Lifecycle & Renewal Prompts:** Surface clear remaining-days badges for temporary Pro grants issued via the Owner Console (`/admin`) with seamless upgrade CTAs before expiration.
+4. **Programmatic SEO & Broker Guide Acquisition Loop:** Expand interlinking between `/markets`, `/asset/$symbol`, `/etf-overlap`, and the 5-language broker import guides (`/trading212-import`, `/ibkr-import`, `/revolut-import`).

@@ -739,7 +739,7 @@ function Watchlist() {
                       onClick={() => toggleWatch(r.a.symbol)}
                       aria-label={`${c.remove} ${r.a.symbol}`}
                       title={c.remove}
-                      className="justify-self-end text-primary"
+                      className="col-span-2 justify-self-end text-primary md:col-span-1"
                     >
                       <Star size={16} className="fill-current" />
                     </button>

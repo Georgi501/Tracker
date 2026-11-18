@@ -104,12 +104,15 @@ export function ProGate({
           )}
         </div>
       ) : (
-        <div className="relative overflow-hidden rounded-xl">
-          <div aria-hidden className="pointer-events-none select-none blur-[3px] opacity-60">
+        <div className="grid overflow-hidden rounded-xl">
+          <div
+            aria-hidden
+            className="pointer-events-none col-start-1 row-start-1 select-none blur-[3px] opacity-60"
+          >
             {preview}
           </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/40 p-4 text-center">
-            <Lock size={20} className="text-primary" />
+          <div className="z-10 col-start-1 row-start-1 flex flex-col items-center justify-center gap-2 bg-background/40 p-4 text-center">
+            <Lock size={20} className="shrink-0 text-primary" />
             <p className="max-w-xs text-sm text-foreground">{desc}</p>
             <Link
               to="/pricing"

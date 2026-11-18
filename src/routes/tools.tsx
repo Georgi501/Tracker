@@ -271,10 +271,35 @@ function Tools() {
       setRestoring(false);
     }
   };
-  const toolGroups =
-    p.lang === "bg"
-      ? { free: "Безплатни", portfolio: "За моето портфолио", pro: "Pro" }
-      : { free: "Free", portfolio: "For my portfolio", pro: "Pro" };
+  const toolGroups = {
+    en: { free: "Free", portfolio: "For my portfolio", pro: "Pro" },
+    bg: { free: "Безплатни", portfolio: "За моето портфолио", pro: "Pro" },
+    de: { free: "Kostenlos", portfolio: "Für mein Portfolio", pro: "Pro" },
+    es: { free: "Gratis", portfolio: "Para mi cartera", pro: "Pro" },
+    it: { free: "Gratis", portfolio: "Per il mio portafoglio", pro: "Pro" },
+  }[p.lang];
+  const snapshotCopy = {
+    en: {
+      title: "Shareable portfolio snapshot",
+      desc: "A clean card with asset-class percentages only.",
+    },
+    bg: {
+      title: "Споделима снимка на портфолиото",
+      desc: "Красива картичка само с проценти по класове активи.",
+    },
+    de: {
+      title: "Teilbare Portfolio-Karte",
+      desc: "Übersichtliche Karte nur mit Prozentanteilen nach Anlageklasse.",
+    },
+    es: {
+      title: "Tarjeta compartible de cartera",
+      desc: "Una tarjeta limpia solo con porcentajes por clase de activo.",
+    },
+    it: {
+      title: "Card condivisibile del portafoglio",
+      desc: "Una scheda pulita solo con le percentuali per classe di attivo.",
+    },
+  }[p.lang];
   return (
     <div className="space-y-8">
       <h1 className="font-display text-2xl font-bold">{c.tools}</h1>
@@ -298,10 +323,10 @@ function Tools() {
               <DataQuality />
             </Card>
           )}
-          <GoalsCard />
+          <RecurringReminders />
           <Risk />
           <ConcentrationCard />
-          <RecurringReminders />
+          <GoalsCard />
         </div>
       </section>
       <section aria-labelledby="pro-tools">
@@ -338,14 +363,8 @@ function Tools() {
             <PortfolioReview />
           </ProGate>
           <ProGate
-            title={
-              p.lang === "bg" ? "Споделима снимка на портфолиото" : "Shareable portfolio snapshot"
-            }
-            desc={
-              p.lang === "bg"
-                ? "Красива картичка само с проценти по класове активи."
-                : "A clean card with asset-class percentages only."
-            }
+            title={snapshotCopy.title}
+            desc={snapshotCopy.desc}
             preview={<CurveSilhouette />}
           >
             <SnapshotCard />
@@ -397,7 +416,12 @@ function Tools() {
           >
             <AssetRiskAnalysis />
           </ProGate>
-          <ProGate title={c.tax} desc={c.realized} preview={<CurveSilhouette />}>
+          <ProGate
+            className="lg:col-span-2"
+            title={c.tax}
+            desc={c.realized}
+            preview={<CurveSilhouette />}
+          >
             <Tax />
           </ProGate>
         </div>
@@ -799,7 +823,7 @@ function Watchlist() {
     setInput("");
   };
   return (
-    <Card>
+    <Card className="lg:col-span-2">
       <h3 className="font-display mb-3 font-semibold">{c.watchlist}</h3>
       <form
         className="mb-3 flex gap-2"
