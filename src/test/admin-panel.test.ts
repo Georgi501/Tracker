@@ -10,6 +10,18 @@ const authState = vi.hoisted(() => ({
   rpcCalls: [] as { fn: string; args: Record<string, unknown> }[],
   atomicError: null as { message: string } | null,
   subMutations: 0,
+  customPages: null as
+    | ((page: number, perPage: number) => {
+        users: {
+          id: string;
+          email: string | null;
+          created_at: string;
+          last_sign_in_at: string | null;
+        }[];
+        lastPage: number;
+        total: number;
+      })
+    | null,
 }));
 
 function makeSupabaseAdminMock() {
@@ -37,10 +49,12 @@ function makeSupabaseAdminMock() {
   return {
     auth: {
       admin: {
-        listUsers: vi.fn().mockResolvedValue({
-          data: { users, lastPage: 1, total: 2 },
+        listUsers: vi.fn().mockImplementation(async ({ page = 1, perPage = 25 } = {}) => ({
+          data: authState.customPages
+            ? authState.customPages(page, perPage)
+            : { users, lastPage: 1, total: 2 },
           error: null,
-        }),
+        })),
         getUserById: vi.fn().mockImplementation(async (id: string) => ({
           data: { user: users.find((u) => u.id === id) ?? null },
           error: null,
@@ -206,6 +220,7 @@ describe("admin panel API security and functionality", () => {
     authState.rpcCalls = [];
     authState.atomicError = null;
     authState.subMutations = 0;
+    authState.customPages = null;
   });
 
   it("rate limits POST /api/admin", () => {
@@ -356,19 +371,123 @@ describe("admin panel API security and functionality", () => {
     const body = (await resPartial.json()) as {
       users: { email: string | null }[];
       account: { email: string | null } | null;
+      searchMeta?: { truncated: boolean };
     };
     expect(body.users.map((u) => u.email)).toEqual(["free@example.com"]);
     expect(body.account?.email).toBe("free@example.com");
+    expect(body.searchMeta?.truncated).toBe(false);
 
     const resTooLong = await handleAdminGet(
       new Request(`https://capispot.com/api/admin?q=${"a".repeat(121)}`),
     );
     expect(resTooLong.status).toBe(400);
 
+    const resBadPage = await handleAdminGet(
+      new Request("https://capispot.com/api/admin?q=free&page=0"),
+    );
+    expect(resBadPage.status).toBe(400);
+
     authState.mode = "nonadmin";
     const resNonAdmin = await handleAdminGet(
       new Request("https://capispot.com/api/admin?q=free"),
     );
     expect(resNonAdmin.status).toBe(403);
+  });
+
+  it("scans across multiple user pages for partial search, handles no/multiple matches, paginates results, and flags scan limits", async () => {
+    const makeUser = (idx: number, email: string) => ({
+      id: `44444444-4444-4444-8444-${String(idx).padStart(12, "0")}`,
+      email,
+      created_at: "2026-11-10T00:00:00Z",
+      last_sign_in_at: null,
+    });
+
+    // Page 1 has unrelated users; page 2 has 1 match; page 3 has another match
+    authState.customPages = (page) => {
+      if (page === 1) {
+        return {
+          users: [makeUser(1, "alpha@example.com"), makeUser(2, "beta@example.com")],
+          lastPage: 3,
+          total: 6,
+        };
+      }
+      if (page === 2) {
+        return {
+          users: [makeUser(3, "gmarkov1@gmail.com"), makeUser(4, "other@example.com")],
+          lastPage: 3,
+          total: 6,
+        };
+      }
+      return {
+        users: [makeUser(5, "gmarkov2@gmail.com"), makeUser(6, "zeta@example.com")],
+        lastPage: 3,
+        total: 6,
+      };
+    };
+
+    // Multiple matches across page 2 and 3
+    const resMulti = await handleAdminGet(
+      new Request("https://capispot.com/api/admin?q=gmarkov"),
+    );
+    expect(resMulti.status).toBe(200);
+    const multiBody = (await resMulti.json()) as {
+      users: { email: string | null }[];
+      account: { email: string | null } | null;
+      pagination: { page: number; lastPage: number; total: number };
+      searchMeta?: { truncated: boolean; scannedPages: number };
+    };
+    expect(multiBody.users.map((u) => u.email)).toEqual([
+      "gmarkov1@gmail.com",
+      "gmarkov2@gmail.com",
+    ]);
+    expect(multiBody.account).toBeNull();
+    expect(multiBody.pagination).toEqual({ page: 1, lastPage: 1, total: 2 });
+    expect(multiBody.searchMeta?.truncated).toBe(false);
+    expect(multiBody.searchMeta?.scannedPages).toBe(3);
+
+    // No matching accounts
+    const resNone = await handleAdminGet(
+      new Request("https://capispot.com/api/admin?q=nomatchxyz"),
+    );
+    expect(resNone.status).toBe(200);
+    const noneBody = (await resNone.json()) as {
+      users: unknown[];
+      pagination: { page: number; lastPage: number; total: number };
+    };
+    expect(noneBody.users).toEqual([]);
+    expect(noneBody.pagination).toEqual({ page: 1, lastPage: 1, total: 0 });
+
+    // >25 matches pagination (30 matching users -> page 1 = 25, page 2 = 5)
+    authState.customPages = () => ({
+      users: Array.from({ length: 30 }, (_, i) => makeUser(100 + i, `gm${i}@gmail.com`)),
+      lastPage: 1,
+      total: 30,
+    });
+    const resPage2 = await handleAdminGet(
+      new Request("https://capispot.com/api/admin?q=gm&page=2"),
+    );
+    expect(resPage2.status).toBe(200);
+    const page2Body = (await resPage2.json()) as {
+      users: unknown[];
+      pagination: { page: number; lastPage: number; total: number };
+    };
+    expect(page2Body.users).toHaveLength(5);
+    expect(page2Body.pagination).toEqual({ page: 2, lastPage: 2, total: 30 });
+
+    // Scan cap reached (lastPage = 25 > maxScanPages = 20) flags truncated: true
+    authState.customPages = (page) => ({
+      users: [makeUser(200 + page, `user${page}@example.com`)],
+      lastPage: 25,
+      total: 2500,
+    });
+    const resTruncated = await handleAdminGet(
+      new Request("https://capispot.com/api/admin?q=user1"),
+    );
+    expect(resTruncated.status).toBe(200);
+    const truncBody = (await resTruncated.json()) as {
+      searchMeta?: { truncated: boolean; scannedPages: number; maxScanPages: number };
+    };
+    expect(truncBody.searchMeta?.truncated).toBe(true);
+    expect(truncBody.searchMeta?.scannedPages).toBe(20);
   });
 });

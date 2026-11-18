@@ -7,6 +7,10 @@ const searchQuerySchema = z.string().trim().min(1).max(120);
 const pageSchema = z.coerce.number().int().min(1).max(100_000).default(1);
 const planFilterSchema = z.enum(["all", "free", "pro", "granted"]).default("all");
 const ADMIN_PAGE_SIZE = 25;
+// Safety bounds for multi-page partial search across Supabase Auth users
+const ADMIN_SEARCH_SCAN_PER_PAGE = 100;
+const ADMIN_SEARCH_MAX_SCAN_PAGES = 20;
+const ADMIN_SEARCH_MAX_ENRICH = 200;
 
 const mutationSchema = z
   .object({
@@ -242,9 +246,20 @@ export async function handleAdminGet(request: Request): Promise<Response> {
   if (!planResult.success) return json({ error: "Invalid plan filter" }, 400);
   const plan = planResult.data;
 
-  const [statsResult, usersResult, manualGrantsCountRes] = await Promise.all([
+  const isUuidQuery = Boolean(rawQuery && uuidSchema.safeParse(rawQuery).success);
+  const isEmailQuery = Boolean(rawQuery && emailSchema.safeParse(rawQuery).success);
+  const needle = rawQuery.toLowerCase();
+
+  function matchesPlan(u: AdminUserSummary): boolean {
+    if (plan === "free") return !u.pro;
+    if (plan === "pro") return u.pro;
+    if (plan === "granted") return u.has_admin_grant;
+    return true;
+  }
+
+  // Exact lookup when userId or full email/UUID is provided; only scan pages for partial search.
+  const [statsResult, manualGrantsCountRes] = await Promise.all([
     auth.supabaseAdmin.rpc("admin_dashboard_stats"),
-    auth.supabaseAdmin.auth.admin.listUsers({ page, perPage: ADMIN_PAGE_SIZE }),
     auth.supabaseAdmin
       .from("pro_access_grants")
       .select("id", { count: "exact", head: true })
@@ -252,37 +267,19 @@ export async function handleAdminGet(request: Request): Promise<Response> {
   ]);
 
   if (statsResult.error) return failure(statsResult.error, "Unable to load admin summary");
-  if (usersResult.error) return failure(usersResult.error, "Unable to load registered accounts");
 
-  const enriched = await enrichUsers(auth.supabaseAdmin, usersResult.data.users);
-  if (enriched.error) return failure(enriched.error, "Unable to load account access status");
-
-  const needle = rawQuery.toLowerCase();
-  const filteredUsers = enriched.users.filter((u) => {
-    const planOk =
-      plan === "free"
-        ? !u.pro
-        : plan === "pro"
-          ? u.pro
-          : plan === "granted"
-            ? u.has_admin_grant
-            : true;
-    if (!planOk) return false;
-    if (!needle) return true;
-    return (
-      Boolean(u.email?.toLowerCase().includes(needle)) || u.user_id.toLowerCase().includes(needle)
-    );
-  });
-
-  // Look up searched or selected account
   let account: AdminUserSummary | null = null;
-  const isUuidQuery = Boolean(rawQuery && uuidSchema.safeParse(rawQuery).success);
-  const isEmailQuery = Boolean(rawQuery && emailSchema.safeParse(rawQuery).success);
+  let filteredUsers: AdminUserSummary[] = [];
+  let paginationTotal = 0;
+  let paginationLastPage = 1;
+  let searchMeta: { truncated: boolean; scannedPages: number; maxScanPages: number } | undefined;
+
   const lookupId = selectedUserId ?? (isUuidQuery ? rawQuery : null);
   if (lookupId) {
     const byId = await auth.supabaseAdmin.auth.admin.getUserById(lookupId);
     if (!byId.error && byId.data.user) {
       const one = await enrichUsers(auth.supabaseAdmin, [byId.data.user]);
+      if (one.error) return failure(one.error, "Unable to load account access status");
       account = one.users[0] ?? null;
     }
   } else if (isEmailQuery) {
@@ -293,11 +290,84 @@ export async function handleAdminGet(request: Request): Promise<Response> {
       const byId = await auth.supabaseAdmin.auth.admin.getUserById(found.user_id);
       if (!byId.error && byId.data.user) {
         const one = await enrichUsers(auth.supabaseAdmin, [byId.data.user]);
+        if (one.error) return failure(one.error, "Unable to load account access status");
         account = one.users[0] ?? null;
       }
     }
-  } else if (rawQuery && filteredUsers.length === 1) {
-    account = filteredUsers[0] ?? null;
+  }
+
+  if (isUuidQuery || isEmailQuery) {
+    filteredUsers = account && matchesPlan(account) ? [account] : [];
+    paginationTotal = filteredUsers.length;
+    paginationLastPage = 1;
+    searchMeta = { truncated: false, scannedPages: 0, maxScanPages: ADMIN_SEARCH_MAX_SCAN_PAGES };
+  } else if (needle) {
+    type RawAuthUser = {
+      id: string;
+      email?: string | null;
+      created_at: string;
+      last_sign_in_at?: string | null;
+    };
+    const matchedRaw: RawAuthUser[] = [];
+    let scanPage = 1;
+    let totalAuthPages = 1;
+    let scannedPages = 0;
+    let truncated = false;
+
+    while (scanPage <= totalAuthPages && scanPage <= ADMIN_SEARCH_MAX_SCAN_PAGES) {
+      const pageRes = await auth.supabaseAdmin.auth.admin.listUsers({
+        page: scanPage,
+        perPage: ADMIN_SEARCH_SCAN_PER_PAGE,
+      });
+      if (pageRes.error) return failure(pageRes.error, "Unable to load registered accounts");
+      scannedPages += 1;
+      totalAuthPages = Math.max(1, pageRes.data.lastPage ?? 1);
+      for (const u of pageRes.data.users) {
+        if (
+          Boolean(u.email?.toLowerCase().includes(needle)) ||
+          u.id.toLowerCase().includes(needle)
+        ) {
+          matchedRaw.push(u);
+        }
+      }
+      if (matchedRaw.length >= ADMIN_SEARCH_MAX_ENRICH) {
+        if (scanPage < totalAuthPages || matchedRaw.length > ADMIN_SEARCH_MAX_ENRICH) {
+          truncated = true;
+        }
+        break;
+      }
+      scanPage += 1;
+    }
+    if (totalAuthPages > ADMIN_SEARCH_MAX_SCAN_PAGES && scannedPages >= ADMIN_SEARCH_MAX_SCAN_PAGES) {
+      truncated = true;
+    }
+
+    const toEnrich = matchedRaw.slice(0, ADMIN_SEARCH_MAX_ENRICH);
+    const enriched = await enrichUsers(auth.supabaseAdmin, toEnrich);
+    if (enriched.error) return failure(enriched.error, "Unable to load account access status");
+
+    const planMatched = enriched.users.filter(matchesPlan);
+    paginationTotal = planMatched.length;
+    paginationLastPage = Math.max(1, Math.ceil(paginationTotal / ADMIN_PAGE_SIZE));
+    const start = (page - 1) * ADMIN_PAGE_SIZE;
+    filteredUsers = planMatched.slice(start, start + ADMIN_PAGE_SIZE);
+    if (planMatched.length === 1) {
+      account = planMatched[0] ?? null;
+    }
+    searchMeta = { truncated, scannedPages, maxScanPages: ADMIN_SEARCH_MAX_SCAN_PAGES };
+  } else {
+    const usersResult = await auth.supabaseAdmin.auth.admin.listUsers({
+      page,
+      perPage: ADMIN_PAGE_SIZE,
+    });
+    if (usersResult.error) return failure(usersResult.error, "Unable to load registered accounts");
+
+    const enriched = await enrichUsers(auth.supabaseAdmin, usersResult.data.users);
+    if (enriched.error) return failure(enriched.error, "Unable to load account access status");
+
+    filteredUsers = enriched.users.filter(matchesPlan);
+    paginationTotal = usersResult.data.total;
+    paginationLastPage = usersResult.data.lastPage;
   }
 
   // Optional audit trail & expiring temporary grants (graceful if migration 0036 not yet applied)
@@ -370,10 +440,11 @@ export async function handleAdminGet(request: Request): Promise<Response> {
     account,
     users: filteredUsers,
     recentAuditLogs,
+    ...(searchMeta ? { searchMeta } : {}),
     pagination: {
       page,
-      lastPage: usersResult.data.lastPage,
-      total: usersResult.data.total,
+      lastPage: paginationLastPage,
+      total: paginationTotal,
     },
   });
 }

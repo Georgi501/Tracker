@@ -45,6 +45,7 @@ type AdminResponse = {
   account: AdminUserSummary | null;
   users: AdminUserSummary[];
   recentAuditLogs?: AdminAuditEntry[];
+  searchMeta?: { truncated: boolean; scannedPages: number; maxScanPages: number };
   pagination: AdminUserPage;
 };
 
@@ -76,6 +77,7 @@ function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchTruncated, setSearchTruncated] = useState(false);
 
   // Grant / revoke controls
   const [grantMode, setGrantMode] = useState<"permanent" | "7d" | "30d" | "custom">("permanent");
@@ -228,8 +230,10 @@ function AdminPage() {
         if (extraQuery) {
           setAccount(result.account);
           setSearched(true);
+          setSearchTruncated(Boolean(result.searchMeta?.truncated));
         } else {
           setSearched(false);
+          setSearchTruncated(false);
         }
       } catch (error) {
         const msg = error instanceof Error ? error.message : copy.loadError;
@@ -560,6 +564,17 @@ function AdminPage() {
               ))}
             </div>
 
+            {searchTruncated && (
+              <p
+                role="status"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
+              >
+                {bg
+                  ? "Показани са частични резултати (достигнат е лимитът за сканиране). Въведете пълен имейл или UUID за точно търсене."
+                  : "Showing partial results (scan limit reached). Enter a full email or UUID for an exact lookup."}
+              </p>
+            )}
+
             {accounts.length ? (
               <>
                 <div className="w-full max-w-full overflow-x-auto">
@@ -630,7 +645,7 @@ function AdminPage() {
                     variant="outline"
                     size="sm"
                     disabled={busy || accountPage.page <= 1}
-                    onClick={() => void loadPage(accountPage.page - 1, planFilter)}
+                    onClick={() => void loadPage(accountPage.page - 1, planFilter, queryInput.trim())}
                     className="rounded-full"
                   >
                     {copy.previous}
@@ -643,7 +658,7 @@ function AdminPage() {
                     variant="outline"
                     size="sm"
                     disabled={busy || accountPage.page >= accountPage.lastPage}
-                    onClick={() => void loadPage(accountPage.page + 1, planFilter)}
+                    onClick={() => void loadPage(accountPage.page + 1, planFilter, queryInput.trim())}
                     className="rounded-full"
                   >
                     {copy.next}
