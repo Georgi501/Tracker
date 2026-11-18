@@ -60,7 +60,9 @@ export function HeaderSearch() {
           setValue(e.target.value);
           go(e.target.value);
         }}
-        className="header-search-input absolute inset-0 z-10 rounded-full bg-transparent pl-9 pr-12 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+        className={`header-search-input absolute inset-0 z-10 rounded-full bg-transparent pl-9 text-sm text-foreground outline-none placeholder:text-muted-foreground ${
+          value ? "pr-9" : "pr-3.5"
+        }`}
       />
       {value ? (
         <button

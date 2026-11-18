@@ -1335,8 +1335,8 @@ function Dashboard() {
                           className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
                           <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold">{h.asset.name}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold">{h.asset.name}</p>
                             <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
                           </div>
                           <div className="text-right text-sm">

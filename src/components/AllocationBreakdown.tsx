@@ -29,8 +29,21 @@ export function AllocationBreakdown({
   const total = rows.reduce((sum, item) => sum + item.value, 0);
   const activeIndex = hoveredIndex ?? selectedIndex;
 
+  if (rows.length === 0 || total <= 0) {
+    return (
+      <div
+        role="img"
+        aria-label={`${totalLabel}: ${formatValue(0)}`}
+        className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-secondary/30 px-3.5 py-3"
+      >
+        <span className="text-xs font-medium text-muted-foreground">{totalLabel}</span>
+        <span className="numeric-display text-sm font-bold">{formatValue(0)}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid items-center gap-2 sm:grid-cols-[minmax(160px,0.9fr)_minmax(0,1.1fr)] sm:gap-5">
+    <div className="allocation-breakdown-grid">
       <div
         role="img"
         aria-label={`${totalLabel}: ${formatValue(total)}. ${rows
@@ -39,7 +52,7 @@ export function AllocationBreakdown({
               `${item.name}: ${formatValue(item.value)} (${percentage(item.value / total)})`,
           )
           .join(", ")}`}
-        className="relative mx-auto h-36 w-full max-w-[240px] sm:h-44"
+        className="relative mx-auto h-36 w-full max-w-[176px] sm:h-40"
       >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -47,7 +60,7 @@ export function AllocationBreakdown({
               <Pie
                 data={[{ name: "Portfolio", value: total }]}
                 dataKey="value"
-                innerRadius="60%"
+                innerRadius="64%"
                 outerRadius="90%"
                 stroke="none"
                 fill="var(--secondary)"
@@ -59,7 +72,7 @@ export function AllocationBreakdown({
               data={rows}
               dataKey="value"
               nameKey="name"
-              innerRadius="61%"
+              innerRadius="65%"
               outerRadius="89%"
               paddingAngle={0}
               cornerRadius={0}
@@ -85,17 +98,17 @@ export function AllocationBreakdown({
             </Pie>
           </PieChart>
         </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
-          <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <span className="max-w-full truncate text-[10px] leading-tight font-medium text-muted-foreground">
             {totalLabel}
           </span>
-          <span className="numeric-display mt-0.5 max-w-full truncate text-sm font-bold sm:text-base">
+          <span className="numeric-display mt-0.5 max-w-full truncate text-xs font-bold sm:text-[13px]">
             {formatValue(total)}
           </span>
         </div>
       </div>
 
-      <ul className="space-y-0.5">
+      <ul className={rows.length >= 4 ? "allocation-legend-multi space-y-0.5" : "space-y-0.5"}>
         {rows.map((item, index) => {
           const share = (item.value / total) * 100;
           const active = activeIndex === index;

@@ -734,30 +734,56 @@ function Holdings() {
           const total = p.holdings.reduce((s, h) => s + h.value, 0);
           const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
           const prev = total - day;
+          const totalCost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
+          const totalPnl = p.holdings.reduce((s, h) => s + h.pnl, 0);
           return (
-            <Card>
-              <div className="flex flex-wrap items-end gap-x-10 gap-y-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {c.holdingsSummary}
-                  </p>
-                  <p className="numeric-display mt-1 text-3xl font-bold">{p.money(total)}</p>
+            <div className="grid gap-4 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
+              <Card className="flex flex-col justify-between gap-4 p-4 sm:p-5">
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {c.holdingsSummary}
+                    </p>
+                    <p className="numeric-display mt-1 text-3xl font-bold">{p.money(total)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {c.dayChange}
+                    </p>
+                    <p className="numeric-display mt-1 text-lg font-semibold">
+                      <Delta value={day}>
+                        {p.money(day, { sign: true })} ({prev > 0 ? pct((day / prev) * 100) : "—"})
+                      </Delta>
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {c.dayChange}
-                  </p>
-                  <p className="numeric-display mt-1 text-lg font-semibold">
-                    <Delta value={day}>
-                      {p.money(day, { sign: true })} ({prev > 0 ? pct((day / prev) * 100) : "—"})
-                    </Delta>
-                  </p>
+                <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3.5 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">{p.t("invested")}</p>
+                    <p className="numeric-display mt-0.5 text-sm font-semibold">
+                      {p.money(totalCost)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{p.t("totalPnl")}</p>
+                    <p className="numeric-display mt-0.5 text-sm font-semibold">
+                      <Delta value={totalPnl}>
+                        {p.money(totalPnl, { sign: true })}
+                      </Delta>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{p.t("holdings")}</p>
+                    <p className="numeric-display mt-0.5 text-sm font-semibold">
+                      {p.holdings.length}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+              <AllocationCard />
+            </div>
           );
         })()}
-      {p.holdings.length > 0 && <AllocationCard />}
       <Card className="holdings-positions cq-card">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="font-display mr-auto text-2xl font-bold">{p.t("holdings")}</h1>
@@ -776,10 +802,10 @@ function Holdings() {
             <Plus size={16} />
             {c.addHolding}
           </button>
-          <div className="relative w-full sm:w-96">
+          <div className="relative w-full sm:min-w-[26rem] sm:flex-1 lg:max-w-lg">
             <Search
               size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
               value={q}
@@ -788,7 +814,9 @@ function Holdings() {
               onChange={(e) => setQ(e.target.value)}
               placeholder={c.placeholder}
               aria-label={c.placeholder}
-              className="w-full rounded-full border border-input bg-background py-3 pl-9 pr-9 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
+              className={`h-11 w-full rounded-full border border-input bg-background py-2 pl-9 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20 ${
+                q ? "pr-9" : "pr-3.5"
+              }`}
             />
             {q && (
               <button

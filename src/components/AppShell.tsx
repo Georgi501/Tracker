@@ -333,7 +333,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = [
     { to: "/", label: p.t("dashboard") },
     { to: "/holdings", label: p.t("holdings") },
-    { to: "/markets", label: marketCopy[p.lang].markets },
+    {
+      to: "/markets",
+      label:
+        p.lang === "bg"
+          ? "Пазари"
+          : p.lang === "de"
+            ? "Marktsuche"
+            : p.lang === "es"
+              ? "Mercados"
+              : p.lang === "it"
+                ? "Mercati"
+                : marketCopy[p.lang].markets,
+    },
     { to: "/watchlist", label: shellCopy.watchlist },
     {
       to: "/alerts",
@@ -371,9 +383,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         {
           label: shellCopy.portfolioGroup,
           links: nav.filter((item) =>
-            ["/compare", "/timeline", "/dividends", "/brokers", "/alerts", "/earnings"].includes(
-              item.to,
-            ),
+            [
+              "/watchlist",
+              "/alerts",
+              "/compare",
+              "/timeline",
+              "/dividends",
+              "/brokers",
+              "/earnings",
+            ].includes(item.to),
           ),
         },
         {
@@ -489,7 +507,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
       <header className="header-as sticky top-0 z-30">
-        <div className="header-layout mx-auto flex min-h-14 flex-wrap items-center gap-x-2 gap-y-1.5 px-4 py-1.5 lg:gap-x-4">
+        <div className="header-layout mx-auto flex min-h-14 flex-wrap items-center gap-x-2 gap-y-1.5 px-3 py-1.5 sm:px-4 xl:gap-x-3 2xl:gap-x-4">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <span className="brand-wordmark font-display text-lg font-bold tracking-tight sm:text-xl">
               <span className="b1">Capi</span>
@@ -502,7 +520,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 activeOptions={{ exact: true }}
-                className="as-link"
+                className={`as-link ${
+                  n.to === "/alerts" || n.to === "/watchlist" ? "hidden 2xl:inline-flex" : ""
+                }`}
                 activeProps={{ className: "as-link-active" }}
               >
                 {n.label}
@@ -540,7 +560,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenu>
             )}
           </nav>
-          <div className="header-search-slot order-last min-w-0 w-full basis-full lg:max-w-sm xl:max-w-md">
+          <div className="header-search-slot order-last min-w-0 w-full basis-full xl:max-w-md">
             <HeaderSearch />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -564,7 +584,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   to="/pricing"
                   hash="plan-comparison"
-                  className="press hidden rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 md:inline"
+                  className="press hidden rounded-md bg-primary px-2.5 py-1.5 text-xs font-bold whitespace-nowrap text-primary-foreground hover:opacity-90 md:inline 2xl:px-3"
                 >
                   {shellCopy.upgrade}
                 </Link>

@@ -133,7 +133,7 @@ export function CommandMenu({ onAddTx }: { onAddTx: () => void }) {
         aria-haspopup="dialog"
         aria-expanded={open}
         title={`${c.title} (Ctrl/⌘+K)`}
-        className="press grid size-11 shrink-0 place-items-center rounded-full border border-border/70 bg-secondary/50 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="press grid size-9 shrink-0 place-items-center rounded-full border border-border/70 bg-secondary/50 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <Command size={18} aria-hidden />
         <span className="sr-only">Ctrl/⌘+K</span>
