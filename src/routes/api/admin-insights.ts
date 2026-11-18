@@ -236,8 +236,57 @@ export const Route = createFileRoute("/api/admin-insights")({
           .order("created_at", { ascending: false })
           .limit(10);
 
+        const [statsRes, manualGrants, expiringGrants] = await Promise.all([
+          db.rpc("admin_dashboard_stats"),
+          safe(() =>
+            db
+              .from("pro_access_grants")
+              .select("*", { count: "exact", head: true })
+              .is("revoked_at", null),
+          ),
+          safe(() =>
+            (
+              db.from("pro_access_grants") as unknown as {
+                select: (
+                  c: string,
+                  o: { count: "exact"; head: true },
+                ) => {
+                  is: (
+                    c: string,
+                    v: null,
+                  ) => {
+                    gte: (
+                      c: string,
+                      v: string,
+                    ) => {
+                      lte: (c: string, v: string) => CountResult;
+                    };
+                  };
+                };
+              }
+            )
+              .select("*", { count: "exact", head: true })
+              .is("revoked_at", null)
+              .gte("expires_at", new Date(now).toISOString())
+              .lte("expires_at", ahead(14)),
+          ),
+        ]);
+
+        const baseStats = !statsRes.error ? statsRes.data?.[0] : null;
+        const totalUsers = baseStats ? Number(baseStats.total_users) : null;
+        const proUsers = baseStats ? Number(baseStats.pro_accounts) : null;
+        const freeUsers =
+          totalUsers !== null && proUsers !== null ? Math.max(0, totalUsers - proUsers) : null;
+
         return json({
           generatedAt: new Date(now).toISOString(),
+          accessSummary: {
+            totalUsers,
+            freeUsers,
+            proUsers,
+            manualGrants,
+            expiringGrants,
+          },
           growth: {
             signups7,
             signups30,

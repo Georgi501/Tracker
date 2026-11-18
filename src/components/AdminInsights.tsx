@@ -13,6 +13,13 @@ type VisitorStats = {
 };
 type Insights = {
   generatedAt: string;
+  accessSummary?: {
+    totalUsers: Count;
+    freeUsers: Count;
+    proUsers: Count;
+    manualGrants: Count;
+    expiringGrants: Count;
+  };
   growth: {
     signups7: Count;
     signups30: Count;
@@ -90,10 +97,18 @@ const COPY = {
     referrals: "Invitations",
     pending: "Joined, waiting for first payment",
     rewarded: "Rewarded",
+    accessTitle: "Plans & manual grants",
+    totalUsersLabel: "Total registered users",
+    freeUsersLabel: "Free users",
+    proUsersLabel: "Effective Pro users",
+    manualGrantsLabel: "Active manual Pro grants",
+    expiringGrantsLabel: "Temporary grants expiring in 14d",
     feedback: "Latest feedback",
     noFeedback: "No feedback yet.",
     unavailable: "n/a",
+    loading: "Loading insights...",
     loadError: "Insights are unavailable right now.",
+    emptyState: "No visitor or subscription events recorded yet for this environment.",
     updated: "Updated",
   },
   bg: {
@@ -148,10 +163,18 @@ const COPY = {
     referrals: "Покани",
     pending: "Регистрирани, чакат първо плащане",
     rewarded: "Възнаградени",
+    accessTitle: "Планове и ръчни Pro права",
+    totalUsersLabel: "Общо регистрирани",
+    freeUsersLabel: "Безплатни профили",
+    proUsersLabel: "Активни Pro профили",
+    manualGrantsLabel: "Ръчни Pro права",
+    expiringGrantsLabel: "Изтичащи временни права (14 дни)",
     feedback: "Последна обратна връзка",
     noFeedback: "Още няма обратна връзка.",
     unavailable: "н/д",
+    loading: "Зареждане на показателите...",
     loadError: "Показателите не са налични в момента.",
+    emptyState: "Все още няма записани събития за посещения или абонаменти в тази среда.",
     updated: "Обновено",
   },
 };
@@ -200,24 +223,38 @@ export function AdminInsights({ bg, total }: { bg: boolean; total: number | null
 
   if (failed)
     return (
-      <Card>
-        <p className="text-sm text-muted-foreground">{c.loadError}</p>
+      <Card className="min-w-0 p-4 sm:p-5">
+        <p role="alert" className="text-sm text-destructive">
+          {c.loadError}
+        </p>
       </Card>
     );
-  if (!data) return null;
+  if (!data)
+    return (
+      <Card className="min-w-0 p-4 sm:p-5">
+        <div role="status" aria-busy="true" className="space-y-2">
+          <h2 className="font-display text-lg font-semibold">{c.title}</h2>
+          <p className="text-sm text-muted-foreground">{c.loading}</p>
+        </div>
+      </Card>
+    );
+
+  const hasAnalyticsActivity =
+    Boolean(v30?.unique_visitors) ||
+    Object.values(data.events30).some((val) => typeof val === "number" && val > 0);
 
   const activated = data.growth.usersWithTransactions;
   const rate =
     activated !== null && total ? `${Math.round((activated / total) * 100)}%` : c.unavailable;
 
   const Block = ({ title, rows }: { title: string; rows: [string, string][] }) => (
-    <Card className="space-y-3">
+    <Card className="min-w-0 space-y-3">
       <h3 className="font-display text-base font-semibold">{title}</h3>
       <dl className="space-y-1.5 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-baseline justify-between gap-3">
-            <dt className="text-muted-foreground">{label}</dt>
-            <dd className="font-semibold tabular-nums">{value}</dd>
+            <dt className="min-w-0 break-words text-muted-foreground">{label}</dt>
+            <dd className="shrink-0 font-semibold tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
@@ -225,14 +262,21 @@ export function AdminInsights({ bg, total }: { bg: boolean; total: number | null
   );
 
   return (
-    <section className="grid gap-3">
-      <div>
+    <section className="grid min-w-0 gap-3">
+      <div className="min-w-0">
         <h2 className="font-display text-xl font-semibold">{c.title}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           {c.note} {c.visitsNote} {c.updated}: {new Date(data.generatedAt).toLocaleString()}
         </p>
       </div>
-      <div className="grid gap-3 md:grid-cols-2">
+      {!hasAnalyticsActivity && (
+        <Card className="min-w-0 p-4">
+          <p role="status" className="text-sm text-muted-foreground">
+            {c.emptyState}
+          </p>
+        </Card>
+      )}
+      <div className="grid min-w-0 gap-3 md:grid-cols-2">
         <Block
           title={c.visits}
           rows={[
@@ -244,6 +288,16 @@ export function AdminInsights({ bg, total }: { bg: boolean; total: number | null
             [c.avgTime30, duration(v30?.avg_session_seconds)],
             [c.pricing30, withShare(v30?.visitors_pricing)],
             [c.signup30v, withShare(v30?.visitors_signup)],
+          ]}
+        />
+        <Block
+          title={c.accessTitle}
+          rows={[
+            [c.totalUsersLabel, num(data.accessSummary?.totalUsers ?? total)],
+            [c.freeUsersLabel, num(data.accessSummary?.freeUsers ?? null)],
+            [c.proUsersLabel, num(data.accessSummary?.proUsers ?? null)],
+            [c.manualGrantsLabel, num(data.accessSummary?.manualGrants ?? null)],
+            [c.expiringGrantsLabel, num(data.accessSummary?.expiringGrants ?? null)],
           ]}
         />
         <Block

@@ -86,6 +86,7 @@ export const RATE_LIMITED_PATHS = [
   "/api/thesis",
   "/api/review",
   "/api/public/analytics",
+  "/api/admin",
 ];
 
 type Limiter = { limit: (options: { key: string }) => Promise<{ success: boolean }> };
