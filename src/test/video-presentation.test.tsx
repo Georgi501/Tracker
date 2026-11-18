@@ -1,5 +1,7 @@
 import { VideoPresentation } from "@/components/VideoPresentation";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("localized product walkthrough", () => {
@@ -39,5 +41,31 @@ describe("localized product walkthrough", () => {
       "src",
       "/video-preview/?embed=1&mode=visitor&theme=dark&lang=bg",
     );
+  });
+
+  it("switches between Portfolio tour and Pro tools and syncs the standalone link", () => {
+    render(<VideoPresentation mode="visitor" theme="light" lang="en" />);
+    const proBtn = screen.getByRole("button", { name: "Pro tools" });
+    expect(proBtn).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(proBtn);
+    expect(proBtn).toHaveAttribute("aria-pressed", "true");
+    const frame = screen.getByTitle("CapiSpot Pro tools walkthrough");
+    expect(frame).toHaveAttribute(
+      "src",
+      "/video-preview/?embed=1&mode=pro&theme=light&lang=en",
+    );
+    expect(screen.getByRole("link", { name: /Open the full walkthrough/i })).toHaveAttribute(
+      "href",
+      "/video-preview/?mode=pro&theme=light&lang=en",
+    );
+  });
+
+  it("hides duplicate internal section-heading in embedded mode while keeping controls visible", () => {
+    const htmlPath = path.resolve(process.cwd(), "public/video-preview/index.html");
+    const html = fs.readFileSync(htmlPath, "utf8");
+    expect(html).toContain("body.embedded .section-heading");
+    expect(html).not.toMatch(/body\.embedded\s+\.clip-controls\s*\{\s*display:\s*none/);
+    expect(html).toContain('capispot-video-preview:request-height');
   });
 });

@@ -138,15 +138,44 @@ All 38 UI route modules in `src/routes/` and their shared components were audite
 
 ---
 
-## 5. Product Video Modernization Plan (Next Phase After UI Approval)
+## 5. Product Presentation Modernization (Completed — Phase 4)
 
-Per project rules, `src/components/VideoPresentation.tsx` and `public/video-preview/` were kept 100% untouched during Phases 1–3. Once the UI/UX overhaul is approved, the Video Modernization Phase should execute the following steps:
+### Root Causes Identified in BEFORE Audit
+1. **Duplicated Presentation Header (`body.embedded .section-heading`):** `src/components/VideoPresentation.tsx` rendered an outer card header (`See CapiSpot in action.` + `[Portfolio tour | Pro tools]`) while `public/video-preview/index.html` left `.section-heading` (`See the product. Understand the difference.` + a second `[Portfolio tour | Pro tools]` toggle) visible when `embed=1`.
+2. **Restrictive Height Clamping (`Math.min(event.data.height, 420)`) & Vertical Content Clipping:** `VideoPresentation.tsx` clamped the iframe height to `420px` (defaulting to `300px`/`330px`), clipping `48px`–`138px` of content on desktop (`468px` tall) and cutting off **100% of `.scene-copy` (`379px`–`499px` clipped)** on mobile (`360px`/`390px`, where `.player-layout` stacks to `799px–825px`).
+3. **Hidden Scene Navigation & Player Controls in Embedded Mode (`body.embedded .clip-controls { display: none; }`):** `public/video-preview/index.html` hid `#clip-controls` in embedded mode, depriving homepage visitors of chapter pills, Next/Previous buttons, and the seek bar.
+4. **Narrow Portrait Mobile Screenshot Frame (`340px`, `916:984`) & Outdated/Clipped PNG Assets:** All 10 `public/video-preview/ui-*.png` files were pre-overhaul mobile portrait screenshots (`916×984`) showing the old clipped header search (`"Search for news, ti"`), floating mobile bottom nav bars covering the bottom 20% of content, cut-off table columns in `ui-holdings.png`, and outdated `"1 broker connection (CSV)"` text in `ui-pro-features.png`.
+5. **Distracting Center Play Button & Ambient Synth Drone:** A `72px` central play button obscured the middle of every product screenshot, and an oscillator drone (`#sound-toggle`) synthesized background audio.
 
-1. **Eliminate Duplicate Outer/Inner Header & Mode Switcher:**
-   - **Current Issue Observed in `dashboard_1440_en_dark.png`:** `src/components/VideoPresentation.tsx` renders an outer card header (`PRODUCT WALKTHROUGH` / `See CapiSpot in action.` / `[Portfolio tour | Pro tools]`) and embeds `/video-preview/?mode=...`, which renders its own inner header (`See the product. Understand the difference.` / `[Portfolio tour | Pro tools]`), resulting in two stacked headers and two identical mode switchers.
-   - **Planned Fix:** Pass `&embed=1` to `/video-preview/` (or remove the redundant inner top bar inside `public/video-preview/index.html`) so the outer React card header in `VideoPresentation.tsx` is the single unified control bar.
-2. **Refresh All 10 Slide Assets + Hero Image from the Overhauled UI:**
-   - Re-capture `public/hero-portfolio.png` and `public/video-preview/ui-overview.png`, `ui-holdings.png`, `ui-import.png`, `ui-market-discovery.png`, `ui-dividends.png`, `ui-features.png`, `ui-fifo.png`, `ui-dcf.png`, `ui-pro-features.png`, and `ui-pro-preview.png` at `1440×900` (`deviceScaleFactor: 2`) so the walkthrough reflects the new side-by-side `Holdings Summary + Allocation` layout, unclipped search bars, and balanced `Tools` / `Dashboard` grids.
+### Changes Applied
+1. **`src/components/VideoPresentation.tsx`:**
+   - Expanded dynamic iframe height range to `Math.max(440, Math.min(Math.ceil(event.data.height), 980))` with a two-way `capispot-video-preview:request-height` / `capispot-video-preview:resize` postMessage handshake (`onLoad` + mount timeouts) and theme-aware iframe key (`${activeMode}-${lang}-${theme}`).
+2. **`public/video-preview/index.html`:**
+   - Hid `.section-heading` in `body.embedded` while preserving it in standalone `/video-preview/`.
+   - Un-hid `.clip-controls` (Next/Previous, Play/Pause, seek progress bar, time indicator, and clickable chapter pills) in embedded mode.
+   - Updated `.screen-frame` from `340px` portrait (`916 / 984`) to `width: min(100%, 660px); aspect-ratio: 10 / 7` (`660×462` on desktop, full width `292×204` on `360px` mobile) and moved `.big-play` to a sleek `38×38px` bottom-left corner badge so screenshots are never obstructed.
+   - Disabled the Web Audio oscillator synth (`soundEnabled = false`) and hid `#sound-toggle`.
+3. **Refreshed All 11 Product Screenshots from the Live Overhauled Application (`2560×1792` @ 2x retina, sanitized sample data):**
+   - `public/hero-portfolio.png` (`2560×1920`)
+   - `public/video-preview/ui-overview.png`
+   - `public/video-preview/ui-holdings.png`
+   - `public/video-preview/ui-import.png`
+   - `public/video-preview/ui-market-discovery.png`
+   - `public/video-preview/ui-dividends.png`
+   - `public/video-preview/ui-features.png`
+   - `public/video-preview/ui-fifo.png`
+   - `public/video-preview/ui-dcf.png`
+   - `public/video-preview/ui-pro-features.png`
+   - `public/video-preview/ui-pro-preview.png`
+
+### Quantitative Before vs. After Presentation Metrics
+| Viewport / Mode / Lang | Metric | BEFORE (`video-before`) | AFTER (`video-after`) |
+| :--- | :--- | :--- | :--- |
+| **All 14 Embedded Views (`1440px`–`360px`, 5 langs)** | Duplicate Internal Header (`innerHeadingVisible`) | `true` (14 / 14 duplicated) | **`false` (0 / 14 duplicated)** |
+| **All 14 Embedded Views (`1440px`–`360px`, 5 langs)** | Vertical Content Clipping (`contentClippedVertically`) | `true` (14 / 14 clipped) | **`false` (0 / 14 clipped)** |
+| **All 14 Embedded Views (`1440px`–`360px`, 5 langs)** | Interactive Controls & Chapters (`clipControlsVisible`) | `false` (hidden in embed) | **`true` (14 / 14 visible & clickable)** |
+| **Desktop `1440px` (`en`/`bg`/`de`/`es`/`it`)** | Product Screenshot Frame Size | `340px × 365px` (portrait mobile crop) | **`660px × 462px` (`10:7` desktop view)** |
+| **Mobile `360px` (`en`/`bg`/`de`, dark/light)** | Iframe Height vs Content Height | `300px–420px` vs `799px–825px` (cut off) | **`653px–679px` vs `653px–679px` (100% fit)** |
 
 ---
 

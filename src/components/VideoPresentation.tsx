@@ -113,12 +113,30 @@ export function VideoPresentation({
       ) {
         return;
       }
-      setHeight(Math.max(300, Math.min(event.data.height, 420)));
+      setHeight(Math.max(440, Math.min(Math.ceil(event.data.height), 980)));
+    };
+
+    const requestHeight = () => {
+      try {
+        frame.current?.contentWindow?.postMessage(
+          { type: "capispot-video-preview:request-height" },
+          window.location.origin,
+        );
+      } catch {
+        // Ignore cross-frame timing errors before load
+      }
     };
 
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
+    requestHeight();
+    const t1 = window.setTimeout(requestHeight, 120);
+    const t2 = window.setTimeout(requestHeight, 400);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [activeMode, lang, theme]);
 
   return (
     <section
@@ -171,17 +189,26 @@ export function VideoPresentation({
         </div>
       </div>
       <div
-        className="h-[300px] w-full min-w-0 bg-background/40 sm:h-[330px]"
+        className="h-[610px] w-full min-w-0 bg-background/40"
         style={height !== null ? { height } : undefined}
       >
         <iframe
-          key={`${activeMode}-${lang}`}
+          key={`${activeMode}-${lang}-${theme}`}
           ref={frame}
           title={activeMode === "pro" ? c.proFrame : c.visitorFrame}
           src={`/video-preview/?embed=1&mode=${activeMode}&theme=${theme}&lang=${lang}`}
           className="block h-full w-full border-0"
           allowFullScreen
-          loading="lazy"
+          onLoad={() => {
+            try {
+              frame.current?.contentWindow?.postMessage(
+                { type: "capispot-video-preview:request-height" },
+                window.location.origin,
+              );
+            } catch {
+              // Ignore
+            }
+          }}
         />
       </div>
     </section>
