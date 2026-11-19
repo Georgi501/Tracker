@@ -12,7 +12,10 @@ export function AllocationBreakdown({
   formatValue,
   colorOffset = 0,
   locale = languageLocale("en"),
+  neutralNames = [],
 }: {
+  /** Row names rendered in a neutral grey (e.g. data not available) instead of a palette colour. */
+  neutralNames?: string[];
   data: AllocationItem[];
   totalLabel: string;
   formatValue: (value: number, compact?: boolean) => string;
@@ -21,7 +24,12 @@ export function AllocationBreakdown({
 }) {
   const percentage = (value: number) =>
     new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(value);
-  const colorFor = (index: number) => allocationColorAt(index, colorOffset);
+  const colorFor = (index: number) => {
+    const name = rows[index]?.name;
+    return name !== undefined && neutralNames.includes(name)
+      ? "var(--muted-foreground)"
+      : allocationColorAt(index, colorOffset);
+  };
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const rows = data

@@ -392,9 +392,11 @@ describe("Category E — UI, 5-language labels, & compliance-safe provenance dis
     ];
 
     render(createElement(AllocationCard));
-    fireEvent.click(screen.getByRole("button", { name: "byRegion" }));
+    fireEvent.click(screen.getByRole("tab", { name: "byRegion" }));
 
-    expect(screen.getByText("Unknown / Unclassified")).toBeInTheDocument();
+    expect(screen.getByText("Fund · no country split")).toBeInTheDocument();
+    expect(screen.getByText("Unidentified")).toBeInTheDocument();
+    expect(screen.queryByText("Unknown / Unclassified")).not.toBeInTheDocument();
     expect(screen.getAllByText(/Not licensed for display/i).length).toBeGreaterThan(0);
 
     const toggle = screen.getByRole("button", { name: /Methodology & data sources/i });
@@ -410,6 +412,56 @@ describe("Category E — UI, 5-language labels, & compliance-safe provenance dis
     expect(screen.queryByText(/Pending/i)).not.toBeInTheDocument();
   });
 
+  it("Focus tab shows verified fund scope without country percentages and keeps unknowns unclassified", () => {
+    const mk = (id: string, symbol: string, value: number) => ({
+      asset: {
+        id,
+        symbol,
+        name: symbol,
+        type: "etf" as const,
+        sector: "Broad Market",
+        region: "Europe",
+        price: 1,
+        change24h: 0,
+        dividendPerShare: 0,
+        payMonths: [],
+      },
+      quantity: 1,
+      avgCost: 1,
+      costBasis: value,
+      value,
+      pnl: 0,
+      pnlPct: 0,
+      dayChange: 0,
+    });
+    mockHoldingsState.holdings = [mk("1", "SPYL.DE", 9000), mk("2", "MYSTERY.DE", 1000)];
+    render(createElement(AllocationCard));
+    fireEvent.click(screen.getByRole("tab", { name: "Focus" }));
+    expect(screen.getByText("United States")).toBeInTheDocument();
+    expect(screen.getByText("Unclassified")).toBeInTheDocument();
+    expect(screen.getByTestId("focus-notice")).toHaveTextContent(
+      /not underlying country exposure/i,
+    );
+    expect(screen.queryByText("Europe")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /How focus is determined/i }));
+    expect(screen.getByText(/S&P 500 Index/)).toBeInTheDocument();
+  });
+
+  it("exposes accessible tab semantics with roving keyboard navigation", () => {
+    mockHoldingsState.holdings = [];
+    render(createElement(AllocationCard));
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(4);
+    expect(screen.getByRole("tablist")).toBeInTheDocument();
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(tabs[0]).toHaveAttribute("tabindex", "0");
+    expect(tabs[1]).toHaveAttribute("tabindex", "-1");
+    fireEvent.keyDown(tabs[0]!, { key: "ArrowLeft" });
+    expect(screen.getByRole("tab", { name: "Focus" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Focus" }), { key: "Home" });
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel")).toBeInTheDocument();
+  });
   it("surfaces outdated authorized sources, unpriced positions, and minor-cutoff OTHR cleanly", () => {
     const summary = calculatePortfolioGeographicExposure(
       [

@@ -593,6 +593,25 @@ export const FUND_EXPOSURE_REGISTRY: readonly FundExposureEntry[] = [
     redistributionCleared: false,
   },
   {
+    canonicalId: "xtrackers-nasdaq100",
+    name: "Xtrackers Nasdaq 100 UCITS ETF 1C",
+    issuer: "Xtrackers / DWS",
+    indexName: "Nasdaq-100 Index",
+    domicile: "IE",
+    assetType: "etf",
+    isins: ["IE00BMFKG444"],
+    listings: ["XNAS.DE"],
+    aliases: ["XNAS"],
+    source: "Xtrackers (Catalog identity)",
+    sourceUrl: "https://etf.dws.com/",
+    methodology: WITHHELD_FUND_METHODOLOGY,
+    asOfDate: "2026-11-19",
+    dataQuality: "license-restricted",
+    isBenchmarkProxy: false,
+    licenseStatus: "unclear-index-mandate",
+    redistributionCleared: false,
+  },
+  {
     canonicalId: "qqq-nasdaq100",
     name: "Invesco QQQ Trust (Nasdaq-100)",
     issuer: "Invesco",
@@ -959,6 +978,12 @@ export interface PortfolioGeographicSummary {
   estimatedValue: number;
   nonGeographicValue: number;
   unknownValue: number;
+  /** Part of unknownValue held in catalogued funds whose country split is not available to display. */
+  withheldFundValue: number;
+  /** Part of unknownValue held in instruments that are not identified at all. */
+  unresolvedValue: number;
+  /** Part of unknownValue that is an unallocated residual inside an otherwise available breakdown. */
+  residualUnknownValue: number;
   staleValue: number;
   decomposedEtfs: string[];
   unresolvedAssets: string[];
@@ -995,6 +1020,9 @@ export function calculatePortfolioGeographicExposure(
   let estimatedValue = 0;
   let nonGeographicValue = 0;
   let unknownValue = 0;
+  let withheldFundValue = 0;
+  let unresolvedValue = 0;
+  let residualUnknownValue = 0;
   let staleValue = 0;
   let latestAsOfDate: string | null = null;
 
@@ -1045,6 +1073,9 @@ export function calculatePortfolioGeographicExposure(
 
       if (region === "Unknown") {
         unknownValue += sliceValue;
+        if (profile.dataQuality === "license-restricted") withheldFundValue += sliceValue;
+        else if (profile.kind === "unavailable") unresolvedValue += sliceValue;
+        else residualUnknownValue += sliceValue;
       } else if (region === "Non-Geographic") {
         nonGeographicValue += sliceValue;
       } else if (profile.isBenchmarkProxy) {
@@ -1071,6 +1102,9 @@ export function calculatePortfolioGeographicExposure(
     estimatedValue,
     nonGeographicValue,
     unknownValue,
+    withheldFundValue,
+    unresolvedValue,
+    residualUnknownValue,
     staleValue,
     decomposedEtfs,
     unresolvedAssets,

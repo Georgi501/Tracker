@@ -5,6 +5,15 @@ import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { EtfOverlapCard } from "@/components/EtfOverlapCard";
 import { GeoExposureDisclosure } from "@/components/GeoExposureDisclosure";
+import { InvestmentFocusDisclosure } from "@/components/InvestmentFocusDisclosure";
+import { FOCUS_COPY } from "@/lib/investment-focus-copy";
+import {
+  calculatePortfolioInvestmentFocus,
+  FOCUS_LABELS,
+  geoDisplayRows,
+  neutralAllocationNames,
+  type PortfolioFocusSummary,
+} from "@/lib/investment-focus";
 import { PerformanceAttribution } from "@/components/PerformanceAttribution";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { ShareAllocationButton } from "@/components/ShareAllocationModal";
@@ -380,7 +389,7 @@ function Analytics() {
         .sort((a, b) => b.v - a.v),
     [p.holdings],
   );
-  const { sectorExposure, regionExposure, geoSummary, exposures } = useMemo(() => {
+  const { sectorExposure, regionExposure, geoSummary, focusSummary, exposures } = useMemo(() => {
     const sector = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
     const region = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
     const geo =
@@ -392,6 +401,7 @@ function Analytics() {
       sectorExposure: sector,
       regionExposure: region,
       geoSummary: geo,
+      focusSummary: calculatePortfolioInvestmentFocus(p.holdings),
       exposures: [
         {
           title: p.t("byClass"),
@@ -403,7 +413,7 @@ function Analytics() {
         },
         {
           title: c.byRegion,
-          rows: region.rows,
+          rows: geo ? geoDisplayRows(geo, p.lang) : region.rows,
         },
         {
           title: p.t("byCurrency"),
@@ -1288,6 +1298,16 @@ function Analytics() {
                     geoSummary={exposure.title === c.byRegion ? geoSummary : null}
                   />
                 ))}
+              {focusSummary.rows.length > 0 && (
+                <Breakdown
+                  title={FOCUS_COPY[p.lang].title}
+                  data={focusSummary.rows.map((row) => ({
+                    name: FOCUS_LABELS[p.lang][row.focus],
+                    value: row.value,
+                  }))}
+                  focusSummary={focusSummary}
+                />
+              )}
             </div>
           </section>
           <section className="sm:col-span-2 lg:col-span-3 border-t border-border pt-4">
@@ -1325,11 +1345,13 @@ function Breakdown({
   data,
   colorOffset = 0,
   geoSummary = null,
+  focusSummary = null,
 }: {
   title: string;
   data: { name: string; value: number }[];
   colorOffset?: number;
   geoSummary?: PortfolioGeographicSummary | null;
+  focusSummary?: PortfolioFocusSummary | null;
 }) {
   const p = usePortfolio();
   const unpricedCount = p.holdings.filter((h) => !Number.isFinite(h.value)).length;
@@ -1339,6 +1361,7 @@ function Breakdown({
       <AllocationBreakdown
         locale={languageLocale(p.lang)}
         data={data}
+        neutralNames={neutralAllocationNames(p.lang)}
         colorOffset={colorOffset}
         totalLabel={
           unpricedCount > 0
@@ -1356,6 +1379,7 @@ function Breakdown({
       {geoSummary && (
         <GeoExposureDisclosure summary={geoSummary} lang={p.lang} unpricedCount={unpricedCount} />
       )}
+      {focusSummary && <InvestmentFocusDisclosure summary={focusSummary} lang={p.lang} />}
     </Card>
   );
 }
