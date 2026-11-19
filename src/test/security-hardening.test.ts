@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { isRateLimited, RATE_LIMITED_PATHS } from "@/server";
+import { handleAssetCountriesRequest } from "@/routes/api/public/asset-countries";
+import * as assetCountriesServer from "@/lib/asset-countries.server";
 
 describe("security hardening regressions", () => {
   describe("/api/public/analytics rate limiting", () => {
@@ -112,6 +114,95 @@ describe("security hardening regressions", () => {
       const source = readFileSync(resolve(process.cwd(), file), "utf8");
       expect(source).toContain('.from("public_profiles")');
       expect(source).not.toContain('.from("profiles")');
+    });
+  });
+
+  describe("/api/public/asset-countries security controls", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("includes /api/public/asset-countries in RATE_LIMITED_PATHS and limits GET per cf-connecting-ip", async () => {
+      expect(RATE_LIMITED_PATHS).toContain("/api/public/asset-countries");
+      const limit = vi.fn(async ({ key }: { key: string }) => ({
+        success: !key.endsWith(":198.51.100.8"),
+      }));
+      const env = { AI_LIMITER: { limit } };
+
+      const blocked = new Request(
+        "https://capispot.com/api/public/asset-countries?symbols=SAP.DE",
+        {
+          method: "GET",
+          headers: { "cf-connecting-ip": "198.51.100.8" },
+        },
+      );
+      expect(await isRateLimited(blocked, env, "/api/public/asset-countries")).toBe(true);
+      expect(limit).toHaveBeenCalledWith({ key: "/api/public/asset-countries:198.51.100.8" });
+
+      const allowed = new Request(
+        "https://capispot.com/api/public/asset-countries?symbols=SAP.DE",
+        {
+          method: "GET",
+          headers: { "cf-connecting-ip": "203.0.113.11" },
+        },
+      );
+      expect(await isRateLimited(allowed, env, "/api/public/asset-countries")).toBe(false);
+    });
+
+    it("rejects arbitrary URLs, oversized queries, and >30 unique symbols, while deduplicating duplicates", async () => {
+      const ssrf = await handleAssetCountriesRequest(
+        new Request("https://capispot.com/api/public/asset-countries?symbols=https://evil.com"),
+      );
+      expect(ssrf.status).toBe(400);
+
+      const oversized = await handleAssetCountriesRequest(
+        new Request(
+          `https://capispot.com/api/public/asset-countries?symbols=${"AAPL,".repeat(120)}`,
+        ),
+      );
+      expect(oversized.status).toBe(400);
+
+      const tooManyUnique = Array.from({ length: 31 }, (_, i) => `SYM${i}`).join(",");
+      const overMax = await handleAssetCountriesRequest(
+        new Request(`https://capispot.com/api/public/asset-countries?symbols=${tooManyUnique}`),
+      );
+      expect(overMax.status).toBe(400);
+
+      const spy = vi.spyOn(assetCountriesServer, "resolveAssetCountries").mockResolvedValue({
+        countries: { "SAP.DE": "Germany" },
+        rateLimited: false,
+      });
+      const duped = await handleAssetCountriesRequest(
+        new Request(
+          "https://capispot.com/api/public/asset-countries?symbols=sap.de,SAP.DE,%20sap.de%20",
+        ),
+      );
+      expect(duped.status).toBe(200);
+      expect(spy).toHaveBeenCalledWith(["SAP.DE"]);
+    });
+
+    it("returns 429 with Retry-After when upstream rate limit occurs with zero cached results", async () => {
+      vi.spyOn(assetCountriesServer, "resolveAssetCountries").mockResolvedValue({
+        countries: {},
+        rateLimited: true,
+      });
+      const res = await handleAssetCountriesRequest(
+        new Request("https://capispot.com/api/public/asset-countries?symbols=BMW.DE"),
+      );
+      expect(res.status).toBe(429);
+      expect(res.headers.get("Retry-After")).toBe("60");
+    });
+
+    it("fails closed without querying Yahoo Finance when external provider is disabled", async () => {
+      const { resolveAssetCountries } = await import("@/lib/asset-countries.server");
+      const res = await resolveAssetCountries(["BMW.DE"]);
+      expect(res).toEqual({ countries: {}, rateLimited: false, providerDisabled: true });
+
+      const apiRes = await handleAssetCountriesRequest(
+        new Request("https://capispot.com/api/public/asset-countries?symbols=BMW.DE"),
+      );
+      expect(apiRes.status).toBe(200);
+      expect(await apiRes.json()).toEqual({ countries: {}, disabled: true });
     });
   });
 });

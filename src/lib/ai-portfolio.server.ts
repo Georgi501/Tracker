@@ -10,7 +10,24 @@ import {
   type Holding,
   type Transaction,
 } from "./portfolio";
+import {
+  calculatePortfolioGeographicExposure,
+  distributeShareTenths,
+  resolveInstrumentGeoProfile,
+} from "./geographic-exposure";
 import { fetchCryptoQuotes, fetchFx, fetchLiveQuote, type LiveQuote } from "./prices.server";
+
+function resolvedRegionSummary(asset: Asset): string {
+  const profile = resolveInstrumentGeoProfile(asset);
+  const entries = Object.entries(profile.regions)
+    .filter(([, weight]) => typeof weight === "number" && weight > 0)
+    .sort(([, a], [, b]) => (b ?? 0) - (a ?? 0));
+  if (entries.length === 0) return "Unknown";
+  if (entries.length === 1) return entries[0]![0];
+  return entries
+    .map(([region, weight]) => `${region} ${((weight ?? 0) * 100).toFixed(1)}%`)
+    .join(", ");
+}
 
 export interface ValuedPortfolioSummary {
   assets: Asset[];
@@ -200,6 +217,16 @@ export async function loadValuedPortfolio(
   };
 }
 
+function formatGeographicExposureSummary(holdings: readonly Holding[]) {
+  const geo = calculatePortfolioGeographicExposure(holdings);
+  const tenths = distributeShareTenths(geo.rows.map((r) => r.value));
+  return geo.rows.map((r, index) => ({
+    region: r.region,
+    valueUsd: +r.value.toFixed(2),
+    weightPct: (tenths[index] ?? 0) / 10,
+  }));
+}
+
 export function buildAdvisorPortfolioPayload(summary: ValuedPortfolioSummary) {
   const symbolByAssetId = new Map(summary.assets.map((a) => [a.id, a.symbol]));
   return {
@@ -207,12 +234,13 @@ export function buildAdvisorPortfolioPayload(summary: ValuedPortfolioSummary) {
     note: "All costs, valuations, and live quote prices are normalized to USD (including split adjustments from corporate_actions, transaction fees in costBasis, and manual valuations for bonds/realEstate); null price/value means quote unavailable.",
     totalValueUsd: +summary.totalValue.toFixed(2),
     totalCostUsd: +summary.totalCost.toFixed(2),
+    geographicExposure: formatGeographicExposureSummary(summary.holdings),
     positions: summary.holdings.map((h) => ({
       symbol: h.asset.symbol,
       name: h.asset.name,
       type: h.asset.type,
       sector: h.asset.sector,
-      region: h.asset.region,
+      region: resolvedRegionSummary(h.asset),
       quantity: +h.quantity.toFixed(6),
       avgCostUsd: +h.avgCost.toFixed(2),
       costBasisUsd: +h.costBasis.toFixed(2),
@@ -251,6 +279,7 @@ export function buildReviewPortfolioFacts(summary: ValuedPortfolioSummary) {
     asOf: new Date().toISOString().slice(0, 10),
     totalValueUsd: +totalValue.toFixed(2),
     totalCostUsd: +totalCost.toFixed(2),
+    geographicExposure: formatGeographicExposureSummary(holdings),
     transactions: transactions.length,
     note: "All costs, valuations, and live quote prices are normalized to USD (including split adjustments, transaction fees in costUsd, and manual valuations for bonds/realEstate); null means unavailable.",
     positions: holdings.map((h) => ({
@@ -258,7 +287,7 @@ export function buildReviewPortfolioFacts(summary: ValuedPortfolioSummary) {
       name: h.asset.name,
       type: h.asset.type,
       sector: h.asset.sector,
-      region: h.asset.region,
+      region: resolvedRegionSummary(h.asset),
       quantity: +h.quantity.toFixed(6),
       avgCostUsd: +h.avgCost.toFixed(2),
       costUsd: +h.costBasis.toFixed(2),

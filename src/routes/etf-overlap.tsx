@@ -82,7 +82,7 @@ const COPY: Record<Lang, Copy> = {
     regionBreakdown: "Region look-through comparison",
     sharedLabel: "Shared",
     methodology:
-      "Calculated from verified index-level sector and regional exposure profiles in CapiSpot. Unknown tickers are never fabricated.",
+      "Third-party ETF sector and regional breakdowns are omitted unless authorized distribution rights are supplied. Unknown tickers are never fabricated.",
     ctaTitle: "Analyze overlap across your full real portfolio",
     ctaBody:
       "Connect or import your brokers via CSV to see true look-through weights, dividend calendars, and tax lots across all your ETFs and stocks.",
@@ -104,7 +104,7 @@ const COPY: Record<Lang, Copy> = {
     regionBreakdown: "Регионално сравнение (look-through)",
     sharedLabel: "Общо",
     methodology:
-      "Изчислено от проверени индексни профили за секторна и регионална експозиция в CapiSpot. Неизвестни тикери не се измислят.",
+      "Секторните и регионалните разбивки от трети страни не се показват без приложим лиценз за комерсиално разпространение. Липсващи данни не се измислят.",
     ctaTitle: "Анализирай припокриването в цялото си реално портфолио",
     ctaBody:
       "Импортирай брокерите си безплатно през CSV, за да видиш реалните тегла, дивидентния календар и данъчните партиди за всички ETF-и и акции.",
@@ -126,7 +126,7 @@ const COPY: Record<Lang, Copy> = {
     regionBreakdown: "Regionen-Vergleich (Look-Through)",
     sharedLabel: "Gemeinsam",
     methodology:
-      "Berechnet aus verifizierten Index-Sektor- und Regionenprofilen in CapiSpot. Unbekannte Ticker werden niemals erfunden.",
+      "Drittanbieter-ETF-Gewichtungen werden ohne entsprechende Verbreitungsrechte nicht angezeigt. Fehlende Daten werden niemals erfunden.",
     ctaTitle: "Überschneidungen im gesamten echten Portfolio analysieren",
     ctaBody:
       "Importiere deine Broker kostenlos per CSV und erhalte echte Look-Through-Gewichtungen, Dividendenkalender und Steuerlose.",
@@ -148,7 +148,7 @@ const COPY: Record<Lang, Copy> = {
     regionBreakdown: "Comparación regional (look-through)",
     sharedLabel: "Compartido",
     methodology:
-      "Calculado con perfiles verificados de exposición sectorial y regional de índices en CapiSpot. Nunca inventamos tickers.",
+      "Los desgloses sectoriales y regionales de ETFs de terceros no se muestran sin derechos comerciales aplicables. Nunca se inventan datos faltantes.",
     ctaTitle: "Analiza el solapamiento en toda tu cartera real",
     ctaBody:
       "Importa tus brókeres gratis por CSV para ver pesos reales, calendario de dividendos y lotes fiscales en todos tus ETFs y acciones.",
@@ -170,7 +170,7 @@ const COPY: Record<Lang, Copy> = {
     regionBreakdown: "Confronto geografico (look-through)",
     sharedLabel: "Condiviso",
     methodology:
-      "Calcolato da profili verificati di esposizione settoriale e geografica in CapiSpot. I ticker sconosciuti non vengono mai inventati.",
+      "Le ripartizioni settoriali e geografiche di terze parti non sono mostrate senza diritti di distribuzione commerciale applicabili. I dati mancanti non vengono mai inventati.",
     ctaTitle: "Analizza la sovrapposizione su tutto il tuo portafoglio reale",
     ctaBody:
       "Importa gratuitamente i tuoi broker via CSV per vedere i pesi reali, il calendario dividendi e i lotti fiscali di tutti i tuoi ETF e azioni.",
@@ -467,7 +467,9 @@ export function EtfOverlapPage({
             <div className="rounded-xl border border-border/70 bg-secondary/30 p-4">
               <p className="text-xs font-medium text-muted-foreground">{c.sectorOverlap}</p>
               <p className="mt-1 font-display text-3xl font-bold tabular-nums text-foreground">
-                {(comparison.sectorOverlap * 100).toFixed(1)}%
+                {comparison.sectors.length > 0
+                  ? `${(comparison.sectorOverlap * 100).toFixed(1)}%`
+                  : "—"}
               </p>
               <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
@@ -479,7 +481,9 @@ export function EtfOverlapPage({
             <div className="rounded-xl border border-border/70 bg-secondary/30 p-4">
               <p className="text-xs font-medium text-muted-foreground">{c.regionOverlap}</p>
               <p className="mt-1 font-display text-3xl font-bold tabular-nums text-foreground">
-                {(comparison.regionOverlap * 100).toFixed(1)}%
+                {comparison.regions.length > 0
+                  ? `${(comparison.regionOverlap * 100).toFixed(1)}%`
+                  : "—"}
               </p>
               <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
@@ -569,39 +573,46 @@ function ComparisonBreakdownCard({
         </div>
       </div>
 
-      <ul className="space-y-3">
-        {rows.map((row) => (
-          <li key={row.name} className="space-y-1.5 text-xs">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-foreground">{row.name}</span>
-              <span className="font-semibold tabular-nums text-primary">
-                {sharedLabel}: {(row.overlap * 100).toFixed(1)}%
-              </span>
-            </div>
-            <div className="space-y-1">
-              {symbols.map((sym, idx) => {
-                const weight = row.weights[sym] ?? 0;
-                return (
-                  <div key={sym} className="flex items-center gap-2">
-                    <span className="w-11 shrink-0 font-mono text-[11px] text-muted-foreground">
-                      {sym}
-                    </span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className={`h-full rounded-full ${ETF_COLORS[idx] ?? "bg-primary"}`}
-                        style={{ width: `${Math.min(100, weight * 100)}%` }}
-                      />
+      {rows.length === 0 ? (
+        <p className="rounded-xl border border-border/60 bg-secondary/25 px-3 py-2.5 text-xs text-muted-foreground">
+          Third-party ETF breakdown data is not licensed for commercial display; weights are omitted
+          rather than approximated.
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((row) => (
+            <li key={row.name} className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-foreground">{row.name}</span>
+                <span className="font-semibold tabular-nums text-primary">
+                  {sharedLabel}: {(row.overlap * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="space-y-1">
+                {symbols.map((sym, idx) => {
+                  const weight = row.weights[sym] ?? 0;
+                  return (
+                    <div key={sym} className="flex items-center gap-2">
+                      <span className="w-11 shrink-0 font-mono text-[11px] text-muted-foreground">
+                        {sym}
+                      </span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className={`h-full rounded-full ${ETF_COLORS[idx] ?? "bg-primary"}`}
+                          style={{ width: `${Math.min(100, weight * 100)}%` }}
+                        />
+                      </div>
+                      <span className="w-12 shrink-0 text-right tabular-nums text-muted-foreground">
+                        {(weight * 100).toFixed(1)}%
+                      </span>
                     </div>
-                    <span className="w-12 shrink-0 text-right tabular-nums text-muted-foreground">
-                      {(weight * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </li>
-        ))}
-      </ul>
+                  );
+                })}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

@@ -1,3 +1,4 @@
+import { distributeShareTenths } from "@/lib/geographic-exposure";
 import { languageLocale } from "@/lib/i18n";
 import { useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
@@ -27,6 +28,7 @@ export function AllocationBreakdown({
     .filter((item) => Number.isFinite(item.value) && item.value > 0)
     .sort((a, b) => b.value - a.value);
   const total = rows.reduce((sum, item) => sum + item.value, 0);
+  const shareTenths = distributeShareTenths(rows.map((item) => item.value));
   const activeIndex = hoveredIndex ?? selectedIndex;
 
   if (rows.length === 0 || total <= 0) {
@@ -43,13 +45,13 @@ export function AllocationBreakdown({
   }
 
   return (
-    <div className="allocation-breakdown-grid">
+    <div className="allocation-breakdown-grid min-w-0">
       <div
         role="img"
         aria-label={`${totalLabel}: ${formatValue(total)}. ${rows
           .map(
-            (item) =>
-              `${item.name}: ${formatValue(item.value)} (${percentage(item.value / total)})`,
+            (item, index) =>
+              `${item.name}: ${formatValue(item.value)} (${percentage((shareTenths[index] ?? 0) / 1000)})`,
           )
           .join(", ")}`}
         className="relative mx-auto h-36 w-full max-w-[176px] sm:h-40"
@@ -108,9 +110,14 @@ export function AllocationBreakdown({
         </div>
       </div>
 
-      <ul className={rows.length >= 4 ? "allocation-legend-multi space-y-0.5" : "space-y-0.5"}>
+      <ul
+        className={
+          rows.length >= 4 ? "allocation-legend-multi min-w-0 space-y-0.5" : "min-w-0 space-y-0.5"
+        }
+      >
         {rows.map((item, index) => {
           const share = (item.value / total) * 100;
+          const displayShareRatio = (shareTenths[index] ?? 0) / 1000;
           const active = activeIndex === index;
           return (
             <li key={item.name}>
@@ -137,7 +144,7 @@ export function AllocationBreakdown({
                     {formatValue(item.value, true)}
                   </span>
                   <span className="numeric-display w-12 shrink-0 text-right text-sm font-semibold">
-                    {percentage(share / 100)}
+                    {percentage(displayShareRatio)}
                   </span>
                 </span>
                 <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-muted">

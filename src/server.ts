@@ -86,6 +86,7 @@ export const RATE_LIMITED_PATHS = [
   "/api/thesis",
   "/api/review",
   "/api/public/analytics",
+  "/api/public/asset-countries",
   "/api/admin",
 ];
 
@@ -97,7 +98,9 @@ export async function isRateLimited(
   env: unknown,
   pathname: string,
 ): Promise<boolean> {
-  if (request.method !== "POST" || !RATE_LIMITED_PATHS.includes(pathname)) return false;
+  if (!RATE_LIMITED_PATHS.includes(pathname)) return false;
+  const allowGet = pathname === "/api/public/asset-countries" && request.method === "GET";
+  if (request.method !== "POST" && !allowGet) return false;
   const limiter = (env as { AI_LIMITER?: Limiter } | undefined)?.AI_LIMITER;
   if (!limiter) return false;
   const clientIp = request.headers.get("cf-connecting-ip")?.trim();

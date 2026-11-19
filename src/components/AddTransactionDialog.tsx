@@ -1,4 +1,5 @@
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { initialAssetRegion } from "@/lib/geographic-exposure";
 import type { Lang } from "@/lib/i18n";
 import { localDateString } from "@/lib/local-date";
 import {
@@ -235,7 +236,7 @@ export function AddTransactionDialog({
           symbol: r.symbol,
           type: r.type,
           sector: "Other",
-          region: cur === "EUR" ? "Europe" : "Global",
+          region: initialAssetRegion({ symbol: r.symbol, name: r.name, type: r.type }),
           price: pr,
           ...(r.type === "bond"
             ? {

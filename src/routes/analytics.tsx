@@ -4,6 +4,7 @@ import { Card } from "@/components/AppShell";
 import { ChartDataTable } from "@/components/ChartDataTable";
 import { ChartTooltipContent } from "@/components/ChartTooltipContent";
 import { EtfOverlapCard } from "@/components/EtfOverlapCard";
+import { GeoExposureDisclosure } from "@/components/GeoExposureDisclosure";
 import { PerformanceAttribution } from "@/components/PerformanceAttribution";
 import { Heatmap, HeatmapSilhouette, ProGate } from "@/components/ProFeatures";
 import { ShareAllocationButton } from "@/components/ShareAllocationModal";
@@ -21,6 +22,10 @@ import { BENCHMARKS, benchmarkSeries, savedBenchmark, type BenchmarkSymbol } fro
 import { getBenchmarkHistory } from "@/lib/benchmark.functions";
 import { confirmPortfolioSplit } from "@/lib/corporate-actions.functions";
 import { calculatePortfolioExposures } from "@/lib/etf-overlap";
+import {
+  calculatePortfolioGeographicExposure,
+  type PortfolioGeographicSummary,
+} from "@/lib/geographic-exposure";
 import type { PortfolioPoint } from "@/lib/history";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
@@ -375,13 +380,18 @@ function Analytics() {
         .sort((a, b) => b.v - a.v),
     [p.holdings],
   );
-  const { sectorExposure, regionExposure, exposures } = useMemo(() => {
+  const { sectorExposure, regionExposure, geoSummary, exposures } = useMemo(() => {
     const sector = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
     const region = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
+    const geo =
+      exposureMode === "lookThrough"
+        ? calculatePortfolioGeographicExposure(p.holdings, p.label)
+        : null;
     const validHoldings = p.holdings.filter((h) => Number.isFinite(h.value));
     return {
       sectorExposure: sector,
       regionExposure: region,
+      geoSummary: geo,
       exposures: [
         {
           title: p.t("byClass"),
@@ -1229,16 +1239,31 @@ function Analytics() {
                 ))}
               </div>
             </div>
-            {exposureMode === "lookThrough" && sectorExposure.decomposedEtfs.length > 0 && (
-              <p className="mb-3 text-xs text-muted-foreground">
-                {EXPOSURE_MODE_COPY[p.lang].decomposed(sectorExposure.decomposedEtfs.join(", "))}
-              </p>
-            )}
-            {exposureMode === "lookThrough" && sectorExposure.fallbackEtfs.length > 0 && (
-              <p className="mb-3 text-xs text-muted-foreground">
-                {EXPOSURE_MODE_COPY[p.lang].fallback(sectorExposure.fallbackEtfs.join(", "))}
-              </p>
-            )}
+            {exposureMode === "lookThrough" &&
+              (sectorExposure.decomposedEtfs.length > 0 ||
+                regionExposure.decomposedEtfs.length > 0) && (
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {EXPOSURE_MODE_COPY[p.lang].decomposed(
+                    [
+                      ...new Set([
+                        ...regionExposure.decomposedEtfs,
+                        ...sectorExposure.decomposedEtfs,
+                      ]),
+                    ].join(", "),
+                  )}
+                </p>
+              )}
+            {exposureMode === "lookThrough" &&
+              (sectorExposure.fallbackEtfs.length > 0 ||
+                regionExposure.fallbackEtfs.length > 0) && (
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {EXPOSURE_MODE_COPY[p.lang].fallback(
+                    [
+                      ...new Set([...regionExposure.fallbackEtfs, ...sectorExposure.fallbackEtfs]),
+                    ].join(", "),
+                  )}
+                </p>
+              )}
             <div className="grid gap-4 md:grid-cols-2">
               {accounts.some((account) => account.value !== null) && (
                 <Breakdown
@@ -1256,7 +1281,12 @@ function Analytics() {
                   (exposure) => exposure.title === c.bySector || exposure.title === c.byRegion,
                 )
                 .map((exposure) => (
-                  <Breakdown key={exposure.title} title={exposure.title} data={exposure.rows} />
+                  <Breakdown
+                    key={exposure.title}
+                    title={exposure.title}
+                    data={exposure.rows}
+                    geoSummary={exposure.title === c.byRegion ? geoSummary : null}
+                  />
                 ))}
             </div>
           </section>
@@ -1294,30 +1324,38 @@ function Breakdown({
   title,
   data,
   colorOffset = 0,
+  geoSummary = null,
 }: {
   title: string;
   data: { name: string; value: number }[];
   colorOffset?: number;
+  geoSummary?: PortfolioGeographicSummary | null;
 }) {
   const p = usePortfolio();
+  const unpricedCount = p.holdings.filter((h) => !Number.isFinite(h.value)).length;
   return (
-    <Card>
+    <Card className="min-w-0">
       <h3 className="font-display mb-3 font-semibold">{title}</h3>
       <AllocationBreakdown
         locale={languageLocale(p.lang)}
         data={data}
         colorOffset={colorOffset}
         totalLabel={
-          {
-            en: "Total value",
-            bg: "Обща стойност",
-            de: "Gesamtwert",
-            es: "Valor total",
-            it: "Valore totale",
-          }[p.lang]
+          unpricedCount > 0
+            ? p.t("holdingValuePartialTotal")
+            : {
+                en: "Total value",
+                bg: "Обща стойност",
+                de: "Gesamtwert",
+                es: "Valor total",
+                it: "Valore totale",
+              }[p.lang]
         }
         formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
       />
+      {geoSummary && (
+        <GeoExposureDisclosure summary={geoSummary} lang={p.lang} unpricedCount={unpricedCount} />
+      )}
     </Card>
   );
 }

@@ -29,6 +29,8 @@ export interface Asset {
   type: AssetType;
   sector: string;
   region: string;
+  country?: string;
+  isin?: string;
   price: number; // USD; NaN means unavailable
   change24h: number; // percent
   dividendPerShare: number; // annual USD

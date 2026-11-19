@@ -1,4 +1,5 @@
-export type PublicCacheNamespace = "sec-tickers" | "sec-annual-history" | "market-daily-history";
+export type PublicCacheNamespace =
+  "sec-tickers" | "sec-annual-history" | "market-daily-history" | "asset-country";
 
 export interface EdgeCacheLike {
   match(request: Request | string): Promise<Response | undefined>;

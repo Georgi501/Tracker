@@ -66,6 +66,7 @@ import { Route as ApiAccountDeleteRouteImport } from './routes/api/account/delet
 import { Route as ApiAccountPortalRouteImport } from './routes/api/account/portal'
 import { Route as ApiPaymentsCheckoutRouteImport } from './routes/api/payments/checkout'
 import { Route as ApiPublicAnalyticsRouteImport } from './routes/api/public/analytics'
+import { Route as ApiPublicAssetCountriesRouteImport } from './routes/api/public/asset-countries'
 import { Route as ApiReferralsClaimRouteImport } from './routes/api/referrals/claim'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -354,6 +355,11 @@ const ApiPublicAnalyticsRoute = ApiPublicAnalyticsRouteImport.update({
   path: '/api/public/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAssetCountriesRoute = ApiPublicAssetCountriesRouteImport.update({
+  id: '/api/public/asset-countries',
+  path: '/api/public/asset-countries',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReferralsClaimRoute = ApiReferralsClaimRouteImport.update({
   id: '/api/referrals/claim',
   path: '/api/referrals/claim',
@@ -424,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/public/asset-countries': typeof ApiPublicAssetCountriesRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -485,6 +492,7 @@ export interface FileRoutesByTo {
   '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/public/asset-countries': typeof ApiPublicAssetCountriesRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -547,6 +555,7 @@ export interface FileRoutesById {
   '/api/account/portal': typeof ApiAccountPortalRoute
   '/api/payments/checkout': typeof ApiPaymentsCheckoutRoute
   '/api/public/analytics': typeof ApiPublicAnalyticsRoute
+  '/api/public/asset-countries': typeof ApiPublicAssetCountriesRoute
   '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -610,6 +619,7 @@ export interface FileRouteTypes {
     | '/api/account/portal'
     | '/api/payments/checkout'
     | '/api/public/analytics'
+    | '/api/public/asset-countries'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -671,6 +681,7 @@ export interface FileRouteTypes {
     | '/api/account/portal'
     | '/api/payments/checkout'
     | '/api/public/analytics'
+    | '/api/public/asset-countries'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   id:
@@ -732,6 +743,7 @@ export interface FileRouteTypes {
     | '/api/account/portal'
     | '/api/payments/checkout'
     | '/api/public/analytics'
+    | '/api/public/asset-countries'
     | '/api/referrals/claim'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -793,6 +805,7 @@ export interface RootRouteChildren {
   ApiAccountPortalRoute: typeof ApiAccountPortalRoute
   ApiPaymentsCheckoutRoute: typeof ApiPaymentsCheckoutRoute
   ApiPublicAnalyticsRoute: typeof ApiPublicAnalyticsRoute
+  ApiPublicAssetCountriesRoute: typeof ApiPublicAssetCountriesRoute
   ApiReferralsClaimRoute: typeof ApiReferralsClaimRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -1198,6 +1211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/asset-countries': {
+      id: '/api/public/asset-countries'
+      path: '/api/public/asset-countries'
+      fullPath: '/api/public/asset-countries'
+      preLoaderRoute: typeof ApiPublicAssetCountriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/referrals/claim': {
       id: '/api/referrals/claim'
       path: '/api/referrals/claim'
@@ -1284,6 +1304,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAccountPortalRoute: ApiAccountPortalRoute,
   ApiPaymentsCheckoutRoute: ApiPaymentsCheckoutRoute,
   ApiPublicAnalyticsRoute: ApiPublicAnalyticsRoute,
+  ApiPublicAssetCountriesRoute: ApiPublicAssetCountriesRoute,
   ApiReferralsClaimRoute: ApiReferralsClaimRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

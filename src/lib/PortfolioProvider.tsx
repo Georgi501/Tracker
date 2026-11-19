@@ -12,6 +12,7 @@ import { dictionaries, isLang, languageLocale, translateLabel, type Lang } from 
 import { currentUsdPrice, formatUsdAmount, type LiveFx } from "./live-fx";
 import { localDateString } from "./local-date";
 import { getExchangeRate } from "./market.functions";
+import { initialAssetRegion } from "./geographic-exposure";
 import {
   FX,
   brokerHoldings,
@@ -534,6 +535,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         ...(current?.quoteRefreshFailed ? { quoteRefreshFailed: true } : {}),
         ...(current?.quoteFxAt !== undefined ? { quoteFxAt: current.quoteFxAt } : {}),
         ...(current?.quoteFxSource !== undefined ? { quoteFxSource: current.quoteFxSource } : {}),
+        ...(current?.country !== undefined ? { country: current.country } : {}),
+        ...(current?.isin !== undefined ? { isin: current.isin } : {}),
       };
     });
     setTx(txs);
@@ -547,15 +550,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         quoteFn,
       );
       if (userRef.current?.id !== user.id || requestVersion !== reloadVersion.current) return;
-      setAssets(
-        base.map((x) => {
+      setAssets((prev) => {
+        const prevCountry = new Map(prev.map((item) => [item.id, item.country]));
+        return base.map((x) => {
+          const existingCountry = prevCountry.get(x.id);
+          const withCountry =
+            existingCountry && !x.country ? { ...x, country: existingCountry } : x;
           const q = res.quotes[x.symbol];
           if (!q)
             return ["stock", "etf", "crypto"].includes(x.type)
-              ? { ...x, quoteRefreshFailed: true }
-              : x;
+              ? { ...withCountry, quoteRefreshFailed: true }
+              : withCountry;
           const updated = {
-            ...x,
+            ...withCountry,
             price: q.price,
             change24h: q.change ?? Number.NaN,
             quoteCurrency: q.currency,
@@ -568,8 +575,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           if (q.fxAt) updated.quoteFxAt = q.fxAt;
           if (q.fxSource) updated.quoteFxSource = q.fxSource;
           return updated;
-        }),
-      );
+        });
+      });
       setPricesLive(Object.keys(res.quotes).length > 0);
       setPriceNote(res.failed ? "error" : res.missing.length ? "unavailable" : null);
     } catch (e) {
@@ -875,6 +882,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         });
         const converted = normalized.map((row, index) => ({
           ...row,
+          ...(rows[index]?.isin ? { isin: rows[index]!.isin } : {}),
           ...(rows[index]?.sourceExecutedAt
             ? { sourceExecutedAt: rows[index]!.sourceExecutedAt }
             : {}),
@@ -903,7 +911,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               symbol: r.symbol,
               name: r.name,
               type: r.assetType,
-              region: r.assetType === "crypto" ? "Global" : "North America",
+              region: initialAssetRegion({
+                symbol: r.symbol,
+                name: r.name,
+                type: r.assetType,
+                isin: r.isin,
+              }),
               sector: r.assetType === "crypto" ? "Crypto" : "Other",
               ...(r.assetType === "bond"
                 ? {

@@ -1,4 +1,8 @@
-import { compareEtfProfiles, resolveEtfExposureProfile } from "@/lib/etf-overlap";
+import {
+  compareEtfProfiles,
+  resolveEtfExposureProfile,
+  type EtfExposureProfile,
+} from "@/lib/etf-overlap";
 import { EtfOverlapPage, resolveInitialEtfPair } from "@/routes/etf-overlap";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -41,30 +45,55 @@ vi.mock("@tanstack/react-router", () => ({
   },
 }));
 
+const SYNTHETIC_PROFILES: Record<string, EtfExposureProfile> = {
+  SYN_A: {
+    symbol: "SYN_A",
+    sectors: { Technology: 0.6, Financials: 0.4 },
+    regions: { "North America": 1 },
+  },
+  SYN_B: {
+    symbol: "SYN_B",
+    sectors: { Technology: 0.6, Financials: 0.4 },
+    regions: { "North America": 1 },
+  },
+  SYN_C: {
+    symbol: "SYN_C",
+    sectors: { Technology: 0.8, Communication: 0.2 },
+    regions: { "North America": 0.9, Europe: 0.1 },
+  },
+};
+
 describe("ETF overlap & look-through calculator", () => {
-  it("computes verified overlap scores and ignores unknown tickers", () => {
-    const identical = compareEtfProfiles(["VOO", "VUAA"]);
+  it("computes overlap scores from synthetic profiles and safely omits unlicensed runtime weights", () => {
+    const identical = compareEtfProfiles(["SYN_A", "SYN_B"], SYNTHETIC_PROFILES);
     expect(identical).not.toBeNull();
     expect(identical!.sectorOverlap).toBeCloseTo(1, 5);
     expect(identical!.regionOverlap).toBeCloseTo(1, 5);
 
-    const mixed = compareEtfProfiles(["VOO", "QQQ"]);
+    const mixed = compareEtfProfiles(["SYN_A", "SYN_C"], SYNTHETIC_PROFILES);
     expect(mixed).not.toBeNull();
-    expect(mixed!.sectorOverlap).toBeGreaterThan(0.6);
-    expect(mixed!.sectorOverlap).toBeLessThan(0.9);
-    expect(mixed!.regionOverlap).toBeCloseTo(0.97, 2);
+    expect(mixed!.sectorOverlap).toBeCloseTo(0.6, 5);
+    expect(mixed!.regionOverlap).toBeCloseTo(0.9, 5);
 
-    const three = compareEtfProfiles(["VOO", "VWCE", "QQQ"]);
-    expect(three?.symbols).toEqual(["VOO", "VWCE", "QQQ"]);
+    expect(compareEtfProfiles(["UNKNOWN_TICKER", "ALSO_UNKNOWN"], SYNTHETIC_PROFILES)).toBeNull();
 
-    expect(compareEtfProfiles(["UNKNOWN_TICKER", "ALSO_UNKNOWN"])).toBeNull();
+    // Distributable runtime mode omits unlicensed third-party percentage tables
+    const commercialDefault = compareEtfProfiles(["VWCE", "IWDA"]);
+    expect(commercialDefault).not.toBeNull();
+    expect(commercialDefault!.sectors).toEqual([]);
+    expect(commercialDefault!.regions).toEqual([]);
+    expect(commercialDefault!.sectorOverlap).toBe(0);
+    expect(commercialDefault!.regionOverlap).toBe(0);
   });
 
-  it("renders interactively with presets, 3rd ETF toggle, and localized CTA", () => {
+  it("renders interactively with presets, 3rd ETF toggle, disclosure message, and localized CTA", () => {
     render(<EtfOverlapPage />);
     expect(
       screen.getByRole("heading", { name: "ETF Overlap & Exposure Calculator" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/not licensed for commercial display/i).length,
+    ).toBeGreaterThanOrEqual(1);
 
     const vwcePreset = screen.getByRole("link", { name: "VWCE vs IWDA" });
     expect(vwcePreset).toHaveAttribute("href", "/etf-overlap?etfs=VWCE%2CIWDA");

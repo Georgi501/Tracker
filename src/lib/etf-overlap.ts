@@ -1,4 +1,9 @@
 import type { Holding } from "./portfolio";
+import {
+  calculatePortfolioGeographicExposure,
+  resolveFundExposureEntry,
+  type FundExposureEntry,
+} from "./geographic-exposure";
 
 export interface EtfHoldingSet {
   symbol: string;
@@ -18,100 +23,46 @@ export interface EtfExposureProfile {
   regions: Record<string, number>;
 }
 
-const SP500_SECTORS: Record<string, number> = {
-  Technology: 0.32,
-  Financials: 0.13,
-  Healthcare: 0.12,
-  "Consumer Discretionary": 0.1,
-  "Communication Services": 0.09,
-  Industrials: 0.08,
-  "Consumer Staples": 0.06,
-  Energy: 0.04,
-  Utilities: 0.02,
-  "Real Estate": 0.02,
-  Materials: 0.02,
-};
+const SUPPORTED_ETF_SYMBOLS = [
+  "VOO",
+  "SPY",
+  "IVV",
+  "VTI",
+  "VUAA",
+  "VUSA",
+  "CSPX",
+  "SXR8",
+  "SPYL",
+  "ZPRV",
+  "QQQ",
+  "EQQQ",
+  "SXRV",
+  "VWCE",
+  "VWRP",
+  "VWRL",
+  "VHYL",
+  "IWDA",
+  "SWDA",
+  "EUNL",
+  "XDWD",
+  "IUSQ",
+  "SSAC",
+  "IS3N",
+  "EIMI",
+  "EXSA",
+  "MEUD",
+  "IXUA",
+] as const;
 
-const SP500_REGIONS: Record<string, number> = {
-  "North America": 1,
-};
-
-const NASDAQ100_SECTORS: Record<string, number> = {
-  Technology: 0.51,
-  "Communication Services": 0.16,
-  "Consumer Discretionary": 0.13,
-  "Consumer Staples": 0.06,
-  Healthcare: 0.06,
-  Industrials: 0.05,
-  Utilities: 0.03,
-};
-
-const NASDAQ100_REGIONS: Record<string, number> = {
-  "North America": 0.97,
-  Europe: 0.02,
-  "Asia-Pacific": 0.01,
-};
-
-const ALL_WORLD_SECTORS: Record<string, number> = {
-  Technology: 0.26,
-  Financials: 0.16,
-  Healthcare: 0.11,
-  "Consumer Discretionary": 0.11,
-  Industrials: 0.11,
-  "Communication Services": 0.08,
-  "Consumer Staples": 0.06,
-  Energy: 0.04,
-  Materials: 0.03,
-  Utilities: 0.02,
-  "Real Estate": 0.02,
-};
-
-const ALL_WORLD_REGIONS: Record<string, number> = {
-  "North America": 0.65,
-  Europe: 0.15,
-  "Asia-Pacific": 0.1,
-  "Emerging Markets": 0.1,
-};
-
-const MSCI_WORLD_SECTORS: Record<string, number> = {
-  Technology: 0.27,
-  Financials: 0.15,
-  Healthcare: 0.12,
-  Industrials: 0.11,
-  "Consumer Discretionary": 0.11,
-  "Communication Services": 0.08,
-  "Consumer Staples": 0.06,
-  Energy: 0.04,
-  Materials: 0.03,
-  Utilities: 0.03,
-};
-
-const MSCI_WORLD_REGIONS: Record<string, number> = {
-  "North America": 0.72,
-  Europe: 0.18,
-  "Asia-Pacific": 0.1,
-};
-
-export const SUPPORTED_ETF_EXPOSURE_PROFILES: Record<string, EtfExposureProfile> = {
-  VOO: { symbol: "VOO", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  SPY: { symbol: "SPY", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  IVV: { symbol: "IVV", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  VTI: { symbol: "VTI", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  VUAA: { symbol: "VUAA", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  VUSA: { symbol: "VUSA", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  CSPX: { symbol: "CSPX", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  SXR8: { symbol: "SXR8", sectors: SP500_SECTORS, regions: SP500_REGIONS },
-  QQQ: { symbol: "QQQ", sectors: NASDAQ100_SECTORS, regions: NASDAQ100_REGIONS },
-  EQQQ: { symbol: "EQQQ", sectors: NASDAQ100_SECTORS, regions: NASDAQ100_REGIONS },
-  VWCE: { symbol: "VWCE", sectors: ALL_WORLD_SECTORS, regions: ALL_WORLD_REGIONS },
-  VT: { symbol: "VT", sectors: ALL_WORLD_SECTORS, regions: ALL_WORLD_REGIONS },
-  VWRP: { symbol: "VWRP", sectors: ALL_WORLD_SECTORS, regions: ALL_WORLD_REGIONS },
-  VWRL: { symbol: "VWRL", sectors: ALL_WORLD_SECTORS, regions: ALL_WORLD_REGIONS },
-  IWDA: { symbol: "IWDA", sectors: MSCI_WORLD_SECTORS, regions: MSCI_WORLD_REGIONS },
-  SWDA: { symbol: "SWDA", sectors: MSCI_WORLD_SECTORS, regions: MSCI_WORLD_REGIONS },
-  EUNL: { symbol: "EUNL", sectors: MSCI_WORLD_SECTORS, regions: MSCI_WORLD_REGIONS },
-  URTH: { symbol: "URTH", sectors: MSCI_WORLD_SECTORS, regions: MSCI_WORLD_REGIONS },
-};
+/**
+ * Identity-only catalog for supported ETFs in distributable builds.
+ * Zero proprietary third-party sector or country weight tables are embedded;
+ * authorized weight profiles can be supplied cleanly via custom registries/maps.
+ */
+export const SUPPORTED_ETF_EXPOSURE_PROFILES: Record<string, EtfExposureProfile> =
+  Object.fromEntries(
+    SUPPORTED_ETF_SYMBOLS.map((symbol) => [symbol, { symbol, sectors: {}, regions: {} }]),
+  );
 
 export function resolveEtfExposureProfile(
   symbol: string,
@@ -119,6 +70,13 @@ export function resolveEtfExposureProfile(
 ): EtfExposureProfile | null {
   const upper = symbol.trim().toUpperCase();
   if (profiles[upper]) return profiles[upper]!;
+  if (profiles === SUPPORTED_ETF_EXPOSURE_PROFILES) {
+    const identity = resolveFundExposureEntry({ symbol: upper });
+    if (identity) {
+      return { symbol: upper, sectors: {}, regions: {} };
+    }
+    return null;
+  }
   const baseTicker = upper.split(".")[0];
   if (baseTicker && profiles[baseTicker]) return profiles[baseTicker]!;
   return null;
@@ -130,11 +88,28 @@ export function calculatePortfolioExposures(
   mode: "direct" | "lookThrough" = "direct",
   labelFn: (raw: string) => string = (value) => value,
   profiles: Record<string, EtfExposureProfile> = SUPPORTED_ETF_EXPOSURE_PROFILES,
+  options?: {
+    registry?: readonly FundExposureEntry[];
+    equityCountries?: Readonly<Record<string, string>>;
+  },
 ): {
   rows: { name: string; value: number }[];
   decomposedEtfs: string[];
   fallbackEtfs: string[];
 } {
+  if (
+    dimension === "region" &&
+    mode === "lookThrough" &&
+    profiles === SUPPORTED_ETF_EXPOSURE_PROFILES
+  ) {
+    const geo = calculatePortfolioGeographicExposure(holdings, labelFn, options);
+    return {
+      rows: geo.rows.map((row) => ({ name: row.name, value: row.value })),
+      decomposedEtfs: geo.decomposedEtfs,
+      fallbackEtfs: [...new Set([...geo.unresolvedAssets, ...geo.licenseWithheldAssets])],
+    };
+  }
+
   const totals = new Map<string, number>();
   const decomposedEtfs: string[] = [];
   const fallbackEtfs: string[] = [];
@@ -205,16 +180,22 @@ export function calculateEtfOverlap(
   for (const fund of compositions) {
     const fundValue = holdings.find(
       (holding) =>
-        holding.asset.type === "etf" && holding.asset.symbol.toUpperCase() === fund.symbol,
+        holding.asset.type === "etf" &&
+        holding.asset.symbol.toUpperCase() === fund.symbol.toUpperCase(),
     )?.value;
-    if (!fundValue || fundValue <= 0) continue;
-    for (const constituent of fund.holdings)
+    if (!fundValue || !Number.isFinite(fundValue) || fundValue <= 0) continue;
+    for (const constituent of fund.holdings) {
+      if (!Number.isFinite(constituent.weight) || constituent.weight <= 0) continue;
       add(constituent.symbol, constituent.name, fundValue * constituent.weight, fund.symbol);
+    }
   }
+
   for (const holding of holdings) {
-    if (holding.asset.type === "stock" && holding.value > 0)
+    if (holding.asset.type === "stock" && Number.isFinite(holding.value) && holding.value > 0) {
       add(holding.asset.symbol, holding.asset.name, holding.value, holding.asset.symbol);
+    }
   }
+
   return [...values.values()].sort((a, b) => b.weight - a.weight);
 }
 
@@ -258,7 +239,9 @@ function buildComparisonDimension(
       if (w > maxWeight) maxWeight = w;
     }
     const overlap = Number.isFinite(minWeight) ? minWeight : 0;
-    totalOverlap += overlap;
+    if (key !== "Unknown" && key !== "Non-Geographic") {
+      totalOverlap += overlap;
+    }
     if (maxWeight > 0) {
       rows.push({ name: key, weights, overlap });
     }
@@ -272,8 +255,8 @@ function buildComparisonDimension(
 }
 
 /**
- * Compares 2 or 3 supported ETFs using verified sector and region exposure profiles.
- * Unknown tickers are ignored rather than fabricated.
+ * Compares 2 or 3 ETFs using provided/authorized exposure profiles.
+ * Third-party tables without distribution rights remain empty rather than fabricated.
  */
 export function compareEtfProfiles(
   symbols: readonly string[],

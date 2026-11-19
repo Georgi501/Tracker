@@ -1,0 +1,6 @@
+# Progress Checkpoint — Clean Distribution & Geographic Exposure Engine
+
+- [x] **Root-Cause Fixes:** Replaced `EUR -> Europe` and CSV `"North America"` defaults (`AddTransactionDialog.tsx`, `csv-import.ts`, `PortfolioProvider.tsx`) with neutral `initialAssetRegion`, preserved ISINs on import, and eliminated legacy `asset.region` display poisoning via on-read resolution.
+- [x] **Reusable Look-Through Engine:** Built pure `src/lib/geographic-exposure.ts` (`GEO_REGIONS`, `COUNTRY_TO_REGION`, `resolveFundExposureEntry` with ISIN-conflict guard, `resolveInstrumentGeoProfile`, `calculatePortfolioGeographicExposure`, `distributeShareTenths` 100.0% rounding).
+- [x] **Distribution & Licensing Scrubbing:** Removed all third-party copied ETF country/sector tables and client flags from source, JS bundles, test fixtures, documentation, and `release/geo-clean` Git history; disabled unverified Yahoo `assetProfile.country` lookups while preserving strict endpoint security and public corporate HQ labels.
+- [x] **UI, 5-Language Support & Responsive Layout:** Updated `AllocationCard`, `AllocationBreakdown`, `GeoExposureDisclosure`, `analytics.tsx`, `etf-overlap.tsx`, and `holdings.tsx`, fixing the `360px` mobile overflow cleanly across all viewports.

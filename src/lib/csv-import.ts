@@ -1,5 +1,6 @@
 import type { AssetType, TxKind, Transaction } from "./portfolio";
 import { CRYPTO_SYMBOLS } from "./crypto-assets";
+import { resolveFundExposureEntry } from "./geographic-exposure";
 import { isValidIsoDate } from "./history";
 
 export type BrokerFormat = "generic" | "trading212" | "ibkr" | "revolut";
@@ -14,6 +15,7 @@ export interface ImportedTx {
   sourceTransactionId?: string | undefined;
   sourceExecutedAt?: string | undefined; // Provider time, without inventing a timezone.
   symbol: string;
+  isin?: string | undefined;
   name: string;
   assetType: AssetType;
   kind: TxKind;
@@ -183,7 +185,17 @@ const sourceIdentity = (id: string, prefix: string, time: string) => ({
   ...(executionTime(time) ? { sourceExecutedAt: executionTime(time) } : {}),
 });
 const CRYPTO = new Set([...CRYPTO_SYMBOLS, "MATIC"]);
-const guessType = (sym: string): AssetType => (CRYPTO.has(sym.toUpperCase()) ? "crypto" : "stock");
+const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{9}\d$/;
+const cleanIsin = (raw: string | undefined): string | undefined => {
+  const v = raw?.trim().toUpperCase() ?? "";
+  return ISIN_RE.test(v) ? v : undefined;
+};
+const guessType = (sym: string, isin?: string): AssetType =>
+  CRYPTO.has(sym.toUpperCase())
+    ? "crypto"
+    : resolveFundExposureEntry({ symbol: sym, isin })
+      ? "etf"
+      : "stock";
 const parseSafely = (parse: () => ImportedTx[]) => {
   try {
     return parse();
@@ -199,6 +211,7 @@ function generic(text: string): ImportedTx[] {
     date: ["date", "datetime", "tradedate", "transactiondate", "transactiondateutc", "time"],
     type: ["type", "action", "side", "transactiontype", "activity"],
     symbol: ["symbol", "ticker", "isin", "instrument", "asset", "product"],
+    isin: ["isin"],
     name: ["name", "description", "company", "securityname"],
     asset_type: ["assettype", "securitytype"],
     quantity: ["quantity", "qty", "shares", "units", "noofshares"],
@@ -216,7 +229,8 @@ function generic(text: string): ImportedTx[] {
       const kind = value(row, "type").toLowerCase() as TxKind;
       if (!["buy", "sell", "dividend"].includes(kind)) return [];
       const symbol = value(row, "symbol").toUpperCase();
-      const at = (value(row, "asset_type") || guessType(symbol)) as AssetType;
+      const isin = cleanIsin(value(row, "isin")) ?? cleanIsin(symbol);
+      const at = (value(row, "asset_type") || guessType(symbol, isin)) as AssetType;
       const cur = currency(value(row, "currency"));
       const feeCurrencyValue = headers
         .map((header, index) => ({ header, index }))
@@ -241,6 +255,7 @@ function generic(text: string): ImportedTx[] {
       return [
         {
           symbol,
+          ...(isin ? { isin } : {}),
           ...sourceIdentity(value(row, "source_id"), "", value(row, "date")),
           name: value(row, "name") || symbol,
           assetType: at,
@@ -267,10 +282,12 @@ function trading212(text: string): ImportedTx[] {
       const a = g("action").toLowerCase();
       const symbol = g("ticker").toUpperCase();
       if (!symbol) return [];
+      const isin = cleanIsin(g("isin"));
       const base = {
         symbol,
+        ...(isin ? { isin } : {}),
         name: g("name") || symbol,
-        assetType: "stock" as AssetType,
+        assetType: guessType(symbol, isin),
         date: day(g("time")),
         ...sourceIdentity(
           g("id"),
@@ -378,7 +395,7 @@ function ibkr(text: string): ImportedTx[] {
         out.push({
           symbol,
           name: symbol,
-          assetType: cat.includes("crypto") ? "crypto" : "stock",
+          assetType: cat.includes("crypto") ? "crypto" : guessType(symbol),
           kind: qty > 0 ? "buy" : "sell",
           quantity: Math.abs(qty),
           currency: currency(g("currency")),
@@ -395,12 +412,14 @@ function ibkr(text: string): ImportedTx[] {
         const g = (k: string) => r[divHead.indexOf(k)] ?? "";
         if (g("currency").toLowerCase().startsWith("total")) continue;
         const symbol = (g("description").match(/^([A-Z.]+)\s*\(/)?.[1] ?? "").toUpperCase();
+        const isin = cleanIsin(g("description").match(/\(([A-Z]{2}[A-Z0-9]{9}\d)\)/)?.[1]);
         const amt = num(g("amount"));
         if (!symbol || amt <= 0) continue;
         out.push({
           symbol,
+          ...(isin ? { isin } : {}),
           name: symbol,
-          assetType: "stock",
+          assetType: guessType(symbol, isin),
           kind: "dividend",
           quantity: 1,
           currency: currency(g("currency")),

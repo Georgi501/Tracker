@@ -858,6 +858,13 @@ const labels: Record<string, Record<Lang, string>> = {
     es: "Norteamérica",
     it: "Nord America",
   },
+  "Latin America": {
+    en: "Latin America",
+    bg: "Латинска Америка",
+    de: "Lateinamerika",
+    es: "Latinoamérica",
+    it: "America Latina",
+  },
   Europe: { en: "Europe", bg: "Европа", de: "Europa", es: "Europa", it: "Europa" },
   "Asia-Pacific": {
     en: "Asia-Pacific",
@@ -865,6 +872,34 @@ const labels: Record<string, Record<Lang, string>> = {
     de: "Asien-Pazifik",
     es: "Asia-Pacífico",
     it: "Asia-Pacifico",
+  },
+  "Middle East": {
+    en: "Middle East",
+    bg: "Близък изток",
+    de: "Naher Osten",
+    es: "Oriente Medio",
+    it: "Medio Oriente",
+  },
+  Africa: {
+    en: "Africa",
+    bg: "Африка",
+    de: "Afrika",
+    es: "África",
+    it: "Africa",
+  },
+  "Non-Geographic": {
+    en: "Non-geographic (Cash & Crypto)",
+    bg: "Негеографски (Кеш и Крипто)",
+    de: "Nicht-geografisch (Cash & Krypto)",
+    es: "No geográfico (Efectivo y Cripto)",
+    it: "Non geografico (Liquidità e Cripto)",
+  },
+  Unknown: {
+    en: "Unknown / Unclassified",
+    bg: "Неизвестен / Некласифициран",
+    de: "Unbekannt / Nicht klassifiziert",
+    es: "Desconocido / Sin clasificar",
+    it: "Sconosciuto / Non classificato",
   },
   "Emerging Markets": {
     en: "Emerging Markets",

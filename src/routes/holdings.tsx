@@ -737,8 +737,8 @@ function Holdings() {
           const totalCost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
           const totalPnl = p.holdings.reduce((s, h) => s + h.pnl, 0);
           return (
-            <div className="grid gap-4 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
-              <Card className="flex flex-col justify-between gap-4 p-4 sm:p-5">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
+              <Card className="flex min-w-0 flex-col justify-between gap-4 p-4 sm:p-5">
                 <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -767,9 +767,7 @@ function Holdings() {
                   <div>
                     <p className="text-muted-foreground">{p.t("totalPnl")}</p>
                     <p className="numeric-display mt-0.5 text-sm font-semibold">
-                      <Delta value={totalPnl}>
-                        {p.money(totalPnl, { sign: true })}
-                      </Delta>
+                      <Delta value={totalPnl}>{p.money(totalPnl, { sign: true })}</Delta>
                     </p>
                   </div>
                   <div>
