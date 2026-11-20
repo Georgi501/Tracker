@@ -11,6 +11,7 @@ import { DataQuality, PortfolioReview } from "@/components/ProTools";
 import { RecurringReminders } from "@/components/RecurringReminders";
 import { ScenarioStudio } from "@/components/ScenarioStudio";
 import { SnapshotCard } from "@/components/SnapshotCard";
+import { TaxReportTable } from "@/components/TaxReportTable";
 import { ThesisCheck } from "@/components/ThesisCheck";
 import { Button } from "@/components/ui/button";
 import { useWatchState } from "@/hooks/use-watch-state";
@@ -34,10 +35,7 @@ import { proCopy } from "@/lib/pro-i18n";
 import { proToolsCopy } from "@/lib/pro-tools-copy";
 import { pct, usePortfolio } from "@/lib/store";
 import { thesisCopy } from "@/lib/thesis-copy";
-import {
-  computeBaseCurrencyRealizedReport,
-  formatBaseCurrencyAmount,
-} from "@/lib/base-currency-accounting";
+import { computeBaseCurrencyRealizedReport } from "@/lib/base-currency-accounting";
 import {
   classValues,
   exportCsv,
@@ -744,42 +742,7 @@ function Tax() {
       {!displayTaxReport.years.length ? (
         <p className="text-sm text-muted-foreground">{c.noSales}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[420px] text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr>
-                <th className="py-1 font-medium">{c.year}</th>
-                <th className="text-right font-medium">{c.proceeds}</th>
-                <th className="text-right font-medium">{c.costBasis}</th>
-                <th className="text-right font-medium">{c.realized}</th>
-                <th className="text-right font-medium">{c.dividendsReceived}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayTaxReport.years.map((y) => (
-                <tr key={y.year} className="border-t border-border">
-                  <td className="py-2 font-semibold">
-                    {y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`}
-                  </td>
-                  <td className="text-right">
-                    {formatBaseCurrencyAmount(y.proceeds, p.currency, p.lang)}
-                  </td>
-                  <td className="text-right">
-                    {formatBaseCurrencyAmount(y.cost, p.currency, p.lang)}
-                  </td>
-                  <td className="text-right">
-                    <Delta value={y.realized}>
-                      {formatBaseCurrencyAmount(y.realized, p.currency, p.lang, { sign: true })}
-                    </Delta>
-                  </td>
-                  <td className="text-right">
-                    {formatBaseCurrencyAmount(y.dividends, p.currency, p.lang)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TaxReportTable years={displayTaxReport.years} lang={p.lang} currency={p.currency} />
       )}
       {p.currency === "EUR" &&
         (!displayTaxReport.fxComplete || !displayTaxReport.dividendsFxComplete) && (
