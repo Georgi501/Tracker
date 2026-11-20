@@ -92,7 +92,7 @@ export function EtfOverlapCard() {
   const missing = symbols.filter((symbol) => !available.has(symbol));
 
   return (
-    <Card className="min-w-0 lg:col-span-3">
+    <Card className="min-w-0 overflow-hidden lg:col-span-3">
       <h3 className="font-display font-semibold">{copy.title}</h3>
       <p className="mt-1 text-xs text-muted-foreground">{copy.description}</p>
       {!funds.length ? (
@@ -102,15 +102,20 @@ export function EtfOverlapCard() {
       ) : results.length ? (
         <ul className="mt-3 divide-y divide-border/60">
           {results.slice(0, 10).map((item) => (
-            <li key={item.symbol} className="flex items-center justify-between gap-3 py-2 text-sm">
-              <span className="min-w-0">
-                <span className="font-semibold">{item.symbol}</span>
-                <span className="ml-2 truncate text-muted-foreground">{item.name}</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
+            <li
+              key={item.symbol}
+              className="relative flex min-w-0 items-center justify-between gap-3 overflow-hidden py-2 text-sm"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="shrink-0 font-semibold">{item.symbol}</span>
+                  <span className="min-w-0 truncate text-muted-foreground">{item.name}</span>
+                </span>
+                <span className="mt-0.5 block break-words text-xs text-muted-foreground">
                   {item.sources.join(", ")}
                 </span>
               </span>
-              <span className="shrink-0 font-semibold tabular-nums">
+              <span className="relative shrink-0 font-semibold tabular-nums">
                 <span className="sr-only">{copy.weight}: </span>
                 {(item.weight * 100).toFixed(2)}%
               </span>

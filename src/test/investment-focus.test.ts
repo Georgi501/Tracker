@@ -228,11 +228,18 @@ describe("investment focus — semantics and invariants", () => {
     expect(rows.find((r) => r.name === "North America")?.value).toBe(3000);
   });
 
-  it("analytics route constrains mobile grids to grid-cols-1 with min-w-0 and avoids orphaned sm:col-span-2", () => {
+  it("analytics route and ETF overlap card constrain mobile grids and rows to prevent horizontal overflow", () => {
     const src = readFileSync(resolve(process.cwd(), "src/routes/analytics.tsx"), "utf8");
     expect(src).toContain('className="grid grid-cols-1 gap-5 lg:grid-cols-3"');
     expect(src).toContain('className="grid grid-cols-1 gap-4 md:grid-cols-2"');
     expect(src).toContain('className="min-w-0 lg:col-span-3"');
     expect(src).not.toContain('className="sm:col-span-2 lg:col-span-3');
+
+    const overlap = readFileSync(
+      resolve(process.cwd(), "src/components/EtfOverlapCard.tsx"),
+      "utf8",
+    );
+    expect(overlap).toContain('className="min-w-0 overflow-hidden lg:col-span-3"');
+    expect(overlap).toContain('className="min-w-0 flex-1"');
   });
 });
