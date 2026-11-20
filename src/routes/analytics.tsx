@@ -637,8 +637,8 @@ function Analytics() {
     );
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-3">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 lg:col-span-3">
         <h1 className="font-display text-2xl font-bold">{p.t("analytics")}</h1>
         <ShareAllocationButton holdings={p.holdings} lang={p.lang} />
       </div>
@@ -649,7 +649,7 @@ function Analytics() {
         retry={() => void historyQuery.refetch()}
       />
 
-      <Card className="lg:col-span-3">
+      <Card className="min-w-0 lg:col-span-3">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display font-semibold">{p.t("returnsByPeriod")}</h3>
           <div className="flex flex-wrap gap-1">
@@ -919,7 +919,7 @@ function Analytics() {
           (h) => p.t(h.asset.type),
         )}
       />
-      <Card className="lg:col-span-3">
+      <Card className="min-w-0 lg:col-span-3">
         <h3 className="font-display mb-1 font-semibold">{c.attribution}</h3>
         <p className="mb-4 text-xs text-muted-foreground">{c.attributionNote}</p>
         <div
@@ -979,7 +979,7 @@ function Analytics() {
           })()}
         </div>
       </Card>
-      <Card className="lg:col-span-3">
+      <Card className="min-w-0 lg:col-span-3">
         <h3 className="font-display mb-1 font-semibold">{c.dataQuality}</h3>
         <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -1016,7 +1016,7 @@ function Analytics() {
         )}
       </Card>
       {pendingSplits.length > 0 && (
-        <Card className="lg:col-span-3 border-warning/40">
+        <Card className="min-w-0 lg:col-span-3 border-warning/40">
           <h3 className="font-display font-semibold">{c.splitReviewTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{c.splitReviewHelp}</p>
           <ul className="mt-3 divide-y divide-border">
@@ -1044,7 +1044,7 @@ function Analytics() {
         </Card>
       )}
       <ProGate
-        className="lg:col-span-3"
+        className="min-w-0 lg:col-span-3"
         title={
           {
             en: "ETF overlap",
@@ -1068,7 +1068,7 @@ function Analytics() {
         <EtfOverlapCard />
       </ProGate>
       <ProGate
-        className="lg:col-span-3"
+        className="min-w-0 lg:col-span-3"
         title={c.benchmark}
         desc={c.reportDescription}
         preview={
@@ -1078,8 +1078,8 @@ function Analytics() {
           </div>
         }
       >
-        <div className="grid gap-5 lg:grid-cols-3">
-          <section className="lg:col-span-2" aria-labelledby="analytics-benchmark-title">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <section className="min-w-0 lg:col-span-2" aria-labelledby="analytics-benchmark-title">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 id="analytics-benchmark-title" className="font-semibold">
@@ -1087,10 +1087,10 @@ function Analytics() {
                 </h4>
                 <p className="text-xs text-muted-foreground">{c.benchmarkDescription}</p>
               </div>
-              <label className="grid gap-1 text-xs text-muted-foreground">
+              <label className="grid min-w-0 max-w-full gap-1 text-xs text-muted-foreground">
                 {c.benchmarkLabel}
                 <select
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  className="h-9 max-w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
                   value={benchmark}
                   onChange={(event) => setBenchmark(savedBenchmark(event.currentTarget.value))}
                 >
@@ -1185,7 +1185,7 @@ function Analytics() {
             )}
             <p className="mt-2 text-xs text-muted-foreground">{c.benchmarkCaveat}</p>
           </section>
-          <section aria-labelledby="analytics-risk-title">
+          <section className="min-w-0" aria-labelledby="analytics-risk-title">
             <h4 id="analytics-risk-title" className="font-semibold">
               {c.risk}
             </h4>
@@ -1223,15 +1223,12 @@ function Analytics() {
               </p>
             </div>
           </section>
-          <section
-            className="sm:col-span-2 lg:col-span-3"
-            aria-labelledby="analytics-exposure-title"
-          >
+          <section className="min-w-0 lg:col-span-3" aria-labelledby="analytics-exposure-title">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h4 id="analytics-exposure-title" className="font-semibold">
                 {c.exposures}
               </h4>
-              <div className="inline-flex rounded-full bg-secondary p-1 text-xs">
+              <div className="inline-flex max-w-full flex-wrap rounded-full bg-secondary p-1 text-xs">
                 {(["lookThrough", "direct"] as const).map((mode) => (
                   <button
                     key={mode}
@@ -1274,7 +1271,7 @@ function Analytics() {
                   )}
                 </p>
               )}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {accounts.some((account) => account.value !== null) && (
                 <Breakdown
                   title={c.byAccount}
@@ -1310,7 +1307,7 @@ function Analytics() {
               )}
             </div>
           </section>
-          <section className="sm:col-span-2 lg:col-span-3 border-t border-border pt-4">
+          <section className="min-w-0 lg:col-span-3 border-t border-border pt-4">
             <h4 className="font-semibold">{c.report}</h4>
             <p className="mb-3 text-xs text-muted-foreground">{c.reportDescription}</p>
             <p className="mb-3 text-xs text-muted-foreground">{c.monthlyReportHint}</p>
@@ -1329,7 +1326,7 @@ function Analytics() {
         </div>
       </ProGate>
       <ProGate
-        className="lg:col-span-3"
+        className="min-w-0 lg:col-span-3"
         title={proCopy[p.lang].heatmap}
         desc={proCopy[p.lang].heatmapDesc}
         preview={<HeatmapSilhouette />}

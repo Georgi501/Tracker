@@ -92,7 +92,7 @@ export function EtfOverlapCard() {
   const missing = symbols.filter((symbol) => !available.has(symbol));
 
   return (
-    <Card className="lg:col-span-3">
+    <Card className="min-w-0 lg:col-span-3">
       <h3 className="font-display font-semibold">{copy.title}</h3>
       <p className="mt-1 text-xs text-muted-foreground">{copy.description}</p>
       {!funds.length ? (

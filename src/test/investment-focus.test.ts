@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   calculatePortfolioGeographicExposure,
@@ -224,5 +226,13 @@ describe("investment focus — semantics and invariants", () => {
     expect(rows.find((r) => r.name === "Fund · no country split")?.value).toBe(6000);
     expect(rows.find((r) => r.name === "Unidentified")?.value).toBe(1000);
     expect(rows.find((r) => r.name === "North America")?.value).toBe(3000);
+  });
+
+  it("analytics route constrains mobile grids to grid-cols-1 with min-w-0 and avoids orphaned sm:col-span-2", () => {
+    const src = readFileSync(resolve(process.cwd(), "src/routes/analytics.tsx"), "utf8");
+    expect(src).toContain('className="grid grid-cols-1 gap-5 lg:grid-cols-3"');
+    expect(src).toContain('className="grid grid-cols-1 gap-4 md:grid-cols-2"');
+    expect(src).toContain('className="min-w-0 lg:col-span-3"');
+    expect(src).not.toContain('className="sm:col-span-2 lg:col-span-3');
   });
 });
