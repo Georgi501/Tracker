@@ -2,6 +2,7 @@ import { currencyRate, type DailyPrice } from "./history";
 import { languageLocale, type Lang } from "./i18n";
 import {
   normalizeTransactionsForSplits,
+  type BrokerHolding,
   type CorporateAction,
   type Currency,
   type Holding,
@@ -81,11 +82,11 @@ function replayEurCostByAsset(
     if (tx.kind === "dividend") continue;
     const state = out.get(tx.assetId) ?? { qty: 0, costEur: 0, complete: true };
     if (tx.kind === "buy") {
+      state.qty += tx.quantity;
       const rate = currencyRate("EUR", tx.date, priceList, []);
       if (rate === null || !(rate > 0)) {
         state.complete = false;
       } else {
-        state.qty += tx.quantity;
         state.costEur += (tx.quantity * tx.price + (tx.fee ?? 0)) / rate;
       }
     } else {
@@ -93,10 +94,34 @@ function replayEurCostByAsset(
       const avg = state.qty > 0 ? state.costEur / state.qty : 0;
       state.qty -= sellQty;
       state.costEur -= avg * sellQty;
+      if (state.qty <= 1e-12) {
+        out.delete(tx.assetId);
+        continue;
+      }
     }
     out.set(tx.assetId, state);
   }
   return out;
+}
+
+export function holdingMarketValueInBaseCurrency(
+  holding: Pick<BrokerHolding, "asset" | "quantity" | "value">,
+  currency: Currency,
+  liveEurPerUsd: number | null,
+): number {
+  if (currency === "USD" || !Number.isFinite(holding.value)) return holding.value;
+  const { quoteCurrency, quoteNativePrice } = holding.asset;
+  if (
+    quoteCurrency === "EUR" &&
+    typeof quoteNativePrice === "number" &&
+    Number.isFinite(quoteNativePrice) &&
+    quoteNativePrice > 0
+  ) {
+    return holding.quantity * quoteNativePrice;
+  }
+  return liveEurPerUsd !== null && Number.isFinite(liveEurPerUsd) && liveEurPerUsd > 0
+    ? holding.value * liveEurPerUsd
+    : Number.NaN;
 }
 
 function computeSingleHoldingMetrics(
@@ -132,20 +157,7 @@ function computeSingleHoldingMetrics(
   const hasValidLiveFx =
     typeof liveEurPerUsd === "number" && Number.isFinite(liveEurPerUsd) && liveEurPerUsd > 0;
 
-  let value = Number.NaN;
-  if (Number.isFinite(holding.value)) {
-    if (
-      holding.asset.quoteCurrency === "EUR" &&
-      typeof holding.asset.quoteNativePrice === "number" &&
-      Number.isFinite(holding.asset.quoteNativePrice) &&
-      holding.asset.quoteNativePrice > 0
-    ) {
-      // Avoid EUR -> USD -> EUR floating-point round-trip drift for EUR-quoted listings.
-      value = holding.quantity * holding.asset.quoteNativePrice;
-    } else if (hasValidLiveFx) {
-      value = holding.value * liveEurPerUsd;
-    }
-  }
+  const value = holdingMarketValueInBaseCurrency(holding, currency, liveEurPerUsd);
 
   let dayChange = Number.NaN;
   if (Number.isFinite(value) && Number.isFinite(holding.asset.change24h)) {

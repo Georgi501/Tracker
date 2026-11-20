@@ -7,6 +7,7 @@ import {
   convertHistoricalUsdAmount,
   formatBaseCurrencyAmount,
   formatHistoricalUsdAmount,
+  holdingMarketValueInBaseCurrency,
   holdingsInBaseCurrency,
   transactionCashFlowUsd,
 } from "@/lib/base-currency-accounting";
@@ -20,7 +21,7 @@ import type { DailyPrice } from "@/lib/history";
 import { resolveAssetIdentity } from "@/lib/instrument-identity";
 import { calculatePortfolioInvestmentFocus } from "@/lib/investment-focus";
 import {
-  brokerHoldings,
+  accountValues,
   computeHoldings,
   groupBy,
   type Asset,
@@ -79,6 +80,35 @@ const SYNTHETIC_13_TRADES_EUR_DATES: Array<{
 ];
 
 describe("Issue 1 — Cross-page parity (Holdings, Dashboard, Allocation, Analytics, Asset Detail)", () => {
+  it("recovers the dated EUR basis after a position with missing FX is fully closed", () => {
+    const asset = { id: "asset", symbol: "VXUS.DE", price: 30 } as Asset;
+    const transactions: Transaction[] = [
+      { id: "old-buy", assetId: asset.id, kind: "buy", quantity: 2, price: 10, date: "2026-01-01" },
+      {
+        id: "old-sell",
+        assetId: asset.id,
+        kind: "sell",
+        quantity: 2,
+        price: 12,
+        date: "2026-02-01",
+      },
+      { id: "new-buy", assetId: asset.id, kind: "buy", quantity: 1, price: 24, date: "2026-03-01" },
+    ];
+    const holdings = computeHoldings([asset], transactions);
+    const options = {
+      liveEurPerUsd: 0.8,
+      eurUsdPrices: makeDailyPrices([["2026-03-01", 1.2]]),
+    };
+    const portfolio = computePortfolioBaseMetrics(holdings, transactions, "EUR", options);
+    const holding = computeHoldingBaseMetrics(holdings[0]!, transactions, "EUR", options);
+
+    expect(portfolio.totalCost).toBe(20);
+    expect(portfolio.datedFxComplete).toBe(true);
+    expect(holding.costBasis).toBe(portfolio.totalCost);
+    expect(holding.costBasisMethod).toBe("dated-historical-fx");
+    expect(computeBaseCurrencyRealizedReport(transactions, "EUR", options).totalRealized).toBeNaN();
+  });
+
   it("produces 0.00 cent divergence across all surfaces in EUR and USD on identical quote & FX snapshots", () => {
     const eurUsdPrices = makeDailyPrices([
       ["2026-09-07", 1.112],
@@ -194,11 +224,11 @@ describe("Issue 1 — Cross-page parity (Holdings, Dashboard, Allocation, Analyt
         (sum, h) => sum + (dashboardSummary.byAssetId.get(h.asset.id)?.pnl ?? 0),
         0,
       );
-      const bh = brokerHoldings(assets, txs, [], []);
-      const accountTotal = bh.reduce((sum, item) => {
-        const m = dashboardSummary.byAssetId.get(item.asset.id)!;
-        return sum + (item.quantity / m.quantity) * m.value;
-      }, 0);
+      const accounts = accountValues(assets, txs, [], [], [], (holding) =>
+        holdingMarketValueInBaseCurrency(holding, currency, liveEurPerUsd),
+      );
+      expect(accounts.every((account) => account.value !== null)).toBe(true);
+      const accountTotal = accounts.reduce((sum, account) => sum + (account.value ?? 0), 0);
 
       // Asset Detail sums individual computeHoldingBaseMetrics
       let assetDetailValueSum = 0;

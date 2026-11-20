@@ -112,7 +112,7 @@ const C = {
     avg: "Average cost",
     value: "Value",
     pnl: "Unrealized P&L",
-    bought: "Invested",
+    bought: "Total purchases",
     sold: "Sold",
     div: "Dividends received",
     since: "Holding since",
@@ -155,7 +155,7 @@ const C = {
     avg: "Средна цена",
     value: "Стойност",
     pnl: "Нереализирана P&L",
-    bought: "Инвестирано",
+    bought: "Общо покупки",
     sold: "Продадено",
     div: "Получени дивиденти",
     since: "Държиш от",
@@ -198,7 +198,7 @@ const C = {
     avg: "Durchschnittskosten",
     value: "Wert",
     pnl: "Nicht realisierter Gewinn/Verlust",
-    bought: "Investiert",
+    bought: "Käufe insgesamt",
     sold: "Verkauft",
     div: "Erhaltene Dividenden",
     since: "Im Bestand seit",
@@ -241,7 +241,7 @@ const C = {
     avg: "Coste medio",
     value: "Valor",
     pnl: "Ganancia/pérdida no realizada",
-    bought: "Invertido",
+    bought: "Compras totales",
     sold: "Vendido",
     div: "Dividendos recibidos",
     since: "En cartera desde",
@@ -284,7 +284,7 @@ const C = {
     avg: "Costo medio",
     value: "Valore",
     pnl: "Profitto/perdita non realizzato",
-    bought: "Investito",
+    bought: "Acquisti totali",
     sold: "Venduto",
     div: "Dividendi ricevuti",
     since: "In portafoglio dal",
@@ -451,14 +451,17 @@ function AssetPage() {
   const [valuationNote, setValuationNote] = useState("");
   const [savingValuation, setSavingValuation] = useState(false);
   const [bondCouponDate, setBondCouponDate] = useState("");
-  const h = p.holdings.find((x) => x.asset.symbol.toUpperCase() === symbol.toUpperCase());
+  const requestedSymbol = symbol.toUpperCase();
+  const ownedAsset =
+    p.assets.find((asset) => asset.symbol.toUpperCase() === requestedSymbol) ??
+    p.assets.find((asset) => asset.quoteSymbol?.toUpperCase() === requestedSymbol);
+  const h = ownedAsset
+    ? p.holdings.find((holding) => holding.asset.id === ownedAsset.id)
+    : undefined;
   const catalogAsset = searchCatalog(symbol).find(
-    (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
+    (candidate) => candidate.symbol.toUpperCase() === requestedSymbol,
   );
-  const portfolioAsset =
-    h?.asset ??
-    p.assets.find((a) => a.symbol.toUpperCase() === symbol.toUpperCase()) ??
-    catalogAsset;
+  const portfolioAsset = h?.asset ?? ownedAsset ?? catalogAsset;
   const resolveAsset = useServerFn(searchMarket);
   const assetQuery = useQuery({
     queryKey: ["public-asset", symbol.toUpperCase()],
@@ -468,9 +471,7 @@ function AssetPage() {
   });
   const asset =
     portfolioAsset ??
-    assetQuery.data?.assets.find(
-      (candidate) => candidate.symbol.toUpperCase() === symbol.toUpperCase(),
-    );
+    assetQuery.data?.assets.find((candidate) => candidate.symbol.toUpperCase() === requestedSymbol);
   const bondAsset = asset?.type === "bond" ? asset : null;
   const bondAssetId = bondAsset?.id;
   const bondPriceValue = bondAsset?.price;
@@ -628,6 +629,10 @@ function AssetPage() {
             [
               c.pnl,
               `${formatBaseCurrencyAmount(holdingMetrics?.pnl ?? Number.NaN, p.currency, p.lang, { sign: true })} (${pct(holdingMetrics?.pnlPct ?? Number.NaN)})`,
+            ],
+            [
+              p.t("invested"),
+              formatBaseCurrencyAmount(holdingMetrics?.costBasis ?? Number.NaN, p.currency, p.lang),
             ],
             [c.bought, formatBaseCurrencyAmount(s.bought, p.currency, p.lang)],
             [c.sold, formatBaseCurrencyAmount(s.sold, p.currency, p.lang)],

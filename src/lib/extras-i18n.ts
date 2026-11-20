@@ -24,7 +24,7 @@ const en = {
   alertNone: "No alerts yet. Alerts are checked against market quotes while the app is open.",
   taxExport: "Download tax report (Excel/CSV)",
   taxNote:
-    "Amounts in USD, FIFO. The period follows your selected start month; no country-specific tax rules are applied. Verify with a qualified tax professional.",
+    "FIFO. CSV and PDF exports use USD. The period follows your selected start month; no country-specific tax rules are applied. Verify with a qualified tax professional.",
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -52,7 +52,7 @@ const bg: Copy = {
     "Няма известия. Проверяват се спрямо пазарните котировки, докато приложението е отворено.",
   taxExport: "Изтегли данъчен отчет (Excel/CSV)",
   taxNote:
-    "Суми в USD, по FIFO. Периодът следва избрания начален месец; не се прилагат правила за конкретна държава. Провери с данъчен консултант.",
+    "Метод FIFO. CSV и PDF справките са в USD. Периодът следва избрания начален месец; не се прилагат правила за конкретна държава. Провери с данъчен консултант.",
 };
 const de: Copy = {
   watch: "Zur Watchlist",
@@ -78,7 +78,7 @@ const de: Copy = {
   alertNone: "Noch keine Alarme. Sie werden bei geöffneter App mit Marktkursen geprüft.",
   taxExport: "Steuerbericht herunterladen (Excel/CSV)",
   taxNote:
-    "Beträge in USD, FIFO. Der Zeitraum folgt dem gewählten Startmonat; länderspezifische Steuerregeln werden nicht angewendet. Vor der Abgabe fachlich prüfen lassen.",
+    "FIFO. CSV- und PDF-Exporte erfolgen in USD. Der Zeitraum folgt dem gewählten Startmonat; länderspezifische Steuerregeln werden nicht angewendet. Vor der Abgabe fachlich prüfen lassen.",
 };
 const es: Copy = {
   watch: "Añadir a watchlist",
@@ -104,7 +104,7 @@ const es: Copy = {
   alertNone: "Sin alertas. Se comprueban con cotizaciones de mercado mientras la app está abierta.",
   taxExport: "Descargar informe fiscal (Excel/CSV)",
   taxNote:
-    "Importes en USD, FIFO. El periodo sigue el mes de inicio seleccionado; no se aplican reglas fiscales específicas de ningún país. Consulta a un profesional.",
+    "FIFO. Las exportaciones CSV y PDF usan USD. El periodo sigue el mes de inicio seleccionado; no se aplican reglas fiscales específicas de ningún país. Consulta a un profesional.",
 };
 const it: Copy = {
   watch: "Aggiungi alla watchlist",
@@ -130,7 +130,7 @@ const it: Copy = {
   alertNone: "Nessun avviso. Vengono controllati con quotazioni di mercato mentre l'app è aperta.",
   taxExport: "Scarica report fiscale (Excel/CSV)",
   taxNote:
-    "Importi in USD, FIFO. Il periodo segue il mese iniziale selezionato; non vengono applicate regole fiscali nazionali. Verifica con un professionista.",
+    "FIFO. Le esportazioni CSV e PDF usano USD. Il periodo segue il mese iniziale selezionato; non vengono applicate regole fiscali nazionali. Verifica con un professionista.",
 };
 export const extrasCopy: Record<Lang, Copy> = { en, bg, de, es, it };
 

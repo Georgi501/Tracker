@@ -636,7 +636,6 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     if (!base.length) return;
     try {
       const quoteAssets = base.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type));
-      if (!quoteAssets.length) return;
       const todayIso = new Date().toISOString().slice(0, 10);
       let eurUsdRange: { start: string; end: string } | undefined;
       if (txs.length > 0) {
@@ -650,6 +649,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           eurUsdRange = { start: startIso, end: endIso };
         }
       }
+      if (!quoteAssets.length && !eurUsdRange) return;
       const res = await fetchPortfolioQuoteBatches(
         quoteAssets.map((x) => ({
           symbol: x.symbol,

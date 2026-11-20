@@ -25,6 +25,7 @@ import {
   computePortfolioBaseMetrics,
   convertHistoricalUsdAmount,
   formatBaseCurrencyAmount,
+  holdingMarketValueInBaseCurrency,
   holdingsInBaseCurrency,
   transactionCashFlowUsd,
 } from "@/lib/base-currency-accounting";
@@ -47,8 +48,8 @@ import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
 import { languageLocale } from "@/lib/i18n";
 import {
+  accountValues,
   assetCurrency,
-  brokerHoldings,
   groupBy,
   portfolioHistoryFingerprint,
 } from "@/lib/portfolio";
@@ -246,25 +247,15 @@ function Analytics() {
     enabled: !!p.user,
     staleTime: 60000,
   });
-  const effectiveEurUsdPrices = useMemo(
-    () => (p.eurUsdPrices.length ? p.eurUsdPrices : historyQuery.data?.eurUsdPrices),
-    [p.eurUsdPrices, historyQuery.data?.eurUsdPrices],
-  );
+  const eurUsdPrices = p.eurUsdPrices;
   const baseMetrics = useMemo(
     () =>
       computePortfolioBaseMetrics(p.holdings, p.transactions, p.currency, {
         liveEurPerUsd: p.eurPerUsd,
-        eurUsdPrices: effectiveEurUsdPrices,
+        eurUsdPrices,
         splits: p.corporateActions,
       }),
-    [
-      p.holdings,
-      p.transactions,
-      p.currency,
-      p.eurPerUsd,
-      effectiveEurUsdPrices,
-      p.corporateActions,
-    ],
+    [p.holdings, p.transactions, p.currency, p.eurPerUsd, eurUsdPrices, p.corporateActions],
   );
   const baseHoldings = useMemo(
     () => holdingsInBaseCurrency(p.holdings, baseMetrics),
@@ -468,50 +459,17 @@ function Analytics() {
       ],
     };
   }, [baseHoldings, exposureMode, translateLabel, lang, translate, c.bySector, c.byRegion]);
-  const accounts = useMemo(() => {
-    const names = new Map(p.brokers.map((broker) => [broker.id, broker.name]));
-    const accountIds = new Set([
-      ...p.transactions.map((transaction) => transaction.brokerId ?? "manual"),
-      ...p.brokerTransfers.flatMap((transfer) => [transfer.fromBrokerId, transfer.toBrokerId]),
-    ]);
-    const byBroker = new Map(
-      [...accountIds].map((id) => [
-        id,
-        {
-          id,
-          name: names.get(id) ?? (id === "manual" ? c.manualAccount : c.unknownAccount),
-          value: 0 as number | null,
-          missingQuotes: 0,
-        },
-      ]),
-    );
-    for (const holding of brokerHoldings(
-      p.assets,
-      p.transactions,
-      p.brokerTransfers,
-      p.corporateActions,
-    )) {
-      const entry = byBroker.get(holding.brokerId);
-      if (!entry) continue;
-      const m = baseMetrics.byAssetId.get(holding.asset.id);
-      if (!m || !Number.isFinite(m.value) || m.quantity <= 0) {
-        entry.value = null;
-        entry.missingQuotes += 1;
-      } else if (entry.value !== null) {
-        entry.value += (holding.quantity / m.quantity) * m.value;
-      }
-    }
-    return [...byBroker.values()].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
-  }, [
+  const accounts = accountValues(
     p.assets,
     p.transactions,
-    p.brokerTransfers,
-    p.corporateActions,
     p.brokers,
-    baseMetrics,
-    c.manualAccount,
-    c.unknownAccount,
-  ]);
+    p.corporateActions,
+    p.brokerTransfers,
+    (holding) => holdingMarketValueInBaseCurrency(holding, p.currency, p.eurPerUsd),
+  ).map((account) => ({
+    ...account,
+    name: account.name ?? (account.id === "manual" ? c.manualAccount : c.unknownAccount),
+  }));
   const pricedHoldings = p.holdings.filter(
     (holding) => Number.isFinite(holding.asset.price) && holding.asset.price > 0,
   );
@@ -538,13 +496,22 @@ function Analytics() {
       transactionCashFlowUsd(transaction),
       transaction.date,
       p.currency,
-      effectiveEurUsdPrices,
+      eurUsdPrices,
     );
     if (p.currency === "EUR" && converted.method !== "dated-historical-fx") {
       return Number.NaN;
     }
     return sum + converted.amount;
   }, 0);
+  const currentValuation = [
+    [p.t("netWorth"), formatBaseCurrencyAmount(baseMetrics.totalValue, p.currency, p.lang)],
+    [p.t("invested"), formatBaseCurrencyAmount(baseMetrics.totalCost, p.currency, p.lang)],
+    [
+      c.unrealizedPnl,
+      formatBaseCurrencyAmount(baseMetrics.totalPnl, p.currency, p.lang, { sign: true }),
+    ],
+    [c.return, pct(baseMetrics.totalPnlPct)],
+  ];
   const reportSections: AnalyticsReportSection[] = [
     {
       title: c.summary,
@@ -552,7 +519,7 @@ function Analytics() {
       rows: [
         [c.reportPeriod, range ? rangeLabel(range) : c.unavailable],
         [c.currency, p.currency],
-        [p.t("netWorth"), formatBaseCurrencyAmount(baseMetrics.totalValue, p.currency, p.lang)],
+        ...currentValuation,
         [p.t("selectedPeriod"), currentReturn === null ? "—" : pct(currentReturn)],
         [c.selectedBenchmark, benchmark === "none" ? c.benchmarkNone : benchmark],
         [c.volatility, risk ? pct(risk.volatility) : c.unavailable],
@@ -739,6 +706,16 @@ function Analytics() {
         <h1 className="font-display text-2xl font-bold">{p.t("analytics")}</h1>
         <ShareAllocationButton holdings={p.holdings} lang={p.lang} />
       </div>
+      <Card className="min-w-0 lg:col-span-3">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {currentValuation.map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className="numeric-display mt-1 text-lg font-bold tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
       <HistoryLoadError
         lang={p.lang}
         failed={historyQuery.isError}

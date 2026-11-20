@@ -831,6 +831,8 @@ function Holdings() {
                     <p className="numeric-display mt-0.5 text-sm font-semibold">
                       <Delta value={totalPnl}>
                         {formatBaseCurrencyAmount(totalPnl, p.currency, p.lang, { sign: true })}
+                        {Number.isFinite(baseMetrics.totalPnlPct) &&
+                          ` (${pct(baseMetrics.totalPnlPct)})`}
                       </Delta>
                     </p>
                   </div>

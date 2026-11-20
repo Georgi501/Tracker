@@ -371,6 +371,7 @@ export function accountValues(
   brokers: { id: string; name: string }[],
   splits: CorporateAction[] = [],
   transfers: BrokerTransfer[] = [],
+  marketValue: (holding: BrokerHolding) => number = (holding) => holding.value,
 ): { id: string; name: string | null; value: number | null; missingQuotes: number }[] {
   const names = new Map(brokers.map((broker) => [broker.id, broker.name]));
   const accountIds = new Set([
@@ -380,17 +381,12 @@ export function accountValues(
   const holdings = brokerHoldings(assets, transactions, transfers, splits);
   return [...accountIds]
     .map((id) => {
-      const accountHoldings = holdings.filter((holding) => holding.brokerId === id);
-      const missingQuotes = accountHoldings.filter(
-        (holding) => !Number.isFinite(holding.value),
-      ).length;
+      const values = holdings.filter((holding) => holding.brokerId === id).map(marketValue);
+      const missingQuotes = values.filter((value) => !Number.isFinite(value)).length;
       return {
         id,
         name: names.get(id) ?? null,
-        value:
-          missingQuotes > 0
-            ? null
-            : accountHoldings.reduce((sum, holding) => sum + holding.value, 0),
+        value: missingQuotes > 0 ? null : values.reduce((sum, value) => sum + value, 0),
         missingQuotes,
       };
     })

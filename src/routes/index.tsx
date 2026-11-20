@@ -630,27 +630,24 @@ function Dashboard() {
     enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,
   });
-  const effectiveEurUsdPrices = useMemo(
-    () => (p.eurUsdPrices.length ? p.eurUsdPrices : history.data?.eurUsdPrices),
-    [p.eurUsdPrices, history.data?.eurUsdPrices],
-  );
+  const eurUsdPrices = p.eurUsdPrices;
   const baseMetrics = useMemo(
     () =>
       computePortfolioBaseMetrics(holdings, transactions, p.currency, {
         liveEurPerUsd: p.eurPerUsd,
-        eurUsdPrices: effectiveEurUsdPrices,
+        eurUsdPrices,
         splits: p.corporateActions,
       }),
-    [holdings, transactions, p.currency, p.eurPerUsd, effectiveEurUsdPrices, p.corporateActions],
+    [holdings, transactions, p.currency, p.eurPerUsd, eurUsdPrices, p.corporateActions],
   );
   const realizedSummary = useMemo(
     () =>
       computeBaseCurrencyRealizedReport(transactions, p.currency, {
         taxYearStartMonth: 1,
-        eurUsdPrices: effectiveEurUsdPrices,
+        eurUsdPrices,
         splits: p.corporateActions,
       }),
-    [transactions, p.currency, effectiveEurUsdPrices, p.corporateActions],
+    [transactions, p.currency, eurUsdPrices, p.corporateActions],
   );
   const realized = realizedSummary.totalRealized;
   const irrV = useMemo(() => {
@@ -970,7 +967,7 @@ function Dashboard() {
               </p>
               <div
                 role="img"
-                aria-label={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}, ${chartMode === "performance" ? `${performanceSeries.length} ${p.t("dataPoints")}${performanceSeries.length ? `, ${p.t("latestValue")} ${pct(performanceSeries.at(-1)!.v)}` : ""}` : `${series.length} ${p.t("dataPoints")}${series.length ? `, ${p.t("latestValue")} ${p.money(series.at(-1)!.v)}` : ""}`}.`}
+                aria-label={`${chartMode === "performance" ? c.portfolio : p.t("netWorth")} ${p.t("chart")}, ${period}, ${chartMode === "performance" ? `${performanceSeries.length} ${p.t("dataPoints")}${performanceSeries.length ? `, ${p.t("latestValue")} ${pct(performanceSeries.at(-1)!.v)}` : ""}` : `${series.length} ${p.t("dataPoints")}${series.length ? `, ${p.t("latestValue")} ${formatBaseCurrencyAmount(series.at(-1)!.v, p.currency, p.lang)}` : ""}`}.`}
                 className="relative mt-3 h-52 touch-pan-y sm:h-60 md:h-64"
                 onTouchStart={(e) => (swipeX.current = e.touches[0]?.clientX ?? null)}
                 onTouchEnd={(e) => {
@@ -1164,7 +1161,10 @@ function Dashboard() {
                         pct(point.v),
                         ...(comparison[index] ? [pct(comparison[index]!.benchmark)] : []),
                       ])
-                    : series.map((point) => [fmtT(point.t), p.money(point.v)])
+                    : series.map((point) => [
+                        fmtT(point.t),
+                        formatBaseCurrencyAmount(point.v, p.currency, p.lang),
+                      ])
                 }
               />
               <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -1520,7 +1520,7 @@ function Dashboard() {
                                 amount,
                                 transaction.date,
                                 p.currency,
-                                effectiveEurUsdPrices,
+                                eurUsdPrices,
                                 p.lang,
                                 { sign: transaction.kind === "dividend" },
                               )}
