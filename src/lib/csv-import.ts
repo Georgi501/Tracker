@@ -369,7 +369,8 @@ function generic(text: string): ImportedTx[] {
     price: ["price", "unitprice", "pricepershare", "priceperunit", "executionprice"],
     currency: ["currency", "pricecurrency", "settlementcurrency"],
     fee: ["fee", "fees", "commission", "transactionfee", "commissionamount"],
-    source_id: ["sourcetransactionid", "transactionid", "tradeid", "executionid", "id"],
+    source_id: ["sourceid", "sourcetransactionid", "transactionid", "tradeid", "executionid", "id"],
+    source_executed_at: ["sourceexecutedat"],
   };
   const value = (row: string[], key: string) => {
     const index = headers.findIndex((header) => aliases[key]?.includes(header));
@@ -427,6 +428,9 @@ function generic(text: string): ImportedTx[] {
           ...(resolvedSymbol !== rawSymbol ? { brokerSymbol: rawSymbol } : {}),
           ...(rawIsin ? { isin: rawIsin } : {}),
           ...sourceIdentity(value(row, "source_id"), "", value(row, "date")),
+          ...(value(row, "source_executed_at")
+            ? { sourceExecutedAt: value(row, "source_executed_at") }
+            : {}),
           name: rawName,
           assetType: at,
           kind,
@@ -767,7 +771,14 @@ function analyzeTrading212FromRows(rows: string[][]): CsvAnalysisResult {
       feeCurrency: resolvedFeeCurrency ?? tradeCurrency,
       date: parsedDate,
       currency: tradeCurrency,
-      ...sourceIdentity(cell(idIdx), "t212:fill:", timeValue),
+      ...sourceIdentity(
+        cell(idIdx),
+        "t212:fill:",
+        lowerHead[timeIdx] === "time (utc)" &&
+          /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(timeValue)
+          ? `${timeValue}Z`
+          : timeValue,
+      ),
     });
   }
 
@@ -1208,7 +1219,9 @@ export function splitDuplicates(
         return (
           !row.sourceExecutedAt ||
           !candidate.sourceExecutedAt ||
-          row.sourceExecutedAt === candidate.sourceExecutedAt
+          row.sourceExecutedAt === candidate.sourceExecutedAt ||
+          (row.sourceTransactionId?.startsWith("t212:fill:") &&
+            row.sourceExecutedAt === `${candidate.sourceExecutedAt}Z`)
         );
       });
     (duplicate ? duplicates : fresh).push(row);

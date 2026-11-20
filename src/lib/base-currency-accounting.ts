@@ -1,5 +1,6 @@
 import { currencyRate, type DailyPrice } from "./history";
 import { languageLocale, type Lang } from "./i18n";
+import { transactionChronology, unverifiedSale } from "./transaction-chronology";
 import {
   normalizeTransactionsForSplits,
   type BrokerHolding,
@@ -19,7 +20,11 @@ import {
 
 export type CostBasisFxMethod = "usd-stored" | "dated-historical-fx" | "spot-fx-fallback";
 export type RealizedFxMethod =
-  "usd-stored" | "dated-historical-fx" | "no-sales" | "missing-historical-fx";
+  | "usd-stored"
+  | "dated-historical-fx"
+  | "no-sales"
+  | "missing-historical-fx"
+  | "unverified-chronology";
 export type HistoricalAmountMethod =
   "usd-stored" | "dated-historical-fx" | "usd-fallback-missing-fx";
 
@@ -74,11 +79,11 @@ function replayEurCostByAsset(
 ): Map<string, { qty: number; costEur: number; complete: boolean }> {
   const out = new Map<string, { qty: number; costEur: number; complete: boolean }>();
   if (!eurUsdPrices.length || !transactions.length) return out;
-  const sorted = normalizeTransactionsForSplits([...transactions], [...splits]).sort((a, b) =>
-    a.date.localeCompare(b.date),
+  const { ordered } = transactionChronology(
+    normalizeTransactionsForSplits([...transactions], [...splits]),
   );
   const priceList = orderedDailyPrices(eurUsdPrices);
-  for (const tx of sorted) {
+  for (const tx of ordered) {
     if (tx.kind === "dividend") continue;
     const state = out.get(tx.assetId) ?? { qty: 0, costEur: 0, complete: true };
     if (tx.kind === "buy") {
@@ -171,6 +176,7 @@ function computeSingleHoldingMetrics(
   let avgCost = Number.NaN;
   let costBasisMethod: CostBasisFxMethod = "spot-fx-fallback";
   if (
+    Number.isFinite(holding.costBasis) &&
     replayedEur &&
     replayedEur.complete &&
     replayedEur.qty > 1e-9 &&
@@ -277,13 +283,16 @@ export function computePortfolioBaseMetrics(
 
     if (currency === "EUR" && metrics.costBasisMethod !== "dated-historical-fx") {
       datedFxComplete = false;
-      spotFallbackSymbols.push(holding.asset.symbol);
+      if (Number.isFinite(metrics.costBasis)) spotFallbackSymbols.push(holding.asset.symbol);
     }
   }
 
-  const isComplete = missingQuoteSymbols.length === 0;
+  const invalid = transactionChronology(
+    normalizeTransactionsForSplits([...transactions], [...(options.splits ?? [])]),
+  ).invalid;
+  const isComplete = missingQuoteSymbols.length === 0 && !invalid.size;
   const resolvedTotalValue = isComplete ? totalValue : Number.NaN;
-  const resolvedTotalCost = hasAllCosts ? totalCost : Number.NaN;
+  const resolvedTotalCost = hasAllCosts && !invalid.size ? totalCost : Number.NaN;
   const resolvedTotalDayChange = isComplete ? totalDayChange : Number.NaN;
   const totalPnl =
     isComplete && Number.isFinite(resolvedTotalValue) && Number.isFinite(resolvedTotalCost)
@@ -391,8 +400,8 @@ export function computeBaseCurrencyRealizedReport(
 
   const splits = options?.splits ?? [];
   const priceList = orderedDailyPrices(options?.eurUsdPrices);
-  const sorted = normalizeTransactionsForSplits([...transactions], [...splits]).sort((a, b) =>
-    a.date.localeCompare(b.date),
+  const chronology = transactionChronology(
+    normalizeTransactionsForSplits([...transactions], [...splits]),
   );
 
   const rateAt = (date: string): number | null => {
@@ -409,6 +418,7 @@ export function computeBaseCurrencyRealizedReport(
   const years = new Map<number, BaseCurrencyTaxYear>();
   const portfolioMissingDates = new Set<string>();
   let salesCount = 0;
+  let chronologyComplete = true;
 
   const yearOf = (d: string): BaseCurrencyTaxYear => {
     const calendarYear = Number(d.slice(0, 4));
@@ -433,7 +443,7 @@ export function computeBaseCurrencyRealizedReport(
     return r;
   };
 
-  for (const t of sorted) {
+  for (const t of chronology.ordered) {
     if (t.kind === "dividend") {
       const netUsd = t.quantity * t.price - (t.fee ?? 0);
       const y = yearOf(t.date);
@@ -463,6 +473,27 @@ export function computeBaseCurrencyRealizedReport(
             : Number.NaN,
         date: t.date,
         fxMissing: buyRate === null,
+      });
+      continue;
+    }
+
+    if (unverifiedSale(t, chronology)) {
+      chronologyComplete = false;
+      salesCount += 1;
+      const y = yearOf(t.date);
+      y.realized = y.cost = y.proceeds = Number.NaN;
+      const rate = rateAt(t.date);
+      y.sales.push({
+        assetId: t.assetId,
+        date: t.date,
+        acquiredDate: "—",
+        quantity: t.quantity,
+        proceeds: rate === null ? Number.NaN : (t.quantity * t.price - (t.fee ?? 0)) / rate,
+        cost: Number.NaN,
+        fee: rate === null ? Number.NaN : (t.fee ?? 0) / rate,
+        gain: Number.NaN,
+        fxComplete: rate !== null,
+        missingFxDates: rate === null ? [t.date] : [],
       });
       continue;
     }
@@ -570,7 +601,7 @@ export function computeBaseCurrencyRealizedReport(
     };
   }
 
-  if (!fxComplete) {
+  if (!fxComplete || !chronologyComplete) {
     return {
       currency,
       years: sortedYears,
@@ -579,9 +610,9 @@ export function computeBaseCurrencyRealizedReport(
       totalCost: Number.NaN,
       totalDividends,
       salesCount,
-      fxComplete: false,
+      fxComplete,
       dividendsFxComplete,
-      method: "missing-historical-fx",
+      method: chronologyComplete ? "missing-historical-fx" : "unverified-chronology",
       missingFxDates: [...portfolioMissingDates].sort(),
     };
   }

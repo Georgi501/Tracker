@@ -165,6 +165,7 @@ export function parseT212Orders(orders: z.infer<typeof t212OrderSchema>[]): Impo
         price: fill.price,
         ...(fees > 0 ? { fee: fees, feeCurrency: assertCurrency(feeCurrency ?? "") } : {}),
         date: transactionDate(fill.filledAt),
+        sourceExecutedAt: fill.filledAt,
         currency: tradeCur,
       },
     ];
@@ -284,6 +285,7 @@ export function parseFlexReport(xml: string): ImportedTx[] {
       price,
       fee: Math.abs(Number(trade["ibCommission"]) || 0),
       date,
+      ...(trade["dateTime"]?.includes(";") ? { sourceExecutedAt: trade["dateTime"] } : {}),
       currency: cur,
     });
   }

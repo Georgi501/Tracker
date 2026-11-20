@@ -61,6 +61,7 @@ import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioHistoryFingerprint, portfolioIrr, type Transaction } from "@/lib/portfolio";
+import { transactionChronology } from "@/lib/transaction-chronology";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -767,9 +768,10 @@ function Dashboard() {
   const isConcentrated = largestShareRatio !== null && largestShareRatio >= 0.5;
   const isFundExposure = largestHolding?.asset.type === "etf";
   const showConcentrationWarning = isConcentrated && !isFundExposure;
-  const recentTransactions = [...p.transactions]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 4);
+  const recentTransactions = useMemo(
+    () => transactionChronology(p.transactions).ordered.slice(-4).reverse(),
+    [p.transactions],
+  );
   const spanDays =
     series.length > 1 ? ((series.at(-1)?.t ?? 0) - (series[0]?.t ?? 0)) / 86_400_000 : 0;
   const fmtT = (t: number) =>

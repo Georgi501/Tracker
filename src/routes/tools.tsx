@@ -244,6 +244,8 @@ function Tools() {
         quantity: transaction.quantity,
         price: transaction.price,
         fee: transaction.fee ?? 0,
+        sourceTransactionId: transaction.sourceTransactionId,
+        sourceExecutedAt: transaction.sourceExecutedAt,
       }));
       const normalized = await p.normalizeImportRows(rows);
       const split = splitDuplicates(rows, existing, normalized);

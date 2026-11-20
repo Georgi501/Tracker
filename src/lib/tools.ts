@@ -1,3 +1,4 @@
+import { transactionChronology, unverifiedSale } from "./transaction-chronology";
 import {
   normalizeTransactionsForSplits,
   type Asset,
@@ -210,9 +211,13 @@ export function fifoSalePreview(
     return null;
 
   const lots: { quantity: number; costPerUnit: number }[] = [];
-  for (const transaction of normalizeTransactionsForSplits(txs, splits)
-    .filter((item) => item.assetId === assetId && item.kind !== "dividend")
-    .sort((a, b) => a.date.localeCompare(b.date))) {
+  const chronology = transactionChronology(
+    normalizeTransactionsForSplits(txs, splits).filter(
+      (item) => item.assetId === assetId && item.kind !== "dividend",
+    ),
+  );
+  if (chronology.fifo.size || chronology.invalid.size || chronology.mixed.size) return null;
+  for (const transaction of chronology.ordered) {
     if (
       !Number.isFinite(transaction.quantity) ||
       transaction.quantity <= 0 ||
@@ -263,9 +268,7 @@ export function fifoTaxReport(
 ): TaxYear[] {
   if (!Number.isInteger(taxYearStartMonth) || taxYearStartMonth < 1 || taxYearStartMonth > 12)
     throw new Error("Tax year start month must be between 1 and 12");
-  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
-    a.date.localeCompare(b.date),
-  );
+  const chronology = transactionChronology(normalizeTransactionsForSplits(txs, splits));
   const lots = new Map<string, { qty: number; costPerUnit: number; date: string }[]>();
   const years = new Map<number, TaxYear>();
   const yearOf = (d: string) => {
@@ -288,7 +291,7 @@ export function fifoTaxReport(
     }
     return r;
   };
-  for (const t of sorted) {
+  for (const t of chronology.ordered) {
     if (t.kind === "dividend") {
       const gross = t.quantity * t.price;
       const fee = t.fee ?? 0;
@@ -305,6 +308,21 @@ export function fifoTaxReport(
         qty: t.quantity,
         costPerUnit: t.price + (t.fee ?? 0) / t.quantity,
         date: t.date,
+      });
+      continue;
+    }
+    if (unverifiedSale(t, chronology)) {
+      const y = yearOf(t.date);
+      y.realized = y.cost = y.proceeds = Number.NaN;
+      y.sales.push({
+        assetId: t.assetId,
+        date: t.date,
+        acquiredDate: "—",
+        quantity: t.quantity,
+        proceeds: t.quantity * t.price - (t.fee ?? 0),
+        cost: Number.NaN,
+        fee: t.fee ?? 0,
+        gain: Number.NaN,
       });
       continue;
     }
@@ -410,26 +428,28 @@ export function riskMetrics(points: PortfolioPoint[], riskFreePct = 0): RiskMetr
 export function exportCsv(assets: Asset[], txs: Transaction[]): string {
   const by = new Map(assets.map((a) => [a.id, a]));
   const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
-  const rows = [...txs]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((t) => {
-      const a = by.get(t.assetId);
-      return [
-        t.date,
-        t.kind,
-        a?.symbol ?? "",
-        a?.name ?? "",
-        a?.type ?? "",
-        t.quantity,
-        t.price,
-        t.fee ?? 0,
-      ]
-        .map((v) => esc(String(v)))
-        .join(",");
-    });
+  const hasSource = txs.some((t) => t.sourceTransactionId || t.sourceExecutedAt);
+  const rows = transactionChronology(txs).ordered.map((t) => {
+    const a = by.get(t.assetId);
+    return [
+      t.date,
+      t.kind,
+      a?.symbol ?? "",
+      a?.name ?? "",
+      a?.type ?? "",
+      t.quantity,
+      t.price,
+      t.fee ?? 0,
+      "USD",
+      ...(hasSource ? [t.sourceTransactionId ?? "", t.sourceExecutedAt ?? ""] : []),
+    ]
+      .map((v) => esc(String(v)))
+      .join(",");
+  });
   return [
-    "date,type,symbol,name,asset_type,quantity,price,fee,currency",
-    ...rows.map((row) => `${row},USD`),
+    "date,type,symbol,name,asset_type,quantity,price,fee,currency" +
+      (hasSource ? ",source_id,source_executed_at" : ""),
+    ...rows,
   ].join("\n");
 }
 
@@ -443,7 +463,7 @@ export function classValues(holdings: Holding[]): Record<string, number> {
 /** Spreadsheet-ready tax report: yearly summary rows followed by each FIFO sale (USD). */
 export function taxReportCsv(years: TaxYear[], assets: Asset[]): string {
   const by = new Map(assets.map((a) => [a.id, a.symbol]));
-  const r = (n: number) => n.toFixed(2);
+  const r = (n: number) => (Number.isFinite(n) ? n.toFixed(2) : "");
   const lines = ["section,year,date,symbol,quantity,proceeds_usd,cost_usd,gain_usd,dividends_usd"];
   for (const y of years)
     lines.push(
@@ -648,7 +668,8 @@ export function taxReportHtml(
     selectedYear !== undefined ? years.filter((item) => item.year === selectedYear) : years;
   const yearLabel = (y: TaxYear) =>
     y.yearEnd === y.year ? String(y.year) : `${y.year}/${String(y.yearEnd).slice(-2)}`;
-  const money = (v: number, sign = false) => `${sign && v > 0 ? "+" : ""}${v.toFixed(2)}`;
+  const money = (v: number, sign = false) =>
+    Number.isFinite(v) ? `${sign && v > 0 ? "+" : ""}${v.toFixed(2)}` : "—";
 
   const summaryRows = filteredYears
     .map(

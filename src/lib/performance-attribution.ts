@@ -1,4 +1,5 @@
-﻿import {
+import { transactionChronology, transactionLedgerDay } from "./transaction-chronology";
+import {
   closeAt,
   currencyRate,
   type DailyPrice,
@@ -33,9 +34,14 @@ export function dailyAttribution(
   splits: CorporateAction[] = [],
 ): AttributionDay[] | null {
   if (points.length < 2) return null;
-  const txs = normalizeTransactionsForSplits(transactions, splits).sort((a, b) =>
-    a.date.localeCompare(b.date),
-  );
+  const chronology = transactionChronology(normalizeTransactionsForSplits(transactions, splits));
+  if (
+    [...chronology.invalid.values()].some(
+      (day) => day <= new Date(points.at(-1)!.t).toISOString().slice(0, 10),
+    )
+  )
+    return null;
+  const txs = chronology.ordered;
   if (
     txs.some(
       (t) =>
@@ -58,7 +64,8 @@ export function dailyAttribution(
       );
   };
   const firstDate = new Date(points[0]!.t).toISOString().slice(0, 10);
-  while (cursor < txs.length && txs[cursor]!.date <= firstDate) update(txs[cursor++]!);
+  while (cursor < txs.length && transactionLedgerDay(txs[cursor]!) <= firstDate)
+    update(txs[cursor++]!);
   const result: AttributionDay[] = [];
   for (let i = 1; i < points.length; i++) {
     const previous = points[i - 1]!,
@@ -75,9 +82,9 @@ export function dailyAttribution(
     let dividends = 0,
       fees = 0,
       flow = 0;
-    while (cursor < txs.length && txs[cursor]!.date <= date) {
+    while (cursor < txs.length && transactionLedgerDay(txs[cursor]!) <= date) {
       const tx = txs[cursor++]!;
-      if (tx.date !== date) return null;
+      if (transactionLedgerDay(tx) !== date) return null;
       dayTx.push(tx);
       update(tx);
       fees -= (tx.fee ?? 0) / baseNow;

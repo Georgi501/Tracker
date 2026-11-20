@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { transactionChronology } from "./transaction-chronology";
 import { readPortfolioSnapshot } from "./portfolio-snapshot";
 import {
   computeHoldings,
@@ -66,9 +67,7 @@ export async function loadValuedPortfolio(
 ): Promise<ValuedPortfolioSummary> {
   const snapshot = await readPortfolioSnapshot(sb);
   const assetRows = snapshot.assets ?? [];
-  const txRows = [...(snapshot.transactions ?? [])].sort((a, b) =>
-    String(a.date).localeCompare(String(b.date)),
-  );
+  const txRows = snapshot.transactions ?? [];
   const corporateActions: CorporateAction[] = (snapshot.corporate_actions ?? []).map((action) => ({
     assetId: action.asset_id,
     date: action.event_date,
@@ -96,6 +95,8 @@ export async function loadValuedPortfolio(
     price: Number(r.price),
     fee: Number(r.fee ?? 0),
     date: r.date,
+    ...(r.source_executed_at ? { sourceExecutedAt: r.source_executed_at } : {}),
+    ...(r.source_transaction_id ? { sourceTransactionId: r.source_transaction_id } : {}),
   }));
 
   const normalizedTransactions = corporateActions.length
@@ -115,12 +116,8 @@ export async function loadValuedPortfolio(
   }
 
   // Determine active positions after split normalization so we only request live quotes for held assets.
-  const qtyByAsset = new Map<string, number>();
-  for (const t of normalizedTransactions) {
-    const cur = qtyByAsset.get(t.assetId) ?? 0;
-    if (t.kind === "buy") qtyByAsset.set(t.assetId, cur + t.quantity);
-    else if (t.kind === "sell") qtyByAsset.set(t.assetId, Math.max(0, cur - t.quantity));
-  }
+  const chronology = transactionChronology(normalizedTransactions);
+  const qtyByAsset = chronology.quantities;
 
   const identityByAssetId = new Map(
     assetRows.map((a) => [
@@ -239,8 +236,12 @@ export async function loadValuedPortfolio(
   });
 
   const holdings = computeHoldings(assets, transactions, corporateActions);
-  const totalValue = holdings.reduce((sum, h) => sum + (Number.isFinite(h.value) ? h.value : 0), 0);
-  const totalCost = holdings.reduce((sum, h) => sum + h.costBasis, 0);
+  const totalValue = chronology.invalid.size
+    ? Number.NaN
+    : holdings.reduce((sum, h) => sum + (Number.isFinite(h.value) ? h.value : 0), 0);
+  const totalCost = chronology.invalid.size
+    ? Number.NaN
+    : holdings.reduce((sum, h) => sum + h.costBasis, 0);
 
   return {
     assets,

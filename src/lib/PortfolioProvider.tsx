@@ -1043,6 +1043,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           price: row.price,
           fee: row.fee ?? 0,
           date: row.date,
+          ...(row.sourceExecutedAt ? { sourceExecutedAt: row.sourceExecutedAt } : {}),
+          ...(row.sourceTransactionId ? { sourceTransactionId: row.sourceTransactionId } : {}),
         }));
         validateBrokerTransfers([...transactionsRef.current, ...pendingTransactions]);
         const createdAssetIds: string[] = [];

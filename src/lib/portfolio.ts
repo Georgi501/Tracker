@@ -1,3 +1,4 @@
+import { transactionChronology, transactionLedgerDay } from "./transaction-chronology";
 import type { QuoteRejectionReason } from "./instrument-identity";
 
 export type AssetType = "stock" | "etf" | "crypto" | "bond" | "cash" | "realEstate";
@@ -175,21 +176,20 @@ export function computeHoldings(
   txs: Transaction[],
   splits: CorporateAction[] = [],
 ): Holding[] {
-  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
-    a.date.localeCompare(b.date),
+  const { ordered, mixed, invalid } = transactionChronology(
+    normalizeTransactionsForSplits(txs, splits),
   );
   const map = new Map<string, { qty: number; cost: number }>();
-  for (const t of sorted) {
+  for (const t of ordered) {
     if (t.kind === "dividend") continue;
     const h = map.get(t.assetId) ?? { qty: 0, cost: 0 };
     if (t.kind === "buy") {
       h.qty += t.quantity;
       h.cost += t.quantity * t.price + (t.fee ?? 0);
     } else {
-      const sellQty = Math.min(t.quantity, h.qty);
       const avg = h.qty > 0 ? h.cost / h.qty : 0;
-      h.qty -= sellQty;
-      h.cost -= avg * sellQty;
+      h.qty -= t.quantity;
+      h.cost -= avg * t.quantity;
     }
     map.set(t.assetId, h);
   }
@@ -197,16 +197,17 @@ export function computeHoldings(
   for (const a of assets) {
     const h = map.get(a.id);
     if (!h || h.qty <= 1e-9) continue;
-    const value = h.qty * a.price;
-    const pnl = value - h.cost;
+    const value = invalid.has(a.id) ? Number.NaN : h.qty * a.price;
+    const cost = mixed.has(a.id) || invalid.has(a.id) ? Number.NaN : h.cost;
+    const pnl = value - cost;
     out.push({
       asset: a,
       quantity: h.qty,
-      avgCost: h.cost / h.qty,
-      costBasis: h.cost,
+      avgCost: cost / h.qty,
+      costBasis: cost,
       value,
       pnl,
-      pnlPct: h.cost > 0 ? (pnl / h.cost) * 100 : 0,
+      pnlPct: cost > 0 ? (pnl / cost) * 100 : Number.isFinite(cost) ? 0 : Number.NaN,
       dayChange: value - value / (1 + a.change24h / 100),
     });
   }
@@ -232,7 +233,7 @@ export function brokerHoldings(
 
   const relevantSplits = asOfDate ? splits.filter((action) => action.date <= asOfDate) : splits;
   const relevantTransactions = asOfDate
-    ? transactions.filter((transaction) => transaction.date <= asOfDate)
+    ? transactions.filter((transaction) => transactionLedgerDay(transaction) <= asOfDate)
     : transactions;
   const relevantTransfers = asOfDate
     ? transfers.filter((transfer) => transfer.date <= asOfDate)
@@ -243,18 +244,19 @@ export function brokerHoldings(
       (a.createdAt ?? "").localeCompare(b.createdAt ?? "") ||
       a.id.localeCompare(b.id),
   );
+  const chronology = transactionChronology(
+    normalizeTransactionsForSplits(relevantTransactions, relevantSplits),
+  );
   const events: (
     | { date: string; order: number; sequence: number; transaction: Transaction }
     | { date: string; order: number; sequence: number; transfer: BrokerTransfer }
   )[] = [
-    ...normalizeTransactionsForSplits(relevantTransactions, relevantSplits).map(
-      (transaction, sequence) => ({
-        date: transaction.date,
-        order: 0,
-        sequence,
-        transaction,
-      }),
-    ),
+    ...chronology.ordered.map((transaction, sequence) => ({
+      date: transactionLedgerDay(transaction),
+      order: 0,
+      sequence,
+      transaction,
+    })),
     ...sortedTransfers.map((transfer, sequence) => {
       const timestamp = Date.parse(`${transfer.date}T00:00:00Z`);
       if (
@@ -283,6 +285,7 @@ export function brokerHoldings(
   ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.sequence - b.sequence);
   type Lot = { quantity: number; costPerUnit: number; acquiredAt: string; order: number };
   const accounts = new Map<string, Map<string, Lot[]>>();
+  const shortfalls = new Map<Lot[], number>();
   const accountLots = (brokerId: string, assetId: string) => {
     let account = accounts.get(brokerId);
     if (!account) {
@@ -326,14 +329,19 @@ export function brokerHoldings(
       const lots = accountLots(transaction.brokerId ?? "manual", transaction.assetId);
       if (transaction.kind === "dividend") continue;
       if (transaction.kind === "buy") {
+        const shortfall = shortfalls.get(lots) ?? 0;
+        const covered = Math.min(shortfall, transaction.quantity);
+        if (covered > 0) shortfalls.set(lots, shortfall - covered);
+        if (covered === transaction.quantity) continue;
         addLot(lots, {
-          quantity: transaction.quantity,
+          quantity: transaction.quantity - covered,
           costPerUnit: transaction.price + (transaction.fee ?? 0) / transaction.quantity,
           acquiredAt: transaction.date,
           order: sequence,
         });
       } else {
-        consumeLots(lots, transaction.quantity);
+        const { remaining } = consumeLots(lots, transaction.quantity);
+        if (remaining > 1e-9) shortfalls.set(lots, (shortfalls.get(lots) ?? 0) + remaining);
       }
       continue;
     }
@@ -351,14 +359,18 @@ export function brokerHoldings(
     [...positions].flatMap(([assetId, lots]) => {
       const asset = assetsById.get(assetId);
       const quantity = lots.reduce((total, lot) => total + lot.quantity, 0);
-      if (!asset || quantity <= 1e-9) return [];
+      const unverified = shortfalls.has(lots);
+      if (!asset || (quantity <= 1e-9 && !unverified)) return [];
       return [
         {
           brokerId,
           asset,
           quantity,
-          costBasis: lots.reduce((total, lot) => total + lot.quantity * lot.costPerUnit, 0),
-          value: quantity * asset.price,
+          costBasis:
+            unverified || chronology.affectedFifo.has(assetId)
+              ? Number.NaN
+              : lots.reduce((total, lot) => total + lot.quantity * lot.costPerUnit, 0),
+          value: unverified ? Number.NaN : quantity * asset.price,
         },
       ];
     }),
@@ -468,18 +480,19 @@ export function portfolioIrr(
     terminalValue = currentValue * fx.liveEurPerUsd;
   }
   const flows: { date: Date; amount: number }[] = [];
-  for (const t of [...txs].sort((a, b) => a.date.localeCompare(b.date))) {
+  const chronology = transactionChronology(txs);
+  for (const t of chronology.ordered) {
     const usdAmount =
       t.kind === "buy"
         ? -(t.quantity * t.price + (t.fee ?? 0))
         : t.quantity * t.price - (t.fee ?? 0);
     if (!useEur) {
-      flows.push({ date: new Date(t.date), amount: usdAmount });
+      flows.push({ date: new Date(transactionLedgerDay(t)), amount: usdAmount });
       continue;
     }
     const rate = eurUsdRateAt(fx.eurUsd, t.date);
     if (rate === null) return null;
-    flows.push({ date: new Date(t.date), amount: usdAmount / rate });
+    flows.push({ date: new Date(transactionLedgerDay(t)), amount: usdAmount / rate });
   }
   flows.push({ date: now, amount: terminalValue });
   return irr(flows);
@@ -491,7 +504,10 @@ export type Period = "1D" | "1W" | "1M" | "1Y" | "ALL";
 export function transactionsFingerprint(txs: Transaction[]): string {
   if (!txs.length) return "0";
   return txs
-    .map((t) => `${t.id}:${t.assetId}:${t.date}:${t.kind}:${t.quantity}:${t.price}:${t.fee ?? 0}`)
+    .map(
+      (t) =>
+        `${t.id}:${t.assetId}:${t.date}:${t.kind}:${t.quantity}:${t.price}:${t.fee ?? 0}:${t.brokerId ?? ""}:${t.sourceExecutedAt ?? ""}:${t.sourceTransactionId ?? ""}`,
+    )
     .join("|");
 }
 

@@ -1,3 +1,4 @@
+import { transactionChronology } from "./transaction-chronology";
 import {
   isQuoteStale,
   normalizeTransactionsForSplits,
@@ -75,7 +76,7 @@ export function qualityIssues(
         out.push({ kind: "priceOutlier", symbol: sym(assetId), date: transaction.date });
   }
   const qty = new Map<string, number>();
-  for (const t of [...adjustedTransactions].sort((a, b) => a.date.localeCompare(b.date))) {
+  for (const t of transactionChronology(adjustedTransactions).ordered) {
     if (t.kind === "dividend") continue;
     const q = (qty.get(t.assetId) ?? 0) + (t.kind === "buy" ? t.quantity : -t.quantity);
     qty.set(t.assetId, q);
@@ -107,9 +108,9 @@ export function increasesOversellAmount(
   const totalShortfall = (transactions: Transaction[]) => {
     const quantities = new Map<string, number>();
     let shortfall = 0;
-    for (const transaction of normalizeTransactionsForSplits(transactions, splits).sort((a, b) =>
-      a.date.localeCompare(b.date),
-    )) {
+    for (const transaction of transactionChronology(
+      normalizeTransactionsForSplits(transactions, splits),
+    ).ordered) {
       if (transaction.kind === "dividend") continue;
       const current = quantities.get(transaction.assetId) ?? 0;
       if (transaction.kind === "sell") {

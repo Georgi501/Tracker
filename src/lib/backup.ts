@@ -34,6 +34,8 @@ const backupSchema = z
           price: z.number().finite().positive(),
           fee: z.number().finite().nonnegative().default(0),
           date: dateSchema,
+          sourceTransactionId: z.string().max(512).optional(),
+          sourceExecutedAt: z.string().max(128).optional(),
         }),
       )
       .min(1)
@@ -57,6 +59,10 @@ export function parsePortfolioBackup(value: unknown): ImportedTx[] {
       price: transaction.price,
       fee: transaction.fee,
       date: transaction.date,
+      ...(transaction.sourceTransactionId
+        ? { sourceTransactionId: transaction.sourceTransactionId }
+        : {}),
+      ...(transaction.sourceExecutedAt ? { sourceExecutedAt: transaction.sourceExecutedAt } : {}),
       currency: "USD",
       ...(asset.type === "bond"
         ? {

@@ -1,3 +1,4 @@
+import { transactionChronology, transactionLedgerDay } from "./transaction-chronology";
 import type { StockSplitEvent } from "./corporate-actions";
 import {
   normalizeTransactionsForSplits,
@@ -123,9 +124,10 @@ export function buildPortfolioHistory(
   splits: CorporateAction[] = [],
 ) {
   const points: PortfolioPoint[] = [];
-  const sorted = normalizeTransactionsForSplits(txs, splits).sort((a, b) =>
-    a.date.localeCompare(b.date),
-  );
+  const chronology = transactionChronology(normalizeTransactionsForSplits(txs, splits));
+  if ([...chronology.invalid.values()].some((day) => day <= end))
+    return { points: [], unavailable: true, assetContributions: [] };
+  const sorted = chronology.ordered.map((tx) => ({ tx, day: transactionLedgerDay(tx) }));
   const qty = new Map<string, number>();
   const contributions = new Map<string, number>();
   const assetCursors = new Map(
@@ -160,17 +162,15 @@ export function buildPortfolioHistory(
     let flow = 0;
     const assetFlows = new Map<string, number>();
     while (index < sorted.length) {
-      const tx = sorted[index];
-      if (!tx || tx.date > date) break;
+      const entry = sorted[index];
+      if (!entry || entry.day > date) break;
+      const { tx, day } = entry;
       if (tx.kind !== "dividend")
         qty.set(
           tx.assetId,
-          Math.max(
-            0,
-            (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity),
-          ),
+          (qty.get(tx.assetId) ?? 0) + (tx.kind === "buy" ? tx.quantity : -tx.quantity),
         );
-      if (tx.date === date && tx.kind !== "dividend") {
+      if (day === date && tx.kind !== "dividend") {
         const txFlow =
           tx.kind === "buy"
             ? tx.quantity * tx.price + (tx.fee ?? 0)
@@ -184,7 +184,7 @@ export function buildPortfolioHistory(
     let available = true;
     const values = new Map<string, number>();
     for (const asset of assets) {
-      const units = qty.get(asset.id) ?? 0;
+      const units = Math.max(0, qty.get(asset.id) ?? 0);
       if (!units) {
         values.set(asset.id, 0);
         continue;

@@ -173,7 +173,7 @@ describe("Trading 212 CSV import repair", () => {
       currency: "EUR",
       date: "2025-01-07",
       sourceTransactionId: "t212:fill:SYN-BUY-1",
-      sourceExecutedAt: "2025-01-07 10:00:00",
+      sourceExecutedAt: "2025-01-07 10:00:00Z",
     });
 
     // Re-importing the exact same 35-row CSV identifies all 13 fills as duplicates

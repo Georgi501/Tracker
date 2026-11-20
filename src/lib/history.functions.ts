@@ -22,6 +22,7 @@ import {
 import { resolveAssetIdentity, validateQuoteIdentity } from "./instrument-identity";
 
 import { readPortfolioSnapshot } from "./portfolio-snapshot";
+import { transactionChronology, transactionLedgerDay } from "./transaction-chronology";
 
 const HISTORY_BATCH_SIZE = 5;
 
@@ -44,11 +45,14 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
     const txs: Transaction[] = (t.data ?? []).map((r) => ({
       id: r.id,
       assetId: r.asset_id,
+      brokerId: r.broker_id,
       kind: r.kind as Transaction["kind"],
       quantity: Number(r.quantity),
       price: Number(r.price),
       fee: Number(r.fee ?? 0),
       date: r.date,
+      ...(r.source_executed_at ? { sourceExecutedAt: r.source_executed_at } : {}),
+      ...(r.source_transaction_id ? { sourceTransactionId: r.source_transaction_id } : {}),
     }));
     if (!txs.length)
       return {
@@ -68,8 +72,10 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
     }));
     const now = new Date();
     const end = now.toISOString().slice(0, 10);
-    txs.sort((a, b) => a.date.localeCompare(b.date));
-    const first = earliestTransactionDate(txs, end);
+    const first = earliestTransactionDate(
+      txs.map((tx) => ({ ...tx, date: transactionLedgerDay(tx) })),
+      end,
+    );
     const start = [periodStart(data.period, first, now), first].sort().at(-1) ?? first;
     const fetchStart = new Date(Date.parse(start) - 7 * 86400000).toISOString().slice(0, 10);
     const firstFetchStart = new Date(Date.parse(first) - 7 * 86400000).toISOString().slice(0, 10);
@@ -223,18 +229,12 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
         .toISOString()
         .slice(0, 10);
-      const quantities = new Map<string, number>();
-      for (const transaction of normalizeTransactionsForSplits(txs, splitActions)) {
-        if (transaction.date > end || transaction.kind === "dividend") continue;
-        quantities.set(
-          transaction.assetId,
-          Math.max(
-            0,
-            (quantities.get(transaction.assetId) ?? 0) +
-              (transaction.kind === "buy" ? transaction.quantity : -transaction.quantity),
-          ),
-        );
-      }
+      const { quantities } = transactionChronology(
+        normalizeTransactionsForSplits(
+          txs.filter((tx) => transactionLedgerDay(tx) <= end),
+          splitActions,
+        ),
+      );
       const baseRateAt = (date: string) =>
         data.currency === "USD" ? 1 : currencyRate("EUR", date, eur.prices, gbp.prices);
       const assetReturns = assets.flatMap((asset) => {
