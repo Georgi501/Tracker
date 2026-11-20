@@ -1,9 +1,11 @@
+import { CsvPrepareError, type CsvPrepareErrorCode } from "./csv-import";
 import type { Lang } from "./i18n";
 type TrustCopy = {
   retry: string;
   quoteFailure: string;
   privacyHint: string;
   fileError: string;
+  csvErrors: Record<CsvPrepareErrorCode, string>;
   attribution: string;
   drivers: readonly [string, string, string, string];
   net: string;
@@ -41,6 +43,24 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     privacyHint: "Screen privacy only. Exports retain actual values.",
     fileError:
       "The CSV could not be prepared. Check the file format and use at most 10,000 rows (10 MB).",
+    csvErrors: {
+      file_too_large: "File exceeds the 10 MB CSV size limit.",
+      too_many_rows:
+        "File exceeds the 10,000-row CSV limit. Split older history into smaller exports.",
+      empty_file: "This CSV file is empty or contains no transaction rows.",
+      invalid_encoding:
+        "Could not read file text cleanly. Export or save the CSV in UTF-8 encoding without binary re-formatting.",
+      malformed_csv:
+        "Malformed CSV syntax detected (for example, unclosed quotes). Export a fresh CSV from your broker without editing.",
+      missing_t212_headers: "This Trading 212 CSV is missing required columns",
+      unsupported_format:
+        "Unsupported CSV layout. Use an unmodified Trading 212, Interactive Brokers, Revolut or generic template CSV.",
+      invalid_dates: "The file contains a future transaction date that cannot be priced yet.",
+      fx_unavailable:
+        "Historical exchange rates could not be retrieved right now. Please try again in a moment.",
+      unexpected_error:
+        "Could not prepare the CSV preview. Check that the file is a valid UTF-8 CSV and try again.",
+    },
     attribution: "Why did my portfolio change?",
     drivers: ["Price change", "Dividends received", "Fees / taxes", "Currency impact"],
     net: "Result including recorded income",
@@ -75,7 +95,7 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     preparing: "Preparing preview…",
     instructions: {
       trading212:
-        "Export your account history as CSV, including trades and dividends. Keep the original currency and column headers.",
+        "Export your Trading 212 History as CSV keeping the original currency and column headers. Investment purchases and sales are imported; card spending, cashback and other cash-account movements are excluded automatically.",
       ibkr: "Export a CSV activity statement or Flex Query with trades and dividends. Keep symbols, dates, currencies and commissions.",
       revolut:
         "Download a CSV trading statement for the account and period you want to import. Keep the original headers.",
@@ -93,6 +113,24 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     privacyHint: "Скриване само на екрана. Експортите запазват реалните стойности.",
     fileError:
       "CSV файлът не може да се подготви. Провери формата и използвай до 10 000 реда (10 MB).",
+    csvErrors: {
+      file_too_large: "Файлът надвишава ограничението от 10 MB за CSV.",
+      too_many_rows:
+        "Файлът надвишава ограничението от 10 000 реда. Раздели по-старата история на по-малки експорти.",
+      empty_file: "CSV файлът е празен или не съдържа редове с операции.",
+      invalid_encoding:
+        "Файлът не може да бъде прочетен коректно като UTF-8 текст. Експортирай CSV в UTF-8 без повторно запазване в друг формат.",
+      malformed_csv:
+        "Открита е невалидна CSV структура (например незатворени кавички). Изтегли оригинален CSV от брокера без ръчна редакция.",
+      missing_t212_headers: "В този Trading 212 CSV липсват задължителни колони",
+      unsupported_format:
+        "Неподдържан CSV формат. Използвай оригинален CSV от Trading 212, Interactive Brokers, Revolut или общия шаблон на CapiSpot.",
+      invalid_dates: "Файлът съдържа бъдеща дата на сделка, за която все още няма пазарна оценка.",
+      fx_unavailable:
+        "Историческите валутни курсове не можаха да се заредят в момента. Опитай отново след малко.",
+      unexpected_error:
+        "Прегледът на CSV не можа да бъде подготвен. Провери дали файлът е валиден UTF-8 CSV и опитай отново.",
+    },
     attribution: "Защо се промени портфолиото ми?",
     drivers: ["Промяна на цените", "Получени дивиденти", "Такси / данъци", "Валутен ефект"],
     net: "Резултат със записаните доходи",
@@ -127,7 +165,7 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     preparing: "Подготовка на прегледа…",
     instructions: {
       trading212:
-        "Експортирай историята на сметката като CSV със сделки и дивиденти. Запази оригиналната валута и заглавията на колоните.",
+        "Експортирай историята си от Trading 212 като CSV с оригиналните колони и валути. Импортират се инвестиционни покупки и продажби; картови плащания, кешбек и други кеш движения се изключват автоматично.",
       ibkr: "Експортирай CSV Activity Statement или Flex Query със сделки и дивиденти. Запази символите, датите, валутите и комисионите.",
       revolut:
         "Изтегли CSV извлечение за инвестиционната сметка и периода за импорт. Запази оригиналните заглавия.",
@@ -145,6 +183,25 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     privacyHint: "Nur Bildschirmansicht. Exporte behalten die echten Werte.",
     fileError:
       "CSV konnte nicht vorbereitet werden. Format prüfen; höchstens 10.000 Zeilen (10 MB).",
+    csvErrors: {
+      file_too_large: "Die Datei überschreitet das CSV-Limit von 10 MB.",
+      too_many_rows:
+        "Die Datei überschreitet das Limit von 10.000 CSV-Zeilen. Teile ältere Historien auf kleinere Exporte auf.",
+      empty_file: "Diese CSV-Datei ist leer oder enthält keine Transaktionszeilen.",
+      invalid_encoding:
+        "Datei konnte nicht sauber als UTF-8 gelesen werden. Bitte als UTF-8-CSV exportieren oder speichern.",
+      malformed_csv:
+        "Ungültige CSV-Syntax erkannt (z. B. nicht geschlossene Anführungszeichen). Bitte eine unbearbeitete CSV-Datei vom Broker exportieren.",
+      missing_t212_headers: "In dieser Trading-212-CSV fehlen erforderliche Spalten",
+      unsupported_format:
+        "Nicht unterstütztes CSV-Layout. Nutze eine unveränderte CSV von Trading 212, Interactive Brokers, Revolut oder die allgemeine Vorlage.",
+      invalid_dates:
+        "Die Datei enthält ein zukünftiges Transaktionsdatum, das noch nicht bewertet werden kann.",
+      fx_unavailable:
+        "Historische Wechselkurse konnten gerade nicht abgerufen werden. Bitte versuche es gleich erneut.",
+      unexpected_error:
+        "CSV-Vorschau konnte nicht vorbereitet werden. Prüfe, ob eine gültige UTF-8-CSV-Datei vorliegt, und versuche es erneut.",
+    },
     attribution: "Warum hat sich mein Portfolio verändert?",
     drivers: ["Kursänderung", "Erhaltene Dividenden", "Gebühren / Steuern", "Währungseffekt"],
     net: "Ergebnis mit erfassten Erträgen",
@@ -179,7 +236,7 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     preparing: "Vorschau wird vorbereitet…",
     instructions: {
       trading212:
-        "Kontohistorie als CSV mit Trades und Dividenden exportieren. Originalwährung und Spaltenüberschriften beibehalten.",
+        "Trading-212-Verlauf als CSV mit Originalspalten und -währungen exportieren. Wertpapierkäufe und -verkäufe werden importiert; Kartenzahlungen, Cashback und sonstige Kontobewegungen werden automatisch ausgeschlossen.",
       ibkr: "CSV Activity Statement oder Flex Query mit Trades und Dividenden exportieren. Symbole, Daten, Währungen und Gebühren beibehalten.",
       revolut:
         "CSV-Handelsauszug für Konto und Zeitraum herunterladen. Originalüberschriften beibehalten.",
@@ -195,6 +252,24 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     quoteFailure: "Falló la última actualización. Pueden mostrarse precios anteriores.",
     privacyHint: "Solo privacidad en pantalla. Las exportaciones conservan los valores reales.",
     fileError: "No se pudo preparar el CSV. Revisa el formato; máximo 10.000 filas (10 MB).",
+    csvErrors: {
+      file_too_large: "El archivo supera el límite de 10 MB para CSV.",
+      too_many_rows:
+        "El archivo supera el límite de 10.000 filas. Divide el historial antiguo en exportaciones más pequeñas.",
+      empty_file: "Este archivo CSV está vacío o no contiene filas de operaciones.",
+      invalid_encoding:
+        "No se pudo leer el texto correctamente. Exporta o guarda el CSV con codificación UTF-8 sin formato binario.",
+      malformed_csv:
+        "Se detectó sintaxis CSV no válida (por ejemplo, comillas sin cerrar). Exporta un CSV nuevo desde tu bróker sin editarlo.",
+      missing_t212_headers: "A este CSV de Trading 212 le faltan columnas obligatorias",
+      unsupported_format:
+        "Formato CSV no compatible. Usa una exportación sin modificar de Trading 212, Interactive Brokers, Revolut o la plantilla genérica.",
+      invalid_dates: "El archivo contiene una fecha futura que aún no puede valorarse.",
+      fx_unavailable:
+        "No se pudieron obtener los tipos de cambio históricos en este momento. Inténtalo de nuevo en unos instantes.",
+      unexpected_error:
+        "No se pudo preparar la vista previa del CSV. Comprueba que sea un CSV UTF-8 válido e inténtalo de nuevo.",
+    },
     attribution: "¿Por qué cambió mi cartera?",
     drivers: [
       "Cambio de precio",
@@ -239,7 +314,7 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     preparing: "Preparando vista previa…",
     instructions: {
       trading212:
-        "Exporta el historial de la cuenta como CSV con operaciones y dividendos. Conserva moneda y encabezados originales.",
+        "Exporta tu historial de Trading 212 como CSV conservando columnas y monedas originales. Se importan compras y ventas de inversión; pagos con tarjeta, cashback y otros movimientos de efectivo se excluyen automáticamente.",
       ibkr: "Exporta un Activity Statement o Flex Query CSV con operaciones y dividendos. Conserva símbolos, fechas, divisas y comisiones.",
       revolut:
         "Descarga un extracto CSV de la cuenta y período deseados. Conserva los encabezados originales.",
@@ -255,6 +330,24 @@ export const trustCopy: Record<Lang, TrustCopy> = {
       "Ultimo aggiornamento non riuscito. Potrebbero essere mostrati prezzi precedenti.",
     privacyHint: "Solo privacy sullo schermo. Le esportazioni mantengono i valori reali.",
     fileError: "Impossibile preparare il CSV. Controlla il formato; massimo 10.000 righe (10 MB).",
+    csvErrors: {
+      file_too_large: "Il file supera il limite di 10 MB per i CSV.",
+      too_many_rows:
+        "Il file supera il limite di 10.000 righe. Suddividi lo storico più vecchio in esportazioni più piccole.",
+      empty_file: "Questo file CSV è vuoto o non contiene righe di operazioni.",
+      invalid_encoding:
+        "Impossibile leggere correttamente il testo. Esporta o salva il CSV con codifica UTF-8.",
+      malformed_csv:
+        "Rilevata sintassi CSV non valida (ad esempio virgolette non chiuse). Esporta un nuovo CSV dal broker senza modificarlo.",
+      missing_t212_headers: "In questo CSV di Trading 212 mancano colonne obbligatorie",
+      unsupported_format:
+        "Formato CSV non supportato. Usa un file originale di Trading 212, Interactive Brokers, Revolut o il modello generico.",
+      invalid_dates: "Il file contiene una data futura che non può ancora essere valutata.",
+      fx_unavailable:
+        "Impossibile recuperare i tassi di cambio storici in questo momento. Riprova tra poco.",
+      unexpected_error:
+        "Impossibile preparare l'anteprima CSV. Verifica che il file sia un CSV UTF-8 valido e riprova.",
+    },
     attribution: "Perché è cambiato il portafoglio?",
     drivers: [
       "Variazione del prezzo",
@@ -299,7 +392,7 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     preparing: "Preparazione anteprima…",
     instructions: {
       trading212:
-        "Esporta la cronologia del conto in CSV con operazioni e dividendi. Mantieni valuta e intestazioni originali.",
+        "Esporta la cronologia di Trading 212 in CSV mantenendo colonne e valute originali. Vengono importati acquisti e vendite di investimento; spese con carta, cashback e altri movimenti di liquidità vengono esclusi automaticamente.",
       ibkr: "Esporta un Activity Statement o Flex Query CSV con operazioni e dividendi. Mantieni simboli, date, valute e commissioni.",
       revolut:
         "Scarica un estratto CSV del conto e periodo desiderati. Mantieni le intestazioni originali.",
@@ -310,3 +403,21 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     summary: ["Aggiunte", "Duplicati saltati", "Da verificare"],
   },
 };
+
+export function formatCsvPrepareError(lang: Lang, error: unknown): string {
+  const c = trustCopy[lang];
+  if (error instanceof CsvPrepareError) {
+    const base = c.csvErrors[error.code] ?? c.csvErrors.unexpected_error;
+    if (error.code === "missing_t212_headers" && error.missingHeaders?.length) {
+      return `${base} (${error.missingHeaders.join(", ")})`;
+    }
+    return base;
+  }
+  if (error instanceof Error) {
+    if (error.message === "Invalid transaction dates") return c.csvErrors.invalid_dates;
+    if (error.message.startsWith("Historical exchange rate unavailable")) {
+      return c.csvErrors.fx_unavailable;
+    }
+  }
+  return c.csvErrors.unexpected_error;
+}

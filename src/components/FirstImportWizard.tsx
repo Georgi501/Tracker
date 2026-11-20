@@ -1,21 +1,11 @@
-import { BROKER_FORMATS, detectBrokerFormat, type BrokerFormat } from "@/lib/csv-import";
+import { BROKER_FORMATS, prepareCsvFile, type BrokerFormat } from "@/lib/csv-import";
 import type { Lang } from "@/lib/i18n";
 import type { Broker } from "@/lib/store";
-import { trustCopy } from "@/lib/trust-i18n";
+import { formatCsvPrepareError, trustCopy } from "@/lib/trust-i18n";
 import { Link } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { Button } from "./ui/button";
-
-function readFileText(file: File): Promise<string> {
-  if (typeof file.text === "function") return file.text();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read CSV file"));
-    reader.readAsText(file);
-  });
-}
 
 export function FirstImportWizard({
   lang,
@@ -92,17 +82,10 @@ export function FirstImportWizard({
   const handleAutoDetectFile = async (file: File) => {
     if (preparing || creating) return;
     setDropError(null);
+    setDetectedFormat(null);
     try {
-      if (file.size > 10 * 1024 * 1024) {
-        setDropError(c.fileError);
-        return;
-      }
-      const text = await readFileText(file);
-      const detected = detectBrokerFormat(text);
-      if (!detected) {
-        setDropError(c.fileError);
-        return;
-      }
+      const analysis = await prepareCsvFile(file, format ?? undefined);
+      const detected = analysis.format;
       setDetectedFormat(detected);
       setFormat(detected);
       setInstructions(false);
@@ -124,8 +107,8 @@ export function FirstImportWizard({
       } finally {
         setCreating(false);
       }
-    } catch {
-      setDropError(c.fileError);
+    } catch (err) {
+      setDropError(formatCsvPrepareError(lang, err));
     }
   };
 

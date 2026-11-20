@@ -31,10 +31,62 @@ export interface ImportedTx {
   bondManualPrice?: number | undefined;
 }
 
+export const MAX_CSV_BYTES = 10 * 1024 * 1024;
+export const MAX_CSV_ROWS = 10_000;
+const SUPPORTED_CURRENCIES = ["USD", "EUR", "BGN", "GBX", "GBP"] as const;
+const FEE_HEADER_RE = /fee|commission|comm\/?f|stamp duty|levy|charge/i;
+
+export type CsvPrepareErrorCode =
+  | "file_too_large"
+  | "too_many_rows"
+  | "empty_file"
+  | "invalid_encoding"
+  | "malformed_csv"
+  | "missing_t212_headers"
+  | "unsupported_format"
+  | "invalid_dates"
+  | "fx_unavailable"
+  | "unexpected_error";
+
+export class CsvPrepareError extends Error {
+  readonly code: CsvPrepareErrorCode;
+  readonly missingHeaders?: readonly string[] | undefined;
+
+  constructor(code: CsvPrepareErrorCode, options?: { missingHeaders?: readonly string[] }) {
+    super(code);
+    this.name = "CsvPrepareError";
+    this.code = code;
+    this.missingHeaders = options?.missingHeaders;
+  }
+}
+
 export interface CsvRejection {
   row: number;
   raw: string;
-  reason: "unsupported_action" | "missing_ticker" | "invalid_transaction";
+  action?: string | undefined;
+  reason:
+    | "unsupported_action"
+    | "unknown_action"
+    | "missing_ticker"
+    | "unsupported_currency"
+    | "invalid_transaction";
+}
+
+export interface CsvExcludedRow {
+  row: number;
+  action: string;
+  date?: string | undefined;
+  reason: "non_investment_operation";
+}
+
+export interface CsvAnalysisResult {
+  format: BrokerFormat;
+  totalRows: number;
+  transactions: ImportedTx[];
+  excluded: CsvExcludedRow[];
+  excludedBreakdown: { action: string; count: number }[];
+  rejected: CsvRejection[];
+  feeColumns: string[];
 }
 
 export interface ReconciliationTotals {
@@ -101,30 +153,113 @@ export const GENERIC_TEMPLATE =
 const toUsd = (v: number, _cur?: string) => v;
 const currency = (cur: string) => {
   const c = (cur || "USD").trim().toUpperCase();
-  if (!["USD", "EUR", "BGN", "GBX", "GBP"].includes(c))
+  if (!(SUPPORTED_CURRENCIES as readonly string[]).includes(c))
     throw new Error(`Unsupported currency: ${c}`);
   return c;
 };
+const isSupportedCurrency = (cur: string): boolean =>
+  (SUPPORTED_CURRENCIES as readonly string[]).includes(cur.trim().toUpperCase());
 
-export function parseCsvRows(text: string): string[][] {
+const isCurrencyDescriptorHeader = (header: string): boolean => {
+  const h = header.trim().toLowerCase();
+  return (
+    h === "currency" ||
+    h.startsWith("currency (") ||
+    /\bcurrency$/.test(h) ||
+    h === "currencyfee" ||
+    h === "feecurrency"
+  );
+};
+
+const stripBom = (text: string) => text.replace(/^\uFEFF/, "");
+
+export async function decodeCsvFile(file: File): Promise<string> {
+  if (file.size > MAX_CSV_BYTES) throw new CsvPrepareError("file_too_large");
+  let text: string;
+  if (typeof file.arrayBuffer === "function") {
+    const buffer = await file.arrayBuffer();
+    if (buffer.byteLength > MAX_CSV_BYTES) throw new CsvPrepareError("file_too_large");
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      throw new CsvPrepareError("invalid_encoding");
+    }
+  } else if (typeof FileReader !== "undefined") {
+    const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        reader.result instanceof ArrayBuffer
+          ? resolve(reader.result)
+          : reject(new CsvPrepareError("unexpected_error"));
+      reader.onerror = () => reject(new CsvPrepareError("unexpected_error"));
+      reader.readAsArrayBuffer(file);
+    });
+    if (buffer.byteLength > MAX_CSV_BYTES) throw new CsvPrepareError("file_too_large");
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      throw new CsvPrepareError("invalid_encoding");
+    }
+  } else if (typeof file.text === "function") {
+    text = await file.text();
+  } else {
+    throw new CsvPrepareError("unexpected_error");
+  }
+  if (text.includes("\u0000") || text.includes("\uFFFD")) {
+    throw new CsvPrepareError("invalid_encoding");
+  }
+  return text;
+}
+
+function detectDelimiter(cleanText: string): "," | ";" {
+  let commas = 0;
+  let semicolons = 0;
+  let inQuotes = false;
+  let sawContent = false;
+  for (let i = 0; i < cleanText.length; i++) {
+    const c = cleanText[i]!;
+    if (inQuotes) {
+      if (c === '"' && cleanText[i + 1] === '"') i++;
+      else if (c === '"') inQuotes = false;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      sawContent = true;
+    } else if (c === "\n" || c === "\r") {
+      if (sawContent) break;
+    } else {
+      if (c.trim() !== "") sawContent = true;
+      if (c === ",") commas++;
+      else if (c === ";") semicolons++;
+    }
+  }
+  if (commas > 0 && commas >= semicolons) return ",";
+  if (semicolons > 0) return ";";
+  return ",";
+}
+
+export function parseCsvRowsStrict(text: string): { rows: string[][]; unclosedQuote: boolean } {
+  const clean = stripBom(text);
+  const delimiter = detectDelimiter(clean);
   const rows: string[][] = [];
-  let row: string[] = [],
-    cell = "",
-    q = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
+  let row: string[] = [];
+  let cell = "";
+  let q = false;
+  for (let i = 0; i < clean.length; i++) {
+    const c = clean[i]!;
     if (q) {
-      if (c === '"' && text[i + 1] === '"') {
+      if (c === '"' && clean[i + 1] === '"') {
         cell += '"';
         i++;
       } else if (c === '"') q = false;
       else cell += c;
     } else if (c === '"') q = true;
-    else if (c === "," || c === ";") {
+    else if (c === delimiter) {
       row.push(cell);
       cell = "";
     } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
+      if (c === "\r" && clean[i + 1] === "\n") i++;
       row.push(cell);
       cell = "";
       if (row.some((x) => x.trim() !== "")) rows.push(row);
@@ -133,7 +268,35 @@ export function parseCsvRows(text: string): string[][] {
   }
   row.push(cell);
   if (row.some((x) => x.trim() !== "")) rows.push(row);
-  return rows.map((r) => r.map((x) => x.trim()));
+  return {
+    rows: rows.map((r) => r.map((x) => x.trim())),
+    unclosedQuote: q,
+  };
+}
+
+export function parseCsvRows(text: string): string[][] {
+  return parseCsvRowsStrict(text).rows;
+}
+
+export function parseFiniteNumber(s: string): number | null {
+  const stripped = s
+    .trim()
+    .replace(/^([+-])\s*[$€£]\s*/, "$1")
+    .replace(/^[$€£]\s*/, "")
+    .replace(/^(?:[A-Z]{3})\s+/i, "")
+    .replace(/\s*(?:[A-Z]{3}|[$€£])$/i, "")
+    .replace(/\s+/g, "");
+  if (!stripped || !/\d/.test(stripped)) return null;
+  if (!/^[+-]?[\d.,]+$/.test(stripped)) return null;
+  let v = stripped;
+  if (v.includes(",") && v.includes("."))
+    v =
+      v.lastIndexOf(",") > v.lastIndexOf(".")
+        ? v.replace(/\./g, "").replace(",", ".")
+        : v.replace(/,/g, "");
+  else if (v.includes(",")) v = v.replace(",", ".");
+  const parsed = Number(v);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function table(text: string) {
@@ -155,16 +318,7 @@ function table(text: string) {
     return getter;
   });
 }
-const num = (s: string) => {
-  let v = s.replace(/[^\d.,-]/g, "");
-  if (v.includes(",") && v.includes("."))
-    v =
-      v.lastIndexOf(",") > v.lastIndexOf(".")
-        ? v.replace(/\./g, "").replace(",", ".")
-        : v.replace(/,/g, "");
-  else if (v.includes(",")) v = v.replace(",", ".");
-  return Number(v) || 0;
-};
+const num = (s: string) => parseFiniteNumber(s) ?? 0;
 const day = (s: string) => {
   const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (m) {
@@ -276,58 +430,343 @@ function generic(text: string): ImportedTx[] {
   });
 }
 
-function trading212(text: string): ImportedTx[] {
-  return table(text).flatMap((g) => {
-    return parseSafely(() => {
-      const a = g("action").toLowerCase();
-      const symbol = g("ticker").toUpperCase();
-      if (!symbol) return [];
-      const isin = cleanIsin(g("isin"));
-      const base = {
-        symbol,
-        ...(isin ? { isin } : {}),
-        name: g("name") || symbol,
-        assetType: guessType(symbol, isin),
-        date: day(g("time")),
-        ...sourceIdentity(
-          g("id"),
-          a.includes("dividend") ? "t212:dividend:" : "t212:fill:",
-          g("time"),
-        ),
-      };
-      if (a.includes("dividend")) {
-        const total = num(g("total")) || num(g("no. of shares")) * num(g("price / share"));
-        return [
-          {
-            ...base,
-            kind: "dividend" as TxKind,
-            quantity: 1,
-            currency: currency(g("currency (total)") || g("currency (price / share)")),
-            price: toUsd(total),
-            fee: g.sum(/fee|commission|comm\/?f|stamp duty|levy|charge/i),
-            feeCurrency: currency(
-              g("currency (transaction fee)") || g("currency (price / share)") || "USD",
-            ),
-          },
-        ];
+type T212ActionClassification =
+  | { category: "trade"; kind: "buy" | "sell" }
+  | { category: "excluded"; actionLabel: string }
+  | { category: "unknown"; actionLabel: string };
+
+const T212_BUY_ACTIONS = new Set(["market buy", "limit buy", "stop buy", "stop limit buy", "buy"]);
+const T212_SELL_ACTIONS = new Set([
+  "market sell",
+  "limit sell",
+  "stop sell",
+  "stop limit sell",
+  "sell",
+]);
+const T212_EXCLUDED_ACTIONS = new Set([
+  "spending cashback",
+  "cashback",
+  "card debit",
+  "card credit",
+  "card refund",
+  "card payment",
+  "card purchase",
+  "card withdrawal",
+  "card atm withdrawal",
+  "card deposit",
+  "card top-up",
+  "card top up",
+  "interest on cash",
+  "lending interest",
+  "interest",
+  "deposit",
+  "withdrawal",
+  "currency conversion",
+  "currency exchange",
+  "cash transfer",
+  "internal transfer",
+  "pie cash deposit",
+  "pie cash withdrawal",
+  "bonus",
+  "promo",
+  "referral bonus",
+  "fee",
+  "account fee",
+  "custody fee",
+  "inactivity fee",
+  "tax",
+  "withholding tax",
+  "dividend",
+  "dividend adjustment",
+]);
+const T212_CARD_ACTION_RE =
+  /^card\s+(?:debit|credit|refund|payment|purchase|withdrawal|atm withdrawal|deposit|top[- ]?up|fee|settlement|reversal)$/;
+const T212_DIVIDEND_ACTION_RE = /^dividend\s*\((?![^)]*reinvestment)[^)]+\)$/;
+
+export function classifyTrading212Action(rawAction: string): T212ActionClassification {
+  const trimmed = rawAction.trim().replace(/\s+/g, " ");
+  const normalized = trimmed.toLowerCase();
+  if (T212_BUY_ACTIONS.has(normalized)) return { category: "trade", kind: "buy" };
+  if (T212_SELL_ACTIONS.has(normalized)) return { category: "trade", kind: "sell" };
+  if (
+    T212_EXCLUDED_ACTIONS.has(normalized) ||
+    T212_CARD_ACTION_RE.test(normalized) ||
+    T212_DIVIDEND_ACTION_RE.test(normalized)
+  ) {
+    return {
+      category: "excluded",
+      actionLabel: trimmed || "Non-investment operation",
+    };
+  }
+  return {
+    category: "unknown",
+    actionLabel: trimmed || "(empty)",
+  };
+}
+
+function findTrading212TimeIndex(lowerHeaders: string[]): number {
+  const utcIdx = lowerHeaders.indexOf("time (utc)");
+  if (utcIdx >= 0) return utcIdx;
+  const plainIdx = lowerHeaders.indexOf("time");
+  if (plainIdx >= 0) return plainIdx;
+  return lowerHeaders.findIndex((header) => /^time\s*\([^)]+\)$/.test(header));
+}
+
+export function missingTrading212Headers(headers: readonly string[]): string[] {
+  const lower = headers.map((h) => h.trim().toLowerCase());
+  const missing: string[] = [];
+  if (!lower.includes("action")) missing.push("Action");
+  if (findTrading212TimeIndex(lower) < 0) missing.push("Time / Time (UTC)");
+  if (!lower.includes("ticker")) missing.push("Ticker");
+  if (!lower.includes("no. of shares")) missing.push("No. of shares");
+  if (!lower.includes("price / share")) missing.push("Price / share");
+  return missing;
+}
+
+function hasTrading212Signature(lowerHeaders: string[]): boolean {
+  const indicators = [
+    "action",
+    "time (utc)",
+    "isin",
+    "no. of shares",
+    "price / share",
+    "currency (price / share)",
+    "exchange rate",
+    "currency (total)",
+    "merchant name",
+    "merchant category",
+  ];
+  return indicators.filter((col) => lowerHeaders.includes(col)).length >= 2;
+}
+
+const csvRowText = (row: string[]) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",");
+
+function analyzeTrading212FromRows(rows: string[][]): CsvAnalysisResult {
+  const [head = [], ...body] = rows;
+  const lowerHead = head.map((h) => h.toLowerCase());
+  const timeIdx = findTrading212TimeIndex(lowerHead);
+  const colIndex = (name: string) => lowerHead.indexOf(name.toLowerCase());
+  const actionIdx = colIndex("action");
+  const isinIdx = colIndex("isin");
+  const tickerIdx = colIndex("ticker");
+  const nameIdx = colIndex("name");
+  const idIdx = colIndex("id");
+  const sharesIdx = colIndex("no. of shares");
+  const priceIdx = colIndex("price / share");
+  const priceCurrencyIdx = colIndex("currency (price / share)");
+  const txFeeCurrencyIdx = colIndex("currency (transaction fee)");
+  const totalCurrencyIdx = colIndex("currency (total)");
+
+  const feeColumnIndexes = lowerHead.reduce<number[]>((acc, header, index) => {
+    if (FEE_HEADER_RE.test(header) && !isCurrencyDescriptorHeader(header)) acc.push(index);
+    return acc;
+  }, []);
+
+  const transactions: ImportedTx[] = [];
+  const excluded: CsvExcludedRow[] = [];
+  const rejected: CsvRejection[] = [];
+  const breakdownCounts = new Map<string, { label: string; count: number }>();
+
+  const recordBreakdown = (label: string) => {
+    const key = label.toLowerCase();
+    const existing = breakdownCounts.get(key);
+    if (existing) existing.count += 1;
+    else breakdownCounts.set(key, { label, count: 1 });
+  };
+
+  for (let i = 0; i < body.length; i++) {
+    const r = body[i]!;
+    const rowNumber = i + 2;
+    const cell = (idx: number) => (idx >= 0 ? (r[idx] ?? "").trim() : "");
+    const rawAction = cell(actionIdx);
+    const timeValue = cell(timeIdx);
+    const classification = classifyTrading212Action(rawAction);
+
+    if (classification.category === "excluded") {
+      let excludedDate: string | undefined;
+      try {
+        excludedDate = timeValue ? day(timeValue) : undefined;
+      } catch {
+        excludedDate = undefined;
       }
-      const kind: TxKind | null = a.includes("buy") ? "buy" : a.includes("sell") ? "sell" : null;
-      if (!kind) return [];
-      return [
-        {
-          ...base,
-          kind,
-          currency: currency(g("currency (price / share)")),
-          quantity: num(g("no. of shares")),
-          price: toUsd(num(g("price / share")), g("currency (price / share)")),
-          fee: g.sum(/fee|commission|comm\/?f|stamp duty|levy|charge/i),
-          feeCurrency: currency(
-            g("currency (transaction fee)") || g("currency (price / share)") || "USD",
-          ),
-        },
-      ];
+      excluded.push({
+        row: rowNumber,
+        action: classification.actionLabel,
+        ...(excludedDate ? { date: excludedDate } : {}),
+        reason: "non_investment_operation",
+      });
+      recordBreakdown(classification.actionLabel);
+      continue;
+    }
+
+    if (classification.category === "unknown") {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: classification.actionLabel,
+        reason: "unknown_action",
+      });
+      continue;
+    }
+
+    const symbol = cell(tickerIdx).toUpperCase();
+    if (!symbol) {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: rawAction,
+        reason: "missing_ticker",
+      });
+      continue;
+    }
+    if (!/^[A-Z0-9.^:=_-]{1,20}$/i.test(symbol)) {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: rawAction,
+        reason: "invalid_transaction",
+      });
+      continue;
+    }
+
+    let parsedDate: string;
+    try {
+      parsedDate = day(timeValue);
+    } catch {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: rawAction,
+        reason: "invalid_transaction",
+      });
+      continue;
+    }
+
+    const rawQty = parseFiniteNumber(cell(sharesIdx));
+    const quantity =
+      rawQty === null
+        ? 0
+        : classification.kind === "sell"
+          ? Math.abs(rawQty)
+          : rawQty > 0
+            ? rawQty
+            : 0;
+    const rawPrice = parseFiniteNumber(cell(priceIdx));
+    const price = rawPrice !== null && rawPrice > 0 ? rawPrice : 0;
+
+    if (quantity <= 0 || price <= 0) {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: rawAction,
+        reason: "invalid_transaction",
+      });
+      continue;
+    }
+
+    let tradeCurrency = "USD";
+    if (priceCurrencyIdx >= 0) {
+      const rawCur = cell(priceCurrencyIdx);
+      if (!rawCur) {
+        rejected.push({
+          row: rowNumber,
+          raw: csvRowText(r),
+          action: rawAction,
+          reason: "invalid_transaction",
+        });
+        continue;
+      }
+      if (!isSupportedCurrency(rawCur)) {
+        rejected.push({
+          row: rowNumber,
+          raw: csvRowText(r),
+          action: rawAction,
+          reason: "unsupported_currency",
+        });
+        continue;
+      }
+      tradeCurrency = rawCur.toUpperCase();
+    }
+
+    let feeSum = 0;
+    let resolvedFeeCurrency: string | undefined;
+    let feeFailure: CsvRejection["reason"] | null = null;
+
+    for (const feeIdx of feeColumnIndexes) {
+      const rawFee = cell(feeIdx);
+      if (!rawFee) continue;
+      const parsedFee = parseFiniteNumber(rawFee);
+      if (parsedFee === null) {
+        feeFailure = "invalid_transaction";
+        break;
+      }
+      const absFee = Math.abs(parsedFee);
+      if (absFee === 0) continue;
+
+      const pairedCurIdx = colIndex(`currency (${lowerHead[feeIdx]!})`);
+      const rawFeeCur =
+        cell(pairedCurIdx) || cell(txFeeCurrencyIdx) || cell(totalCurrencyIdx) || tradeCurrency;
+      if (!isSupportedCurrency(rawFeeCur)) {
+        feeFailure = "unsupported_currency";
+        break;
+      }
+      const feeCur = rawFeeCur.toUpperCase();
+      if (resolvedFeeCurrency && resolvedFeeCurrency !== feeCur) {
+        feeFailure = "invalid_transaction";
+        break;
+      }
+      resolvedFeeCurrency = feeCur;
+      feeSum += absFee;
+    }
+
+    if (feeFailure) {
+      rejected.push({
+        row: rowNumber,
+        raw: csvRowText(r),
+        action: rawAction,
+        reason: feeFailure,
+      });
+      continue;
+    }
+
+    const isin = cleanIsin(cell(isinIdx));
+    transactions.push({
+      symbol,
+      ...(isin ? { isin } : {}),
+      name: (cell(nameIdx) || symbol).slice(0, 200),
+      assetType: guessType(symbol, isin),
+      kind: classification.kind,
+      quantity,
+      price: toUsd(price, tradeCurrency),
+      fee: feeSum,
+      feeCurrency: resolvedFeeCurrency ?? tradeCurrency,
+      date: parsedDate,
+      currency: tradeCurrency,
+      ...sourceIdentity(cell(idIdx), "t212:fill:", timeValue),
     });
-  });
+  }
+
+  const excludedBreakdown = [...breakdownCounts.values()]
+    .map(({ label, count }) => ({ action: label, count }))
+    .sort((a, b) => b.count - a.count || a.action.localeCompare(b.action));
+
+  return {
+    format: "trading212",
+    totalRows: body.length,
+    transactions,
+    excluded,
+    excludedBreakdown,
+    rejected,
+    feeColumns: detectFeeColumnsFromRows("trading212", rows),
+  };
+}
+
+function analyzeTrading212(text: string): CsvAnalysisResult {
+  return analyzeTrading212FromRows(parseCsvRowsStrict(text).rows);
+}
+
+function trading212(text: string): ImportedTx[] {
+  return analyzeTrading212(text).transactions;
 }
 
 function revolut(text: string): ImportedTx[] {
@@ -438,11 +877,22 @@ function ibkr(text: string): ImportedTx[] {
 
 export function parseBrokerCsv(format: BrokerFormat, text: string): ImportedTx[] {
   const fn = { generic, trading212, ibkr, revolut }[format];
-  return fn(text.replace(/^\uFEFF/, "")).filter((t) => t.symbol && t.quantity > 0 && t.price > 0);
+  return fn(stripBom(text)).filter((t) => t.symbol && t.quantity > 0 && t.price > 0);
 }
 
 export function rejectedCsvRows(format: BrokerFormat, text: string): CsvRejection[] {
-  const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));
+  if (format === "trading212") {
+    const analysis = analyzeTrading212(text);
+    const body = parseCsvRowsStrict(text).rows.slice(1);
+    const excludedAsRejections: CsvRejection[] = analysis.excluded.map((item) => ({
+      row: item.row,
+      raw: csvRowText(body[item.row - 2] ?? []),
+      action: item.action,
+      reason: "unsupported_action",
+    }));
+    return [...excludedAsRejections, ...analysis.rejected].sort((a, b) => a.row - b.row);
+  }
+  const rows = parseCsvRows(stripBom(text));
   const csvRow = (row: string[]) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",");
   const candidates = rows.flatMap((row, index) => {
     if (format === "ibkr") {
@@ -483,25 +933,21 @@ export function rejectedCsvRows(format: BrokerFormat, text: string): CsvRejectio
     const action =
       format === "generic"
         ? value("type").toLowerCase()
-        : format === "trading212"
-          ? value("action").toLowerCase()
-          : format === "revolut"
-            ? value("type").toLowerCase()
-            : row[0] === "Trades"
-              ? "trade"
-              : "dividend";
+        : format === "revolut"
+          ? value("type").toLowerCase()
+          : row[0] === "Trades"
+            ? "trade"
+            : "dividend";
     const supported =
       format === "generic"
         ? ["buy", "sell", "dividend"].includes(action)
-        : format === "trading212"
-          ? action.includes("buy") || action.includes("sell") || action.includes("dividend")
-          : format === "revolut"
-            ? action.startsWith("buy") || action.startsWith("sell") || action.includes("dividend")
-            : row[0] !== "Trades" || !row[2] || row[2] === "Order";
+        : format === "revolut"
+          ? action.startsWith("buy") || action.startsWith("sell") || action.includes("dividend")
+          : row[0] !== "Trades" || !row[2] || row[2] === "Order";
     const symbol =
       format === "generic"
         ? value("symbol")
-        : format === "trading212" || format === "revolut"
+        : format === "revolut"
           ? value("ticker")
           : row[0] === "Trades"
             ? value("symbol")
@@ -520,8 +966,7 @@ export function rejectedCsvRows(format: BrokerFormat, text: string): CsvRejectio
   });
 }
 
-export function detectFeeColumns(format: BrokerFormat, text: string): string[] {
-  const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));
+function detectFeeColumnsFromRows(format: BrokerFormat, rows: string[][]): string[] {
   const headers =
     format === "ibkr"
       ? rows.filter((row) => row[1] === "Header").flatMap((row) => row.slice(2))
@@ -529,18 +974,30 @@ export function detectFeeColumns(format: BrokerFormat, text: string): string[] {
   return [
     ...new Map(
       headers
-        .filter((header) => /fee|commission|comm\/?f|stamp duty|levy|charge/i.test(header))
+        .filter((header) => FEE_HEADER_RE.test(header) && !isCurrencyDescriptorHeader(header))
         .map((header) => [header.toLowerCase(), header]),
     ).values(),
   ];
 }
 
-export function detectBrokerFormat(text: string): BrokerFormat | null {
-  const rows = parseCsvRows(text.replace(/^\uFEFF/, ""));
+export function detectFeeColumns(format: BrokerFormat, text: string): string[] {
+  return detectFeeColumnsFromRows(format, parseCsvRows(stripBom(text)));
+}
+
+function detectBrokerFormatFromRows(rows: string[][]): BrokerFormat | null {
   if (rows.some((r) => r[0] === "Trades" && r[1] === "Header")) return "ibkr";
   const h = (rows[0] ?? []).map((v) => v.toLowerCase());
-  if (h.includes("action") && h.includes("price / share") && h.includes("ticker"))
+  const t212TimeIdx = findTrading212TimeIndex(h);
+  if (
+    (h.includes("action") &&
+      h.includes("price / share") &&
+      (h.includes("ticker") || h.includes("no. of shares") || t212TimeIdx >= 0)) ||
+    (h.includes("action") &&
+      h.includes("no. of shares") &&
+      (t212TimeIdx >= 0 || h.includes("isin")))
+  ) {
     return "trading212";
+  }
   if (h.includes("price per share") && h.includes("type") && h.includes("ticker")) return "revolut";
   const normalized = h.map((header) => header.replace(/[^a-z0-9]+/g, ""));
   const has = (...options: string[]) => options.some((option) => normalized.includes(option));
@@ -552,6 +1009,64 @@ export function detectBrokerFormat(text: string): BrokerFormat | null {
   )
     return "generic";
   return null;
+}
+
+export function detectBrokerFormat(text: string): BrokerFormat | null {
+  return detectBrokerFormatFromRows(parseCsvRows(stripBom(text)));
+}
+
+export function analyzeBrokerCsv(format: BrokerFormat, text: string): CsvAnalysisResult {
+  if (format === "trading212") return analyzeTrading212(text);
+  const rows = parseCsvRows(stripBom(text));
+  const transactions = parseBrokerCsv(format, text);
+  const rejected = rejectedCsvRows(format, text);
+  return {
+    format,
+    totalRows: transactions.length + rejected.length,
+    transactions,
+    excluded: [],
+    excludedBreakdown: [],
+    rejected,
+    feeColumns: detectFeeColumnsFromRows(format, rows),
+  };
+}
+
+export function prepareCsvText(text: string, expectedFormat?: BrokerFormat): CsvAnalysisResult {
+  const { rows, unclosedQuote } = parseCsvRowsStrict(text);
+  if (unclosedQuote) throw new CsvPrepareError("malformed_csv");
+  if (!rows.length) throw new CsvPrepareError("empty_file");
+
+  const headerRow = rows[0] ?? [];
+  const lowerHeaders = headerRow.map((h) => h.toLowerCase());
+  const detected = detectBrokerFormatFromRows(rows);
+
+  if (detected === "trading212" || (!detected && expectedFormat === "trading212")) {
+    const missing = missingTrading212Headers(headerRow);
+    if (missing.length > 0 && (detected === "trading212" || hasTrading212Signature(lowerHeaders))) {
+      throw new CsvPrepareError("missing_t212_headers", { missingHeaders: missing });
+    }
+  }
+
+  if (!detected) throw new CsvPrepareError("unsupported_format");
+
+  const dataRowCount =
+    detected === "ibkr"
+      ? rows.filter((r) => (r[0] === "Trades" || r[0] === "Dividends") && r[1] === "Data").length
+      : Math.max(0, rows.length - 1);
+
+  if (dataRowCount === 0) throw new CsvPrepareError("empty_file");
+  if (dataRowCount > MAX_CSV_ROWS) throw new CsvPrepareError("too_many_rows");
+
+  if (detected === "trading212") return analyzeTrading212FromRows(rows);
+  return analyzeBrokerCsv(detected, text);
+}
+
+export async function prepareCsvFile(
+  file: File,
+  expectedFormat?: BrokerFormat,
+): Promise<CsvAnalysisResult> {
+  const text = await decodeCsvFile(file);
+  return prepareCsvText(text, expectedFormat);
 }
 
 /** All import entry points compare only the selected brokerage account. */

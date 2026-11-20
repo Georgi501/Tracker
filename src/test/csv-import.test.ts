@@ -129,14 +129,22 @@ describe("CSV import", () => {
       },
     ]);
   });
-  it("parses Trading 212 buys and dividends", () => {
+  it("parses Trading 212 buys with Time and Time (UTC) and excludes dividends in investment-only mode", () => {
     const csv =
-      "Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Total,Currency (Total)\n" +
+      "Action,Time (UTC),ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Total,Currency (Total)\n" +
       "Market buy,2024-02-01 10:00:00,US0378331005,AAPL,Apple,2,180,USD,360,USD\n" +
       "Dividend (Ordinary),2024-05-16 00:00:00,US0378331005,AAPL,Apple,2,0.25,USD,0.5,USD\n";
     const r = parseBrokerCsv("trading212", csv);
-    expect(r.map((x) => x.kind)).toEqual(["buy", "dividend"]);
-    expect(r[1]!.price).toBeCloseTo(0.5);
+    expect(r.map((x) => x.kind)).toEqual(["buy"]);
+    expect(r[0]).toMatchObject({ symbol: "AAPL", date: "2024-02-01", quantity: 2, price: 180 });
+    const legacy =
+      "Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Total,Currency (Total)\n" +
+      "Limit buy,2024-02-02 10:00:00,US0378331005,AAPL,Apple,1,175,USD,175,USD\n";
+    expect(parseBrokerCsv("trading212", legacy)[0]).toMatchObject({
+      symbol: "AAPL",
+      kind: "buy",
+      date: "2024-02-02",
+    });
   });
   it("parses Revolut sells", () => {
     const csv =

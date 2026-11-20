@@ -861,6 +861,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       },
       normalizeImportRows: async (rows) => {
         if (!user) throw new Error(dictionaries[lang].signIn);
+        if (!rows.length) return [];
         return convertFn({
           data: {
             rows: rows.map((row) => ({
