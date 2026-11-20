@@ -23,7 +23,10 @@ import { Switch } from "@/components/ui/switch";
 import { analyticsCopy } from "@/lib/analytics-i18n";
 import {
   computePortfolioBaseMetrics,
+  convertHistoricalUsdAmount,
   formatBaseCurrencyAmount,
+  holdingsInBaseCurrency,
+  transactionCashFlowUsd,
 } from "@/lib/base-currency-accounting";
 import {
   analyticsReportCsv,
@@ -44,8 +47,8 @@ import { getPortfolioHistory } from "@/lib/history.functions";
 import type { Lang } from "@/lib/i18n";
 import { languageLocale } from "@/lib/i18n";
 import {
-  accountValues,
   assetCurrency,
+  brokerHoldings,
   groupBy,
   portfolioHistoryFingerprint,
 } from "@/lib/portfolio";
@@ -243,11 +246,15 @@ function Analytics() {
     enabled: !!p.user,
     staleTime: 60000,
   });
+  const effectiveEurUsdPrices = useMemo(
+    () => (p.eurUsdPrices.length ? p.eurUsdPrices : historyQuery.data?.eurUsdPrices),
+    [p.eurUsdPrices, historyQuery.data?.eurUsdPrices],
+  );
   const baseMetrics = useMemo(
     () =>
       computePortfolioBaseMetrics(p.holdings, p.transactions, p.currency, {
         liveEurPerUsd: p.eurPerUsd,
-        eurUsdPrices: p.eurUsdPrices.length ? p.eurUsdPrices : historyQuery.data?.eurUsdPrices,
+        eurUsdPrices: effectiveEurUsdPrices,
         splits: p.corporateActions,
       }),
     [
@@ -255,10 +262,13 @@ function Analytics() {
       p.transactions,
       p.currency,
       p.eurPerUsd,
-      p.eurUsdPrices,
-      historyQuery.data?.eurUsdPrices,
+      effectiveEurUsdPrices,
       p.corporateActions,
     ],
+  );
+  const baseHoldings = useMemo(
+    () => holdingsInBaseCurrency(p.holdings, baseMetrics),
+    [p.holdings, baseMetrics],
   );
   const history = historyQuery.data?.points ?? EMPTY_HISTORY;
   const pendingSplits = historyQuery.data?.pendingSplits ?? [];
@@ -414,23 +424,34 @@ function Analytics() {
         .sort((a, b) => b.v - a.v),
     [p.holdings, baseMetrics],
   );
+  const { t: translate, label: translateLabel, lang } = p;
   const { sectorExposure, regionExposure, geoSummary, focusSummary, exposures } = useMemo(() => {
-    const sector = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
-    const region = calculatePortfolioExposures(p.holdings, "region", exposureMode, p.label);
+    const sector = calculatePortfolioExposures(
+      baseHoldings,
+      "sector",
+      exposureMode,
+      translateLabel,
+    );
+    const region = calculatePortfolioExposures(
+      baseHoldings,
+      "region",
+      exposureMode,
+      translateLabel,
+    );
     const geo =
       exposureMode === "lookThrough"
-        ? calculatePortfolioGeographicExposure(p.holdings, p.label)
+        ? calculatePortfolioGeographicExposure(baseHoldings, translateLabel)
         : null;
-    const validHoldings = p.holdings.filter((h) => Number.isFinite(h.value));
+    const validHoldings = baseHoldings.filter((h) => Number.isFinite(h.value));
     return {
       sectorExposure: sector,
       regionExposure: region,
       geoSummary: geo,
-      focusSummary: calculatePortfolioInvestmentFocus(p.holdings),
+      focusSummary: calculatePortfolioInvestmentFocus(baseHoldings),
       exposures: [
         {
-          title: p.t("byClass"),
-          rows: groupBy(validHoldings, (h) => p.t(h.asset.type)),
+          title: translate("byClass"),
+          rows: groupBy(validHoldings, (h) => translate(h.asset.type)),
         },
         {
           title: c.bySector,
@@ -438,25 +459,59 @@ function Analytics() {
         },
         {
           title: c.byRegion,
-          rows: geo ? geoDisplayRows(geo, p.lang) : region.rows,
+          rows: geo ? geoDisplayRows(geo, lang) : region.rows,
         },
         {
-          title: p.t("byCurrency"),
+          title: translate("byCurrency"),
           rows: groupBy(validHoldings, (h) => assetCurrency(h.asset)),
         },
       ],
     };
-  }, [p, exposureMode, c.bySector, c.byRegion]);
-  const accounts = accountValues(
+  }, [baseHoldings, exposureMode, translateLabel, lang, translate, c.bySector, c.byRegion]);
+  const accounts = useMemo(() => {
+    const names = new Map(p.brokers.map((broker) => [broker.id, broker.name]));
+    const accountIds = new Set([
+      ...p.transactions.map((transaction) => transaction.brokerId ?? "manual"),
+      ...p.brokerTransfers.flatMap((transfer) => [transfer.fromBrokerId, transfer.toBrokerId]),
+    ]);
+    const byBroker = new Map(
+      [...accountIds].map((id) => [
+        id,
+        {
+          id,
+          name: names.get(id) ?? (id === "manual" ? c.manualAccount : c.unknownAccount),
+          value: 0 as number | null,
+          missingQuotes: 0,
+        },
+      ]),
+    );
+    for (const holding of brokerHoldings(
+      p.assets,
+      p.transactions,
+      p.brokerTransfers,
+      p.corporateActions,
+    )) {
+      const entry = byBroker.get(holding.brokerId);
+      if (!entry) continue;
+      const m = baseMetrics.byAssetId.get(holding.asset.id);
+      if (!m || !Number.isFinite(m.value) || m.quantity <= 0) {
+        entry.value = null;
+        entry.missingQuotes += 1;
+      } else if (entry.value !== null) {
+        entry.value += (holding.quantity / m.quantity) * m.value;
+      }
+    }
+    return [...byBroker.values()].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
+  }, [
     p.assets,
     p.transactions,
-    p.brokers,
-    p.corporateActions,
     p.brokerTransfers,
-  ).map((account) => ({
-    ...account,
-    name: account.name ?? (account.id === "manual" ? c.manualAccount : c.unknownAccount),
-  }));
+    p.corporateActions,
+    p.brokers,
+    baseMetrics,
+    c.manualAccount,
+    c.unknownAccount,
+  ]);
   const pricedHoldings = p.holdings.filter(
     (holding) => Number.isFinite(holding.asset.price) && holding.asset.price > 0,
   );
@@ -477,10 +532,19 @@ function Analytics() {
     const time = Date.parse(`${transaction.date}T00:00:00Z`);
     return Number.isFinite(time) && time >= range.start && time < range.end;
   });
-  const recordedDividendTotal = recordedDividends.reduce(
-    (sum, transaction) => sum + transaction.quantity * transaction.price - (transaction.fee ?? 0),
-    0,
-  );
+  const recordedDividendTotal = recordedDividends.reduce((sum, transaction) => {
+    if (!Number.isFinite(sum)) return Number.NaN;
+    const converted = convertHistoricalUsdAmount(
+      transactionCashFlowUsd(transaction),
+      transaction.date,
+      p.currency,
+      effectiveEurUsdPrices,
+    );
+    if (p.currency === "EUR" && converted.method !== "dated-historical-fx") {
+      return Number.NaN;
+    }
+    return sum + converted.amount;
+  }, 0);
   const reportSections: AnalyticsReportSection[] = [
     {
       title: c.summary,
@@ -501,7 +565,7 @@ function Analytics() {
       title: c.recordedDividends,
       columns: [c.metric, c.value],
       rows: [
-        [c.recordedDividends, recordedDividendTotal],
+        [c.recordedDividends, formatBaseCurrencyAmount(recordedDividendTotal, p.currency, p.lang)],
         [c.dividendTransactions, recordedDividends.length],
       ],
     },
@@ -510,9 +574,9 @@ function Analytics() {
       columns: [c.category, c.marketValue, c.weight],
       rows: exposure.rows.map((row) => [
         row.name,
-        p.money(row.value),
-        portfolioValuationAvailable && total > 0
-          ? `${((row.value / total) * 100).toFixed(2)}%`
+        formatBaseCurrencyAmount(row.value, p.currency, p.lang),
+        baseMetrics.isComplete && baseMetrics.totalValue > 0
+          ? `${((row.value / baseMetrics.totalValue) * 100).toFixed(2)}%`
           : "—",
       ]),
     })),
@@ -521,9 +585,11 @@ function Analytics() {
       columns: [c.category, c.marketValue, c.weight],
       rows: accounts.map((account) => [
         account.name,
-        account.value === null ? c.unavailable : p.money(account.value),
-        account.value !== null && portfolioValuationAvailable && total > 0
-          ? `${((account.value / total) * 100).toFixed(2)}%`
+        account.value === null
+          ? c.unavailable
+          : formatBaseCurrencyAmount(account.value, p.currency, p.lang),
+        account.value !== null && baseMetrics.isComplete && baseMetrics.totalValue > 0
+          ? `${((account.value / baseMetrics.totalValue) * 100).toFixed(2)}%`
           : "—",
       ]),
     },
@@ -930,7 +996,7 @@ function Analytics() {
         title={p.t("byAsset")}
         colorOffset={4}
         data={groupBy(
-          p.holdings.filter((h) => Number.isFinite(h.value)),
+          baseHoldings.filter((h) => Number.isFinite(h.value)),
           (h) => h.asset.symbol,
         )}
       />
@@ -938,7 +1004,7 @@ function Analytics() {
         title={p.t("byCurrency")}
         colorOffset={3}
         data={groupBy(
-          p.holdings.filter((h) => Number.isFinite(h.value)),
+          baseHoldings.filter((h) => Number.isFinite(h.value)),
           (h) => assetCurrency(h.asset),
         )}
       />
@@ -946,7 +1012,7 @@ function Analytics() {
         title={p.t("byClass")}
         colorOffset={1}
         data={groupBy(
-          p.holdings.filter((h) => Number.isFinite(h.value)),
+          baseHoldings.filter((h) => Number.isFinite(h.value)),
           (h) => p.t(h.asset.type),
         )}
       />
@@ -1401,7 +1467,14 @@ function Breakdown({
                 it: "Valore totale",
               }[p.lang]
         }
-        formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
+        formatValue={(value, compact) =>
+          formatBaseCurrencyAmount(
+            value,
+            p.currency,
+            p.lang,
+            compact ? { compact: true } : undefined,
+          )
+        }
       />
       {geoSummary && (
         <GeoExposureDisclosure summary={geoSummary} lang={p.lang} unpricedCount={unpricedCount} />

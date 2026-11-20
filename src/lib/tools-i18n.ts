@@ -45,6 +45,8 @@ const en = {
   rebalanceBasisUnavailable: "FIFO basis unavailable",
   exportTaxPdf: "Print / Save PDF report",
   allYears: "All years",
+  taxFxUnavailable:
+    "Historical EUR/USD rates are missing for some sale or acquisition dates; affected EUR figures are withheld rather than estimated with today's spot rate. CSV/PDF exports remain in USD.",
 };
 type Copy = typeof en;
 const bg: Copy = {
@@ -92,6 +94,8 @@ const bg: Copy = {
   rebalanceBasisUnavailable: "FIFO себестойността не е налична",
   exportTaxPdf: "Печат / Запази PDF справка",
   allYears: "Всички години",
+  taxFxUnavailable:
+    "Липсват исторически курсове EUR/USD за някои дати на покупка или продажба; засегнатите суми в EUR не се показват вместо да се изчисляват по текущ курс. CSV/PDF експортът остава в USD.",
 };
 const de: Copy = {
   tools: "Werkzeuge",
@@ -138,6 +142,8 @@ const de: Copy = {
   rebalanceBasisUnavailable: "FIFO-Einstandswert nicht verfügbar",
   exportTaxPdf: "Steuerbericht drucken / als PDF speichern",
   allYears: "Alle Jahre",
+  taxFxUnavailable:
+    "Für einige Kauf- oder Verkaufsdaten fehlen historische EUR/USD-Kurse; betroffene EUR-Beträge werden nicht angezeigt statt mit dem heutigen Kurs geschätzt. CSV-/PDF-Exporte bleiben in USD.",
 };
 const es: Copy = {
   tools: "Herramientas",
@@ -184,6 +190,8 @@ const es: Copy = {
   rebalanceBasisUnavailable: "Coste FIFO no disponible",
   exportTaxPdf: "Imprimir / Guardar informe PDF",
   allYears: "Todos los años",
+  taxFxUnavailable:
+    "Faltan tipos de cambio históricos EUR/USD para algunas fechas de compra o venta; los importes en EUR afectados se omiten en lugar de estimarse con el tipo actual. Las exportaciones CSV/PDF siguen en USD.",
 };
 const it: Copy = {
   tools: "Strumenti",
@@ -231,5 +239,7 @@ const it: Copy = {
   rebalanceBasisUnavailable: "Costo FIFO non disponibile",
   exportTaxPdf: "Stampa / Salva report PDF",
   allYears: "Tutti gli anni",
+  taxFxUnavailable:
+    "Mancano i cambi storici EUR/USD per alcune date di acquisto o vendita; gli importi in EUR interessati vengono omessi anziché stimati con il cambio spot odierno. Le esportazioni CSV/PDF restano in USD.",
 };
 export const toolsCopy: Record<Lang, Copy> = { en, bg, de, es, it };

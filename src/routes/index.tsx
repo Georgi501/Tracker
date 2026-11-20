@@ -13,8 +13,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import {
+  computeBaseCurrencyRealizedReport,
   computePortfolioBaseMetrics,
   formatBaseCurrencyAmount,
+  formatHistoricalUsdAmount,
+  transactionCashFlowUsd,
 } from "@/lib/base-currency-accounting";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod, type PortfolioPoint } from "@/lib/history";
@@ -58,7 +61,6 @@ import { LandingSections, LandingSteps } from "@/components/LandingSections";
 import { VideoPresentation } from "@/components/VideoPresentation";
 import { pct, usePortfolio } from "@/lib/store";
 import { portfolioHistoryFingerprint, portfolioIrr, type Transaction } from "@/lib/portfolio";
-import { fifoTaxReport } from "@/lib/tools";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -218,7 +220,7 @@ const METRIC_HELP: Record<
     invested:
       "Remaining cost basis of your open positions; it is not the sum of every deposit or trade ever made.",
     realized:
-      "Realized gain or loss on completed sales, calculated using FIFO from your recorded transactions.",
+      "Realized gain or loss on completed sales calculated using FIFO. In EUR mode, each purchase lot and sale uses trade-date historical EUR/USD FX (withheld if historical FX is unavailable).",
   },
   bg: {
     totalPnl:
@@ -231,7 +233,7 @@ const METRIC_HELP: Record<
     invested:
       "Оставащата себестойност на отворените позиции; не е сборът на всички вноски или сделки.",
     realized:
-      "Реализирана печалба или загуба от приключени продажби, изчислена по FIFO от записаните сделки.",
+      "Реализирана печалба или загуба от приключени продажби по FIFO. В EUR всяка покупка и продажба използва историческия курс EUR/USD към датата на сделката (не се показва при липсващ курс).",
   },
   de: {
     totalPnl:
@@ -244,7 +246,7 @@ const METRIC_HELP: Record<
     invested:
       "Verbleibende Einstandskosten deiner offenen Positionen; nicht die Summe aller Einzahlungen oder Trades.",
     realized:
-      "Realisierter Gewinn oder Verlust aus abgeschlossenen Verkäufen, nach FIFO anhand deiner erfassten Transaktionen berechnet.",
+      "Realisierter Gewinn oder Verlust aus abgeschlossenen Verkäufen nach FIFO. Im EUR-Modus verwendet jeder Kauf und Verkauf den historischen EUR/USD-Kurs des Handelstages.",
   },
   es: {
     totalPnl:
@@ -257,7 +259,7 @@ const METRIC_HELP: Record<
     invested:
       "Coste restante de las posiciones abiertas; no es la suma de todos los depósitos u operaciones.",
     realized:
-      "Ganancia o pérdida realizada en ventas completadas, calculada por FIFO a partir de tus operaciones registradas.",
+      "Ganancia o pérdida realizada en ventas completadas según FIFO. En EUR cada compra y venta usa el tipo EUR/USD histórico de la fecha de operación.",
   },
   it: {
     totalPnl:
@@ -270,7 +272,7 @@ const METRIC_HELP: Record<
     invested:
       "Costo residuo delle posizioni aperte; non è la somma di tutti i depositi o delle operazioni effettuate.",
     realized:
-      "Guadagno o perdita realizzata sulle vendite completate, calcolata con il metodo FIFO dalle operazioni registrate.",
+      "Guadagno o perdita realizzata sulle vendite completate con metodo FIFO. In EUR ogni acquisto e vendita usa il cambio storico EUR/USD della data dell'operazione.",
   },
 };
 
@@ -334,6 +336,7 @@ const DASHBOARD_COPY: Record<
     fundExposureContext: string;
     reviewHoldings: string;
     recentActivity: string;
+    recentActivityFxNote: string;
     viewAll: string;
     noRecentActivity: string;
     units: string;
@@ -358,6 +361,8 @@ const DASHBOARD_COPY: Record<
       "This measures your share in the fund, not how many companies it holds. If it is a broad index ETF, it can diversify across companies while your portfolio remains concentrated in that fund and its tracked market.",
     reviewHoldings: "Review holdings",
     recentActivity: "Recent activity",
+    recentActivityFxNote:
+      "Amounts shown in EUR use trade-date historical FX (or stored USD if historical FX is unavailable).",
     viewAll: "View all",
     noRecentActivity: "No recent transactions.",
     units: "units",
@@ -381,6 +386,8 @@ const DASHBOARD_COPY: Record<
       "Това показва дела ти в самия фонд, а не броя компании в него. Ако е широк индексен ETF, той може да разпределя риска между компании, но портфейлът ти остава концентриран в този фонд и следвания от него пазар.",
     reviewHoldings: "Прегледай позициите",
     recentActivity: "Последни трансакции",
+    recentActivityFxNote:
+      "Сумите в EUR използват исторически курс към датата на сделката (или записаната сума в USD при липсващ курс).",
     viewAll: "Виж всички",
     noRecentActivity: "Няма скорошни трансакции.",
     units: "бр.",
@@ -404,6 +411,8 @@ const DASHBOARD_COPY: Record<
       "Dies zeigt deinen Anteil am Fonds, nicht die Anzahl seiner Unternehmen. Ein breit gestreuter Index-ETF kann über viele Unternehmen streuen, während dein Portfolio auf diesen Fonds und den abgebildeten Markt konzentriert bleibt.",
     reviewHoldings: "Positionen ansehen",
     recentActivity: "Letzte Aktivitäten",
+    recentActivityFxNote:
+      "Beträge in EUR nutzen den historischen Wechselkurs des Handelstages (oder gespeicherte USD, falls kein Kurs vorliegt).",
     viewAll: "Alle anzeigen",
     noRecentActivity: "Keine aktuellen Transaktionen.",
     units: "Einheiten",
@@ -426,6 +435,8 @@ const DASHBOARD_COPY: Record<
       "Esto mide tu peso en el fondo, no cuántas empresas contiene. Si es un ETF de índice amplio, puede diversificar entre empresas, aunque la cartera siga concentrada en ese fondo y en el mercado que sigue.",
     reviewHoldings: "Revisar posiciones",
     recentActivity: "Actividad reciente",
+    recentActivityFxNote:
+      "Los importes en EUR usan el tipo de cambio histórico de la fecha de operación (o USD registrados si no está disponible).",
     viewAll: "Ver todas",
     noRecentActivity: "No hay operaciones recientes.",
     units: "unidades",
@@ -449,6 +460,8 @@ const DASHBOARD_COPY: Record<
       "Questo misura il peso del fondo, non quante società contiene. Se è un ETF su un indice ampio, può diversificare tra società, mentre il portafoglio resta concentrato su quel fondo e sul mercato seguito.",
     reviewHoldings: "Rivedi le posizioni",
     recentActivity: "Attività recenti",
+    recentActivityFxNote:
+      "Gli importi in EUR usano il cambio storico della data dell'operazione (o USD registrati se il cambio storico manca).",
     viewAll: "Vedi tutte",
     noRecentActivity: "Nessuna operazione recente.",
     units: "unità",
@@ -602,17 +615,10 @@ function Dashboard() {
   }, [benchmark, benchmarkLoaded]);
   const c = benchmarkCopy[p.lang];
   const chartNote = CHART_NOTE[p.lang];
-  const portfolioMetrics = useMemo(() => {
-    const total = holdings.reduce((sum, holding) => sum + holding.value, 0);
-    return {
-      total,
-      realized: fifoTaxReport(transactions, 1, p.corporateActions).reduce(
-        (sum, year) => sum + year.realized,
-        0,
-      ),
-    };
-  }, [holdings, transactions, p.corporateActions]);
-  const { total, realized } = portfolioMetrics;
+  const total = useMemo(
+    () => holdings.reduce((sum, holding) => sum + holding.value, 0),
+    [holdings],
+  );
   const historyFn = useServerFn(getPortfolioHistory);
   const txKey = useMemo(
     () => portfolioHistoryFingerprint(p.transactions, p.corporateActions, p.manualValuations),
@@ -624,23 +630,29 @@ function Dashboard() {
     enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,
   });
+  const effectiveEurUsdPrices = useMemo(
+    () => (p.eurUsdPrices.length ? p.eurUsdPrices : history.data?.eurUsdPrices),
+    [p.eurUsdPrices, history.data?.eurUsdPrices],
+  );
   const baseMetrics = useMemo(
     () =>
       computePortfolioBaseMetrics(holdings, transactions, p.currency, {
         liveEurPerUsd: p.eurPerUsd,
-        eurUsdPrices: p.eurUsdPrices.length ? p.eurUsdPrices : history.data?.eurUsdPrices,
+        eurUsdPrices: effectiveEurUsdPrices,
         splits: p.corporateActions,
       }),
-    [
-      holdings,
-      transactions,
-      p.currency,
-      p.eurPerUsd,
-      p.eurUsdPrices,
-      history.data?.eurUsdPrices,
-      p.corporateActions,
-    ],
+    [holdings, transactions, p.currency, p.eurPerUsd, effectiveEurUsdPrices, p.corporateActions],
   );
+  const realizedSummary = useMemo(
+    () =>
+      computeBaseCurrencyRealizedReport(transactions, p.currency, {
+        taxYearStartMonth: 1,
+        eurUsdPrices: effectiveEurUsdPrices,
+        splits: p.corporateActions,
+      }),
+    [transactions, p.currency, effectiveEurUsdPrices, p.corporateActions],
+  );
+  const realized = realizedSummary.totalRealized;
   const irrV = useMemo(() => {
     if (!holdings.length || !Number.isFinite(total)) return Number.NaN;
     if (p.currency === "USD") return portfolioIrr(transactions, total);
@@ -1335,7 +1347,12 @@ function Dashboard() {
                     help={METRIC_HELP[p.lang].realized}
                     value={
                       p.user ? (
-                        <CountUp value={realized} format={(n) => p.money(n, { sign: true })} />
+                        <CountUp
+                          value={realized}
+                          format={(n) =>
+                            formatBaseCurrencyAmount(n, p.currency, p.lang, { sign: true })
+                          }
+                        />
                       ) : (
                         "—"
                       )
@@ -1463,75 +1480,84 @@ function Dashboard() {
                 </Link>
               </div>
               {recentTransactions.length ? (
-                <ul className="grid divide-y divide-border lg:grid-cols-2 lg:gap-x-6">
-                  {recentTransactions.map((transaction) => {
-                    const asset = p.assets.find((item) => item.id === transaction.assetId);
-                    const amount =
-                      transaction.kind === "dividend"
-                        ? transaction.price - (transaction.fee ?? 0)
-                        : transaction.kind === "buy"
-                          ? transaction.quantity * transaction.price + (transaction.fee ?? 0)
-                          : transaction.quantity * transaction.price - (transaction.fee ?? 0);
-                    const date = new Date(`${transaction.date}T12:00:00`);
-                    return (
-                      <li
-                        key={transaction.id}
-                        className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">
-                            {asset?.name ?? p.t("asset")}
-                            {asset?.symbol ? (
-                              <span className="ml-1.5 font-normal text-muted-foreground">
-                                {asset.symbol}
-                              </span>
-                            ) : null}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {p.t(transaction.kind)}
-                            {transaction.kind !== "dividend" &&
-                              ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
-                            {" · "}
-                            {Number.isNaN(date.getTime())
-                              ? transaction.date
-                              : date.toLocaleDateString(locale, {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 sm:justify-end">
-                          <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
-                            {p.money(amount, { sign: transaction.kind === "dividend" })}
-                          </p>
-                          <div className="flex shrink-0 items-center">
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              aria-label={TRANSACTION_ACTION_COPY[p.lang].edit}
-                              title={TRANSACTION_ACTION_COPY[p.lang].edit}
-                              onClick={() => setEditingTransaction(transaction)}
-                            >
-                              <Pencil aria-hidden />
-                            </Button>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              aria-label={TRANSACTION_ACTION_COPY[p.lang].delete}
-                              title={TRANSACTION_ACTION_COPY[p.lang].delete}
-                              onClick={() => setDeletingTransaction(transaction)}
-                            >
-                              <Trash2 aria-hidden />
-                            </Button>
+                <>
+                  <ul className="grid divide-y divide-border lg:grid-cols-2 lg:gap-x-6">
+                    {recentTransactions.map((transaction) => {
+                      const asset = p.assets.find((item) => item.id === transaction.assetId);
+                      const amount = transactionCashFlowUsd(transaction);
+                      const date = new Date(`${transaction.date}T12:00:00`);
+                      return (
+                        <li
+                          key={transaction.id}
+                          className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">
+                              {asset?.name ?? p.t("asset")}
+                              {asset?.symbol ? (
+                                <span className="ml-1.5 font-normal text-muted-foreground">
+                                  {asset.symbol}
+                                </span>
+                              ) : null}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {p.t(transaction.kind)}
+                              {transaction.kind !== "dividend" &&
+                                ` · ${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(transaction.quantity)} ${dashboardCopy.units}`}
+                              {" · "}
+                              {Number.isNaN(date.getTime())
+                                ? transaction.date
+                                : date.toLocaleDateString(locale, {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                            </p>
                           </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <div className="flex items-center justify-between gap-2 sm:justify-end">
+                            <p className="shrink-0 text-right text-sm font-semibold tabular-nums">
+                              {formatHistoricalUsdAmount(
+                                amount,
+                                transaction.date,
+                                p.currency,
+                                effectiveEurUsdPrices,
+                                p.lang,
+                                { sign: transaction.kind === "dividend" },
+                              )}
+                            </p>
+                            <div className="flex shrink-0 items-center">
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                aria-label={TRANSACTION_ACTION_COPY[p.lang].edit}
+                                title={TRANSACTION_ACTION_COPY[p.lang].edit}
+                                onClick={() => setEditingTransaction(transaction)}
+                              >
+                                <Pencil aria-hidden />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                aria-label={TRANSACTION_ACTION_COPY[p.lang].delete}
+                                title={TRANSACTION_ACTION_COPY[p.lang].delete}
+                                onClick={() => setDeletingTransaction(transaction)}
+                              >
+                                <Trash2 aria-hidden />
+                              </Button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {p.currency === "EUR" && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {dashboardCopy.recentActivityFxNote}
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="py-6 text-sm text-muted-foreground">
                   {dashboardCopy.noRecentActivity}

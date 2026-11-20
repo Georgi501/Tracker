@@ -2,6 +2,7 @@ import { Card } from "@/components/AppShell";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { EditTransactionDialog } from "@/components/EditTransactionDialog";
 import { Button } from "@/components/ui/button";
+import { formatHistoricalUsdAmount, transactionCashFlowUsd } from "@/lib/base-currency-accounting";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { filterTimelineTransactions, timelineByMonth } from "@/lib/journey";
 import type { Transaction, TxKind } from "@/lib/portfolio";
@@ -216,11 +217,24 @@ function Timeline() {
                   <div className="flex items-center justify-between gap-2 pl-11 sm:justify-end sm:pl-0">
                     <span className="text-sm font-medium sm:text-right">
                       {t.kind === "dividend"
-                        ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), a)
-                        : `${t.quantity} × ${p.moneyFor(t.price, a)}`}
+                        ? formatHistoricalUsdAmount(
+                            transactionCashFlowUsd(t),
+                            t.date,
+                            p.currency,
+                            p.eurUsdPrices,
+                            p.lang,
+                          )
+                        : `${t.quantity} × ${formatHistoricalUsdAmount(t.price, t.date, p.currency, p.eurUsdPrices, p.lang)}`}
                       {(t.fee ?? 0) > 0 && (
                         <span className="block text-xs text-muted-foreground">
-                          {p.t("fee")}: {p.money(t.fee ?? 0)}
+                          {p.t("fee")}:{" "}
+                          {formatHistoricalUsdAmount(
+                            t.fee ?? 0,
+                            t.date,
+                            p.currency,
+                            p.eurUsdPrices,
+                            p.lang,
+                          )}
                         </span>
                       )}
                     </span>

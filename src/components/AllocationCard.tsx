@@ -1,3 +1,8 @@
+import {
+  computePortfolioBaseMetrics,
+  formatBaseCurrencyAmount,
+  holdingsInBaseCurrency,
+} from "@/lib/base-currency-accounting";
 import { calculatePortfolioGeographicExposure } from "@/lib/geographic-exposure";
 import { languageLocale } from "@/lib/i18n";
 import {
@@ -28,10 +33,17 @@ export function AllocationCard() {
     region: null,
     focus: null,
   });
-  const unpricedCount = p.holdings.filter((h) => !Number.isFinite(h.value)).length;
+  const currency = p.currency ?? "USD";
+  const baseMetrics = computePortfolioBaseMetrics(p.holdings, p.transactions ?? [], currency, {
+    liveEurPerUsd: p.eurPerUsd ?? null,
+    eurUsdPrices: p.eurUsdPrices ?? [],
+    splits: p.corporateActions ?? [],
+  });
+  const baseHoldings = holdingsInBaseCurrency(p.holdings, baseMetrics);
+  const unpricedCount = baseHoldings.filter((h) => !Number.isFinite(h.value)).length;
   const geoSummary =
-    mode === "region" ? calculatePortfolioGeographicExposure(p.holdings, p.label) : null;
-  const focusSummary = mode === "focus" ? calculatePortfolioInvestmentFocus(p.holdings) : null;
+    mode === "region" ? calculatePortfolioGeographicExposure(baseHoldings, p.label) : null;
+  const focusSummary = mode === "focus" ? calculatePortfolioInvestmentFocus(baseHoldings) : null;
   const data = geoSummary
     ? geoDisplayRows(geoSummary, p.lang)
     : focusSummary
@@ -40,7 +52,7 @@ export function AllocationCard() {
           value: row.value,
         }))
       : groupBy(
-          p.holdings.filter((h) => Number.isFinite(h.value)),
+          baseHoldings.filter((h) => Number.isFinite(h.value)),
           (h) => (mode === "class" ? p.t(h.asset.type) : p.label(h.asset.sector)),
         );
   const tabLabel = (m: Mode) =>
@@ -102,11 +114,20 @@ export function AllocationCard() {
           data={data}
           neutralNames={neutralAllocationNames(p.lang)}
           totalLabel={
-            p.holdings.some((h) => !Number.isFinite(h.value))
+            baseHoldings.some((h) => !Number.isFinite(h.value))
               ? p.t("holdingValuePartialTotal")
               : p.t("holdingValueTotal")
           }
-          formatValue={(value, compact) => p.money(value, compact ? { compact: true } : undefined)}
+          formatValue={(value, compact) =>
+            p.currency
+              ? formatBaseCurrencyAmount(
+                  value,
+                  p.currency,
+                  p.lang,
+                  compact ? { compact: true } : undefined,
+                )
+              : p.money(value, compact ? { compact: true } : undefined)
+          }
         />
         {geoSummary && geoSummary.withheldFundValue > 0 && (
           <button

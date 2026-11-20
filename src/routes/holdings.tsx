@@ -13,6 +13,8 @@ import { languageLocale, type Lang } from "@/lib/i18n";
 import {
   computePortfolioBaseMetrics,
   formatBaseCurrencyAmount,
+  formatHistoricalUsdAmount,
+  transactionCashFlowUsd,
   type BaseCurrencyHoldingMetrics,
 } from "@/lib/base-currency-accounting";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
@@ -141,7 +143,8 @@ const COPY: Record<
     | "assetRestored"
     | "holdingsSummary"
     | "dayChange"
-    | "partialValuation",
+    | "partialValuation"
+    | "spotFxCostFallback",
     string
   >
 > = {
@@ -190,6 +193,8 @@ const COPY: Record<
     holdingsSummary: "Holdings Summary",
     dayChange: "Day Change",
     partialValuation: "Partial valuation · missing quote:",
+    spotFxCostFallback:
+      "Historical EUR/USD FX is unavailable for some trade dates; cost basis for these positions uses current spot FX:",
   },
   bg: {
     placeholder: "Търси позиции или тикер (META, VWCE.DE, BTC)…",
@@ -238,6 +243,8 @@ const COPY: Record<
     holdingsSummary: "Обща стойност",
     dayChange: "Дневна промяна",
     partialValuation: "Частична оценка · липсва котировка:",
+    spotFxCostFallback:
+      "Липсват исторически курсове EUR/USD за някои дати на покупка; себестойността за тези позиции използва текущия спот курс:",
   },
   de: {
     placeholder: "Positionen oder Ticker suchen (META, VWCE.DE, BTC)…",
@@ -287,6 +294,8 @@ const COPY: Record<
     holdingsSummary: "Gesamtwert",
     dayChange: "Tagesänderung",
     partialValuation: "Teilbewertung · fehlender Kurs:",
+    spotFxCostFallback:
+      "Historische EUR/USD-Kurse fehlen für einige Handelsdaten; der Einstandswert dieser Positionen nutzt den aktuellen Kassakurs:",
   },
   es: {
     placeholder: "Busca posiciones o un ticker (META, VWCE.DE, BTC)…",
@@ -334,6 +343,8 @@ const COPY: Record<
     holdingsSummary: "Resumen de posiciones",
     dayChange: "Cambio diario",
     partialValuation: "Valoración parcial · falta cotización:",
+    spotFxCostFallback:
+      "Faltan tipos de cambio históricos EUR/USD para algunas fechas; el coste de estas posiciones usa el tipo actual:",
   },
   it: {
     placeholder: "Cerca posizioni o un ticker (META, VWCE.DE, BTC)…",
@@ -383,6 +394,8 @@ const COPY: Record<
     holdingsSummary: "Riepilogo posizioni",
     dayChange: "Variazione giornaliera",
     partialValuation: "Valutazione parziale · quotazione mancante:",
+    spotFxCostFallback:
+      "Cambi storici EUR/USD non disponibili per alcune date; il costo di queste posizioni usa il cambio spot attuale:",
   },
 };
 
@@ -692,8 +705,14 @@ function Holdings() {
                 </span>
                 <span className="flex-1">
                   {t.kind === "dividend"
-                    ? p.moneyFor(t.price, lotAsset)
-                    : `${num(t.quantity)} × ${p.moneyFor(t.price, lotAsset)}`}
+                    ? formatHistoricalUsdAmount(
+                        transactionCashFlowUsd(t),
+                        t.date,
+                        p.currency,
+                        p.eurUsdPrices,
+                        p.lang,
+                      )
+                    : `${num(t.quantity)} × ${formatHistoricalUsdAmount(t.price, t.date, p.currency, p.eurUsdPrices, p.lang)}`}
                 </span>
                 {t.kind !== "dividend" && (
                   <button
@@ -793,6 +812,13 @@ function Holdings() {
                     {c.partialValuation} {baseMetrics.missingQuoteSymbols.join(", ")}
                   </p>
                 )}
+                {p.currency === "EUR" &&
+                  !baseMetrics.datedFxComplete &&
+                  baseMetrics.spotFallbackSymbols.length > 0 && (
+                    <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
+                      {c.spotFxCostFallback} {baseMetrics.spotFallbackSymbols.join(", ")}
+                    </p>
+                  )}
                 <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3.5 text-xs">
                   <div>
                     <p className="text-muted-foreground">{p.t("invested")}</p>

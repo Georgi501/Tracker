@@ -35,6 +35,10 @@ import { proToolsCopy } from "@/lib/pro-tools-copy";
 import { pct, usePortfolio } from "@/lib/store";
 import { thesisCopy } from "@/lib/thesis-copy";
 import {
+  computeBaseCurrencyRealizedReport,
+  formatBaseCurrencyAmount,
+} from "@/lib/base-currency-accounting";
+import {
   classValues,
   exportCsv,
   fifoSalePreview,
@@ -707,6 +711,15 @@ function Tax() {
     () => fifoTaxReport(p.transactions, taxYearStartMonth, p.corporateActions),
     [p.transactions, p.corporateActions, taxYearStartMonth],
   );
+  const displayTaxReport = useMemo(
+    () =>
+      computeBaseCurrencyRealizedReport(p.transactions, p.currency, {
+        taxYearStartMonth,
+        eurUsdPrices: p.eurUsdPrices,
+        splits: p.corporateActions,
+      }),
+    [p.transactions, p.currency, taxYearStartMonth, p.eurUsdPrices, p.corporateActions],
+  );
   const monthName = (month: number) =>
     new Intl.DateTimeFormat(languageLocale(p.lang), { month: "long", timeZone: "UTC" }).format(
       new Date(Date.UTC(2026, month - 1, 1)),
@@ -728,7 +741,7 @@ function Tax() {
           ))}
         </select>
       </label>
-      {!years.length ? (
+      {!displayTaxReport.years.length ? (
         <p className="text-sm text-muted-foreground">{c.noSales}</p>
       ) : (
         <div className="overflow-x-auto">
@@ -743,23 +756,37 @@ function Tax() {
               </tr>
             </thead>
             <tbody>
-              {years.map((y) => (
+              {displayTaxReport.years.map((y) => (
                 <tr key={y.year} className="border-t border-border">
                   <td className="py-2 font-semibold">
                     {y.yearEnd === y.year ? y.year : `${y.year}/${String(y.yearEnd).slice(-2)}`}
                   </td>
-                  <td className="text-right">{p.money(y.proceeds)}</td>
-                  <td className="text-right">{p.money(y.cost)}</td>
                   <td className="text-right">
-                    <Delta value={y.realized}>{p.money(y.realized, { sign: true })}</Delta>
+                    {formatBaseCurrencyAmount(y.proceeds, p.currency, p.lang)}
                   </td>
-                  <td className="text-right">{p.money(y.dividends)}</td>
+                  <td className="text-right">
+                    {formatBaseCurrencyAmount(y.cost, p.currency, p.lang)}
+                  </td>
+                  <td className="text-right">
+                    <Delta value={y.realized}>
+                      {formatBaseCurrencyAmount(y.realized, p.currency, p.lang, { sign: true })}
+                    </Delta>
+                  </td>
+                  <td className="text-right">
+                    {formatBaseCurrencyAmount(y.dividends, p.currency, p.lang)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      {p.currency === "EUR" &&
+        (!displayTaxReport.fxComplete || !displayTaxReport.dividendsFxComplete) && (
+          <p role="status" className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+            {c.taxFxUnavailable}
+          </p>
+        )}
       {years.length > 0 && (
         <div className="mt-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
