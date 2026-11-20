@@ -1,8 +1,10 @@
 import { CsvPrepareError, type CsvPrepareErrorCode } from "./csv-import";
+import type { QuoteRejectionReason } from "./instrument-identity";
 import type { Lang } from "./i18n";
 type TrustCopy = {
   retry: string;
   quoteFailure: string;
+  quoteDiagnostics: Record<QuoteRejectionReason, string>;
   privacyHint: string;
   fileError: string;
   csvErrors: Record<CsvPrepareErrorCode, string>;
@@ -40,6 +42,15 @@ export const trustCopy: Record<Lang, TrustCopy> = {
   en: {
     retry: "Refresh quotes",
     quoteFailure: "The last refresh failed. Older provider prices may still be shown.",
+    quoteDiagnostics: {
+      ticker_collision_blocked:
+        "Blocked ambiguous ticker match on another exchange/currency to avoid mispricing.",
+      currency_mismatch:
+        "Quote rejected because the provider trading currency did not match this listing.",
+      exchange_mismatch: "Quote rejected because the provider exchange did not match this listing.",
+      instrument_type_mismatch:
+        "Quote rejected because the provider instrument type did not match this asset.",
+    },
     privacyHint: "Screen privacy only. Exports retain actual values.",
     fileError:
       "The CSV could not be prepared. Check the file format and use at most 10,000 rows (10 MB).",
@@ -110,6 +121,16 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     retry: "Обнови котировките",
     quoteFailure:
       "Последното обновяване не успя. Възможно е да се показват по-стари цени от доставчика.",
+    quoteDiagnostics: {
+      ticker_collision_blocked:
+        "Блокирано е двусмислено съвпадение на тикер на друга борса/валута, за да се предотврати грешна оценка.",
+      currency_mismatch:
+        "Котировката е отхвърлена, защото валутата от доставчика не съответства на очакваната борсова регистрация.",
+      exchange_mismatch:
+        "Котировката е отхвърлена, защото борсата от доставчика не съответства на очакваната.",
+      instrument_type_mismatch:
+        "Котировката е отхвърлена, защото типът инструмент от доставчика не съответства на актива.",
+    },
     privacyHint: "Скриване само на екрана. Експортите запазват реалните стойности.",
     fileError:
       "CSV файлът не може да се подготви. Провери формата и използвай до 10 000 реда (10 MB).",
@@ -180,6 +201,16 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     retry: "Kurse aktualisieren",
     quoteFailure:
       "Die letzte Aktualisierung ist fehlgeschlagen. Ältere Kurse können noch angezeigt werden.",
+    quoteDiagnostics: {
+      ticker_collision_blocked:
+        "Mehrdeutiger Ticker-Treffer an anderer Börse/Währung wurde blockiert, um Fehlbewertungen zu vermeiden.",
+      currency_mismatch:
+        "Kurs abgelehnt, da die Handelswährung des Anbieters nicht zu dieser Notierung passt.",
+      exchange_mismatch:
+        "Kurs abgelehnt, da der Handelsplatz des Anbieters nicht zu dieser Notierung passt.",
+      instrument_type_mismatch:
+        "Kurs abgelehnt, da der Instrumenttyp des Anbieters nicht zu diesem Wertpapier passt.",
+    },
     privacyHint: "Nur Bildschirmansicht. Exporte behalten die echten Werte.",
     fileError:
       "CSV konnte nicht vorbereitet werden. Format prüfen; höchstens 10.000 Zeilen (10 MB).",
@@ -250,6 +281,16 @@ export const trustCopy: Record<Lang, TrustCopy> = {
   es: {
     retry: "Actualizar cotizaciones",
     quoteFailure: "Falló la última actualización. Pueden mostrarse precios anteriores.",
+    quoteDiagnostics: {
+      ticker_collision_blocked:
+        "Se bloqueó una coincidencia ambigua de símbolo en otra bolsa/divisa para evitar errores de valoración.",
+      currency_mismatch:
+        "Cotización rechazada porque la divisa del proveedor no coincide con esta emisión.",
+      exchange_mismatch:
+        "Cotización rechazada porque la bolsa del proveedor no coincide con esta emisión.",
+      instrument_type_mismatch:
+        "Cotización rechazada porque el tipo de instrumento del proveedor no coincide con este activo.",
+    },
     privacyHint: "Solo privacidad en pantalla. Las exportaciones conservan los valores reales.",
     fileError: "No se pudo preparar el CSV. Revisa el formato; máximo 10.000 filas (10 MB).",
     csvErrors: {
@@ -328,6 +369,16 @@ export const trustCopy: Record<Lang, TrustCopy> = {
     retry: "Aggiorna quotazioni",
     quoteFailure:
       "Ultimo aggiornamento non riuscito. Potrebbero essere mostrati prezzi precedenti.",
+    quoteDiagnostics: {
+      ticker_collision_blocked:
+        "Corrispondenza ambigua del ticker su un'altra borsa/valuta bloccata per evitare valutazioni errate.",
+      currency_mismatch:
+        "Quotazione rifiutata perché la valuta del fornitore non corrisponde a questa quotazione.",
+      exchange_mismatch:
+        "Quotazione rifiutata perché la borsa del fornitore non corrisponde a questa quotazione.",
+      instrument_type_mismatch:
+        "Quotazione rifiutata perché il tipo di strumento del fornitore non corrisponde all'asset.",
+    },
     privacyHint: "Solo privacy sullo schermo. Le esportazioni mantengono i valori reali.",
     fileError: "Impossibile preparare il CSV. Controlla il formato; massimo 10.000 righe (10 MB).",
     csvErrors: {

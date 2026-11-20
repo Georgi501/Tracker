@@ -12,6 +12,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
+import {
+  computePortfolioBaseMetrics,
+  formatBaseCurrencyAmount,
+} from "@/lib/base-currency-accounting";
 import { getPortfolioHistory } from "@/lib/history.functions";
 import { historyReturn, type HistoryPeriod, type PortfolioPoint } from "@/lib/history";
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
@@ -600,23 +604,15 @@ function Dashboard() {
   const chartNote = CHART_NOTE[p.lang];
   const portfolioMetrics = useMemo(() => {
     const total = holdings.reduce((sum, holding) => sum + holding.value, 0);
-    const cost = holdings.reduce((sum, holding) => sum + holding.costBasis, 0);
     return {
       total,
-      portfolioValue: holdings.reduce(
-        (sum, holding) => (Number.isFinite(holding.value) ? sum + holding.value : sum),
-        0,
-      ),
-      cost,
-      pnl: total - cost,
       realized: fifoTaxReport(transactions, 1, p.corporateActions).reduce(
         (sum, year) => sum + year.realized,
         0,
       ),
-      day: holdings.reduce((sum, holding) => sum + holding.dayChange, 0),
     };
   }, [holdings, transactions, p.corporateActions]);
-  const { total, portfolioValue, cost, pnl, realized, day } = portfolioMetrics;
+  const { total, realized } = portfolioMetrics;
   const historyFn = useServerFn(getPortfolioHistory);
   const txKey = useMemo(
     () => portfolioHistoryFingerprint(p.transactions, p.corporateActions, p.manualValuations),
@@ -628,6 +624,23 @@ function Dashboard() {
     enabled: !!p.user && p.portfolioReady,
     staleTime: 60000,
   });
+  const baseMetrics = useMemo(
+    () =>
+      computePortfolioBaseMetrics(holdings, transactions, p.currency, {
+        liveEurPerUsd: p.eurPerUsd,
+        eurUsdPrices: p.eurUsdPrices.length ? p.eurUsdPrices : history.data?.eurUsdPrices,
+        splits: p.corporateActions,
+      }),
+    [
+      holdings,
+      transactions,
+      p.currency,
+      p.eurPerUsd,
+      p.eurUsdPrices,
+      history.data?.eurUsdPrices,
+      p.corporateActions,
+    ],
+  );
   const irrV = useMemo(() => {
     if (!holdings.length || !Number.isFinite(total)) return Number.NaN;
     if (p.currency === "USD") return portfolioIrr(transactions, total);
@@ -712,18 +725,30 @@ function Dashboard() {
     (performanceSeries.at(-1)?.v ?? 0) < 0 ? "var(--destructive)" : "var(--success)";
   const locale = languageLocale(p.lang);
   const dashboardCopy = DASHBOARD_COPY[p.lang];
-  const largestHolding = useMemo(
-    () =>
-      holdings
-        .filter((holding) => Number.isFinite(holding.value))
-        .reduce<(typeof holdings)[number] | null>(
-          (largest, holding) => (!largest || holding.value > largest.value ? holding : largest),
-          null,
-        ),
-    [holdings],
-  );
+  const largestHolding = useMemo(() => {
+    if (
+      !baseMetrics.isComplete ||
+      !Number.isFinite(baseMetrics.totalValue) ||
+      baseMetrics.totalValue <= 0
+    ) {
+      return null;
+    }
+    return holdings.reduce<(typeof holdings)[number] | null>((largest, holding) => {
+      const value = baseMetrics.byAssetId.get(holding.asset.id)?.value ?? Number.NaN;
+      if (!Number.isFinite(value)) return largest;
+      const largestVal = largest
+        ? (baseMetrics.byAssetId.get(largest.asset.id)?.value ?? Number.NEGATIVE_INFINITY)
+        : Number.NEGATIVE_INFINITY;
+      return !largest || value > largestVal ? holding : largest;
+    }, null);
+  }, [holdings, baseMetrics]);
   const largestShareRatio =
-    largestHolding && portfolioValue > 0 ? largestHolding.value / portfolioValue : null;
+    baseMetrics.isComplete &&
+    largestHolding &&
+    Number.isFinite(baseMetrics.totalValue) &&
+    baseMetrics.totalValue > 0
+      ? (baseMetrics.byAssetId.get(largestHolding.asset.id)?.value ?? 0) / baseMetrics.totalValue
+      : null;
   const largestShare =
     largestShareRatio !== null
       ? new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }).format(
@@ -914,7 +939,9 @@ function Dashboard() {
                 </div>
               </div>
               <h1 className="numeric-display mt-1 break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                {p.user ? p.money(total) : "—"}
+                {p.user
+                  ? formatBaseCurrencyAmount(baseMetrics.totalValue, p.currency, p.lang)
+                  : "—"}
               </h1>
               <p className="mt-1 text-sm font-semibold">
                 <Delta value={chg}>
@@ -1187,26 +1214,44 @@ function Dashboard() {
                   help={METRIC_HELP[p.lang].totalPnl}
                   value={
                     p.user ? (
-                      <CountUp value={pnl} format={(n) => p.money(n, { sign: true })} />
+                      <CountUp
+                        value={baseMetrics.totalPnl}
+                        format={(n) =>
+                          formatBaseCurrencyAmount(n, p.currency, p.lang, { sign: true })
+                        }
+                      />
                     ) : (
                       "—"
                     )
                   }
-                  sub={pct((pnl / cost) * 100)}
-                  n={pnl}
+                  sub={pct(baseMetrics.totalPnlPct)}
+                  n={baseMetrics.totalPnl}
                 />
                 <Metric
                   label={p.t("dayChange")}
                   help={METRIC_HELP[p.lang].dayChange}
                   value={
                     p.user ? (
-                      <CountUp value={day} format={(n) => p.money(n, { sign: true })} />
+                      <CountUp
+                        value={baseMetrics.totalDayChange}
+                        format={(n) =>
+                          formatBaseCurrencyAmount(n, p.currency, p.lang, { sign: true })
+                        }
+                      />
                     ) : (
                       "—"
                     )
                   }
-                  sub={pct((day / (total - day)) * 100)}
-                  n={day}
+                  sub={pct(
+                    Number.isFinite(baseMetrics.totalDayChange) &&
+                      Number.isFinite(baseMetrics.totalValue) &&
+                      baseMetrics.totalValue - baseMetrics.totalDayChange > 0
+                      ? (baseMetrics.totalDayChange /
+                          (baseMetrics.totalValue - baseMetrics.totalDayChange)) *
+                          100
+                      : Number.NaN,
+                  )}
+                  n={baseMetrics.totalDayChange}
                 />
                 <div className="contents sm:grid sm:grid-cols-2 sm:gap-2.5">
                   <Metric
@@ -1266,7 +1311,16 @@ function Dashboard() {
                   <Metric
                     label={p.t("invested")}
                     help={METRIC_HELP[p.lang].invested}
-                    value={p.user ? <CountUp value={cost} format={(n) => p.money(n)} /> : "—"}
+                    value={
+                      p.user ? (
+                        <CountUp
+                          value={baseMetrics.totalCost}
+                          format={(n) => formatBaseCurrencyAmount(n, p.currency, p.lang)}
+                        />
+                      ) : (
+                        "—"
+                      )
+                    }
                   />
                   <Metric
                     label={
@@ -1335,44 +1389,57 @@ function Dashboard() {
                     </Link>
                   </div>
                   <ul className="divide-y divide-border">
-                    {p.holdings.slice(0, 6).map((h) => (
-                      <li key={h.asset.id}>
-                        <Link
-                          to="/asset/$symbol"
-                          params={{ symbol: h.asset.symbol }}
-                          className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                        >
-                          <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold">{h.asset.name}</p>
-                            <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
-                          </div>
-                          <div className="text-right text-sm">
-                            <p className="numeric-display font-semibold tabular-nums">
-                              {p.money(h.value)}
-                            </p>
-                            <div className="flex items-center justify-end gap-2 text-xs tabular-nums">
-                              <Delta value={h.pnl}>{pct(h.pnlPct)}</Delta>
-                              <span className="text-muted-foreground">
-                                {portfolioValue > 0 && Number.isFinite(h.value)
-                                  ? ((h.value / portfolioValue) * 100).toFixed(1)
-                                  : "0.0"}
-                                %{" "}
-                                {
-                                  {
-                                    en: "of portfolio",
-                                    bg: "от портфолиото",
-                                    de: "des Portfolios",
-                                    es: "de la cartera",
-                                    it: "del portafoglio",
-                                  }[p.lang]
-                                }
-                              </span>
+                    {p.holdings.slice(0, 6).map((h) => {
+                      const m = baseMetrics.byAssetId.get(h.asset.id);
+                      const weight =
+                        baseMetrics.isComplete &&
+                        baseMetrics.totalValue > 0 &&
+                        m &&
+                        Number.isFinite(m.value)
+                          ? `${((m.value / baseMetrics.totalValue) * 100).toFixed(1)}%`
+                          : "—";
+                      return (
+                        <li key={h.asset.id}>
+                          <Link
+                            to="/asset/$symbol"
+                            params={{ symbol: h.asset.symbol }}
+                            className="flex items-center gap-3 py-2.5 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          >
+                            <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} size={36} />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold">{h.asset.name}</p>
+                              <p className="text-xs text-muted-foreground">{p.t(h.asset.type)}</p>
                             </div>
-                          </div>
-                        </Link>
-                      </li>
-                    ))}
+                            <div className="text-right text-sm">
+                              <p className="numeric-display font-semibold tabular-nums">
+                                {formatBaseCurrencyAmount(
+                                  m?.value ?? Number.NaN,
+                                  p.currency,
+                                  p.lang,
+                                )}
+                              </p>
+                              <div className="flex items-center justify-end gap-2 text-xs tabular-nums">
+                                <Delta value={m?.pnl ?? Number.NaN}>
+                                  {pct(m?.pnlPct ?? Number.NaN)}
+                                </Delta>
+                                <span className="text-muted-foreground">
+                                  {weight}{" "}
+                                  {
+                                    {
+                                      en: "of portfolio",
+                                      bg: "от портфолиото",
+                                      de: "des Portfolios",
+                                      es: "de la cartera",
+                                      it: "del portafoglio",
+                                    }[p.lang]
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </Card>
               </div>

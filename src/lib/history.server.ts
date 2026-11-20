@@ -7,6 +7,11 @@ export interface DailyHistoryResult {
   currency: string;
   prices: DailyPrice[];
   splits: { date: string; numerator: number; denominator: number }[];
+  exchangeName?: string | undefined;
+  fullExchangeName?: string | undefined;
+  instrumentType?: string | undefined;
+  longName?: string | undefined;
+  shortName?: string | undefined;
 }
 
 const MARKET_HISTORY_EDGE_TTL_SECONDS = 15 * 60;
@@ -88,5 +93,16 @@ async function dailyHistoryRaw(
     currency: result.meta.currency,
     prices,
     splits: parseStockSplits(result.events?.splits),
+    ...(typeof result.meta.exchangeName === "string"
+      ? { exchangeName: result.meta.exchangeName }
+      : {}),
+    ...(typeof result.meta.fullExchangeName === "string"
+      ? { fullExchangeName: result.meta.fullExchangeName }
+      : {}),
+    ...(typeof result.meta.instrumentType === "string"
+      ? { instrumentType: result.meta.instrumentType }
+      : {}),
+    ...(typeof result.meta.longName === "string" ? { longName: result.meta.longName } : {}),
+    ...(typeof result.meta.shortName === "string" ? { shortName: result.meta.shortName } : {}),
   };
 }

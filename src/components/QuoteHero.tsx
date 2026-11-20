@@ -169,6 +169,9 @@ const L = {
 
 export function QuoteHero({
   symbol,
+  quoteSymbol,
+  isin,
+  expectedCurrency,
   name,
   type,
   lang,
@@ -178,6 +181,9 @@ export function QuoteHero({
   snapshotRef,
 }: {
   symbol: string;
+  quoteSymbol?: string | undefined;
+  isin?: string | undefined;
+  expectedCurrency?: string | undefined;
   name: string;
   type: T;
   lang: Lang;
@@ -193,15 +199,21 @@ export function QuoteHero({
   const extFn = useServerFn(marketExtended);
   const statsFn = useServerFn(marketStats);
   const [range, setRange] = useState<ChartRange>("1D");
+  const querySymbol = (quoteSymbol?.trim() || symbol).toUpperCase();
+  const identityHint = {
+    ...(name.trim() ? { name: name.trim().slice(0, 200) } : {}),
+    ...(isin ? { isin } : {}),
+    ...(expectedCurrency ? { expectedCurrency } : {}),
+  };
   const q = useQuery({
-    queryKey: ["market-quote", symbol, type],
-    queryFn: () => quoteFn({ data: { symbol, type } }),
+    queryKey: ["market-quote", querySymbol, type, isin ?? "", expectedCurrency ?? ""],
+    queryFn: () => quoteFn({ data: { symbol: querySymbol, type, ...identityHint } }),
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
   const ch = useQuery({
-    queryKey: ["market-details", symbol, type, range],
-    queryFn: () => detailsFn({ data: { symbol, type, range } }),
+    queryKey: ["market-details", querySymbol, type, range, isin ?? "", expectedCurrency ?? ""],
+    queryFn: () => detailsFn({ data: { symbol: querySymbol, type, range, ...identityHint } }),
     staleTime: range === "1D" ? 60_000 : 600_000,
   });
   const shouldLoadDailyFallback =
@@ -211,24 +223,31 @@ export function QuoteHero({
     !ch.data?.unavailable &&
     (ch.data?.closes.length ?? 0) < 2;
   const dailyFallback = useQuery({
-    queryKey: ["market-details", symbol, type, "1M-last-session"],
-    queryFn: () => detailsFn({ data: { symbol, type, range: "1M" } }),
+    queryKey: [
+      "market-details",
+      querySymbol,
+      type,
+      "1M-last-session",
+      isin ?? "",
+      expectedCurrency ?? "",
+    ],
+    queryFn: () => detailsFn({ data: { symbol: querySymbol, type, range: "1M", ...identityHint } }),
     enabled: shouldLoadDailyFallback,
     staleTime: 600_000,
   });
   const showingDailyFallback =
     shouldLoadDailyFallback && !!dailyFallback.data && !dailyFallback.data.unavailable;
-  const usListing = type !== "crypto" && !symbol.includes(".");
+  const usListing = type !== "crypto" && !querySymbol.includes(".");
   const e = useQuery({
-    queryKey: ["market-ext", symbol],
-    queryFn: () => extFn({ data: { symbol } }),
+    queryKey: ["market-ext", querySymbol],
+    queryFn: () => extFn({ data: { symbol: querySymbol } }),
     enabled: usListing,
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
   const stats = useQuery({
-    queryKey: ["market-stats", symbol],
-    queryFn: () => statsFn({ data: { symbol } }),
+    queryKey: ["market-stats", querySymbol],
+    queryFn: () => statsFn({ data: { symbol: querySymbol } }),
     enabled: type !== "crypto" && showStats,
     staleTime: 300_000,
   });
@@ -535,7 +554,7 @@ export function QuoteHero({
         {snapshotRef && <div ref={snapshotRef} className="quote-snapshot min-w-0 empty:hidden" />}
         {showStats && type !== "crypto" && (
           <div className="quote-snapshot min-w-0 rounded-xl border border-border bg-background/45 p-3 empty:hidden sm:p-4">
-            <KeyStats symbol={symbol} lang={lang} variant={statsVariant} />
+            <KeyStats symbol={querySymbol} lang={lang} variant={statsVariant} />
           </div>
         )}
       </div>

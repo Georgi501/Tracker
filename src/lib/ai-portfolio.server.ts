@@ -16,6 +16,7 @@ import {
   resolveInstrumentGeoProfile,
 } from "./geographic-exposure";
 import { fetchCryptoQuotes, fetchFx, fetchLiveQuote, type LiveQuote } from "./prices.server";
+import { resolveAssetIdentity, validateQuoteIdentity } from "./instrument-identity";
 
 function resolvedRegionSummary(asset: Asset): string {
   const profile = resolveInstrumentGeoProfile(asset);
@@ -121,27 +122,58 @@ export async function loadValuedPortfolio(
     else if (t.kind === "sell") qtyByAsset.set(t.assetId, Math.max(0, cur - t.quantity));
   }
 
+  const identityByAssetId = new Map(
+    assetRows.map((a) => [
+      a.id,
+      resolveAssetIdentity({
+        symbol: a.symbol,
+        name: a.name,
+        type: a.type as AssetType,
+      }),
+    ]),
+  );
+
   const heldAssetRows = assetRows.filter((a) => (qtyByAsset.get(a.id) ?? 0) > 0.0001);
   const quotedAssetRows = heldAssetRows.slice(0, 30);
 
-  const cryptoSymbols = quotedAssetRows.filter((a) => a.type === "crypto").map((a) => a.symbol);
+  const cryptoSymbols = quotedAssetRows
+    .filter((a) => (identityByAssetId.get(a.id)?.effectiveType ?? a.type) === "crypto")
+    .map((a) => identityByAssetId.get(a.id)?.quoteSymbol ?? a.symbol);
   const [cryptoQuotes, stockEtfQuotes] = await Promise.all([
     cryptoSymbols.length
       ? fetchCryptoQuotes(cryptoSymbols).catch(() => ({}) as Record<string, LiveQuote>)
       : Promise.resolve({} as Record<string, LiveQuote>),
     Promise.all(
       quotedAssetRows.map(async (a) => {
-        if (a.type !== "stock" && a.type !== "etf") return [a.id, null] as const;
-        const q = await fetchLiveQuote(a.symbol, a.type).catch(() => null);
-        return [a.id, q] as const;
+        const identity = identityByAssetId.get(a.id)!;
+        if (identity.effectiveType !== "stock" && identity.effectiveType !== "etf") {
+          return [a.id, null] as const;
+        }
+        if (identity.forbidUsListingCollision) return [a.id, null] as const;
+        const q = await fetchLiveQuote(identity.quoteSymbol, identity.effectiveType).catch(
+          () => null,
+        );
+        if (!q) return [a.id, null] as const;
+        const validation = validateQuoteIdentity(identity, {
+          providerSymbol: q.providerSymbol ?? identity.quoteSymbol,
+          currency: q.currency,
+          exchangeName: q.exchangeName,
+          fullExchangeName: q.fullExchangeName,
+          instrumentType: q.instrumentType,
+          longName: q.longName,
+          shortName: q.shortName,
+        });
+        return [a.id, validation.ok ? q : null] as const;
       }),
     ),
   ]);
 
   const rawQuotesByAssetId = new Map<string, LiveQuote | null>(stockEtfQuotes);
   for (const a of quotedAssetRows) {
-    if (a.type === "crypto") {
-      rawQuotesByAssetId.set(a.id, cryptoQuotes[a.symbol.toUpperCase()] ?? null);
+    const identity = identityByAssetId.get(a.id);
+    if ((identity?.effectiveType ?? a.type) === "crypto") {
+      const sym = (identity?.quoteSymbol ?? a.symbol).toUpperCase();
+      rawQuotesByAssetId.set(a.id, cryptoQuotes[sym] ?? null);
     }
   }
 
@@ -162,35 +194,39 @@ export async function loadValuedPortfolio(
     const manualValuation = latestValuationByAsset.get(r.id);
     const quote = rawQuotesByAssetId.get(r.id) ?? null;
     const usdQuotePrice = toUsdQuotePrice(quote, eurPerUsd, gbpUsdQuote);
+    const identity = identityByAssetId.get(r.id);
+    const effectiveType = identity?.effectiveType ?? (r.type as AssetType);
     return {
       id: r.id,
       symbol: r.symbol,
       name: r.name,
-      type: r.type as AssetType,
+      type: effectiveType,
+      ...(identity?.isin ? { isin: identity.isin } : {}),
+      ...(identity?.quoteSymbol ? { quoteSymbol: identity.quoteSymbol } : {}),
       sector: r.sector,
       region: r.region,
       price:
-        r.type === "cash"
+        effectiveType === "cash"
           ? 1
-          : r.type === "bond" || r.type === "realEstate"
+          : effectiveType === "bond" || effectiveType === "realEstate"
             ? Number(manualValuation?.price_usd ?? r.manual_price ?? Number.NaN)
             : usdQuotePrice,
       change24h:
-        r.type === "cash" || r.type === "bond" || r.type === "realEstate"
+        effectiveType === "cash" || effectiveType === "bond" || effectiveType === "realEstate"
           ? 0
           : (quote?.change ?? Number.NaN),
       dividendPerShare: Number(r.dividend_per_share ?? 0),
       payMonths: r.pay_months ?? [],
       ...(quote?.currency
         ? { quoteCurrency: quote.currency }
-        : r.type === "cash" || r.type === "bond" || r.type === "realEstate"
+        : effectiveType === "cash" || effectiveType === "bond" || effectiveType === "realEstate"
           ? { quoteCurrency: "USD" }
           : {}),
       ...(quote && Number.isFinite(quote.price)
         ? { quoteNativePrice: quote.price }
-        : r.type === "cash"
+        : effectiveType === "cash"
           ? { quoteNativePrice: 1 }
-          : (r.type === "bond" || r.type === "realEstate") &&
+          : (effectiveType === "bond" || effectiveType === "realEstate") &&
               Number.isFinite(Number(manualValuation?.price_usd ?? r.manual_price ?? Number.NaN))
             ? {
                 quoteNativePrice: Number(

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ImportedTx } from "./csv-import";
+import { resolveImportedInstrument } from "./instrument-identity";
 
 const T212_BASE = "https://live.trading212.com/api/v0";
 const IBKR_BASE = "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService";
@@ -132,28 +133,39 @@ export function parseT212Orders(orders: z.infer<typeof t212OrderSchema>[]): Impo
     const fill = entry.fill;
     if (!fill || fill.type !== "TRADE") return [];
     const instrument = entry.order.instrument;
-    const symbol = instrument?.ticker ?? entry.order.ticker;
-    if (!symbol) return [];
+    const rawSymbol = instrument?.ticker ?? entry.order.ticker;
+    if (!rawSymbol) return [];
     const taxes = fill.walletImpact?.taxes ?? [];
     const taxCurrencies = new Set(taxes.map((tax) => tax.currency.toUpperCase()));
     if (taxCurrencies.size > 1)
       throw new Error(
-        `Trading 212 returned fees in multiple currencies for ${symbol}; sync stopped.`,
+        `Trading 212 returned fees in multiple currencies for ${rawSymbol}; sync stopped.`,
       );
     const feeCurrency = taxes[0]?.currency;
     const fees = taxes.reduce((sum, tax) => sum + Math.abs(tax.quantity), 0);
+    const tradeCur = assertCurrency(instrument?.currency ?? "");
+    const rawName = instrument?.name ?? rawSymbol;
+    const resolved = resolveImportedInstrument({
+      symbol: rawSymbol,
+      name: rawName,
+      currency: tradeCur,
+    });
     return [
       {
         sourceTransactionId: `t212:fill:${fill.id}`,
-        symbol,
-        name: instrument?.name ?? symbol,
-        assetType: "stock",
+        symbol: resolved.quoteSymbol,
+        ...(resolved.quoteSymbol !== rawSymbol.trim().toUpperCase()
+          ? { brokerSymbol: rawSymbol.trim().toUpperCase() }
+          : {}),
+        ...(resolved.isin ? { isin: resolved.isin } : {}),
+        name: rawName,
+        assetType: resolved.effectiveType,
         kind: entry.order.side === "BUY" ? "buy" : "sell",
         quantity: fill.quantity,
         price: fill.price,
         ...(fees > 0 ? { fee: fees, feeCurrency: assertCurrency(feeCurrency ?? "") } : {}),
         date: transactionDate(fill.filledAt),
-        currency: assertCurrency(instrument?.currency ?? ""),
+        currency: tradeCur,
       },
     ];
   });
@@ -161,19 +173,30 @@ export function parseT212Orders(orders: z.infer<typeof t212OrderSchema>[]): Impo
 
 export function parseT212Dividends(dividends: z.infer<typeof t212DividendSchema>[]): ImportedTx[] {
   return dividends.flatMap((item) => {
-    const symbol = item.instrument?.ticker ?? item.ticker;
-    if (!symbol || !Number.isFinite(item.amount) || item.amount <= 0) return [];
+    const rawSymbol = item.instrument?.ticker ?? item.ticker;
+    if (!rawSymbol || !Number.isFinite(item.amount) || item.amount <= 0) return [];
+    const divCur = assertCurrency(item.currency);
+    const rawName = item.instrument?.name ?? rawSymbol;
+    const resolved = resolveImportedInstrument({
+      symbol: rawSymbol,
+      name: rawName,
+      currency: divCur,
+    });
     return [
       {
         sourceTransactionId: `t212:dividend:${item.reference}`,
-        symbol,
-        name: item.instrument?.name ?? symbol,
-        assetType: "stock",
+        symbol: resolved.quoteSymbol,
+        ...(resolved.quoteSymbol !== rawSymbol.trim().toUpperCase()
+          ? { brokerSymbol: rawSymbol.trim().toUpperCase() }
+          : {}),
+        ...(resolved.isin ? { isin: resolved.isin } : {}),
+        name: rawName,
+        assetType: resolved.effectiveType,
         kind: "dividend",
         quantity: 1,
         price: item.amount,
         date: transactionDate(item.paidOn),
-        currency: assertCurrency(item.currency),
+        currency: divCur,
       },
     ];
   });
@@ -238,17 +261,30 @@ export function parseFlexReport(xml: string): ImportedTx[] {
       (side !== "BUY" && side !== "SELL")
     )
       continue;
+    const cur = assertCurrency(trade["currency"] ?? "");
+    const rawName = trade["description"]?.trim() || symbol;
+    const isin = /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(trade["isin"]?.trim().toUpperCase() ?? "")
+      ? trade["isin"]!.trim().toUpperCase()
+      : undefined;
+    const resolved = resolveImportedInstrument({
+      symbol,
+      isin,
+      name: rawName,
+      currency: cur,
+    });
     rows.push({
       sourceTransactionId: `ibkr:trade:${id || index}`,
-      symbol,
-      name: trade["description"]?.trim() || symbol,
-      assetType: "stock",
+      symbol: resolved.quoteSymbol,
+      ...(resolved.quoteSymbol !== symbol ? { brokerSymbol: symbol } : {}),
+      ...(isin ? { isin } : {}),
+      name: rawName,
+      assetType: resolved.effectiveType,
       kind: side === "BUY" ? "buy" : "sell",
       quantity: Math.abs(quantity),
       price,
       fee: Math.abs(Number(trade["ibCommission"]) || 0),
       date,
-      currency: assertCurrency(trade["currency"] ?? ""),
+      currency: cur,
     });
   }
   for (const [index, item] of parseFlexAttributes(xml, "CashTransaction").entries()) {
@@ -259,16 +295,27 @@ export function parseFlexReport(xml: string): ImportedTx[] {
     const symbol = item["symbol"]?.trim().toUpperCase();
     const id = item["transactionID"] ?? item["tradeID"];
     if (!symbol || !id || !date || !Number.isFinite(amount) || amount <= 0) continue;
+    const cur = assertCurrency(item["currency"] ?? "");
+    const rawName = item["description"]?.trim() || symbol;
+    const isin = item["description"]?.match(/\(([A-Z]{2}[A-Z0-9]{9}\d)\)/)?.[1];
+    const resolved = resolveImportedInstrument({
+      symbol,
+      isin,
+      name: rawName,
+      currency: cur,
+    });
     rows.push({
       sourceTransactionId: `ibkr:dividend:${id || index}`,
-      symbol,
-      name: item["description"]?.trim() || symbol,
-      assetType: "stock",
+      symbol: resolved.quoteSymbol,
+      ...(resolved.quoteSymbol !== symbol ? { brokerSymbol: symbol } : {}),
+      ...(isin ? { isin } : {}),
+      name: rawName,
+      assetType: resolved.effectiveType,
       kind: "dividend",
       quantity: 1,
       price: amount,
       date,
-      currency: assertCurrency(item["currency"] ?? ""),
+      currency: cur,
     });
   }
   return rows.sort((a, b) => a.date.localeCompare(b.date));

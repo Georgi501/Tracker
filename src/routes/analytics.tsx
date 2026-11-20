@@ -22,6 +22,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { analyticsCopy } from "@/lib/analytics-i18n";
 import {
+  computePortfolioBaseMetrics,
+  formatBaseCurrencyAmount,
+} from "@/lib/base-currency-accounting";
+import {
   analyticsReportCsv,
   analyticsReportHtml,
   type AnalyticsReport,
@@ -239,6 +243,23 @@ function Analytics() {
     enabled: !!p.user,
     staleTime: 60000,
   });
+  const baseMetrics = useMemo(
+    () =>
+      computePortfolioBaseMetrics(p.holdings, p.transactions, p.currency, {
+        liveEurPerUsd: p.eurPerUsd,
+        eurUsdPrices: p.eurUsdPrices.length ? p.eurUsdPrices : historyQuery.data?.eurUsdPrices,
+        splits: p.corporateActions,
+      }),
+    [
+      p.holdings,
+      p.transactions,
+      p.currency,
+      p.eurPerUsd,
+      p.eurUsdPrices,
+      historyQuery.data?.eurUsdPrices,
+      p.corporateActions,
+    ],
+  );
   const history = historyQuery.data?.points ?? EMPTY_HISTORY;
   const pendingSplits = historyQuery.data?.pendingSplits ?? [];
   const confirmSplit = async (split: (typeof pendingSplits)[number]) => {
@@ -384,10 +405,14 @@ function Analytics() {
   const contrib = useMemo(
     () =>
       p.holdings
-        .filter((h) => Number.isFinite(h.pnl))
-        .map((h) => ({ name: h.asset.symbol, v: h.pnl, pct: h.pnlPct }))
+        .flatMap((h) => {
+          const m = baseMetrics.byAssetId.get(h.asset.id);
+          return m && Number.isFinite(m.pnl)
+            ? [{ name: h.asset.symbol, v: m.pnl, pct: m.pnlPct }]
+            : [];
+        })
         .sort((a, b) => b.v - a.v),
-    [p.holdings],
+    [p.holdings, baseMetrics],
   );
   const { sectorExposure, regionExposure, geoSummary, focusSummary, exposures } = useMemo(() => {
     const sector = calculatePortfolioExposures(p.holdings, "sector", exposureMode, p.label);
@@ -463,7 +488,7 @@ function Analytics() {
       rows: [
         [c.reportPeriod, range ? rangeLabel(range) : c.unavailable],
         [c.currency, p.currency],
-        [p.t("netWorth"), p.money(total)],
+        [p.t("netWorth"), formatBaseCurrencyAmount(baseMetrics.totalValue, p.currency, p.lang)],
         [p.t("selectedPeriod"), currentReturn === null ? "—" : pct(currentReturn)],
         [c.selectedBenchmark, benchmark === "none" ? c.benchmarkNone : benchmark],
         [c.volatility, risk ? pct(risk.volatility) : c.unavailable],
@@ -505,16 +530,19 @@ function Analytics() {
     {
       title: c.holdings,
       columns: [c.asset, c.quantity, c.marketValue, c.weight, c.unrealizedPnl, c.return],
-      rows: p.holdings.map((holding) => [
-        `${holding.asset.symbol} — ${holding.asset.name}`,
-        Number.isFinite(holding.quantity) ? holding.quantity : null,
-        p.money(holding.value),
-        portfolioValuationAvailable && total > 0
-          ? `${((holding.value / total) * 100).toFixed(2)}%`
-          : "—",
-        p.money(holding.pnl, { sign: true }),
-        pct(holding.pnlPct),
-      ]),
+      rows: p.holdings.map((holding) => {
+        const m = baseMetrics.byAssetId.get(holding.asset.id);
+        return [
+          `${holding.asset.symbol} — ${holding.asset.name}`,
+          Number.isFinite(holding.quantity) ? holding.quantity : null,
+          formatBaseCurrencyAmount(m?.value ?? Number.NaN, p.currency, p.lang),
+          baseMetrics.isComplete && baseMetrics.totalValue > 0 && m && Number.isFinite(m.value)
+            ? `${((m.value / baseMetrics.totalValue) * 100).toFixed(2)}%`
+            : "—",
+          formatBaseCurrencyAmount(m?.pnl ?? Number.NaN, p.currency, p.lang, { sign: true }),
+          pct(m?.pnlPct ?? Number.NaN),
+        ];
+      }),
     },
     {
       title: c.periodReturns,
@@ -539,7 +567,10 @@ function Analytics() {
     {
       title: c.pnlAttribution,
       columns: [c.asset, c.contribution],
-      rows: contrib.map((item) => [item.name, p.money(item.v, { sign: true })]),
+      rows: contrib.map((item) => [
+        item.name,
+        formatBaseCurrencyAmount(item.v, p.currency, p.lang, { sign: true }),
+      ]),
     },
     {
       title: c.dataQuality,
@@ -924,7 +955,7 @@ function Analytics() {
         <p className="mb-4 text-xs text-muted-foreground">{c.attributionNote}</p>
         <div
           role="img"
-          aria-label={`${c.attribution}: ${contrib.map((item) => `${item.name}, ${p.money(item.v, { sign: true })}`).join("; ")}.`}
+          aria-label={`${c.attribution}: ${contrib.map((item) => `${item.name}, ${formatBaseCurrencyAmount(item.v, p.currency, p.lang, { sign: true })}`).join("; ")}.`}
         >
           {(() => {
             const max = Math.max(...contrib.map((x) => Math.abs(x.v)), 1);
@@ -935,7 +966,7 @@ function Analytics() {
                   <span
                     className={`font-display text-2xl font-bold tabular-nums ${net >= 0 ? "text-success" : "text-destructive"}`}
                   >
-                    {p.money(net, { sign: true })}
+                    {formatBaseCurrencyAmount(net, p.currency, p.lang, { sign: true })}
                   </span>
                 </div>
                 <ul className="divide-y divide-border/60">
@@ -962,13 +993,12 @@ function Analytics() {
                         <span
                           className={`numeric-display text-right text-sm font-semibold tabular-nums ${up ? "text-success" : "text-destructive"}`}
                         >
-                          {p.money(x.v, { sign: true })}
+                          {formatBaseCurrencyAmount(x.v, p.currency, p.lang, { sign: true })}
                         </span>
                         <span
                           className={`hidden rounded-full px-2 py-0.5 text-center text-xs font-medium tabular-nums sm:block ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
                         >
-                          {up ? "+" : ""}
-                          {x.pct.toFixed(1)}%
+                          {Number.isFinite(x.pct) ? `${up ? "+" : ""}${x.pct.toFixed(1)}%` : "—"}
                         </span>
                       </li>
                     );

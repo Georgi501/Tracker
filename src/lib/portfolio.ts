@@ -1,3 +1,5 @@
+import type { QuoteRejectionReason } from "./instrument-identity";
+
 export type AssetType = "stock" | "etf" | "crypto" | "bond" | "cash" | "realEstate";
 export type TxKind = "buy" | "sell" | "dividend";
 export type Currency = "USD" | "EUR";
@@ -31,6 +33,8 @@ export interface Asset {
   region: string;
   country?: string;
   isin?: string;
+  quoteSymbol?: string;
+  quoteDiagnostic?: QuoteRejectionReason;
   price: number; // USD; NaN means unavailable
   change24h: number; // percent
   dividendPerShare: number; // annual USD

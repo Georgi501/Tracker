@@ -1,6 +1,9 @@
 import type { AssetType, TxKind, Transaction } from "./portfolio";
-import { CRYPTO_SYMBOLS } from "./crypto-assets";
-import { resolveFundExposureEntry } from "./geographic-exposure";
+import {
+  canonicalIdentityKey,
+  guessInstrumentAssetType,
+  resolveImportedInstrument,
+} from "./instrument-identity";
 import { isValidIsoDate } from "./history";
 
 export type BrokerFormat = "generic" | "trading212" | "ibkr" | "revolut";
@@ -15,6 +18,7 @@ export interface ImportedTx {
   sourceTransactionId?: string | undefined;
   sourceExecutedAt?: string | undefined; // Provider time, without inventing a timezone.
   symbol: string;
+  brokerSymbol?: string | undefined;
   isin?: string | undefined;
   name: string;
   assetType: AssetType;
@@ -338,18 +342,11 @@ const sourceIdentity = (id: string, prefix: string, time: string) => ({
   ...(id.trim() ? { sourceTransactionId: prefix + id.trim() } : {}),
   ...(executionTime(time) ? { sourceExecutedAt: executionTime(time) } : {}),
 });
-const CRYPTO = new Set([...CRYPTO_SYMBOLS, "MATIC"]);
 const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{9}\d$/;
 const cleanIsin = (raw: string | undefined): string | undefined => {
   const v = raw?.trim().toUpperCase() ?? "";
   return ISIN_RE.test(v) ? v : undefined;
 };
-const guessType = (sym: string, isin?: string): AssetType =>
-  CRYPTO.has(sym.toUpperCase())
-    ? "crypto"
-    : resolveFundExposureEntry({ symbol: sym, isin })
-      ? "etf"
-      : "stock";
 const parseSafely = (parse: () => ImportedTx[]) => {
   try {
     return parse();
@@ -382,10 +379,27 @@ function generic(text: string): ImportedTx[] {
     return parseSafely(() => {
       const kind = value(row, "type").toLowerCase() as TxKind;
       if (!["buy", "sell", "dividend"].includes(kind)) return [];
-      const symbol = value(row, "symbol").toUpperCase();
-      const isin = cleanIsin(value(row, "isin")) ?? cleanIsin(symbol);
-      const at = (value(row, "asset_type") || guessType(symbol, isin)) as AssetType;
+      const rawSymbol = value(row, "symbol").toUpperCase();
+      const rawIsin = cleanIsin(value(row, "isin")) ?? cleanIsin(rawSymbol);
+      const rawName = value(row, "name") || rawSymbol;
       const cur = currency(value(row, "currency"));
+      const explicitTypeRaw = value(row, "asset_type").trim();
+      const declaredType = explicitTypeRaw ? (explicitTypeRaw as AssetType) : undefined;
+      const resolved = resolveImportedInstrument({
+        symbol: rawSymbol,
+        isin: rawIsin,
+        name: rawName,
+        currency: cur,
+        declaredType,
+      });
+      const at = explicitTypeRaw
+        ? guessInstrumentAssetType({
+            symbol: resolved.quoteSymbol,
+            isin: rawIsin,
+            name: rawName,
+            declaredType,
+          })
+        : resolved.effectiveType;
       const feeCurrencyValue = headers
         .map((header, index) => ({ header, index }))
         .find(({ header }) =>
@@ -406,12 +420,14 @@ function generic(text: string): ImportedTx[] {
             : sum,
         0,
       );
+      const resolvedSymbol = resolved.quoteSymbol;
       return [
         {
-          symbol,
-          ...(isin ? { isin } : {}),
+          symbol: resolvedSymbol,
+          ...(resolvedSymbol !== rawSymbol ? { brokerSymbol: rawSymbol } : {}),
+          ...(rawIsin ? { isin: rawIsin } : {}),
           ...sourceIdentity(value(row, "source_id"), "", value(row, "date")),
-          name: value(row, "name") || symbol,
+          name: rawName,
           assetType: at,
           kind,
           quantity: kind === "dividend" ? 1 : num(value(row, "quantity")),
@@ -729,12 +745,21 @@ function analyzeTrading212FromRows(rows: string[][]): CsvAnalysisResult {
       continue;
     }
 
+    const rawName = (cell(nameIdx) || symbol).slice(0, 200);
     const isin = cleanIsin(cell(isinIdx));
-    transactions.push({
+    const resolved = resolveImportedInstrument({
       symbol,
+      isin,
+      name: rawName,
+      currency: tradeCurrency,
+    });
+    const resolvedSymbol = resolved.quoteSymbol;
+    transactions.push({
+      symbol: resolvedSymbol,
+      ...(resolvedSymbol !== symbol ? { brokerSymbol: symbol } : {}),
       ...(isin ? { isin } : {}),
-      name: (cell(nameIdx) || symbol).slice(0, 200),
-      assetType: guessType(symbol, isin),
+      name: rawName,
+      assetType: resolved.effectiveType,
       kind: classification.kind,
       quantity,
       price: toUsd(price, tradeCurrency),
@@ -773,14 +798,22 @@ function revolut(text: string): ImportedTx[] {
   return table(text).flatMap((g) => {
     return parseSafely(() => {
       const t = g("type").toUpperCase();
-      const symbol = g("ticker").toUpperCase();
-      if (!symbol) return [];
+      const rawSymbol = g("ticker").toUpperCase();
+      if (!rawSymbol) return [];
       const cur = g("currency") || g("price per share").match(/[A-Z]{3}/)?.[0];
+      const tradeCurrency = currency(cur || "USD");
+      const resolved = resolveImportedInstrument({
+        symbol: rawSymbol,
+        name: rawSymbol,
+        currency: tradeCurrency,
+      });
+      const resolvedSymbol = resolved.quoteSymbol;
       const base = {
-        symbol,
-        name: symbol,
-        assetType: guessType(symbol),
-        currency: currency(cur || "USD"),
+        symbol: resolvedSymbol,
+        ...(resolvedSymbol !== rawSymbol ? { brokerSymbol: rawSymbol } : {}),
+        name: rawSymbol,
+        assetType: resolved.effectiveType,
+        currency: tradeCurrency,
         date: day(g("date")),
         ...sourceIdentity(g("transaction id") || g("id"), "revolut:transaction:", g("date")),
       };
@@ -830,14 +863,26 @@ function ibkr(text: string): ImportedTx[] {
         const qty = num(g("quantity"));
         if (!qty) continue;
         const cat = g("asset category").toLowerCase();
-        const symbol = g("symbol").toUpperCase();
+        const rawSymbol = g("symbol").toUpperCase();
+        const tradeCurrency = currency(g("currency"));
+        const isin = cleanIsin(g("isin"));
+        const resolved = resolveImportedInstrument({
+          symbol: rawSymbol,
+          isin,
+          name: g("description") || rawSymbol,
+          currency: tradeCurrency,
+          declaredType: cat.includes("crypto") ? "crypto" : undefined,
+        });
+        const resolvedSymbol = resolved.quoteSymbol;
         out.push({
-          symbol,
-          name: symbol,
-          assetType: cat.includes("crypto") ? "crypto" : guessType(symbol),
+          symbol: resolvedSymbol,
+          ...(resolvedSymbol !== rawSymbol ? { brokerSymbol: rawSymbol } : {}),
+          ...(isin ? { isin } : {}),
+          name: g("description") || rawSymbol,
+          assetType: cat.includes("crypto") ? "crypto" : resolved.effectiveType,
           kind: qty > 0 ? "buy" : "sell",
           quantity: Math.abs(qty),
-          currency: currency(g("currency")),
+          currency: tradeCurrency,
           price: toUsd(num(g("t. price"))),
           fee: Math.abs(num(g("comm/f"))),
           date: day(g("date/time")),
@@ -850,18 +895,27 @@ function ibkr(text: string): ImportedTx[] {
       try {
         const g = (k: string) => r[divHead.indexOf(k)] ?? "";
         if (g("currency").toLowerCase().startsWith("total")) continue;
-        const symbol = (g("description").match(/^([A-Z.]+)\s*\(/)?.[1] ?? "").toUpperCase();
+        const rawSymbol = (g("description").match(/^([A-Z.]+)\s*\(/)?.[1] ?? "").toUpperCase();
         const isin = cleanIsin(g("description").match(/\(([A-Z]{2}[A-Z0-9]{9}\d)\)/)?.[1]);
         const amt = num(g("amount"));
-        if (!symbol || amt <= 0) continue;
+        if (!rawSymbol || amt <= 0) continue;
+        const divCurrency = currency(g("currency"));
+        const resolved = resolveImportedInstrument({
+          symbol: rawSymbol,
+          isin,
+          name: rawSymbol,
+          currency: divCurrency,
+        });
+        const resolvedSymbol = resolved.quoteSymbol;
         out.push({
-          symbol,
+          symbol: resolvedSymbol,
+          ...(resolvedSymbol !== rawSymbol ? { brokerSymbol: rawSymbol } : {}),
           ...(isin ? { isin } : {}),
-          name: symbol,
-          assetType: guessType(symbol, isin),
+          name: rawSymbol,
+          assetType: resolved.effectiveType,
           kind: "dividend",
           quantity: 1,
-          currency: currency(g("currency")),
+          currency: divCurrency,
           price: toUsd(amt),
           fee: 0,
           date: day(g("date")),
@@ -1072,22 +1126,42 @@ export async function prepareCsvFile(
 /** All import entry points compare only the selected brokerage account. */
 export function existingImportTransactions(
   transactions: Transaction[],
-  assets: { id: string; symbol: string }[],
+  assets: {
+    id: string;
+    symbol: string;
+    name?: string;
+    type?: AssetType;
+    isin?: string;
+    quoteCurrency?: string;
+  }[],
   brokerId: string,
 ) {
-  const symbols = new Map(assets.map((asset) => [asset.id, asset.symbol]));
+  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
   return transactions
     .filter((transaction) => transaction.brokerId === brokerId)
-    .map((transaction) => ({
-      ...transaction,
-      symbol: symbols.get(transaction.assetId) ?? "",
-    }));
+    .map((transaction) => {
+      const asset = assetById.get(transaction.assetId);
+      return {
+        ...transaction,
+        symbol: asset?.symbol ?? "",
+        ...(asset?.name ? { name: asset.name } : {}),
+        ...(asset?.type ? { assetType: asset.type } : {}),
+        ...(asset?.isin ? { isin: asset.isin } : {}),
+        ...(asset?.quoteCurrency ? { currency: asset.quoteCurrency } : {}),
+      };
+    });
 }
 
 type ComparisonTransaction = Pick<
   ImportedTx,
   "symbol" | "date" | "quantity" | "price" | "fee" | "sourceTransactionId" | "sourceExecutedAt"
-> & { kind: string };
+> & {
+  kind: string;
+  name?: string | undefined;
+  isin?: string | undefined;
+  assetType?: AssetType | undefined;
+  currency?: string | undefined;
+};
 
 /** Provider IDs are authoritative; legacy matches remain reviewable possible duplicates. */
 export function splitDuplicates(
@@ -1097,8 +1171,18 @@ export function splitDuplicates(
 ) {
   if (rows.length !== normalizedRows.length)
     throw new Error("Duplicate comparison rows must match the imported rows.");
-  const key = (r: ComparisonTransaction) =>
-    `${r.symbol.toUpperCase()}|${r.kind}|${r.date.slice(0, 10)}|${r.kind === "dividend" ? 1 : r.quantity.toFixed(8)}|${r.price.toFixed(8)}|${(r.fee ?? 0).toFixed(8)}`;
+  const key = (r: ComparisonTransaction) => {
+    const id = r.symbol.trim()
+      ? canonicalIdentityKey({
+          symbol: r.symbol,
+          name: r.name,
+          isin: r.isin,
+          type: r.assetType,
+          currency: r.currency,
+        })
+      : "";
+    return `${id}|${r.kind}|${r.date.slice(0, 10)}|${r.kind === "dividend" ? 1 : r.quantity.toFixed(8)}|${r.price.toFixed(8)}|${(r.fee ?? 0).toFixed(8)}`;
+  };
   const seen = new Map<string, ComparisonTransaction[]>();
   const sourceIds = new Set<string>();
   const remember = (row: ComparisonTransaction) => {

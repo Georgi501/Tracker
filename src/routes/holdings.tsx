@@ -10,6 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePositionDeletion } from "@/hooks/use-position-deletion";
 import { PositionDeletionNotices } from "@/components/PositionDeletionNotices";
 import { languageLocale, type Lang } from "@/lib/i18n";
+import {
+  computePortfolioBaseMetrics,
+  formatBaseCurrencyAmount,
+  type BaseCurrencyHoldingMetrics,
+} from "@/lib/base-currency-accounting";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "@/lib/market-search";
 import { marketQuote, searchMarket } from "@/lib/market.functions";
 import { isQuoteStale, type Asset, type AssetType } from "@/lib/portfolio";
@@ -70,7 +75,7 @@ const TYPES: (AssetType | "all")[] = [
 
 type SortKey = "name" | "qty" | "price" | "change" | "avgCost" | "value" | "pnl" | "pnlPct";
 type HoldingRow = ReturnType<typeof usePortfolio>["holdings"][number];
-function sortValue(h: HoldingRow, k: SortKey): number {
+function sortValue(h: HoldingRow, k: SortKey, metrics?: BaseCurrencyHoldingMetrics): number {
   switch (k) {
     case "qty":
       return h.quantity;
@@ -79,13 +84,13 @@ function sortValue(h: HoldingRow, k: SortKey): number {
     case "change":
       return h.asset.change24h;
     case "avgCost":
-      return h.avgCost;
+      return metrics ? metrics.avgCost : h.avgCost;
     case "value":
-      return h.value;
+      return metrics ? metrics.value : h.value;
     case "pnl":
-      return h.pnl;
+      return metrics ? metrics.pnl : h.pnl;
     case "pnlPct":
-      return h.pnlPct;
+      return metrics ? metrics.pnlPct : h.pnlPct;
     default:
       return 0;
   }
@@ -135,7 +140,8 @@ const COPY: Record<
     | "assetRemoved"
     | "assetRestored"
     | "holdingsSummary"
-    | "dayChange",
+    | "dayChange"
+    | "partialValuation",
     string
   >
 > = {
@@ -183,6 +189,7 @@ const COPY: Record<
     assetRestored: "{s} restored",
     holdingsSummary: "Holdings Summary",
     dayChange: "Day Change",
+    partialValuation: "Partial valuation · missing quote:",
   },
   bg: {
     placeholder: "Търси позиции или тикер (META, VWCE.DE, BTC)…",
@@ -230,6 +237,7 @@ const COPY: Record<
     assetRestored: "{s} е възстановен",
     holdingsSummary: "Обща стойност",
     dayChange: "Дневна промяна",
+    partialValuation: "Частична оценка · липсва котировка:",
   },
   de: {
     placeholder: "Positionen oder Ticker suchen (META, VWCE.DE, BTC)…",
@@ -278,6 +286,7 @@ const COPY: Record<
     assetRestored: "{s} wiederhergestellt",
     holdingsSummary: "Gesamtwert",
     dayChange: "Tagesänderung",
+    partialValuation: "Teilbewertung · fehlender Kurs:",
   },
   es: {
     placeholder: "Busca posiciones o un ticker (META, VWCE.DE, BTC)…",
@@ -324,6 +333,7 @@ const COPY: Record<
     assetRestored: "{s} restaurado",
     holdingsSummary: "Resumen de posiciones",
     dayChange: "Cambio diario",
+    partialValuation: "Valoración parcial · falta cotización:",
   },
   it: {
     placeholder: "Cerca posizioni o un ticker (META, VWCE.DE, BTC)…",
@@ -372,6 +382,7 @@ const COPY: Record<
     assetRestored: "{s} ripristinato",
     holdingsSummary: "Riepilogo posizioni",
     dayChange: "Variazione giornaliera",
+    partialValuation: "Valutazione parziale · quotazione mancante:",
   },
 };
 
@@ -400,18 +411,35 @@ function Holdings() {
   });
 
   const sparkFn = useServerFn(getSparklines);
+  const baseMetrics = useMemo(
+    () =>
+      computePortfolioBaseMetrics(p.holdings, p.transactions, p.currency, {
+        liveEurPerUsd: p.eurPerUsd,
+        eurUsdPrices: p.eurUsdPrices,
+        splits: p.corporateActions,
+      }),
+    [p.holdings, p.transactions, p.currency, p.eurPerUsd, p.eurUsdPrices, p.corporateActions],
+  );
   const sparkItems = useMemo(
     () =>
       p.holdings
         .flatMap((h) =>
           h.asset.type === "stock" || h.asset.type === "etf" || h.asset.type === "crypto"
-            ? [{ symbol: h.asset.symbol, type: h.asset.type }]
+            ? [
+                {
+                  symbol: h.asset.symbol,
+                  type: h.asset.type,
+                  name: h.asset.name,
+                  ...(h.asset.isin ? { isin: h.asset.isin } : {}),
+                  ...(h.asset.quoteSymbol ? { quoteSymbol: h.asset.quoteSymbol } : {}),
+                },
+              ]
             : [],
         )
         .slice(0, 40),
     [p.holdings],
   );
-  const sparkKey = sparkItems.map((s) => s.symbol).join(",");
+  const sparkKey = sparkItems.map((s) => `${s.symbol}:${s.quoteSymbol ?? ""}`).join(",");
   const sparks = useQuery({
     queryKey: ["holdings-sparklines", sparkKey],
     queryFn: () => sparkFn({ data: { items: sparkItems } }),
@@ -433,13 +461,13 @@ function Holdings() {
         )
         .sort((a, b) => {
           if (sort.key === "name") return a.asset.name.localeCompare(b.asset.name) * sort.dir;
-          const av = sortValue(a, sort.key),
-            bv = sortValue(b, sort.key);
+          const av = sortValue(a, sort.key, baseMetrics.byAssetId.get(a.asset.id)),
+            bv = sortValue(b, sort.key, baseMetrics.byAssetId.get(b.asset.id));
           if (!Number.isFinite(av)) return Number.isFinite(bv) ? 1 : 0;
           if (!Number.isFinite(bv)) return -1;
           return (av - bv) * sort.dir;
         }),
-    [p.holdings, q, sort, type],
+    [p.holdings, q, sort, type, baseMetrics],
   );
   const Th = ({
     k,
@@ -731,11 +759,11 @@ function Holdings() {
       />
       {p.holdings.length > 0 &&
         (() => {
-          const total = p.holdings.reduce((s, h) => s + h.value, 0);
-          const day = p.holdings.reduce((s, h) => s + h.dayChange, 0);
+          const total = baseMetrics.totalValue;
+          const day = baseMetrics.totalDayChange;
           const prev = total - day;
-          const totalCost = p.holdings.reduce((s, h) => s + h.costBasis, 0);
-          const totalPnl = p.holdings.reduce((s, h) => s + h.pnl, 0);
+          const totalCost = baseMetrics.totalCost;
+          const totalPnl = baseMetrics.totalPnl;
           return (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
               <Card className="flex min-w-0 flex-col justify-between gap-4 p-4 sm:p-5">
@@ -744,7 +772,9 @@ function Holdings() {
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {c.holdingsSummary}
                     </p>
-                    <p className="numeric-display mt-1 text-3xl font-bold">{p.money(total)}</p>
+                    <p className="numeric-display mt-1 text-3xl font-bold">
+                      {formatBaseCurrencyAmount(total, p.currency, p.lang)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -752,22 +782,30 @@ function Holdings() {
                     </p>
                     <p className="numeric-display mt-1 text-lg font-semibold">
                       <Delta value={day}>
-                        {p.money(day, { sign: true })} ({prev > 0 ? pct((day / prev) * 100) : "—"})
+                        {formatBaseCurrencyAmount(day, p.currency, p.lang, { sign: true })} (
+                        {Number.isFinite(day) && prev > 0 ? pct((day / prev) * 100) : "—"})
                       </Delta>
                     </p>
                   </div>
                 </div>
+                {!baseMetrics.isComplete && baseMetrics.missingQuoteSymbols.length > 0 && (
+                  <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
+                    {c.partialValuation} {baseMetrics.missingQuoteSymbols.join(", ")}
+                  </p>
+                )}
                 <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3.5 text-xs">
                   <div>
                     <p className="text-muted-foreground">{p.t("invested")}</p>
                     <p className="numeric-display mt-0.5 text-sm font-semibold">
-                      {p.money(totalCost)}
+                      {formatBaseCurrencyAmount(totalCost, p.currency, p.lang)}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">{p.t("totalPnl")}</p>
                     <p className="numeric-display mt-0.5 text-sm font-semibold">
-                      <Delta value={totalPnl}>{p.money(totalPnl, { sign: true })}</Delta>
+                      <Delta value={totalPnl}>
+                        {formatBaseCurrencyAmount(totalPnl, p.currency, p.lang, { sign: true })}
+                      </Delta>
                     </p>
                   </div>
                   <div>
@@ -944,82 +982,94 @@ function Holdings() {
               </button>
             </div>
             <ul className="holdings-mobile-list space-y-2.5">
-              {rows.map((h, i) => (
-                <li
-                  key={h.asset.id}
-                  style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
-                  className="rise-in rounded-2xl border border-border bg-background/60 p-3"
-                >
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3">
-                    <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        to="/asset/$symbol"
-                        params={{ symbol: h.asset.symbol }}
-                        className="block break-words font-semibold hover:text-primary"
-                      >
-                        {h.asset.name}
-                      </Link>
-                      <StaleBadge
-                        at={h.asset.quoteAt}
-                        price={h.asset.price}
-                        missingLabel={c.unavailable}
-                        staleLabel={p.t("holdingValueStale")}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {num(h.quantity)} · {h.asset.symbol} ·{" "}
-                        <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
-                      </p>
-                      <div className="[&_p]:text-xs [&_svg]:size-3">
-                        <QuoteFreshness
+              {rows.map((h, i) => {
+                const m = baseMetrics.byAssetId.get(h.asset.id);
+                return (
+                  <li
+                    key={h.asset.id}
+                    style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
+                    className="rise-in rounded-2xl border border-border bg-background/60 p-3"
+                  >
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3">
+                      <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to="/asset/$symbol"
+                          params={{ symbol: h.asset.symbol }}
+                          className="block break-words font-semibold hover:text-primary"
+                        >
+                          {h.asset.name}
+                        </Link>
+                        <StaleBadge
                           at={h.asset.quoteAt}
-                          lang={p.lang}
-                          crypto={h.asset.type === "crypto"}
-                          compact
+                          price={h.asset.price}
+                          missingLabel={c.unavailable}
+                          staleLabel={p.t("holdingValueStale")}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          {num(h.quantity)} · {h.asset.symbol} ·{" "}
+                          <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
+                        </p>
+                        <div className="[&_p]:text-xs [&_svg]:size-3">
+                          <QuoteFreshness
+                            at={h.asset.quoteAt}
+                            lang={p.lang}
+                            crypto={h.asset.type === "crypto"}
+                            compact
+                          />
+                        </div>
+                      </div>
+                      <div className="col-span-full row-start-2 min-w-0 border-t border-border/60 pt-3 text-right">
+                        <p className="mb-1 text-xs text-muted-foreground">{p.t("value")}</p>
+                        <div className="[&_.numeric-display]:break-words [&_.numeric-display]:text-xl">
+                          <HoldingValue
+                            asset={h.asset}
+                            quantity={h.quantity}
+                            valueUsd={h.value}
+                            currency={p.currency}
+                            liveFx={p.liveFx}
+                            displayValue={formatBaseCurrencyAmount(
+                              m?.value ?? Number.NaN,
+                              p.currency,
+                              p.lang,
+                            )}
+                            lang={p.lang}
+                            t={p.t}
+                          />
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">{p.t("pnl")}</p>
+                        <p className="numeric-display mt-1 break-words text-sm font-semibold">
+                          <Delta value={m?.pnl ?? Number.NaN}>
+                            {formatBaseCurrencyAmount(m?.pnl ?? Number.NaN, p.currency, p.lang, {
+                              sign: true,
+                            })}{" "}
+                            · {pct(m?.pnlPct ?? Number.NaN)}
+                          </Delta>
+                        </p>
+                      </div>
+                      <div className="col-span-full flex flex-wrap items-center justify-between gap-2">
+                        {lotsToggle(h.asset.id, h.asset.symbol, true)}
+                        <button
+                          onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
+                          disabled={deletion.operations.some(
+                            (entry) =>
+                              entry.assetId === h.asset.id &&
+                              (entry.phase === "deleting" || entry.phase === "restoring"),
+                          )}
+                          aria-label={`${c.remove} ${h.asset.symbol}`}
+                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          <Trash2 size={16} />
+                          <span>{c.remove}</span>
+                        </button>
                       </div>
                     </div>
-                    <div className="col-span-full row-start-2 min-w-0 border-t border-border/60 pt-3 text-right">
-                      <p className="mb-1 text-xs text-muted-foreground">{p.t("value")}</p>
-                      <div className="[&_.numeric-display]:break-words [&_.numeric-display]:text-xl">
-                        <HoldingValue
-                          asset={h.asset}
-                          quantity={h.quantity}
-                          valueUsd={h.value}
-                          currency={p.currency}
-                          liveFx={p.liveFx}
-                          displayValue={p.money(h.value)}
-                          lang={p.lang}
-                          t={p.t}
-                        />
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground">{p.t("pnl")}</p>
-                      <p className="numeric-display mt-1 break-words text-sm font-semibold">
-                        <Delta value={h.pnl}>
-                          {p.moneyFor(h.pnl, h.asset, { sign: true })} · {pct(h.pnlPct)}
-                        </Delta>
-                      </p>
-                    </div>
-                    <div className="col-span-full flex flex-wrap items-center justify-between gap-2">
-                      {lotsToggle(h.asset.id, h.asset.symbol, true)}
-                      <button
-                        onClick={() => void removeAsset(h.asset.id, h.asset.symbol)}
-                        disabled={deletion.operations.some(
-                          (entry) =>
-                            entry.assetId === h.asset.id &&
-                            (entry.phase === "deleting" || entry.phase === "restoring"),
-                        )}
-                        aria-label={`${c.remove} ${h.asset.symbol}`}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                      >
-                        <Trash2 size={16} />
-                        <span>{c.remove}</span>
-                      </button>
-                    </div>
-                  </div>
-                  {expanded.has(h.asset.id) && <div className="mt-3">{lotsPanel(h.asset.id)}</div>}
-                </li>
-              ))}
+                    {expanded.has(h.asset.id) && (
+                      <div className="mt-3">{lotsPanel(h.asset.id)}</div>
+                    )}
+                  </li>
+                );
+              })}
               {!rows.length && (
                 <EmptyState
                   icon="search"
@@ -1057,110 +1107,128 @@ function Holdings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((h) => (
-                    <Fragment key={h.asset.id}>
-                      <tr className="border-b border-border last:border-0 hover:bg-secondary/50">
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
-                            <div>
-                              <Link
-                                to="/asset/$symbol"
-                                params={{ symbol: h.asset.symbol }}
-                                className="font-semibold hover:text-primary"
-                              >
-                                {h.asset.name}
-                              </Link>
-                              <StaleBadge
-                                at={h.asset.quoteAt}
-                                price={h.asset.price}
-                                missingLabel={c.unavailable}
-                                staleLabel={p.t("holdingValueStale")}
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                {h.asset.symbol} · {p.t(h.asset.type)}
-                              </p>
-                              <QuoteFreshness
-                                at={h.asset.quoteAt}
-                                lang={p.lang}
-                                crypto={h.asset.type === "crypto"}
-                                compact
-                              />
+                  {rows.map((h) => {
+                    const m = baseMetrics.byAssetId.get(h.asset.id);
+                    return (
+                      <Fragment key={h.asset.id}>
+                        <tr className="border-b border-border last:border-0 hover:bg-secondary/50">
+                          <td className="py-3">
+                            <div className="flex items-center gap-3">
+                              <CompanyLogo symbol={h.asset.symbol} type={h.asset.type} />
+                              <div>
+                                <Link
+                                  to="/asset/$symbol"
+                                  params={{ symbol: h.asset.symbol }}
+                                  className="font-semibold hover:text-primary"
+                                >
+                                  {h.asset.name}
+                                </Link>
+                                <StaleBadge
+                                  at={h.asset.quoteAt}
+                                  price={h.asset.price}
+                                  missingLabel={c.unavailable}
+                                  staleLabel={p.t("holdingValueStale")}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  {h.asset.symbol} · {p.t(h.asset.type)}
+                                </p>
+                                <QuoteFreshness
+                                  at={h.asset.quoteAt}
+                                  lang={p.lang}
+                                  crypto={h.asset.type === "crypto"}
+                                  compact
+                                />
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="numeric-display px-2 text-right tabular-nums">
-                          {num(h.quantity)}
-                        </td>
-                        <td className="numeric-display px-2 text-right">{nativePrice(h.asset)}</td>
-                        <td className="hidden px-2 lg:table-cell">
-                          <div className="flex justify-end">
-                            {sparks.data?.[h.asset.symbol] ? (
-                              <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
-                            ) : sparks.isLoading &&
-                              h.asset.type !== "cash" &&
-                              h.asset.type !== "bond" &&
-                              h.asset.type !== "realEstate" ? (
-                              <Skeleton className="h-5 w-20" />
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="numeric-display px-2 text-right tabular-nums">
-                          <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
-                        </td>
-                        <td className="numeric-display px-2 text-right">
-                          {p.moneyFor(h.avgCost, h.asset)}
-                        </td>
-                        <td className="px-2 text-right">
-                          <HoldingValue
-                            asset={h.asset}
-                            quantity={h.quantity}
-                            valueUsd={h.value}
-                            currency={p.currency}
-                            liveFx={p.liveFx}
-                            displayValue={p.money(h.value)}
-                            lang={p.lang}
-                            t={p.t}
-                          />
-                        </td>
-                        <td className="px-2 text-right">
-                          <Delta value={h.pnl}>
-                            <span className="numeric-display font-semibold">
-                              {p.moneyFor(h.pnl, h.asset, { sign: true })}
-                            </span>
-                          </Delta>
-                        </td>
-                        <td className="numeric-display px-2 text-right tabular-nums">
-                          <Delta value={h.pnlPct}>{pct(h.pnlPct)}</Delta>
-                        </td>
-                        <td className="pl-2 text-right">
-                          <div className="flex justify-end">
-                            {lotsToggle(h.asset.id, h.asset.symbol)}
-                            <button
-                              onClick={() => removeAsset(h.asset.id, h.asset.symbol)}
-                              disabled={deletion.operations.some(
-                                (entry) =>
-                                  entry.assetId === h.asset.id &&
-                                  (entry.phase === "deleting" || entry.phase === "restoring"),
+                          </td>
+                          <td className="numeric-display px-2 text-right tabular-nums">
+                            {num(h.quantity)}
+                          </td>
+                          <td className="numeric-display px-2 text-right">
+                            {nativePrice(h.asset)}
+                          </td>
+                          <td className="hidden px-2 lg:table-cell">
+                            <div className="flex justify-end">
+                              {sparks.data?.[h.asset.symbol] ? (
+                                <Sparkline data={sparks.data[h.asset.symbol] ?? []} />
+                              ) : sparks.isLoading &&
+                                h.asset.type !== "cash" &&
+                                h.asset.type !== "bond" &&
+                                h.asset.type !== "realEstate" ? (
+                                <Skeleton className="h-5 w-20" />
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="numeric-display px-2 text-right tabular-nums">
+                            <Delta value={h.asset.change24h}>{pct(h.asset.change24h)}</Delta>
+                          </td>
+                          <td className="numeric-display px-2 text-right">
+                            {formatBaseCurrencyAmount(m?.avgCost ?? Number.NaN, p.currency, p.lang)}
+                          </td>
+                          <td className="px-2 text-right">
+                            <HoldingValue
+                              asset={h.asset}
+                              quantity={h.quantity}
+                              valueUsd={h.value}
+                              currency={p.currency}
+                              liveFx={p.liveFx}
+                              displayValue={formatBaseCurrencyAmount(
+                                m?.value ?? Number.NaN,
+                                p.currency,
+                                p.lang,
                               )}
-                              aria-label={`${c.remove} ${h.asset.symbol}`}
-                              title={c.remove}
-                              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      {expanded.has(h.asset.id) && (
-                        <tr className="border-b border-border">
-                          <td colSpan={10} className="pb-3">
-                            {lotsPanel(h.asset.id)}
+                              lang={p.lang}
+                              t={p.t}
+                            />
+                          </td>
+                          <td className="px-2 text-right">
+                            <Delta value={m?.pnl ?? Number.NaN}>
+                              <span className="numeric-display font-semibold">
+                                {formatBaseCurrencyAmount(
+                                  m?.pnl ?? Number.NaN,
+                                  p.currency,
+                                  p.lang,
+                                  {
+                                    sign: true,
+                                  },
+                                )}
+                              </span>
+                            </Delta>
+                          </td>
+                          <td className="numeric-display px-2 text-right tabular-nums">
+                            <Delta value={m?.pnlPct ?? Number.NaN}>
+                              {pct(m?.pnlPct ?? Number.NaN)}
+                            </Delta>
+                          </td>
+                          <td className="pl-2 text-right">
+                            <div className="flex justify-end">
+                              {lotsToggle(h.asset.id, h.asset.symbol)}
+                              <button
+                                onClick={() => removeAsset(h.asset.id, h.asset.symbol)}
+                                disabled={deletion.operations.some(
+                                  (entry) =>
+                                    entry.assetId === h.asset.id &&
+                                    (entry.phase === "deleting" || entry.phase === "restoring"),
+                                )}
+                                aria-label={`${c.remove} ${h.asset.symbol}`}
+                                title={c.remove}
+                                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
-                      )}
-                    </Fragment>
-                  ))}
+                        {expanded.has(h.asset.id) && (
+                          <tr className="border-b border-border">
+                            <td colSpan={10} className="pb-3">
+                              {lotsPanel(h.asset.id)}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
               {!rows.length && (

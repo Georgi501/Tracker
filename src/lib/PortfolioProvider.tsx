@@ -6,13 +6,14 @@ import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { trackAnalyticsEvent } from "./analytics";
-import { isValidIsoDate } from "./history";
+import { earliestTransactionDate, isValidIsoDate, type DailyPrice } from "./history";
 import { convertImport } from "./history.functions";
 import { dictionaries, isLang, languageLocale, translateLabel, type Lang } from "./i18n";
 import { currentUsdPrice, formatUsdAmount, type LiveFx } from "./live-fx";
 import { localDateString } from "./local-date";
 import { getExchangeRate } from "./market.functions";
 import { initialAssetRegion } from "./geographic-exposure";
+import { canonicalIdentityKey, resolveAssetIdentity } from "./instrument-identity";
 import {
   FX,
   brokerHoldings,
@@ -161,6 +162,80 @@ type AssetRow = {
   bond_face_value: number | null;
 };
 
+type AssetLookupMaps = {
+  bySymbol: Map<string, string>;
+  byCanonical: Map<string, string>;
+  keyById: Map<string, string>;
+};
+
+function buildAssetLookup(assets: readonly Asset[]): AssetLookupMaps {
+  const bySymbol = new Map<string, string>();
+  const byCanonical = new Map<string, string>();
+  const keyById = new Map<string, string>();
+  for (const asset of assets) {
+    const upper = asset.symbol.toUpperCase();
+    if (!bySymbol.has(upper)) bySymbol.set(upper, asset.id);
+    const key = canonicalIdentityKey({
+      symbol: asset.symbol,
+      name: asset.name,
+      type: asset.type,
+      isin: asset.isin,
+      currency: asset.quoteCurrency,
+    });
+    keyById.set(asset.id, key);
+    if (!byCanonical.has(key)) byCanonical.set(key, asset.id);
+  }
+  return { bySymbol, byCanonical, keyById };
+}
+
+function registerAssetLookup(
+  maps: AssetLookupMaps,
+  id: string,
+  incoming: {
+    symbol: string;
+    name?: string | null | undefined;
+    type?: AssetType | undefined;
+    isin?: string | null | undefined;
+    currency?: string | null | undefined;
+  },
+) {
+  const upper = incoming.symbol.trim().toUpperCase();
+  const key = canonicalIdentityKey(incoming);
+  if (!maps.bySymbol.has(upper)) maps.bySymbol.set(upper, id);
+  if (!maps.byCanonical.has(key)) maps.byCanonical.set(key, id);
+  maps.keyById.set(id, key);
+}
+
+function findMatchingAssetId(
+  maps: AssetLookupMaps,
+  incoming: {
+    symbol: string;
+    name?: string | null | undefined;
+    type?: AssetType | undefined;
+    isin?: string | null | undefined;
+    currency?: string | null | undefined;
+  },
+): string | undefined {
+  const incomingKey = canonicalIdentityKey(incoming);
+  const canonicalMatch = maps.byCanonical.get(incomingKey);
+  if (canonicalMatch) return canonicalMatch;
+
+  const upper = incoming.symbol.trim().toUpperCase();
+  const symbolMatch = maps.bySymbol.get(upper);
+  if (!symbolMatch) return undefined;
+
+  const existingKey = maps.keyById.get(symbolMatch);
+  if (
+    existingKey &&
+    existingKey.startsWith("isin:") &&
+    incomingKey.startsWith("isin:") &&
+    existingKey !== incomingKey
+  ) {
+    return undefined;
+  }
+  return symbolMatch;
+}
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const rawSearchLang = useRouterState({
@@ -203,6 +278,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const [liveFx, setLiveFx] = useState<LiveFx | null>(null);
+  const [eurUsdPrices, setEurUsdPrices] = useState<DailyPrice[]>([]);
   const eurPerUsd = liveFx?.eurPerUsd ?? null;
   const quoteFn = useServerFn(getQuotes);
   const fxFn = useServerFn(getExchangeRate);
@@ -298,6 +374,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setDataError(false);
           setPricesLive(false);
+          setEurUsdPrices([]);
           setDisplayName("");
           setPortfolioReady(!nextUser);
           setDataUpdatedAt(null);
@@ -317,6 +394,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setDataError(false);
           setPricesLive(false);
+          setEurUsdPrices([]);
           setPortfolioReady(true);
           setDataUpdatedAt(null);
         }
@@ -348,6 +426,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setDataError(false);
           setPricesLive(false);
+          setEurUsdPrices([]);
           setDisplayName("");
           setPortfolioReady(!nextUser);
           setDataUpdatedAt(null);
@@ -384,6 +463,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       setDataError(false);
       setPricesLive(false);
+      setEurUsdPrices([]);
       setAccessReady(true);
       setPortfolioReady(true);
       setDataUpdatedAt(null);
@@ -505,11 +585,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     const base: Asset[] = rows.map((r) => {
       const current = currentById.get(r.id);
       const manualValuation = latestValuationByAsset.get(r.id);
+      const identity = resolveAssetIdentity({
+        symbol: r.symbol,
+        name: r.name,
+        type: r.type as AssetType,
+        isin: current?.isin,
+        quoteSymbol: current?.quoteSymbol,
+      });
+      const effectiveIsin = identity.isin ?? current?.isin;
       return {
         id: r.id,
         symbol: r.symbol,
         name: r.name,
-        type: r.type as AssetType,
+        type: identity.effectiveType,
         sector: r.sector,
         region: r.region,
         price:
@@ -536,7 +624,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         ...(current?.quoteFxAt !== undefined ? { quoteFxAt: current.quoteFxAt } : {}),
         ...(current?.quoteFxSource !== undefined ? { quoteFxSource: current.quoteFxSource } : {}),
         ...(current?.country !== undefined ? { country: current.country } : {}),
-        ...(current?.isin !== undefined ? { isin: current.isin } : {}),
+        ...(effectiveIsin !== undefined ? { isin: effectiveIsin } : {}),
+        ...(identity.quoteSymbol ? { quoteSymbol: identity.quoteSymbol } : {}),
+        ...(current?.quoteDiagnostic !== undefined
+          ? { quoteDiagnostic: current.quoteDiagnostic }
+          : {}),
       };
     });
     setTx(txs);
@@ -545,23 +637,53 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     try {
       const quoteAssets = base.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type));
       if (!quoteAssets.length) return;
+      const todayIso = new Date().toISOString().slice(0, 10);
+      let eurUsdRange: { start: string; end: string } | undefined;
+      if (txs.length > 0) {
+        const earliest = earliestTransactionDate(txs, todayIso);
+        const startMs = Date.parse(`${earliest}T00:00:00Z`) - 7 * 86_400_000;
+        const startIso = Number.isFinite(startMs)
+          ? new Date(startMs).toISOString().slice(0, 10)
+          : earliest;
+        const endIso = txs.reduce((max, tx) => (tx.date > max ? tx.date : max), todayIso);
+        if (isValidIsoDate(startIso) && isValidIsoDate(endIso) && startIso <= endIso) {
+          eurUsdRange = { start: startIso, end: endIso };
+        }
+      }
       const res = await fetchPortfolioQuoteBatches(
-        quoteAssets.map((x) => ({ symbol: x.symbol, type: x.type })),
+        quoteAssets.map((x) => ({
+          symbol: x.symbol,
+          type: x.type,
+          name: x.name,
+          ...(x.isin ? { isin: x.isin } : {}),
+          ...(x.quoteSymbol ? { quoteSymbol: x.quoteSymbol } : {}),
+        })),
         quoteFn,
+        eurUsdRange,
       );
       if (userRef.current?.id !== user.id || requestVersion !== reloadVersion.current) return;
+      const quotes = res?.quotes ?? {};
+      const diagnostics = res?.diagnostics ?? {};
+      const missing = res?.missing ?? [];
+      if (res?.eurUsdPrices?.length) {
+        setEurUsdPrices(res.eurUsdPrices);
+      }
       setAssets((prev) => {
         const prevCountry = new Map(prev.map((item) => [item.id, item.country]));
         return base.map((x) => {
           const existingCountry = prevCountry.get(x.id);
           const withCountry =
             existingCountry && !x.country ? { ...x, country: existingCountry } : x;
-          const q = res.quotes[x.symbol];
-          if (!q)
-            return ["stock", "etf", "crypto"].includes(x.type)
-              ? { ...withCountry, quoteRefreshFailed: true }
-              : withCountry;
-          const updated = {
+          const q = quotes[x.symbol];
+          const diag = diagnostics[x.symbol];
+          if (!q) {
+            if (!["stock", "etf", "crypto"].includes(x.type)) return withCountry;
+            const failed: Asset = { ...withCountry, quoteRefreshFailed: true };
+            if (diag) failed.quoteDiagnostic = diag;
+            else delete failed.quoteDiagnostic;
+            return failed;
+          }
+          const updated: Asset = {
             ...withCountry,
             price: q.price,
             change24h: q.change ?? Number.NaN,
@@ -569,7 +691,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             quoteNativePrice: q.nativePrice,
             quoteAt: q.at,
             quoteRefreshFailed: false,
+            ...(q.resolvedSymbol ? { quoteSymbol: q.resolvedSymbol } : {}),
           };
+          delete updated.quoteDiagnostic;
           delete updated.quoteFxAt;
           delete updated.quoteFxSource;
           if (q.fxAt) updated.quoteFxAt = q.fxAt;
@@ -577,8 +701,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           return updated;
         });
       });
-      setPricesLive(Object.keys(res.quotes).length > 0);
-      setPriceNote(res.failed ? "error" : res.missing.length ? "unavailable" : null);
+      setPricesLive(Object.keys(quotes).length > 0);
+      setPriceNote(res?.failed ? "error" : missing.length ? "unavailable" : null);
     } catch (e) {
       if (userRef.current?.id !== user.id || requestVersion !== reloadVersion.current) return;
       console.error(e);
@@ -599,8 +723,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   };
 
   const ensureAsset = async (a: Omit<Asset, "id">): Promise<string> => {
-    const existing = assets.find((x) => x.symbol.toUpperCase() === a.symbol.toUpperCase());
-    if (existing) return existing.id;
+    const lookup = buildAssetLookup(assetsRef.current);
+    const existingId = findMatchingAssetId(lookup, {
+      symbol: a.symbol,
+      name: a.name,
+      type: a.type,
+      isin: a.isin,
+      currency: a.quoteCurrency,
+    });
+    if (existingId) return existingId;
     const { data, error } = await supabase
       .from("assets")
       .insert({
@@ -673,6 +804,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       priceNote,
       eurPerUsd,
       liveFx,
+      eurUsdPrices,
       setLang: (l) => {
         setLangS(l);
         savePref({ lang: l });
@@ -883,6 +1015,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         });
         const converted = normalized.map((row, index) => ({
           ...row,
+          originalCurrency: rows[index]?.currency,
           ...(rows[index]?.isin ? { isin: rows[index]!.isin } : {}),
           ...(rows[index]?.sourceExecutedAt
             ? { sourceExecutedAt: rows[index]!.sourceExecutedAt }
@@ -891,10 +1024,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             ? { sourceTransactionId: rows[index]!.sourceTransactionId }
             : {}),
         }));
-        const ids = new Map(assets.map((x) => [x.symbol.toUpperCase(), x.id]));
+        const lookup = buildAssetLookup(assetsRef.current);
+        const matchInput = (r: (typeof converted)[number]) => ({
+          symbol: r.symbol,
+          name: r.name,
+          type: r.assetType,
+          isin: r.isin,
+          currency: r.originalCurrency,
+        });
         const pendingTransactions = converted.map((row, index) => ({
           id: `pending-import-${index}`,
-          assetId: ids.get(row.symbol.toUpperCase()) ?? `pending-asset:${row.symbol.toUpperCase()}`,
+          assetId:
+            findMatchingAssetId(lookup, matchInput(row)) ??
+            `pending-asset:${canonicalIdentityKey(matchInput(row))}`,
           brokerId,
           kind: row.kind,
           quantity: row.quantity,
@@ -905,7 +1047,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         validateBrokerTransfers([...transactionsRef.current, ...pendingTransactions]);
         const createdAssetIds: string[] = [];
         for (const r of converted) {
-          if (ids.has(r.symbol.toUpperCase())) continue;
+          const input = matchInput(r);
+          if (findMatchingAssetId(lookup, input)) continue;
           const { data, error } = await supabase
             .from("assets")
             .insert({
@@ -931,14 +1074,14 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             .select("id")
             .single();
           if (error) throw error;
-          ids.set(r.symbol.toUpperCase(), data.id);
+          registerAssetLookup(lookup, data.id, input);
           createdAssetIds.push(data.id);
         }
         const { data, error } = await supabase
           .from("transactions")
           .insert(
             converted.map((r) => {
-              const assetId = ids.get(r.symbol.toUpperCase());
+              const assetId = findMatchingAssetId(lookup, matchInput(r));
               if (!assetId) throw new Error("Asset unavailable");
               return {
                 asset_id: assetId,
@@ -1062,6 +1205,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     reload,
     eurPerUsd,
     liveFx,
+    eurUsdPrices,
     convertFn,
     mutatePosition,
   ]);

@@ -70,7 +70,11 @@ export function DataStatus() {
                 return (
                   <li key={h.asset.id}>
                     {h.asset.symbol}: {c.states[coverage.fresh ? 0 : coverage.stale ? 1 : 2]}
-                    {h.asset.quoteRefreshFailed && <span className="ml-1">· {c.quoteFailure}</span>}
+                    {h.asset.quoteDiagnostic ? (
+                      <span className="ml-1">· {c.quoteDiagnostics[h.asset.quoteDiagnostic]}</span>
+                    ) : (
+                      h.asset.quoteRefreshFailed && <span className="ml-1">· {c.quoteFailure}</span>
+                    )}
                   </li>
                 );
               })}

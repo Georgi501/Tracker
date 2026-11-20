@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { marketSearchSchema, searchCatalog, type MarketAsset } from "./market-search";
+import { resolveAssetIdentity, validateQuoteIdentity } from "./instrument-identity";
 import { dedupeMarketNews } from "./market-news";
 import {
   earningsSurprisePercent,
@@ -84,13 +85,42 @@ export const marketQuote = createServerFn({ method: "POST" })
       .object({
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
         type: z.enum(["stock", "etf", "crypto"]),
+        name: z.string().max(200).optional(),
+        isin: z.string().max(16).optional(),
+        expectedCurrency: z.string().max(8).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
     const { fetchLiveQuote } = await import("./prices.server");
-    const quote = await fetchLiveQuote(data.symbol, data.type);
-    return { quote, reason: quote ? null : ("unavailable" as const) };
+    const hasIdentityHints = Boolean(data.name || data.isin || data.expectedCurrency);
+    if (!hasIdentityHints) {
+      const quote = await fetchLiveQuote(data.symbol, data.type);
+      return { quote, reason: quote ? null : ("unavailable" as const) };
+    }
+    const identity = resolveAssetIdentity({
+      symbol: data.symbol,
+      type: data.type,
+      name: data.name,
+      isin: data.isin,
+      expectedCurrency: data.expectedCurrency,
+    });
+    if (identity.forbidUsListingCollision) {
+      return { quote: null, reason: "ticker_collision_blocked" as const };
+    }
+    const quote = await fetchLiveQuote(identity.quoteSymbol, identity.effectiveType);
+    if (!quote) return { quote: null, reason: "unavailable" as const };
+    const validation = validateQuoteIdentity(identity, {
+      providerSymbol: quote.providerSymbol ?? identity.quoteSymbol,
+      currency: quote.currency,
+      exchangeName: quote.exchangeName,
+      fullExchangeName: quote.fullExchangeName,
+      instrumentType: quote.instrumentType,
+      longName: quote.longName,
+      shortName: quote.shortName,
+    });
+    if (!validation.ok) return { quote: null, reason: validation.reason };
+    return { quote, reason: null };
   });
 
 export const marketTickerQuotes = createServerFn({ method: "POST" })
@@ -255,6 +285,9 @@ export const marketDetails = createServerFn({ method: "POST" })
         symbol: z.string().regex(/^[A-Za-z0-9.^:=_-]{1,20}$/),
         type: z.enum(["stock", "etf", "crypto"]),
         range: z.enum(CHART_RANGES).default("1Y"),
+        name: z.string().max(200).optional(),
+        isin: z.string().max(16).optional(),
+        expectedCurrency: z.string().max(8).optional(),
       })
       .parse(input),
   )
@@ -284,7 +317,20 @@ export const marketDetails = createServerFn({ method: "POST" })
       };
       const cfg = RANGE_CFG[data.range];
       try {
-        const symbol = data.type === "crypto" ? `${data.symbol.toUpperCase()}-USD` : data.symbol;
+        const hasIdentityHints = Boolean(data.name || data.isin || data.expectedCurrency);
+        const identity = hasIdentityHints
+          ? resolveAssetIdentity({
+              symbol: data.symbol,
+              type: data.type,
+              name: data.name,
+              isin: data.isin,
+              expectedCurrency: data.expectedCurrency,
+            })
+          : null;
+        if (identity?.forbidUsListingCollision) return { ...empty, unavailable: true };
+        const effectiveType = identity?.effectiveType ?? data.type;
+        const rawSymbol = identity?.quoteSymbol ?? data.symbol;
+        const symbol = effectiveType === "crypto" ? `${rawSymbol.toUpperCase()}-USD` : rawSymbol;
         const now = new Date();
         const period1 =
           data.range === "YTD"
@@ -294,8 +340,34 @@ export const marketDetails = createServerFn({ method: "POST" })
               : new Date("1970-01-02");
         const [chart, liveQuote] = await Promise.all([
           yahooClient().chart(symbol, { period1, interval: cfg.interval }),
-          data.range === "1D" ? fetchLiveQuote(data.symbol, data.type) : Promise.resolve(null),
+          data.range === "1D" ? fetchLiveQuote(rawSymbol, effectiveType) : Promise.resolve(null),
         ]);
+        const m = chart.meta as {
+          fiftyTwoWeekLow?: number;
+          fiftyTwoWeekHigh?: number;
+          currency?: string;
+          regularMarketPrice?: number;
+          regularMarketTime?: Date | null;
+          exchangeName?: string;
+          fullExchangeName?: string;
+          instrumentType?: string;
+          longName?: string;
+          shortName?: string;
+        };
+        if (
+          identity &&
+          !validateQuoteIdentity(identity, {
+            providerSymbol: rawSymbol,
+            currency: m.currency,
+            exchangeName: m.exchangeName,
+            fullExchangeName: m.fullExchangeName,
+            instrumentType: m.instrumentType,
+            longName: m.longName,
+            shortName: m.shortName,
+          }).ok
+        ) {
+          return { ...empty, unavailable: true };
+        }
         const closes = chart.quotes
           .filter((q) => q.close != null && q.close > 0)
           .map((q) => ({
@@ -305,13 +377,6 @@ export const marketDetails = createServerFn({ method: "POST" })
             h: q.high,
             l: q.low,
           }));
-        const m = chart.meta as {
-          fiftyTwoWeekLow?: number;
-          fiftyTwoWeekHigh?: number;
-          currency?: string;
-          regularMarketPrice?: number;
-          regularMarketTime?: Date | null;
-        };
         const vals = closes.map((x) => x.c);
         const fromData = data.range === "1Y";
         const quoteAt =

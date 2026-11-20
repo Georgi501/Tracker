@@ -15,9 +15,11 @@ import {
 import { dailyAttribution } from "./performance-attribution";
 import {
   normalizeTransactionsForSplits,
+  type AssetType,
   type CorporateAction,
   type Transaction,
 } from "./portfolio";
+import { resolveAssetIdentity, validateQuoteIdentity } from "./instrument-identity";
 
 import { readPortfolioSnapshot } from "./portfolio-snapshot";
 
@@ -85,15 +87,62 @@ export const getPortfolioHistory = createServerFn({ method: "POST" })
           .map((transaction) => transaction.assetId),
       );
       const portfolioAssets = (a.data ?? []).filter((asset) => transactedAssetIds.has(asset.id));
+      const resolvedByAssetId = new Map(
+        portfolioAssets.map((asset) => [
+          asset.id,
+          resolveAssetIdentity({
+            symbol: asset.symbol,
+            name: asset.name,
+            type: asset.type as AssetType,
+          }),
+        ]),
+      );
       const downloadedAssets = await mapInBatches(
-        portfolioAssets.filter((asset) => ["stock", "etf", "crypto"].includes(asset.type)),
+        portfolioAssets.filter((asset) => {
+          const effectiveType = resolvedByAssetId.get(asset.id)?.effectiveType ?? asset.type;
+          return ["stock", "etf", "crypto"].includes(effectiveType);
+        }),
         HISTORY_BATCH_SIZE,
         async (asset) => {
-          const history = await dailyHistory(asset.symbol, fetchStart, end, asset.type);
+          const identity = resolvedByAssetId.get(asset.id)!;
+          if (identity.forbidUsListingCollision) {
+            return {
+              id: asset.id,
+              symbol: asset.symbol,
+              type: identity.effectiveType,
+              currency: identity.expectedCurrency ?? "USD",
+              prices: [],
+              splits: [],
+            };
+          }
+          const history = await dailyHistory(
+            identity.quoteSymbol,
+            fetchStart,
+            end,
+            identity.effectiveType,
+          );
+          const validation = validateQuoteIdentity(identity, {
+            currency: history.currency,
+            exchangeName: history.exchangeName,
+            fullExchangeName: history.fullExchangeName,
+            instrumentType: history.instrumentType,
+            longName: history.longName,
+            shortName: history.shortName,
+          });
+          if (!validation.ok) {
+            return {
+              id: asset.id,
+              symbol: asset.symbol,
+              type: identity.effectiveType,
+              currency: history.currency,
+              prices: [],
+              splits: [],
+            };
+          }
           return {
             id: asset.id,
             symbol: asset.symbol,
-            type: asset.type,
+            type: identity.effectiveType,
             currency: history.currency,
             prices: history.prices,
             splits: history.splits,

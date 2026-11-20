@@ -163,7 +163,8 @@ describe("Trading 212 CSV import repair", () => {
     ]);
 
     expect(analysis.transactions[0]).toMatchObject({
-      symbol: "SPYL",
+      symbol: "SPYL.DE",
+      brokerSymbol: "SPYL",
       isin: "IE000XZSV718",
       assetType: "etf",
       kind: "buy",
@@ -255,7 +256,10 @@ describe("Trading 212 CSV import repair", () => {
 
     const analysis = prepareCsvText(csv, "trading212");
     expect(analysis.transactions).toHaveLength(1);
-    expect(analysis.transactions[0]?.symbol).toBe("SPYL");
+    expect(analysis.transactions[0]?.symbol).toBe("SPYL.DE");
+    expect(analysis.transactions[0]?.brokerSymbol).toBe("SPYL");
+    expect(analysis.transactions[0]?.isin).toBe("IE000XZSV718");
+    expect(analysis.transactions[0]?.assetType).toBe("etf");
     expect(analysis.excluded).toHaveLength(0);
     expect(analysis.rejected.map((r) => [r.row, r.reason])).toEqual([
       [3, "unknown_action"],

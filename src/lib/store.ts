@@ -2,6 +2,7 @@ import type { PositionReceipt } from "./position-deletion";
 import type { User } from "@supabase/supabase-js";
 import { createContext, useContext } from "react";
 import type { ImportedTx } from "./csv-import";
+import type { DailyPrice } from "./history";
 import type { Lang, TKey } from "./i18n";
 import type { LiveFx } from "./live-fx";
 import type {
@@ -53,6 +54,7 @@ export interface State {
   priceNote: string | null;
   eurPerUsd: number | null;
   liveFx: LiveFx | null;
+  eurUsdPrices: DailyPrice[];
   addTransaction: (t: Omit<Transaction, "id">, newAsset?: Omit<Asset, "id">) => Promise<void>;
   createBrokerTransfer: (transfer: Omit<BrokerTransfer, "id" | "createdAt">) => Promise<void>;
   updateBondPrice: (assetId: string, priceUsd: number) => Promise<void>;

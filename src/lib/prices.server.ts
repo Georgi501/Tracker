@@ -9,6 +9,12 @@ export interface LiveQuote {
   at: string;
   currency: string;
   source: "Yahoo Finance";
+  providerSymbol?: string;
+  exchangeName?: string;
+  fullExchangeName?: string;
+  instrumentType?: string;
+  longName?: string;
+  shortName?: string;
 }
 export function yahooClient() {
   return new YahooFinance({
@@ -117,6 +123,12 @@ async function fetchLiveQuoteRaw(symbol: string, type: string): Promise<LiveQuot
       at: q.regularMarketTime.toISOString(),
       currency: q.currency,
       source: "Yahoo Finance",
+      ...(typeof q.symbol === "string" ? { providerSymbol: q.symbol } : {}),
+      ...(typeof q.exchangeName === "string" ? { exchangeName: q.exchangeName } : {}),
+      ...(typeof q.fullExchangeName === "string" ? { fullExchangeName: q.fullExchangeName } : {}),
+      ...(typeof q.instrumentType === "string" ? { instrumentType: q.instrumentType } : {}),
+      ...(typeof q.longName === "string" ? { longName: q.longName } : {}),
+      ...(typeof q.shortName === "string" ? { shortName: q.shortName } : {}),
     };
   } catch {
     return null;

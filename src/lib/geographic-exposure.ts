@@ -1,4 +1,5 @@
 import type { Asset, AssetType, Holding } from "./portfolio";
+import { resolveImportedInstrument } from "./instrument-identity";
 
 export const GEO_REGIONS = [
   "North America",
@@ -461,6 +462,43 @@ export const FUND_EXPOSURE_REGISTRY: readonly FundExposureEntry[] = [
     redistributionCleared: false,
   },
   {
+    canonicalId: "vanguard-ftse-all-world-ex-us-ucits",
+    name: "Vanguard FTSE All-World ex-US UCITS ETF",
+    issuer: "Vanguard",
+    indexName: "FTSE All-World ex US Index",
+    domicile: "IE",
+    assetType: "etf",
+    isins: ["IE0009A5ADV9"],
+    // Do NOT add bare "VXUS" as an unconditional alias: US VXUS (US9220427424) is a separate fund.
+    listings: ["VXUS.DE", "VXUS.AS", "VXUS.L"],
+    source: "Vanguard (Catalog identity)",
+    sourceUrl: "https://www.vanguard.co.uk/",
+    methodology: WITHHELD_FUND_METHODOLOGY,
+    asOfDate: "2026-11-19",
+    dataQuality: "license-restricted",
+    isBenchmarkProxy: false,
+    licenseStatus: "restricted-website-terms",
+    redistributionCleared: false,
+  },
+  {
+    canonicalId: "vanguard-total-international-stock-us",
+    name: "Vanguard Total International Stock ETF",
+    issuer: "Vanguard",
+    indexName: "FTSE Global All Cap ex US Index",
+    domicile: "US",
+    assetType: "etf",
+    isins: ["US9220427424"],
+    listings: ["VXUS"],
+    source: "Vanguard (Catalog identity)",
+    sourceUrl: "https://investor.vanguard.com/",
+    methodology: WITHHELD_FUND_METHODOLOGY,
+    asOfDate: "2026-11-19",
+    dataQuality: "license-restricted",
+    isBenchmarkProxy: false,
+    licenseStatus: "restricted-website-terms",
+    redistributionCleared: false,
+  },
+  {
     canonicalId: "spdr-msci-usa-scv",
     name: "SPDR MSCI USA Small Cap Value Weighted UCITS ETF",
     issuer: "State Street SPDR",
@@ -733,7 +771,11 @@ export function isGeoProfileStale(
 const VALID_ISIN_REGEX = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
 
 export function resolveFundExposureEntry(
-  input: { symbol?: string | null | undefined; isin?: string | null | undefined },
+  input: {
+    symbol?: string | null | undefined;
+    isin?: string | null | undefined;
+    name?: string | null | undefined;
+  },
   registry: readonly FundExposureEntry[] = FUND_EXPOSURE_REGISTRY,
 ): FundExposureEntry | null {
   const normIsin = input.isin?.trim().toUpperCase() || "";
@@ -748,6 +790,25 @@ export function resolveFundExposureEntry(
 
   const normSymbol = input.symbol?.trim().toUpperCase() || "";
   if (!normSymbol) return null;
+
+  // Disambiguate colliding bare tickers (e.g. VXUS UCITS vs VXUS US, EQQQ UCITS vs EQQQ US) before registry fallback.
+  if (registry === FUND_EXPOSURE_REGISTRY) {
+    const resolved = resolveImportedInstrument({
+      symbol: normSymbol,
+      isin: normIsin || undefined,
+      name: input.name,
+    });
+    if (resolved.canonicalId) {
+      const byCanonical = registry.find((entry) => entry.canonicalId === resolved.canonicalId);
+      if (byCanonical) return byCanonical;
+    }
+    if (resolved.isin) {
+      const byResolvedIsin = registry.find((entry) =>
+        entry.isins.some((code) => code.toUpperCase() === resolved.isin),
+      );
+      if (byResolvedIsin) return byResolvedIsin;
+    }
+  }
 
   const byListing = registry.find((entry) =>
     entry.listings.some((ticker) => ticker.toUpperCase() === normSymbol),
@@ -825,7 +886,10 @@ export function resolveInstrumentGeoProfile(
   }
 
   // 2. Fund identity match: expose breakdown weights ONLY if entry is explicitly cleared AND contains authorized weights
-  const fund = resolveFundExposureEntry({ symbol: upperSymbol, isin: asset.isin }, registry);
+  const fund = resolveFundExposureEntry(
+    { symbol: upperSymbol, isin: asset.isin, name: asset.name },
+    registry,
+  );
   if (fund) {
     const hasAuthorizedWeights = Boolean(fund.countries || fund.regions);
     if (!fund.redistributionCleared || !hasAuthorizedWeights) {

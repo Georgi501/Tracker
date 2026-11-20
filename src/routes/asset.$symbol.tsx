@@ -5,12 +5,17 @@ import { QuoteHero } from "@/components/QuoteHero";
 import { Button } from "@/components/ui/button";
 import { InvestmentJournal } from "@/components/InvestmentJournal";
 import { COMPANY_SUGGESTIONS } from "@/lib/company-suggestions";
+import {
+  computeHoldingBaseMetrics,
+  formatBaseCurrencyAmount,
+} from "@/lib/base-currency-accounting";
 import { resolveEtfExposureProfile, SUPPORTED_ETF_EXPOSURE_PROFILES } from "@/lib/etf-overlap";
+import { currencyRate, type DailyPrice } from "@/lib/history";
 import { languageLocale, type Lang } from "@/lib/i18n";
 import { assetSummary } from "@/lib/journey";
 import { searchCatalog } from "@/lib/market-search";
 import { searchMarket } from "@/lib/market.functions";
-import { projectedBondCoupon } from "@/lib/portfolio";
+import { projectedBondCoupon, type Currency } from "@/lib/portfolio";
 import { assetEntityJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { pct, usePortfolio } from "@/lib/store";
 import { useSectionAnchor } from "@/lib/use-section-anchor";
@@ -429,6 +434,23 @@ const BOND_REMINDER_COPY: Record<Lang, { nextCoupon: string; saveDate: string; n
   },
 };
 
+function formatTxAmount(
+  usd: number,
+  date: string,
+  currency: Currency,
+  eurUsdPrices: readonly DailyPrice[],
+  lang: Lang,
+  moneyFn: (usd: number) => string,
+): string {
+  if (currency === "EUR" && eurUsdPrices.length && Number.isFinite(usd)) {
+    const rate = currencyRate("EUR", date, eurUsdPrices as DailyPrice[], []);
+    if (rate !== null && rate > 0) {
+      return formatBaseCurrencyAmount(usd / rate, "EUR", lang);
+    }
+  }
+  return moneyFn(usd);
+}
+
 function AssetPage() {
   const { symbol } = Route.useParams();
   const { from, q } = Route.useSearch();
@@ -495,6 +517,19 @@ function AssetPage() {
       ? asset.type
       : null;
   const projectedCoupon = h && bondAsset ? projectedBondCoupon(bondAsset, h.quantity) : undefined;
+  const assetQuoteSymbol =
+    asset && "quoteSymbol" in asset && typeof asset.quoteSymbol === "string"
+      ? asset.quoteSymbol
+      : undefined;
+  const assetIsin =
+    asset && "isin" in asset && typeof asset.isin === "string" ? asset.isin : undefined;
+  const holdingMetrics = h
+    ? computeHoldingBaseMetrics(h, p.transactions, p.currency, {
+        liveEurPerUsd: p.eurPerUsd,
+        eurUsdPrices: p.eurUsdPrices,
+        splits: p.corporateActions,
+      })
+    : null;
 
   return (
     <div ref={sectionRef} className="asset-page page-enter space-y-5">
@@ -510,6 +545,8 @@ function AssetPage() {
         {type ? (
           <QuoteHero
             symbol={symbol.toUpperCase()}
+            quoteSymbol={assetQuoteSymbol}
+            isin={assetIsin}
             name={asset?.name ?? symbol.toUpperCase()}
             type={type}
             lang={p.lang}
@@ -595,12 +632,26 @@ function AssetPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
             [c.qty, h.quantity.toLocaleString()],
-            [c.avg, p.moneyFor(h.avgCost, h.asset)],
-            [c.value, p.moneyFor(h.value, h.asset)],
-            [c.pnl, `${p.moneyFor(h.pnl, h.asset, { sign: true })} (${pct(h.pnlPct)})`],
-            [c.bought, p.moneyFor(s.bought, h.asset)],
-            [c.sold, p.moneyFor(s.sold, h.asset)],
-            [c.div, p.moneyFor(s.dividends, h.asset)],
+            [
+              c.avg,
+              formatBaseCurrencyAmount(holdingMetrics?.avgCost ?? Number.NaN, p.currency, p.lang),
+            ],
+            [
+              c.value,
+              formatBaseCurrencyAmount(holdingMetrics?.value ?? Number.NaN, p.currency, p.lang),
+            ],
+            [
+              c.pnl,
+              `${formatBaseCurrencyAmount(holdingMetrics?.pnl ?? Number.NaN, p.currency, p.lang, { sign: true })} (${pct(holdingMetrics?.pnlPct ?? Number.NaN)})`,
+            ],
+            [
+              c.bought,
+              s.sold === 0 && holdingMetrics
+                ? formatBaseCurrencyAmount(holdingMetrics.costBasis, p.currency, p.lang)
+                : p.money(s.bought),
+            ],
+            [c.sold, p.money(s.sold)],
+            [c.div, p.money(s.dividends)],
             [c.since, s.firstDate ?? "—"],
           ].map(([k, v]) => (
             <Card key={k} className="p-4">
@@ -813,11 +864,33 @@ function AssetPage() {
                 </span>
                 <span className="numeric-display text-right font-semibold tabular-nums">
                   {t.kind === "dividend"
-                    ? p.moneyFor(t.price * t.quantity - (t.fee ?? 0), h?.asset)
-                    : `${t.quantity} × ${p.moneyFor(t.price, h?.asset)}`}
+                    ? formatTxAmount(
+                        t.price * t.quantity - (t.fee ?? 0),
+                        t.date,
+                        p.currency,
+                        p.eurUsdPrices,
+                        p.lang,
+                        p.money,
+                      )
+                    : `${t.quantity} × ${formatTxAmount(
+                        t.price,
+                        t.date,
+                        p.currency,
+                        p.eurUsdPrices,
+                        p.lang,
+                        p.money,
+                      )}`}
                   {(t.fee ?? 0) > 0 && (
                     <span className="ml-1 block font-sans text-xs font-normal text-muted-foreground">
-                      {p.t("fee")}: {p.money(t.fee ?? 0)}
+                      {p.t("fee")}:{" "}
+                      {formatTxAmount(
+                        t.fee ?? 0,
+                        t.date,
+                        p.currency,
+                        p.eurUsdPrices,
+                        p.lang,
+                        p.money,
+                      )}
                     </span>
                   )}
                 </span>

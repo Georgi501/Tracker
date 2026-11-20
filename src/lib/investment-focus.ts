@@ -21,6 +21,7 @@ export const INVESTMENT_FOCUS_IDS = [
   "europe",
   "global-all-country",
   "global-developed",
+  "global-ex-us",
   "developed-ex-us",
   "emerging",
   "other-single-market",
@@ -134,6 +135,20 @@ export const FUND_FOCUS_CATALOG: Readonly<Record<string, FundFocusFact>> = {
     verifiedOn: "2026-11-19",
     verification: "catalog-only",
   },
+  "vanguard-ftse-all-world-ex-us-ucits": {
+    focus: "global-ex-us",
+    benchmark: "FTSE All-World ex US Index",
+    rule: "Global equity benchmark spanning developed and emerging markets outside the United States.",
+    verifiedOn: "2026-11-20",
+    verification: "web-checked",
+  },
+  "vanguard-total-international-stock-us": {
+    focus: "global-ex-us",
+    benchmark: "FTSE Global All Cap ex US Index",
+    rule: "Global ex-US total international stock benchmark across developed and emerging markets.",
+    verifiedOn: "2026-11-20",
+    verification: "catalog-only",
+  },
   "stoxx-europe-600-ishares-de": {
     focus: "europe",
     benchmark: "STOXX Europe 600 Index",
@@ -230,7 +245,10 @@ export function resolveInstrumentFocus(
     };
   }
 
-  const fund = resolveFundExposureEntry({ symbol: upper, isin: asset.isin }, options?.registry);
+  const fund = resolveFundExposureEntry(
+    { symbol: upper, isin: asset.isin, name: asset.name },
+    options?.registry,
+  );
   if (fund) {
     const fact = catalog[fund.canonicalId];
     if (fact) {
@@ -359,6 +377,7 @@ export const FOCUS_LABELS: Record<Lang, Record<InvestmentFocusId, string>> = {
     europe: "Europe",
     "global-all-country": "Global (all countries)",
     "global-developed": "Global developed",
+    "global-ex-us": "Global ex-US",
     "developed-ex-us": "Developed ex-US",
     emerging: "Emerging markets",
     "other-single-market": "Other single markets",
@@ -370,6 +389,7 @@ export const FOCUS_LABELS: Record<Lang, Record<InvestmentFocusId, string>> = {
     europe: "Европа",
     "global-all-country": "Глобален (всички страни)",
     "global-developed": "Глобален развит",
+    "global-ex-us": "Глобален без САЩ",
     "developed-ex-us": "Развити без САЩ",
     emerging: "Развиващи се пазари",
     "other-single-market": "Други отделни пазари",
@@ -381,6 +401,7 @@ export const FOCUS_LABELS: Record<Lang, Record<InvestmentFocusId, string>> = {
     europe: "Europa",
     "global-all-country": "Global (alle Länder)",
     "global-developed": "Global Industrieländer",
+    "global-ex-us": "Global ex USA",
     "developed-ex-us": "Industrieländer ex USA",
     emerging: "Schwellenländer",
     "other-single-market": "Sonstige Einzelmärkte",
@@ -392,6 +413,7 @@ export const FOCUS_LABELS: Record<Lang, Record<InvestmentFocusId, string>> = {
     europe: "Europa",
     "global-all-country": "Global (todos los países)",
     "global-developed": "Global desarrollado",
+    "global-ex-us": "Global ex EE. UU.",
     "developed-ex-us": "Desarrollados ex EE. UU.",
     emerging: "Mercados emergentes",
     "other-single-market": "Otros mercados individuales",
@@ -403,6 +425,7 @@ export const FOCUS_LABELS: Record<Lang, Record<InvestmentFocusId, string>> = {
     europe: "Europa",
     "global-all-country": "Globale (tutti i paesi)",
     "global-developed": "Globale sviluppati",
+    "global-ex-us": "Globale ex USA",
     "developed-ex-us": "Sviluppati ex USA",
     emerging: "Mercati emergenti",
     "other-single-market": "Altri mercati singoli",
